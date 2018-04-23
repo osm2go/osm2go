@@ -563,61 +563,10 @@ void canvas_item_pixmap::image_move(int x, int y, float hscale, float vscale) {
                nullptr);
 }
 
-int canvas_item_t::get_segment(lpos_t pos) const {
-  GooCanvasPoints *points = nullptr;
-  double line_width = 0;
+int canvas_t::get_item_segment(const canvas_item_t *item, lpos_t pos) const {
+  const item_mapping_t::const_iterator it = item_mapping.find(const_cast<canvas_item_t *>(item));
+  assert(it != item_mapping.end());
 
-  g_object_get(G_OBJECT(this),
-	       "points", &points,
-	       "line-width", &line_width,
-               nullptr);
-
-  if(!points) return -1;
-
-  pointGuard cpoints(points);
-
-  int retval = -1;
-  double mindist = line_width / 2;
-  for(int i = 0; i < cpoints->num_points - 1; i++) {
-
-#define AX (cpoints->coords[2*i+0])
-#define AY (cpoints->coords[2*i+1])
-#define BX (cpoints->coords[2*i+2])
-#define BY (cpoints->coords[2*i+3])
-#define CX static_cast<double>(pos.x)
-#define CY static_cast<double>(pos.y)
-
-    double len = pow(BY-AY,2)+pow(BX-AX,2);
-    double m = ((CX-AX)*(BX-AX)+(CY-AY)*(BY-AY)) / len;
-
-    /* this is a possible candidate */
-    if((m >= 0.0) && (m <= 1.0)) {
-
-      double n;
-      if(fabs(BX-AX) > fabs(BY-AY))
-        n = fabs(sqrt(len) * (AY+m*(BY-AY)-CY)/(BX-AX));
-      else
-        n = fabs(sqrt(len) * -(AX+m*(BX-AX)-CX)/(BY-AY));
-
-      /* check if this is actually on the line and closer than anything */
-      /* we found so far */
-      if(n < mindist) {
-        retval = i;
-        mindist = n;
-      }
-    }
- }
-#undef AX
-#undef AY
-#undef BX
-#undef BY
-#undef CX
-#undef CY
-
-  /* the last and first point are identical for polygons in osm2go. */
-  /* goocanvas doesn't need that, but that's how OSM works and it saves */
-  /* us from having to check the last->first connection for polygons */
-  /* seperately */
-
-  return retval;
+  return canvas_item_info_get_segment(static_cast<const canvas_item_info_poly *>(it->second),
+                                      pos.x, pos.y, 0);
 }

@@ -20,7 +20,7 @@ void testSegment()
   std::unique_ptr<canvas_item_t> line(canvas->polyline_new(CANVAS_GROUP_WAYS, points, 1, 0));
   assert(line);
 
-  int segnum = line->get_segment(lpos_t((4 + 16) / 2, (8 + 32) / 2));
+  int segnum = canvas->get_item_segment(line.get(), lpos_t((4 + 16) / 2, (8 + 32) / 2));
   assert_cmpnum(segnum, 1);
 }
 

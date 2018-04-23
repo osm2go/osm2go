@@ -47,10 +47,6 @@
 #include <osm2go_i18n.h>
 #include <osm2go_stl.h>
 
-int map_item_t::get_segment(lpos_t pos) const {
-  return item->get_segment(pos);
-}
-
 /* this is a chain of map_items which is attached to all entries */
 /* in the osm tree (node_t, way_t, ...) to be able to get a link */
 /* to the screen representation of a give node/way/etc */

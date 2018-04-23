@@ -80,11 +80,6 @@ struct canvas_item_t {
   void set_user_data(map_item_t *data, void (*c_handler)(map_item_t *));
   map_item_t *get_user_data();
   void destroy_connect(void (*c_handler)(void *), void *data);
-
-  /**
-  * @brief get the polygon/polyway segment a certain coordinate is over
-  */
-  int get_segment(lpos_t pos) const;
 };
 
 struct canvas_item_circle : public canvas_item_t {
@@ -158,6 +153,11 @@ public:
                            float hscale, float vscale);
 
   void item_info_push(canvas_item_t *item);
+
+  /**
+  * @brief get the polygon/polyway segment a certain coordinate is over
+  */
+  int get_item_segment(const canvas_item_t *item, lpos_t pos) const;
 };
 
 #endif // CANVAS_H

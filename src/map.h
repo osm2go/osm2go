@@ -80,11 +80,6 @@ struct map_item_t {
   static inline void free(map_item_t *p) {
     delete p;
   }
-
-  /**
-  * @brief get the polygon/polyway segment a certain coordinate is over
-  */
-  int get_segment(lpos_t pos) const;
 };
 
 /* this is a chain of map_items which is attached to all entries */
