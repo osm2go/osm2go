@@ -1018,7 +1018,7 @@ appdata_t::~appdata_t() {
   g_debug("waiting for gtk to shut down ");
 
   /* let gtk clean up first */
-  osm2go_platform::process_events(true);
+  osm2go_platform::process_events();
 
   g_debug(" ok\n");
 

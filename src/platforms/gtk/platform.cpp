@@ -36,13 +36,10 @@ void osm2go_platform::gtk_widget_deleter::operator()(GtkWidget *mem) {
   gtk_widget_destroy(mem);
 }
 
-void osm2go_platform::process_events(bool tick)
+void osm2go_platform::process_events()
 {
-  while(gtk_events_pending()) {
-    if(tick)
-      putchar('.');
+  while(gtk_events_pending())
     gtk_main_iteration();
-  }
 }
 
 void osm2go_platform::Timer::restart(unsigned int seconds, GSourceFunc callback, void *data)

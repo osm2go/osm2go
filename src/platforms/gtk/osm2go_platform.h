@@ -39,9 +39,8 @@ namespace osm2go_platform {
 
   /**
    * @brief process all pending GUI events
-   * @param tick if a '.' should be printed for every iteration
    */
-  void process_events(bool tick = false);
+  void process_events();
 
   /**
    * @brief simple interface to the systems web browser
