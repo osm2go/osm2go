@@ -905,21 +905,6 @@ static bool distance_above(map_t *map, int x, int y, int limit) {
   return sx*sx + sy*sy > limit*limit;
 }
 
-/* scroll with respect to two screen positions */
-static void map_do_scroll(map_t *map, int x, int y) {
-  int sx, sy;
-
-  map->canvas->scroll_get(canvas_t::UNIT_PIXEL, sx, sy);
-  sx -= x-map->pen_down.at.x;
-  sy -= y-map->pen_down.at.y;
-  map_limit_scroll(map, canvas_t::UNIT_PIXEL, sx, sy);
-  map->canvas->scroll_to(canvas_t::UNIT_PIXEL, sx, sy);
-
-  map->canvas->scroll_get(canvas_t::UNIT_METER,
-                    map->state.scroll_offset.x,
-                    map->state.scroll_offset.y);
-}
-
 /* scroll a certain step */
 void map_t::scroll_step(int x, int y) {
   int sx, sy;
@@ -1160,7 +1145,7 @@ void map_t::button_release(int x, int y) {
 
       /* just scroll if we didn't drag an selected item */
       if(!pen_down.on_selected_node) {
-        map_do_scroll(this, x, y);
+        scroll_step(pen_down.at.x - x, pen_down.at.y - y);
       } else {
         printf("released after dragging node\n");
         hl_cursor_clear();
@@ -1241,7 +1226,7 @@ void map_t::handle_motion(int x, int y)
     if(pen_down.drag) {
       /* just scroll if we didn't drag an selected item */
       if(!pen_down.on_selected_node)
-        map_do_scroll(this, x, y);
+        scroll_step(pen_down.at.x - x, pen_down.at.y - y);
       else {
         hl_cursor_draw(x, y, style->node.radius);
         map_touchnode_update(this, x, y);
