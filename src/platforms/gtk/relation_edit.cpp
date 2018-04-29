@@ -247,9 +247,10 @@ static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event, gpoint
 struct relation_list_insert_functor {
   relitem_context_t &context;
   GtkTreeSelection * const selection;
-  GtkTreeIter sel_iter;
-  std::string selname; /* name of sel_iter */
-  relation_list_insert_functor(relitem_context_t &c, GtkTreeSelection *s) : context(c), selection(s) {}
+  GtkTreeIter &sel_iter;
+  std::string &selname; /* name of sel_iter */
+  relation_list_insert_functor(relitem_context_t &c, GtkTreeSelection *s, std::string &sn, GtkTreeIter &it)
+    : context(c), selection(s), sel_iter(it), selname(sn) {}
   void operator()(std::pair<item_id_t, relation_t *> pair);
 };
 
@@ -337,13 +338,15 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
                                        RELITEM_COL_NAME, GTK_SORT_ASCENDING);
 
   /* build a list of iters of all items that should be selected */
-  relation_list_insert_functor inserter(context, selection);
+  std::string selname;
+  GtkTreeIter sel_iter;
+  relation_list_insert_functor inserter(context, selection, selname, sel_iter);
 
   std::for_each(context.osm->relations.begin(),
                 context.osm->relations.end(), inserter);
 
-  if(!inserter.selname.empty())
-    list_view_scroll(view, selection, &inserter.sel_iter);
+  if(!selname.empty())
+    list_view_scroll(view, selection, &sel_iter);
 
   g_signal_connect(selection, "changed", G_CALLBACK(changed), &context);
 
