@@ -1982,10 +1982,10 @@ std::string object_t::get_name(const osm_t &osm) const {
     name = obj->tags.get_value(name_tags[i]);
 
   /* search for some kind of "type" */
-  const std::array<const char *, 9> type_tags =
+  const std::array<const char *, 10> type_tags =
                           { { "amenity", "place", "historic", "leisure",
                               "tourism", "landuse", "waterway", "railway",
-                              "natural" } };
+                              "natural", "man_made" } };
   const char *typestr = nullptr;
 
   for(unsigned int i = 0; !typestr && i < type_tags.size(); i++)
