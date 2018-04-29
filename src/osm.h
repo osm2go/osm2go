@@ -50,11 +50,11 @@ typedef int64_t item_id_t;
 #define ID_ILLEGAL  (static_cast<item_id_t>(0))
 
 class base_object_t;
+struct osm_t;
 class node_t;
 class relation_t;
 class way_t;
 class tag_t;
-typedef std::vector<relation_t *> relation_chain_t;
 typedef std::vector<way_t *> way_chain_t;
 
 struct object_t {
@@ -115,7 +115,7 @@ struct object_t {
   const char *type_string() const;
   std::string id_string() const;
   item_id_t get_id() const noexcept;
-  std::string get_name() const;
+  std::string get_name(const osm_t &osm) const;
 };
 
 struct member_t {
@@ -215,6 +215,16 @@ struct osm_t {
     const std::map<item_id_t, way_t *>::const_iterator itEnd = ways.end();
     const std::map<item_id_t, way_t *>::const_iterator it =
         std::find_if(ways.begin(), itEnd, pred);
+    if(it != itEnd)
+      return it->second;
+    return nullptr;
+  }
+
+  template<typename _Predicate>
+  relation_t *find_relation(_Predicate pred) const {
+    const std::map<item_id_t, relation_t *>::const_iterator itEnd = relations.end();
+    const std::map<item_id_t, relation_t *>::const_iterator it =
+        std::find_if(relations.begin(), itEnd, pred);
     if(it != itEnd)
       return it->second;
     return nullptr;

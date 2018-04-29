@@ -1955,8 +1955,18 @@ void tag_list_t::copy(const tag_list_t &other)
   std::for_each(other.contents->begin(), other.contents->end(), tag_vector_copy_functor(*contents));
 }
 
+struct relation_member_functor {
+  const member_t member;
+  const char * const type;
+  relation_member_functor(const char *t, const char *r, const object_t &o)
+    : member(o, r), type(value_cache.insert(t)) {}
+  bool operator()(const std::pair<item_id_t, relation_t *> &it) const
+  { return it.second->tags.get_value("type") == type &&
+           std::find(it.second->members.begin(), it.second->members.end(), member) != it.second->members.end(); }
+};
+
 /* try to get an as "speaking" description of the object as possible */
-std::string object_t::get_name() const {
+std::string object_t::get_name(const osm_t &osm) const {
   std::string ret;
 
   assert(is_real());
@@ -1986,6 +1996,12 @@ std::string object_t::get_name() const {
     const char *hn = obj->tags.get_value("addr:housenumber");
 
     if(hn) {
+      if(street == nullptr) {
+        // check if there is an "associatedStreet" relation where this is a "house" member
+        const relation_t *astreet = osm.find_relation(relation_member_functor("associatedStreet", "house", *this));
+        if(astreet != nullptr)
+          street = astreet->tags.get_value("name");
+      }
       if(street) {
         ret = "building ";
         ret += street;

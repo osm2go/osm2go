@@ -432,7 +432,7 @@ static GtkWidget *tag_widget(info_tag_context_t &context) {
 
 static void on_relation_members(GtkWidget *, const info_tag_context_t *context) {
   assert_cmpnum(context->object.type, object_t::RELATION);
-  relation_show_members(context->dialog.get(), context->object.relation);
+  relation_show_members(context->dialog.get(), context->object.relation, context->osm);
 }
 
 static void table_attach(GtkWidget *table, GtkWidget *child, int x, int y) {

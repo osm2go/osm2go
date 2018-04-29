@@ -1387,49 +1387,67 @@ static void test_api_adjust()
 
 static void test_description()
 {
-  node_t n;
+  std::unique_ptr<osm_t> osm(new osm_t());
+  set_bounds(osm);
+  lpos_t pos(1, 1);
+  node_t *n = osm->node_new(pos);
+  osm->node_attach(n);
 
-  object_t o(&n);
-  assert_cmpstr(o.get_name(), "unspecified node");
+  object_t o(n);
+  assert_cmpstr(o.get_name(*osm.get()), "unspecified node");
 
   osm_t::TagMap tags;
   tags.insert(osm_t::TagMap::value_type("name", "foo"));
 
-  n.tags.replace(tags);
-  assert_cmpstr(o.get_name(), "node: \"foo\"");
+  n->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm.get()), "node: \"foo\"");
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("highway", "emergency_access_point"));
   tags.insert(osm_t::TagMap::value_type("ref", "H-112"));
-  n.tags.replace(tags);
-  assert_cmpstr(o.get_name(), "emergency access point: \"H-112\"");
+  n->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm.get()), "emergency access point: \"H-112\"");
 
-  way_t w;
-  o = &w;
+  way_t *w = new way_t();
+  osm->way_attach(w);
+  o = w;
 
-  assert_cmpstr(o.get_name(), "unspecified way/area");
+  assert_cmpstr(o.get_name(*osm.get()), "unspecified way/area");
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("name", "foo"));
   tags.insert(osm_t::TagMap::value_type("highway", "residential"));
-  w.tags.replace(tags);
-  assert_cmpstr(o.get_name(), "residential road: \"foo\"");
+  w->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm.get()), "residential road: \"foo\"");
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("ref", "B217"));
   tags.insert(osm_t::TagMap::value_type("highway", "primary"));
-  w.tags.replace(tags);
-  assert_cmpstr(o.get_name(), "primary road: \"B217\"");
+  w->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm.get()), "primary road: \"B217\"");
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("building", "residential"));
   tags.insert(osm_t::TagMap::value_type("addr:housenumber", "42"));
-  w.tags.replace(tags);
-  assert_cmpstr(o.get_name(), "building housenumber 42");
+  w->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm.get()), "building housenumber 42");
 
+  relation_t *r = new relation_t();
+  osm->relation_attach(r);
+  osm_t::TagMap rtags;
+  rtags.insert(osm_t::TagMap::value_type("type", "associatedStreet"));
+  rtags.insert(osm_t::TagMap::value_type("name", "21 Jump Street"));
+  r->tags.replace(rtags);
+  r->members.push_back(member_t(object_t(w), nullptr));
+  // description should not have changed by now
+  assert_cmpstr(o.get_name(*osm.get()), "building housenumber 42");
+  r->members.push_back(member_t(object_t(w), "house"));
+  assert_cmpstr(o.get_name(*osm.get()), "building 21 Jump Street 42");
+
+  // addr:street takes precedence
   tags.insert(osm_t::TagMap::value_type("addr:street", "Highway to hell"));
-  w.tags.replace(tags);
-  assert_cmpstr(o.get_name(), "building Highway to hell 42");
+  w->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm.get()), "building Highway to hell 42");
 }
 
 static void test_relation_members()

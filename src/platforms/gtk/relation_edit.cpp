@@ -428,10 +428,11 @@ relation_list_changed(GtkTreeSelection *selection, gpointer userdata) {
 }
 
 struct member_context_t {
-  member_context_t(const relation_t *r, GtkWidget *d)
-    : relation(r), dialog(d) {}
+  member_context_t(const relation_t *r, osm_t::ref o, GtkWidget *d)
+    : relation(r), dialog(d), osm(o) {}
   const relation_t * const relation;
   GtkWidget * const dialog;
+  osm_t::ref osm;
 };
 
 enum {
@@ -463,7 +464,8 @@ member_list_selection_func(GtkTreeSelection *, GtkTreeModel *model,
 
 struct members_list_functor {
   GtkListStore * const store;
-  explicit members_list_functor(GtkListStore *s) : store(s) {}
+  osm_t::ref osm;
+  explicit members_list_functor(GtkListStore *s, osm_t::ref o) : store(s), osm(o) {}
   void operator()(const member_t &member);
 };
 
@@ -474,7 +476,7 @@ void members_list_functor::operator()(const member_t &member)
   const std::string &id = member.object.id_string();
 
   /* try to find something descriptive */
-  const std::string &name = member.object.is_real() ? member.object.get_name() : std::string();
+  const std::string &name = member.object.is_real() ? member.object.get_name(*osm.get()) : std::string();
 
   /* Append a row and fill in some data */
   gtk_list_store_append(store, &iter);
@@ -544,14 +546,14 @@ static GtkWidget *member_list_widget(member_context_t &context) {
   gtk_tree_view_set_model(view, GTK_TREE_MODEL(store));
 
   std::for_each(context.relation->members.begin(), context.relation->members.end(),
-                members_list_functor(store));
+                members_list_functor(store, context.osm));
 
   gtk_box_pack_start(GTK_BOX(vbox), scrollable_container(GTK_WIDGET(view)), TRUE, TRUE, 0);
 
   return vbox;
 }
 
-void relation_show_members(GtkWidget *parent, const relation_t *relation) {
+void relation_show_members(GtkWidget *parent, const relation_t *relation, osm_t::ref osm) {
   const char *str = relation->tags.get_value("name");
   if(!str)
     str = relation->tags.get_value("ref");
@@ -560,7 +562,7 @@ void relation_show_members(GtkWidget *parent, const relation_t *relation) {
                 g_strdup_printf(_("Members of relation #" ITEM_ID_FORMAT), relation->id) :
                 g_strdup_printf(_("Members of relation \"%s\""), str));
 
-  member_context_t mcontext(relation,
+  member_context_t mcontext(relation, osm,
                             gtk_dialog_new_with_buttons(nstr.get(), GTK_WINDOW(parent),
                                                         GTK_DIALOG_MODAL,
                                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
@@ -585,7 +587,7 @@ static void on_relation_members(relation_context_t *context) {
   relation_t *sel = get_selected_relation(context);
 
   if(sel != nullptr)
-    relation_show_members(context->dialog.get(), sel);
+    relation_show_members(context->dialog.get(), sel, context->osm);
 }
 
 /* user clicked "select" button in relation list */

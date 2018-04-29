@@ -31,6 +31,6 @@ void relation_membership_dialog(osm2go_platform::Widget *parent, const presets_i
                                 osm_t::ref osm, object_t &object);
 
 void relation_list(osm2go_platform::Widget *parent, map_t *map, osm_t::ref osm, presets_items *presets);
-void relation_show_members(osm2go_platform::Widget *parent, const relation_t *relation);
+void relation_show_members(osm2go_platform::Widget *parent, const relation_t *relation, osm_t::ref osm);
 
 #endif // RELATION_EDIT_H

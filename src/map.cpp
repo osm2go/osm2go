@@ -61,8 +61,9 @@ canvas_item_t *map_item_chain_t::firstCanvasItem() const {
   return map_items.front()->item;
 }
 
-static void map_statusbar(const std::unique_ptr<MainUi> &uicontrol, const object_t &object) {
-  const std::string &str = object.get_name();
+static void map_statusbar(const std::unique_ptr<MainUi> &uicontrol, const object_t &object,
+                          osm_t::ref osm) {
+  const std::string &str = object.get_name(*osm.get());
   MainUi::NotificationFlags flags = object.obj->tags.hasTagCollisions() ?
                                     MainUi::Highlight : MainUi::NoFlags;
   uicontrol->showNotification(str.c_str(), flags);
@@ -102,7 +103,7 @@ static void map_node_select(map_t *map, node_t *node) {
   else
     map_item->item = nullptr;
 
-  map_statusbar(map->appdata.uicontrol, map_item->object);
+  map_statusbar(map->appdata.uicontrol, map_item->object, map->appdata.project->osm);
   map->appdata.iconbar->map_item_selected(map_item->object);
 
   /* highlight node */
@@ -239,7 +240,7 @@ void map_t::select_way(way_t *way) {
   map_item->highlight = false;
   map_item->item      = way->map_item_chain->firstCanvasItem();
 
-  map_statusbar(appdata.uicontrol, map_item->object);
+  map_statusbar(appdata.uicontrol, map_item->object, appdata.project->osm);
   appdata.iconbar->map_item_selected(map_item->object);
   appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_MAP_HIDE_SEL, true);
 
@@ -326,7 +327,7 @@ void map_t::select_relation(relation_t *relation) {
   selected.highlight = false;
   selected.item = nullptr;
 
-  map_statusbar(appdata.uicontrol, selected.object);
+  map_statusbar(appdata.uicontrol, selected.object, appdata.project->osm);
   appdata.iconbar->map_item_selected(selected.object);
 
   /* process all members */
