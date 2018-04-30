@@ -2176,10 +2176,9 @@ void tag_list_t::clear()
 void tag_list_t::replace(std::vector<tag_t> &ntags)
 {
   clear();
-  if(ntags.empty()) {
-    contents = nullptr;
+  if(ntags.empty())
     return;
-  }
+
 #if __cplusplus >= 201103L
   contents = new std::vector<tag_t>(std::move(ntags));
   contents->shrink_to_fit();
