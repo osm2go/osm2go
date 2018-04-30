@@ -1965,6 +1965,19 @@ struct relation_member_functor {
            std::find(it.second->members.begin(), it.second->members.end(), member) != it.second->members.end(); }
 };
 
+struct pt_relation_member_functor {
+  const member_t member;
+  const char * const type;
+  const char * const stop_area;
+  pt_relation_member_functor(const char *r, const object_t &o)
+    : member(o, r), type(value_cache.insert("public_transport"))
+    , stop_area(value_cache.insert("stop_area")) {}
+  bool operator()(const std::pair<item_id_t, relation_t *> &it) const
+  { return it.second->tags.get_value("type") == type &&
+           it.second->tags.get_value("public_transport") == stop_area &&
+           std::find(it.second->members.begin(), it.second->members.end(), member) != it.second->members.end(); }
+};
+
 /* try to get an as "speaking" description of the object as possible */
 std::string object_t::get_name(const osm_t &osm) const {
   std::string ret;
@@ -2047,6 +2060,21 @@ std::string object_t::get_name(const osm_t &osm) const {
     }
   }
 
+  if(typestr == nullptr) {
+    typestr = obj->tags.get_value("public_transport");
+
+    if(name == nullptr && typestr != nullptr) {
+      const char *ptkey = strcmp(typestr, "stop_position") == 0 ? "stop" :
+                          strcmp(typestr, "platform") == 0 ? typestr :
+                          nullptr;
+      if(ptkey != nullptr) {
+        const relation_t *stoparea = osm.find_relation(pt_relation_member_functor(ptkey, *this));
+        if(stoparea != nullptr)
+          name = stoparea->tags.get_value("name");
+      }
+    }
+  }
+
   if(typestr) {
     assert(ret.empty());
     ret = typestr;
@@ -2059,7 +2087,7 @@ std::string object_t::get_name(const osm_t &osm) const {
     ret += name;
     ret += '"';
   } else if(ret.empty()) {
-    ret = "unspecified ";
+    ret = _("unspecified ");
     ret += type_string();
   }
 

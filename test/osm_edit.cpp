@@ -1396,7 +1396,12 @@ static void test_description()
   object_t o(n);
   assert_cmpstr(o.get_name(*osm.get()), "unspecified node");
 
+  // test the other "unspecified" code path: tags, but no known ones
   osm_t::TagMap tags;
+  tags.insert(osm_t::TagMap::value_type("source", "bong"));
+  n->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm.get()), "unspecified node");
+
   tags.insert(osm_t::TagMap::value_type("name", "foo"));
 
   n->tags.replace(tags);
@@ -1426,6 +1431,20 @@ static void test_description()
   w->tags.replace(tags);
   assert_cmpstr(o.get_name(*osm.get()), "primary road: \"B217\"");
 
+  // building without address given
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("building", "residential"));
+  w->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm.get()), "building");
+
+  tags.insert(osm_t::TagMap::value_type("addr:housename", "Baskerville Hall"));
+  w->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm.get()), "building: \"Baskerville Hall\"");
+  // name is favored over addr:housename
+  tags.insert(osm_t::TagMap::value_type("name", "Brook Hall"));
+  w->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm.get()), "building: \"Brook Hall\"");
+
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("building", "residential"));
   tags.insert(osm_t::TagMap::value_type("addr:housenumber", "42"));
@@ -1448,6 +1467,34 @@ static void test_description()
   tags.insert(osm_t::TagMap::value_type("addr:street", "Highway to hell"));
   w->tags.replace(tags);
   assert_cmpstr(o.get_name(*osm.get()), "building Highway to hell 42");
+
+  // check PTv2 relation naming
+  r = new relation_t();
+  osm->relation_attach(r);
+  rtags.clear();
+  rtags.insert(osm_t::TagMap::value_type("type", "public_transport"));
+  rtags.insert(osm_t::TagMap::value_type("public_transport", "stop_area"));
+  rtags.insert(osm_t::TagMap::value_type("name", "Kröpcke"));
+  r->tags.replace(rtags);
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("public_transport", "platform"));
+  o = n;
+  n->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm.get()), "platform");
+
+  // wrong role
+  r->members.push_back(member_t(o, nullptr));
+  assert_cmpstr(o.get_name(*osm.get()), "platform");
+
+  // correct role
+  r->members.push_back(member_t(o, "platform"));
+  assert_cmpstr(o.get_name(*osm.get()), "platform: \"Kröpcke\"");
+
+  // local name takes precedence
+  tags.insert(osm_t::TagMap::value_type("name", "Kroepcke"));
+  n->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm.get()), "platform: \"Kroepcke\"");
 }
 
 static void test_relation_members()
