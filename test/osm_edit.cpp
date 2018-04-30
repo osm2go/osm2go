@@ -1420,6 +1420,19 @@ static void test_description()
   assert_cmpstr(o.get_name(*osm.get()), "unspecified way/area");
 
   tags.clear();
+  tags.insert(osm_t::TagMap::value_type("highway", "pedestrian"));
+  w->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm.get()), _("pedestrian way"));
+  tags.insert(osm_t::TagMap::value_type("area", "yes"));
+  w->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm.get()), _("pedestrian area"));
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("highway", "construction"));
+  w->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm.get()), _("road/street under construction"));
+
+  tags.clear();
   tags.insert(osm_t::TagMap::value_type("name", "foo"));
   tags.insert(osm_t::TagMap::value_type("highway", "residential"));
   w->tags.replace(tags);

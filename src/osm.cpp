@@ -2016,15 +2016,15 @@ std::string object_t::get_name(const osm_t &osm) const {
           street = astreet->tags.get_value("name");
       }
       if(street) {
-        ret = "building ";
+        ret = _("building ");
         ret += street;
         ret +=' ';
       } else {
-        ret = "building housenumber ";
+        ret = _("building housenumber ");
       }
       ret += hn;
     } else {
-      typestr = "building";
+      typestr = _("building");
       if(!name)
         name = obj->tags.get_value("addr:housename");
     }
@@ -2048,11 +2048,15 @@ std::string object_t::get_name(const osm_t &osm) const {
       }
 
       else if(!strcmp(highway, "pedestrian")) {
-        typestr = "pedestrian way/area";
+        const char *area = obj->tags.get_value("area");
+        if(area != nullptr && strcmp(area, "yes") == 0)
+          typestr = _("pedestrian area");
+        else
+          typestr = _("pedestrian way");
       }
 
       else if(!strcmp(highway, "construction")) {
-        typestr = "road/street under construction";
+        typestr = _("road/street under construction");
       }
 
       else
