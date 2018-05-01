@@ -78,7 +78,7 @@ GtkWidget *osm2go_platform::entry_new(osm2go_platform::EntryFlags)
 
 bool osm2go_platform::isEntryWidget(GtkWidget *widget)
 {
-  return G_OBJECT_TYPE(widget) == GTK_TYPE_ENTRY;
+  return GTK_IS_ENTRY(widget) == TRUE;
 }
 
 GtkWidget *osm2go_platform::button_new_with_label(const char *label)
@@ -93,7 +93,7 @@ GtkWidget *osm2go_platform::check_button_new_with_label(const char *label)
 
 bool osm2go_platform::isCheckButtonWidget(GtkWidget *widget)
 {
-  return G_OBJECT_TYPE(widget) == GTK_TYPE_CHECK_BUTTON;
+  return GTK_IS_CHECK_BUTTON(widget) == TRUE;
 }
 
 void osm2go_platform::check_button_set_active(GtkWidget *button, bool active)
@@ -142,12 +142,12 @@ std::string osm2go_platform::combo_box_get_active_text(GtkWidget *cbox)
 
 bool osm2go_platform::isComboBoxWidget(GtkWidget *widget)
 {
-  return G_OBJECT_TYPE(widget) == GTK_TYPE_COMBO_BOX;
+  return GTK_IS_COMBO_BOX(widget) == TRUE;
 }
 
 bool osm2go_platform::isComboBoxEntryWidget(GtkWidget *widget)
 {
-  return G_OBJECT_TYPE(widget) == GTK_TYPE_COMBO_BOX_ENTRY;
+  return GTK_IS_COMBO_BOX_ENTRY(widget) == TRUE;
 }
 
 void osm2go_platform::setEntryText(GtkEntry *entry, const char *text, const char *placeholder)
