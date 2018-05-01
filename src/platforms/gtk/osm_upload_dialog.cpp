@@ -365,19 +365,18 @@ void osm_upload(appdata_t &appdata, project_t *project) {
   context.upload(dirty);
 
   if(project->data_dirty) {
-    bool reload_map = false;
     context.append_str(_("Server data has been modified.\nDownloading updated osm data ...\n"));
 
-    if(osm_download(dialog.get(), project)) {
+    bool reload_map = osm_download(dialog.get(), project);
+    if(likely(reload_map)) {
       context.append_str(_("Download successful!\nThe map will be reloaded.\n"));
       project->data_dirty = false;
-      reload_map = true;
     } else
       context.append_str(_("Download failed!\n"));
 
     project->save(dialog.get());
 
-    if(reload_map) {
+    if(likely(reload_map)) {
       /* this kind of rather brute force reload is useful as the moment */
       /* after the upload is a nice moment to bring everything in sync again. */
       /* we basically restart the entire map with fresh data from the server */
@@ -385,7 +384,7 @@ void osm_upload(appdata_t &appdata, project_t *project) {
 
       context.append_str(_("Reloading map ...\n"));
 
-      if(!appdata.project->osm->is_clean(false))
+      if(unlikely(!appdata.project->osm->is_clean(false)))
         context.append_str(_("*** DIFF IS NOT CLEAN ***\nSomething went wrong during "
                              "upload,\nproceed with care!\n"), COLOR_ERR);
 
