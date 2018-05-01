@@ -317,7 +317,7 @@ const std::vector<std::string> &userLangs()
   static std::vector<std::string> lcodes;
   if(lcodes.empty()) {
     const char *lcm = getenv("LC_MESSAGES");
-    if(!lcm)
+    if(lcm == nullptr || *lcm == '\0')
       lcm = getenv("LANG");
     if(lcm && *lcm) {
       std::string lc = lcm;
