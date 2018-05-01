@@ -362,7 +362,7 @@ void osm_upload(appdata_t &appdata, project_t *project) {
                      TRUE, TRUE, 0);
   gtk_widget_show_all(dialog.get());
 
-  osm_do_upload(context, dirty);
+  context.upload(dirty);
 
   if(project->data_dirty) {
     bool reload_map = false;

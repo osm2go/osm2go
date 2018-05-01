@@ -52,8 +52,8 @@ public:
 
   void append_str(const char *msg, const char *colorname = nullptr) __attribute__((nonnull(2)));
   void appendf(const char *colname, const char *fmt, ...) __attribute__((format (printf, 3, 4))) __attribute__((nonnull(3)));
-};
 
-void osm_do_upload(osm_upload_context_t &context, const osm_t::dirty_t &dirty);
+  void upload(const osm_t::dirty_t &dirty);
+};
 
 #endif /* OSM_API_P_H */
