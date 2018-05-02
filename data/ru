@@ -17,126 +17,98 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "gps.h"
+#include "dbus.h"
 
-#include "settings.h"
+#include <libosso.h>
+#include <dbus/dbus-glib-lowlevel.h>
 
-#include <cmath>
-#include <cstdio>
-#include <cstring>
+#define MM_DBUS_SERVICE "com.gnuite.maemo_mapper"
+#define MM_DBUS_PATH "/com/gnuite/maemo_mapper"
+#define MM_DBUS_INTERFACE "com.gnuite.maemo_mapper"
+
 #include <glib.h>
-#include <location/location-gps-device.h>
-#include <location/location-gpsd-control.h>
+#include <dbus/dbus-glib.h>
 
-#include <osm2go_cpp.h>
+static dbus_mm_pos_t mmpos;
+static osso_context_t *osso_context;
 
-class gps_liblocation_state_t : public gps_state_t {
-public:
-  gps_liblocation_state_t(GpsCallback cb, void *context);
-  virtual ~gps_liblocation_state_t();
+static DBusHandlerResult
+signal_filter(G_GNUC_UNUSED DBusConnection *connection, DBusMessage *message, G_GNUC_UNUSED void *user_data) {
+  if(dbus_message_is_signal(message, MM_DBUS_SERVICE, "view_position_changed")) {
+    DBusError error;
+#ifdef USE_FLOAT
+    double lat, lon;
+    double *latp = &lat, *lonp = &lon;
+#else
+    double *latp = &mmpos.pos.lat, *lonp = &mmpos.pos.lon;
+#endif
+    dbus_error_init(&error);
 
-  virtual pos_t get_pos(float *alt = nullptr) override;
-  virtual void setEnable(bool) override;
+    if(dbus_message_get_args(message, &error,
+			     DBUS_TYPE_DOUBLE, latp,
+			     DBUS_TYPE_DOUBLE, lonp,
+			     DBUS_TYPE_INT32,  &mmpos.zoom,
+			     DBUS_TYPE_INVALID)) {
 
-  void updateCallback();
+      g_print("MM: position received: %f/%f, zoom = %d\n",
+              (float)*latp, (float)*lonp, mmpos.zoom);
 
-  LocationGPSDevice * const device;
-  LocationGPSDControl * const control;
-  bool gps_is_on;
-  guint idd_changed;
+      /* store position for further processing */
+#ifdef USE_FLOAT
+      mmpos.pos.lat = lat;
+      mmpos.pos.lon = lon;
+#endif
+      mmpos.valid = TRUE;
 
-  bool fix;
-  bool enabled;
-  pos_t pos;
-  float altitude;
-};
-
-pos_t gps_liblocation_state_t::get_pos(float* alt)
-{
-  if(enabled && fix) {
-    if(alt)
-      *alt = altitude;
-
-    return pos;
-  } else {
-    return pos_t(NAN, NAN);
-  }
-}
-
-static void
-location_changed(gps_liblocation_state_t *gps_state) {
-  gps_state->updateCallback();
-}
-
-void gps_liblocation_state_t::updateCallback()
-{
-  fix = (device->fix->fields & LOCATION_GPS_DEVICE_LATLONG_SET);
-
-  if(fix) {
-    pos.lat = device->fix->latitude;
-    pos.lon = device->fix->longitude;
-  }
-
-  if(device->fix->fields & LOCATION_GPS_DEVICE_ALTITUDE_SET)
-    altitude = device->fix->altitude;
-  else
-    altitude = NAN;
-
-  if(!callback(cb_context))
-    setEnable(false);
-}
-
-gps_state_t *gps_state_t::create(GpsCallback cb, void *context) {
-  return new gps_liblocation_state_t(cb, context);
-}
-
-gps_liblocation_state_t::gps_liblocation_state_t(GpsCallback cb, void *context)
-  : gps_state_t(cb, context)
-  , device(static_cast<LocationGPSDevice *>(g_object_new(LOCATION_TYPE_GPS_DEVICE, nullptr)))
-  , control(location_gpsd_control_get_default())
-  , gps_is_on(false)
-  , fix(false)
-  , enabled(false)
-{
-  g_debug("GPS init: Using liblocation");
-
-  if(!device) {
-    g_warning("Unable to connect to liblocation");
-    return;
-  }
-
-  idd_changed = g_signal_connect_swapped(device, "changed",
-                                         G_CALLBACK(location_changed), this);
-}
-
-gps_liblocation_state_t::~gps_liblocation_state_t()
-{
-  if(!device)
-    return;
-
-  if(control) {
-    g_debug("Having control over GPSD and its running, stopping it");
-    if(gps_is_on)
-      location_gpsd_control_stop(control);
-  }
-
-  /* Disconnect signal */
-  g_signal_handler_disconnect(device, idd_changed);
-}
-
-void gps_liblocation_state_t::setEnable(bool en)
-{
-  if(en != gps_is_on) {
-    if(device && control) {
-      if(en) {
-        g_debug("starting gpsd");
-        location_gpsd_control_start(control);
-      } else {
-        g_debug("stopping gpsd");
-        location_gpsd_control_stop(control);
-      }
-      gps_is_on = en;
+    } else {
+      g_print("  Error getting message: %s\n", error.message);
+      dbus_error_free (&error);
     }
+    return DBUS_HANDLER_RESULT_HANDLED;
   }
-  enabled = en;
+
+  return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+}
+
+/* only the screen is refreshed, useful if e.g. the poi database changed */
+gboolean dbus_mm_set_position(dbus_mm_pos_t *mmp) {
+  osso_rpc_t retval;
+
+  mmpos.valid = FALSE;
+
+  osso_return_t ret = osso_rpc_run(osso_context,
+		     MM_DBUS_SERVICE,
+		     MM_DBUS_PATH,
+		     MM_DBUS_INTERFACE,
+		     "set_view_center",
+		     &retval,
+		     DBUS_TYPE_INVALID);
+
+  osso_rpc_free_val(&retval);
+
+  *mmp = mmpos;
+
+  return(ret == OSSO_OK);
+}
+
+gboolean dbus_register(osso_context_t *ctx) {
+  DBusConnection *bus;
+  DBusError error;
+
+  dbus_error_init (&error);
+  bus = dbus_bus_get(DBUS_BUS_SESSION, &error);
+  if(!bus) {
+    g_warning("Failed to connect to the D-BUS daemon: %s", error.message);
+    dbus_error_free(&error);
+    return FALSE;
+  }
+  dbus_connection_setup_with_g_main(bus, NULL);
+
+  /* listening to messages from all objects as no path is specified */
+  dbus_bus_add_match(bus, "type='signal',interface='"MM_DBUS_INTERFACE"'", &error);
+  dbus_connection_add_filter(bus, signal_filter, NULL, NULL);
+
+  osso_context = ctx;
+
+  return TRUE;
 }
