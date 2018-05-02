@@ -232,7 +232,7 @@ static bool inpoly(const canvas_item_info_poly *poly, int x, int y) {
       y2 = yold;
     }
     if ((xnew < x) == (x <= xold)          /* edge "open" at one end */
-        && (y - y1) * (long)(x2 - x1) < (y2 - y1) * (long)(x - x1))
+        && (y - y1) * static_cast<long>(x2 - x1) < (y2 - y1) * static_cast<long>(x - x1))
       inside = !inside;
 
     xold = xnew;

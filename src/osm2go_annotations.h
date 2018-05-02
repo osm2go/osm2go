@@ -80,7 +80,7 @@ public:
        do { \
          const typeof(a) ca = a; \
          const typeof(b) cb = b; \
-         if (unlikely(!(ca op (typeof(a))cb))) { \
+         if (unlikely(!(ca op static_cast<typeof(a)>(cb)))) { \
            __builtin_constant_p(b) ? \
              assert_num_tpl<typeof(ca)>(a,    #a, #op, #b, __FILE__, __PRETTY_FUNCTION__, __LINE__) : \
              assert_num_tpl<typeof(ca)>(a, b, #a, #op, #b, __FILE__, __PRETTY_FUNCTION__, __LINE__); \

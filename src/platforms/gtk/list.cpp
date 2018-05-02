@@ -161,9 +161,9 @@ bool list_get_selected(GtkWidget *list, GtkTreeModel **model, GtkTreeIter *iter)
     retval = gtk_tree_model_get_iter(*model, iter, static_cast<GtkTreePath *>(slist->data)) == TRUE;
 
 #if GLIB_CHECK_VERSION(2,28,0)
-  g_list_free_full(slist, (GDestroyNotify)gtk_tree_path_free);
+  g_list_free_full(slist, reinterpret_cast<GDestroyNotify>(gtk_tree_path_free));
 #else
-  g_list_foreach(slist, (GFunc)gtk_tree_path_free, nullptr);
+  g_list_foreach(slist, reinterpret_cast<GFunc>(gtk_tree_path_free), nullptr);
   g_list_free(slist);
 #endif
 
