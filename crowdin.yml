@@ -1,0 +1,3 @@
+files:
+  - source: src
+    translation: /data/%two_letters_code%
