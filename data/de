@@ -17,643 +17,579 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* make sure strptime() is defined */
-#ifndef __USE_XOPEN
-#define _XOPEN_SOURCE 600
-#endif
-
-#include "track.h"
+#include "wms.h"
+#include "wms_p.h"
 
 #include "appdata.h"
 #include "fdguard.h"
-#include "gps.h"
 #include "map.h"
+#include "net_io.h"
+#include "notifications.h"
 #include "project.h"
 #include "settings.h"
 #include "uicontrol.h"
 #include "xml_helpers.h"
 
+#include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstring>
-#include <ctime>
-#include <fcntl.h>
-#include <glib.h>
-#include <gtk/gtk.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <map>
 #include <strings.h>
-#include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
+
+#include "osm2go_annotations.h"
+#include "osm2go_stl.h"
+#include <osm2go_i18n.h>
 
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"
 #endif
 
-#include <algorithm>
-
-#include "osm2go_annotations.h"
-#include <osm2go_cpp.h>
-#include <osm2go_i18n.h>
-#include <osm2go_stl.h>
-
-/* format string used to altitude and time */
-#define ALT_FORMAT  "%.02f"
-#define DATE_FORMAT "%FT%T"
-
-class TrackSax {
-  xmlSAXHandler handler;
-  track_point_t *curPoint;
-
-  enum State {
-    DocStart,
-    TagGpx,
-    TagTrk,
-    TagTrkSeg,
-    TagTrkPt,
-    TagTime,
-    TagEle
-  };
-
-  State state;
-
-  struct StateChange {
-    StateChange(const char *nm, State os, State ns)
-      : name(nm), oldState(os), newState(ns) {}
-    const char *name;
-    State oldState;
-    State newState;
-  };
-
-  typedef std::vector<StateChange> StateMap;
-  StateMap tags;
-
-  // custom find to avoid memory allocations for std::string
-  struct tag_find {
-    const char * const name;
-    explicit tag_find(const xmlChar *n) : name(reinterpret_cast<const char *>(n)) {}
-    bool operator()(const StateMap::value_type &p) {
-      return (strcmp(p.name, name) == 0);
-    }
-  };
-
-public:
-  TrackSax();
-
-  bool parse(const char *filename);
-
-  track_t *track;
-  std::vector<track_point_t>::size_type points;  ///< total points
-
-private:
-  void characters(const char *ch, int len);
-  static void cb_characters(void *ts, const xmlChar *ch, int len) {
-    static_cast<TrackSax *>(ts)->characters(reinterpret_cast<const char *>(ch), len);
-  }
-  void startElement(const xmlChar *name, const xmlChar **attrs);
-  static void cb_startElement(void *ts, const xmlChar *name, const xmlChar **attrs) {
-    static_cast<TrackSax *>(ts)->startElement(name, attrs);
-  }
-  void endElement(const xmlChar *name);
-  static void cb_endElement(void *ts, const xmlChar *name) {
-    static_cast<TrackSax *>(ts)->endElement(name);
+struct charcmp {
+  inline bool operator()(const char *a, const char *b) const {
+    return g_strcmp0(a, b) < 0;
   }
 };
 
-/* make menu represent the track state */
-void track_menu_set(appdata_t &appdata) {
-  if(unlikely(appdata_t::window == nullptr))
-    return;
+typedef std::map<const char *, WmsImageFormat, charcmp> FormatMap;
+static FormatMap ImageFormats;
+static std::map<WmsImageFormat, const char *> ImageFormatExtensions;
 
-  bool present = static_cast<bool>(appdata.track.track);
-
-  /* if a track is present, then it can be cleared or exported */
-  appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_TRACK_CLEAR, present);
-  appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_TRACK_EXPORT, present);
-}
-
-static track_t *track_read(const char *filename, bool dirty) {
-  printf("============================================================\n");
-  printf("loading track %s\n", filename);
-
-  TrackSax sx;
-  if(unlikely(!sx.parse(filename))) {
-    delete sx.track;
-    printf("track was empty/invalid track\n");
-    return nullptr;
-  }
-
-  sx.track->dirty = dirty;
-  printf("Track is %sdirty.\n", dirty?"":"not ");
-  printf("%zu points in %zu segments\n", sx.points, sx.track->segments.size());
-
-  return sx.track;
-}
-
-/* ----------------------  saving track --------------------------- */
-
-struct track_save_segs {
-  xmlNodePtr const node;
-  explicit track_save_segs(xmlNodePtr n) : node(n) {}
-
-  struct save_point {
-    xmlNodePtr const node;
-    explicit save_point(xmlNodePtr n) : node(n) {}
-    void operator()(const track_point_t &point);
-  };
-
-  void operator()(const track_seg_t &seg) {
-    xmlNodePtr node_seg = xmlNewChild(node, nullptr, BAD_CAST "trkseg", nullptr);
-    std::for_each(seg.track_points.begin(), seg.track_points.end(),
-                  save_point(node_seg));
-  }
-};
-
-void track_save_segs::save_point::operator()(const track_point_t &point)
+static void initImageFormats()
 {
-  char str[G_ASCII_DTOSTR_BUF_SIZE];
+  ImageFormats["image/png"] = WMS_FORMAT_PNG;
+  ImageFormats["image/gif"] = WMS_FORMAT_GIF;
+  ImageFormats["image/jpg"] = WMS_FORMAT_JPG;
+  ImageFormats["image/jpeg"] = WMS_FORMAT_JPEG;
 
-  xmlNodePtr node_point = xmlNewChild(node, nullptr, BAD_CAST "trkpt", nullptr);
-
-  point.pos.toXmlProperties(node_point);
-
-  if(!std::isnan(point.altitude)) {
-    g_ascii_formatd(str, sizeof(str), ALT_FORMAT, point.altitude);
-    xmlNewTextChild(node_point, nullptr, BAD_CAST "ele", BAD_CAST str);
-  }
-
-  if(likely(point.time)) {
-    struct tm loctime;
-    localtime_r(&point.time, &loctime);
-    strftime(str, sizeof(str), DATE_FORMAT, &loctime);
-    xmlNewTextChild(node_point, nullptr, BAD_CAST "time", BAD_CAST str);
-  }
+  ImageFormatExtensions[WMS_FORMAT_PNG] = "png";
+  ImageFormatExtensions[WMS_FORMAT_GIF] = "gif";
+  ImageFormatExtensions[WMS_FORMAT_JPG] = "jpg";
+  ImageFormatExtensions[WMS_FORMAT_JPEG] = "jpg";
 }
 
-/**
- * @brief write the track information to a GPX file
- * @param name the filename to write to
- * @param track the track data to write
- * @param doc previous xml
- *
- * If doc is given, the last track in doc is updated and all remaining ones
- * are appended. If doc is nullptr all tracks are saved.
- *
- * doc is freed.
- */
-static void track_write(const char *name, const track_t *track, xmlDoc *d) {
-  printf("writing track to %s\n", name);
-
-  xmlNodePtr trk_node;
-  std::vector<track_seg_t>::const_iterator it = track->segments.begin();
-  std::vector<track_seg_t>::const_iterator itEnd = track->segments.end();
-  std::unique_ptr<xmlDoc, xmlDocDelete> doc(d);
-  if(doc) {
-    xmlNodePtr cur_node;
-    xmlNodePtr root_node = xmlDocGetRootElement(doc.get());
-    bool err = false;
-    if (unlikely(!root_node || root_node->type != XML_ELEMENT_NODE ||
-                   strcasecmp(reinterpret_cast<const char *>(root_node->name), "gpx") != 0)) {
-      err = true;
-    } else {
-      cur_node = root_node->children;
-      while(cur_node && cur_node->type != XML_ELEMENT_NODE)
-        cur_node = cur_node->next;
-      if(unlikely(!cur_node || !cur_node->children ||
-                    strcasecmp(reinterpret_cast<const char *>(cur_node->name), "trk") != 0)) {
-        err = true;
-      } else {
-        trk_node = cur_node;
-        /* assume that at most the last segment in the file was modified */
-        for (cur_node = cur_node->children; cur_node->next; cur_node = cur_node->next) {
-          // skip non-nodes, e.g. if the user inserted a comment
-          if (cur_node->type != XML_ELEMENT_NODE)
-            continue;
-          // more tracks in the file than loaded, something is wrong
-          if(unlikely(it == itEnd)) {
-            err = true;
-            break;
-          }
-          /* something else, this track is not written from osm2go */
-          if(unlikely(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "trkseg") != 0)) {
-            err = true;
-            break;
-          }
-          it++;
-        }
-      }
-    }
-    if(unlikely(err)) {
-      doc.reset();
-    } else {
-      /* drop the last entry from XML, it will be rewritten */
-      xmlUnlinkNode(cur_node);
-      xmlFreeNode(cur_node);
-    }
-  }
-
-  if (!doc) {
-    doc.reset(xmlNewDoc(BAD_CAST "1.0"));
-    xmlNodePtr root_node = xmlNewNode(nullptr, BAD_CAST "gpx");
-    xmlNewProp(root_node, BAD_CAST "xmlns",
-               BAD_CAST "http://www.topografix.com/GPX/1/0");
-    xmlNewProp(root_node, BAD_CAST "creator", BAD_CAST PACKAGE " v" VERSION);
-    it = track->segments.begin();
-
-    trk_node = xmlNewChild(root_node, nullptr, BAD_CAST "trk", nullptr);
-    xmlDocSetRootElement(doc.get(), root_node);
-  }
-
-  std::for_each(it, itEnd, track_save_segs(trk_node));
-
-  xmlSaveFormatFileEnc(name, doc.get(), "UTF-8", 1);
-}
-
-/* save track in project */
-void track_save(project_t *project, track_t *track) {
-  if(!project) return;
-
-  /* no need to save again if it has already been saved */
-  if(track && !track->dirty) {
-    printf("track is not dirty, no need to save it (again)\n");
-    return;
-  }
-
-  const std::string trkfname = project->name + ".trk";
-
-  if(!track) {
-    unlinkat(project->dirfd, trkfname.c_str(), 0);
-    return;
-  }
-
-  /* check if there already is such a diff file and make it a backup */
-  /* in case new diff saving fails */
-  const char *backupfn = "backup.trk";
-  xmlDocPtr doc = nullptr;
-
-  struct stat st;
-  if(fstatat(project->dirfd, trkfname.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode)) {
-    printf("backing up existing file '%s' to '%s'\n", trkfname.c_str(), backupfn);
-    if(renameat(project->dirfd, trkfname.c_str(), project->dirfd, backupfn) == 0) {
-      /* parse the old file and get the DOM */
-      fdguard bupfd(project->dirfd, backupfn, O_RDONLY);
-      if(likely(bupfd.valid()))
-        doc = xmlReadFd(bupfd, nullptr, nullptr, XML_PARSE_NONET);
-    }
-  }
-
-  const std::string trk_name = project->path + trkfname;
-  track_write(trk_name.c_str(), track, doc);
-  track->dirty = false;
-
-  /* if we reach this point writing the new file worked and we */
-  /* can delete the backup */
-  unlinkat(project->dirfd, backupfn, 0);
-}
-
-void track_export(const track_t *track, const char *filename) {
-  track_write(filename, track, nullptr);
-}
-
-/* ----------------------  loading track --------------------------- */
-
-bool track_restore(appdata_t &appdata) {
-  const project_t *project = appdata.project.get();
-
-  /* first try to open a backup which is only present if saving the */
-  /* actual diff didn't succeed */
-  const char *backupfn = "backup.trk";
-  std::string trk_name;
-
-  bool ret = true;
-  struct stat st;
-  if(unlikely(fstatat(project->dirfd, backupfn, &st, 0) == 0 && S_ISREG(st.st_mode))) {
-    printf("track backup present, loading it instead of real track ...\n");
-    trk_name = project->path + backupfn;
-  } else {
-    // allocate in one go
-    trk_name = project->path + project->name + ".trk";
-
-    // use relative filename to test
-    if(fstatat(project->dirfd, trk_name.c_str() + project->path.size(), &st, 0) != 0 || !S_ISREG(st.st_mode)) {
-      printf("no track present!\n");
-      ret = false;
-    } else
-      printf("track found, loading ...\n");
-  }
-
-  if (ret) {
-    appdata.track.track.reset(track_read(trk_name.c_str(), false));
-    ret = static_cast<bool>(appdata.track.track);
-  }
-
-  track_menu_set(appdata);
-
-  printf("restored track\n");
-
-  return ret;
-}
-
-static void track_end_segment(std::unique_ptr<track_t> &track) {
-  if(!track) return;
-
-  if(track->active) {
-    printf("ending a segment\n");
-    track->active = false;
-
-    /* todo: check if segment only has 1 point */
-  }
-}
-
-/**
- * @brief append the new position to the current track
- * @param appdata application data
- * @param pos the new position
- * @param alt the new altitude
- * @returns if the position changed
- * @retval false if the GPS position marker needs to be redrawn (i.e. the position changed)
- */
-static bool track_append_position(appdata_t &appdata, const pos_t &pos, float alt, const lpos_t lpos) {
-  /* no track at all? might be due to a "clear track" while running */
-  if(unlikely(!appdata.track.track)) {
-    printf("restarting after \"clear\"\n");
-    appdata.track.track.reset(new track_t());
-  }
-  track_t * const track = appdata.track.track.get();
-
-  track_menu_set(appdata);
-
-  if(unlikely(!track->active)) {
-    printf("starting new segment\n");
-
-    track_seg_t seg;
-    track->segments.push_back(seg);
-    track->active = true;
-  } else
-    printf("appending to current segment\n");
-
-  track_seg_t &seg = track->segments.back();
-  std::vector<track_point_t> &points = seg.track_points;
-
-  /* don't append if point is the same as last time */
-  settings_t::ref settings = settings_t::instance();
-  bool ret;
-  if(unlikely(!points.empty() && points.back().pos == pos)) {
-    printf("same value as last point -> ignore\n");
-    ret = false;
-  } else {
-    ret = true;
-    track->dirty = true;
-    points.push_back(track_point_t(pos, alt, time(nullptr)));
-
-    if(settings->trackVisibility >= DrawCurrent) {
-      if(seg.item_chain.empty()) {
-        /* the segment can now be drawn for the first time */
-        printf("initial draw\n");
-        appdata.map->track_draw_seg(seg);
-      } else {
-        /* the segment has to be updated */
-        appdata.map->track_update_seg(seg);
-      }
-    }
-  }
-
-  if(settings->follow_gps) {
-    if(!appdata.map->scroll_to_if_offscreen(lpos)) {
-      if(!--appdata.track.warn_cnt) {
-        /* warn user once a minute that the current gps */
-        /* position is outside the working area */
-        appdata.uicontrol->showNotification(_("GPS position outside working area!"), MainUi::Brief);
-        appdata.track.warn_cnt = 60;  // warn again after one minute
-      }
-    } else
-      ret = true;
-  }
-
-  return ret;
-}
-
-static void track_do_disable_gps(appdata_t &appdata) {
-  settings_t::instance()->enable_gps = false;
-  appdata.gps_state->setEnable(false);
-
-  /* stopping the GPS removes the marker ... */
-  appdata.map->remove_gps_position();
-
-  /* ... and terminates the current segment if present */
-  track_end_segment(appdata.track.track);
-}
-
-int track_t::gps_position_callback(void *context) {
-  appdata_t &appdata = *static_cast<appdata_t *>(context);
-
-  /* ignore updates while no valid osm file is loaded, e.g. when switching */
-  /* projects */
-  if(unlikely(!appdata.project || !appdata.project->osm))
-    return 1;
-
-  /* the map is only gone of the main screen is being closed */
-  if(unlikely(!appdata.map)) {
-    printf("map has gone while tracking was active, stopping tracker\n");
-
-    appdata.gps_state->setEnable(false);
-
-    return 0;
-  }
-
-  settings_t::ref settings = settings_t::instance();
-  if(!settings->enable_gps) {
-    // Turn myself off gracefully.
-    track_do_disable_gps(appdata);
-    return 0;
-  }
-
-  float alt;
-  pos_t pos = appdata.gps_state->get_pos(&alt);
-  if(pos.valid()) {
-    printf("valid position %.6f/%.6f alt %.2f\n", pos.lat, pos.lon, alt);
-    lpos_t lpos;
-    lpos = pos.toLpos(appdata.project->osm->bounds);
-    if(track_append_position(appdata, pos, alt, lpos) && settings->trackVisibility >= ShowPosition)
-      appdata.map->track_pos(lpos);
-  } else {
-    printf("no valid position\n");
-    /* end segment */
-    track_end_segment(appdata.track.track);
-    appdata.map->remove_gps_position();
-  }
-
-  return 1;
-}
-
-static void track_do_enable_gps(appdata_t &appdata) {
-  settings_t::instance()->enable_gps = true;
-  appdata.gps_state->setEnable(true);
-  appdata.track.warn_cnt = 1;
-
-  if(!appdata.track.track) {
-    printf("GPS: no track yet, starting new one\n");
-    appdata.track.track.reset(new track_t());
-  } else
-    printf("GPS: extending existing track\n");
-}
-
-void track_enable_gps(appdata_t &appdata, bool enable) {
-  printf("request to %sable gps\n", enable?"en":"dis");
-
-  appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_TRACK_FOLLOW_GPS, enable);
-
-  if(enable) track_do_enable_gps(appdata);
-  else       track_do_disable_gps(appdata);
-}
-
-track_t *track_import(const char *filename) {
-  printf("import %s\n", filename);
-
-  return track_read(filename, true);
-}
-
-track_point_t::track_point_t()
-  : time(0)
-  , altitude(NAN)
-{
-  pos.lat = NAN;
-  pos.lon = NAN;
-}
-
-track_point_t::track_point_t(const pos_t &p, float alt, time_t t)
-  : pos(p)
-  , time(t)
-  , altitude(alt)
-{
-}
-
-TrackSax::TrackSax()
-  : curPoint(nullptr)
-  , state(DocStart)
-  , track(nullptr)
-  , points(0)
-{
-  memset(&handler, 0, sizeof(handler));
-  handler.characters = cb_characters;
-  handler.startElement = cb_startElement;
-  handler.endElement = cb_endElement;
-
-  tags.push_back(StateMap::value_type("gpx", DocStart, TagGpx));
-  tags.push_back(StateMap::value_type("trk", TagGpx, TagTrk));
-  tags.push_back(StateMap::value_type("trkseg", TagTrk, TagTrkSeg));
-  tags.push_back(StateMap::value_type("trkpt", TagTrkSeg, TagTrkPt));
-  tags.push_back(StateMap::value_type("time", TagTrkPt, TagTime));
-  tags.push_back(StateMap::value_type("ele", TagTrkPt, TagEle));
-}
-
-bool TrackSax::parse(const char *filename)
-{
-  if(unlikely(xmlSAXUserParseFile(&handler, this, filename) != 0))
+static bool wms_bbox_is_valid(const pos_area &bounds) {
+  /* all four coordinates are valid? */
+  if(unlikely(!bounds.valid()))
     return false;
 
-  return track && !track->segments.empty();
+  /* min/max span a useful range? */
+  if(unlikely(bounds.max.lat - bounds.min.lat < 0.1))
+    return false;
+  if(unlikely(bounds.max.lon - bounds.min.lon < 0.1))
+    return false;
+
+  return true;
 }
 
-void TrackSax::characters(const char *ch, int len)
-{
-  std::string buf;
+static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
+  wms_layer_t *wms_layer = nullptr;
+  xmlNode *cur_node = nullptr;
 
-  switch(state) {
-  case TagEle:
-    buf.assign(ch, len);
-    curPoint->altitude = xml_parse_float(reinterpret_cast<const xmlChar *>(buf.c_str()));
-    break;
-  case TagTime: {
-    buf.assign(ch, len);
-    struct tm time;
-    memset(&time, 0, sizeof(time));
-    time.tm_isdst = -1;
-    if(likely(strptime(buf.c_str(), DATE_FORMAT, &time) != nullptr))
-      curPoint->time = mktime(&time);
-    break;
-  }
-  default:
-    for(int pos = 0; pos < len; pos++)
-      if(unlikely(!isspace(ch[pos]))) {
-        printf("unhandled character data: %*.*s state %i\n", len, len, ch, state);
-        break;
-      }
-  }
-}
+  wms_layer = new wms_layer_t();
 
-void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
-{
-  StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(), tag_find(name));
-
-  if(unlikely(it == tags.end())) {
-    fprintf(stderr, "found unhandled element %s\n", name);
-    return;
-  }
-
-  if(unlikely(state != it->oldState)) {
-    fprintf(stderr, "found element %s in state %i, but expected %i\n",
-            name, state, it->oldState);
-    return;
-  }
-
-  state = it->newState;
-
-  switch(state){
-  case TagTrk:
-    if(!track)
-      track = new track_t();
-    break;
-  case TagTrkSeg:
-    track->segments.push_back(track_seg_t());
-    break;
-  case TagTrkPt: {
-    track->segments.back().track_points.push_back(track_point_t());
-    points++;
-    curPoint = &track->segments.back().track_points.back();
-    for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "lat") == 0)
-        curPoint->pos.lat = xml_parse_float(attrs[i + 1]);
-      else if(likely(strcmp(reinterpret_cast<const char *>(attrs[i]), "lon") == 0))
-        curPoint->pos.lon = xml_parse_float(attrs[i + 1]);
+  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
+    if (cur_node->type == XML_ELEMENT_NODE) {
+      if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Layer") == 0) {
+        wms_layer_t *children = wms_cap_parse_layer(doc, cur_node);
+        if(children)
+          wms_layer->children.push_back(children);
+      } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Name") == 0) {
+        xmlString str(xmlNodeListGetString(doc, cur_node->children, 1));
+        wms_layer->name = reinterpret_cast<char *>(str.get());
+      } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Title") == 0) {
+        xmlString str(xmlNodeListGetString(doc, cur_node->children, 1));
+        wms_layer->title = reinterpret_cast<char *>(str.get());
+      } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "SRS") == 0) {
+        xmlString str(xmlNodeListGetString(doc, cur_node->children, 1));
+        if(strcmp(reinterpret_cast<char *>(str.get()), wms_layer_t::EPSG4326()) == 0)
+          wms_layer->epsg4326 = true;
+        else
+          wms_layer->srs = reinterpret_cast<char *>(str.get());
+        printf("SRS = %s\n", str.get());
+      } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "LatLonBoundingBox") == 0) {
+        wms_layer->llbbox.bounds.min = pos_t::fromXmlProperties(cur_node, "miny", "minx");
+        wms_layer->llbbox.bounds.max = pos_t::fromXmlProperties(cur_node, "maxy", "maxx");
+      } else
+        printf("found unhandled WMT_MS_Capabilities/Capability/Layer/%s\n", cur_node->name);
     }
   }
-  default:
-    break;
-  }
+
+  wms_layer->llbbox.valid = wms_bbox_is_valid(wms_layer->llbbox.bounds);
+
+  printf("------------------- Layer: %s ---------------------------\n", wms_layer->title.c_str());
+  printf("Name: %s\n", wms_layer->name.c_str());
+  printf("EPSG-4326: %s\n", wms_layer->epsg4326?"yes":"no");
+  if(wms_layer->llbbox.valid)
+    printf("LatLonBBox: %f/%f %f/%f\n",
+	   wms_layer->llbbox.bounds.min.lat, wms_layer->llbbox.bounds.min.lon,
+	   wms_layer->llbbox.bounds.max.lat, wms_layer->llbbox.bounds.max.lon);
+  else
+    printf("No/invalid LatLonBBox\n");
+
+  return wms_layer;
 }
 
-void TrackSax::endElement(const xmlChar *name)
-{
-  StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(), tag_find(name));
+static wms_getmap_t wms_cap_parse_getmap(xmlDocPtr doc, xmlNode *a_node) {
+  wms_getmap_t wms_getmap;
+  xmlNode *cur_node;
 
-  assert(it != tags.end());
-  assert(state == it->newState);
+  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
+    if (cur_node->type == XML_ELEMENT_NODE) {
+      if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Format") == 0) {
+        xmlString nstr(xmlNodeListGetString(doc, cur_node->children, 1));
 
-  switch(state){
-  case TagTrkSeg: {
-    // drop empty segments
-    std::vector<track_point_t> &last = track->segments.back().track_points;
-    if(unlikely(last.empty())) {
-      track->segments.pop_back();
-    } else {
-      // this vector will never be appended to again, so shrink it to the size
-      // that is actually needed
-      shrink_to_fit(last);
+        if(nstr) {
+          const FormatMap::const_iterator it =
+                ImageFormats.find(reinterpret_cast<char *>(nstr.get()));
+         if(it != ImageFormats.end())
+            wms_getmap.format |= it->second;
+        }
+      } else
+        printf("found unhandled WMT_MS_Capabilities/Capability/Request/GetMap/%s\n",
+               cur_node->name);
     }
-    break;
   }
-  default:
-    break;
-  }
-  state = it->oldState;
+
+  printf("Supported formats: %s%s%s\n",
+         (wms_getmap.format & WMS_FORMAT_PNG) ? "png " : "",
+         (wms_getmap.format & WMS_FORMAT_GIF) ? "gif " : "",
+         (wms_getmap.format & (WMS_FORMAT_JPG | WMS_FORMAT_JPEG)) ? "jpg " : "");
+  return wms_getmap;
 }
 
-track_t::track_t()
-  : dirty(false)
-  , active(false)
+static wms_request_t wms_cap_parse_request(xmlDocPtr doc, xmlNode *a_node) {
+  wms_request_t wms_request;
+  xmlNode *cur_node;
+
+  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
+    if (cur_node->type == XML_ELEMENT_NODE) {
+      if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "GetMap") == 0)
+        wms_request.getmap = wms_cap_parse_getmap(doc, cur_node);
+      else
+        printf("found unhandled WMT_MS_Capabilities/Capability/Request/%s\n", cur_node->name);
+    }
+  }
+
+  return wms_request;
+}
+
+static bool wms_cap_parse_cap(xmlDocPtr doc, xmlNode *a_node, wms_cap_t *wms_cap) {
+  xmlNode *cur_node;
+  bool has_request = false;
+
+  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
+    if (cur_node->type == XML_ELEMENT_NODE) {
+      if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Request") == 0) {
+        wms_cap->request = wms_cap_parse_request(doc, cur_node);
+        has_request = true;
+      } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Layer") == 0) {
+        wms_layer_t *layer = wms_cap_parse_layer(doc, cur_node);
+        if(layer)
+          wms_cap->layers.push_back(layer);
+      } else
+        printf("found unhandled WMT_MS_Capabilities/Capability/%s\n", cur_node->name);
+    }
+  }
+
+  return has_request && !wms_cap->layers.empty();
+}
+
+static bool wms_cap_parse(wms_t &wms, xmlDocPtr doc, xmlNode *a_node) {
+  xmlNode *cur_node = nullptr;
+  bool has_service = false, has_cap = false;
+
+  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
+    if (cur_node->type == XML_ELEMENT_NODE) {
+
+      if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Service") == 0) {
+        has_service = true;
+      } else if(likely(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Capability") == 0)) {
+        if(!has_cap)
+          has_cap = wms_cap_parse_cap(doc, cur_node, &wms.cap);
+      } else
+        printf("found unhandled WMT_MS_Capabilities/%s\n", cur_node->name);
+    }
+  }
+
+  return has_service && has_cap;
+}
+
+/* parse root element */
+static bool wms_cap_parse_root(wms_t &wms, xmlDocPtr doc) {
+  bool ret = false;
+
+  for (xmlNodePtr cur_node = xmlDocGetRootElement(doc);
+       cur_node != nullptr; cur_node = cur_node->next) {
+    if (cur_node->type == XML_ELEMENT_NODE) {
+      if(likely(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "WMT_MS_Capabilities") == 0))
+        ret = wms_cap_parse(wms, doc, cur_node);
+      else
+        printf("found unhandled %s\n", cur_node->name);
+    }
+  }
+
+  return ret;
+}
+
+/* get pixel extent of image display */
+static void wms_setup_extent(project_t *project, wms_t *wms) {
+  bounds_t bounds;
+  bounds.init(project->bounds);
+
+  lpos_t lmin = project->bounds.min.toLpos();
+  lmin.x -= bounds.center.x;
+  lmin.y -= bounds.center.y;
+  lmin.x *= bounds.scale;
+  lmin.y *= bounds.scale;
+
+  lpos_t lmax = project->bounds.max.toLpos();
+  lmax.x -= bounds.center.x;
+  lmax.y -= bounds.center.y;
+  lmax.x *= bounds.scale;
+  lmax.y *= bounds.scale;
+
+  wms->width = std::min(lmax.x - lmin.x, 2048);
+  wms->height = std::min(lmax.y - lmin.y, 2048);
+
+  printf("WMS: required image size = %dx%d\n", wms->width, wms->height);
+}
+
+/* --------------- freeing stuff ------------------- */
+
+void wms_layers_free(wms_layer_t::list &layers) {
+  std::for_each(layers.begin(), layers.end(), std::default_delete<wms_layer_t>());
+}
+
+wms_layer_t::~wms_layer_t() {
+  wms_layers_free(children);
+}
+
+wms_t::~wms_t() {
+  wms_layers_free(cap.layers);
+}
+
+/* ---------------------- use ------------------- */
+
+bool wms_llbbox_fits(const project_t *project, const wms_llbbox_t &llbbox) {
+  return ((project->bounds.min.lat >= llbbox.bounds.min.lat) &&
+          (project->bounds.min.lon >= llbbox.bounds.min.lon) &&
+          (project->bounds.max.lat <= llbbox.bounds.max.lat) &&
+          (project->bounds.max.lon <= llbbox.bounds.max.lon));
+}
+
+struct child_layer_functor {
+  bool epsg4326;
+  const wms_llbbox_t * const llbbox;
+  const std::string &srs;
+  wms_layer_t::list &clayers;
+  child_layer_functor(bool e, const wms_llbbox_t *x, const std::string &s,
+                      wms_layer_t::list &c)
+    : epsg4326(e), llbbox(x), srs(s), clayers(c) {}
+  void operator()(const wms_layer_t *layer);
+};
+
+void child_layer_functor::operator()(const wms_layer_t *layer)
 {
+  /* get a copy of the parents values for the current one ... */
+  const wms_llbbox_t *local_llbbox = llbbox;
+  bool local_epsg4326 = epsg4326;
+
+  /* ... and overwrite the inherited stuff with better local stuff */
+  if(layer->llbbox.valid)                    local_llbbox = &layer->llbbox;
+  local_epsg4326 |= layer->epsg4326;
+
+  /* only named layers with useful bounding box are added to the list */
+  if(local_llbbox && !layer->name.empty()) {
+    wms_layer_t *c_layer = new wms_layer_t(layer->title, layer->name,
+                                           local_epsg4326 ? std::string() : srs,
+                                           local_epsg4326, *local_llbbox);
+    clayers.push_back(c_layer);
+  }
+
+  std::for_each(layer->children.begin(), layer->children.end(),
+                child_layer_functor(local_epsg4326,
+                                    local_llbbox, srs, clayers));
 }
 
-// vim:et:ts=8:sw=2:sts=2:ai
+struct requestable_layers_functor {
+  wms_layer_t::list &c_layer;
+  explicit requestable_layers_functor(wms_layer_t::list &c) : c_layer(c) {}
+  void operator()(const wms_layer_t *layer);
+};
+
+void requestable_layers_functor::operator()(const wms_layer_t* layer)
+{
+  const wms_llbbox_t *llbbox = &layer->llbbox;
+  if(!llbbox->valid)
+    llbbox = nullptr;
+
+  std::for_each(layer->children.begin(), layer->children.end(),
+                child_layer_functor(layer->epsg4326, llbbox, layer->srs,
+                                    c_layer));
+}
+
+static void setMenuEntries(MainUi *uicontrol, bool en)
+{
+  uicontrol->setActionEnable(MainUi::MENU_ITEM_WMS_CLEAR, en);
+  uicontrol->setActionEnable(MainUi::MENU_ITEM_WMS_ADJUST, en);
+}
+
+static bool setBgImage(appdata_t &appdata, const std::string &filename) {
+  bool ret = appdata.map->set_bg_image(filename);
+  if(ret)
+    setMenuEntries(appdata.uicontrol.get(), true);
+  return ret;
+}
+
+static inline bool layer_is_usable(const wms_layer_t *layer) {
+  return layer->is_usable();
+}
+
+struct find_format_reverse_functor {
+  const unsigned int mask;
+  explicit find_format_reverse_functor(unsigned int m) : mask(m) {}
+  bool operator()(const std::pair<const char *, WmsImageFormat> &p) {
+    return p.second & mask;
+  }
+};
+
+static std::string wmsUrl(const wms_t &wms, const char *get)
+{
+  /* nothing has to be done if the last character of path is already a valid URL delimiter */
+  const char lastCh = wms.server[wms.server.size() - 1];
+  const char *append_char = (lastCh == '?' || lastCh == '&') ? "" :
+  /* if there's already a question mark, then add further */
+  /* parameters using the &, else use the ? */
+                            (wms.server.find('?') != std::string::npos ? "&" : "?");
+  std::string url;
+  url.reserve(256); // make enough room that most URLs will need no reallocation
+  url = wms.server + append_char + "SERVICE=wms&VERSION=1.1.1&REQUEST=Get";
+  url += get;
+
+  return url;
+}
+
+wms_layer_t::list wms_get_layers(project_t *project, wms_t& wms)
+{
+  wms_layer_t::list layers;
+
+  /* ------------- copy values back into project ---------------- */
+  project->wms_server = wms.server;
+
+  /* ----------- request capabilities -------------- */
+
+  const std::string &url = wmsUrl(wms, "Capabilities");
+  std::string capmem;
+
+  /* ----------- parse capabilities -------------- */
+  if(unlikely(!net_io_download_mem(appdata_t::window, url, capmem, _("WMS capabilities")))) {
+    error_dlg(_("WMS download failed:\n\nGetCapabilities failed"));
+    return layers;
+  }
+
+  if(unlikely(ImageFormats.empty()))
+    initImageFormats();
+
+  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadMemory(capmem.c_str(), capmem.size(),
+                                                          nullptr, nullptr, XML_PARSE_NONET));
+
+  /* parse the file and get the DOM */
+  bool parse_success = false;
+  if(unlikely(!doc)) {
+    xmlErrorPtr errP = xmlGetLastError();
+    errorf(nullptr, _("WMS download failed:\n\n"
+            "XML error while parsing capabilities:\n%s"), errP->message);
+  } else {
+    printf("ok, parse doc tree\n");
+
+    parse_success = wms_cap_parse_root(wms, doc.get());
+  }
+
+  capmem.clear();
+
+  /* ------------ basic checks ------------- */
+
+  if(!parse_success) {
+    error_dlg(_("Incomplete/unexpected reply!"));
+    return layers;
+  }
+
+  if(!wms.cap.request.getmap.format) {
+    error_dlg(_("No supported image format found."));
+    return layers;
+  }
+
+  /* ---------- evaluate layers ----------- */
+  printf("\nSearching for usable layers\n");
+
+  requestable_layers_functor fc(layers);
+
+  std::for_each(wms.cap.layers.begin(), wms.cap.layers.end(), fc);
+  bool at_least_one_ok = std::find_if(layers.begin(), layers.end(), layer_is_usable) !=
+                         layers.end();
+
+  if(!at_least_one_ok) {
+    error_dlg(_("Server provides no data in the required format!\n\n"
+                "(epsg4326 and LatLonBoundingBox are mandatory for osm2go)"));
+    wms_layers_free(layers);
+    layers.clear();
+  }
+
+  return layers;
+}
+
+void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
+                            const wms_layer_t::list &layers,
+                            const wms_layer_t::list &selected)
+{
+  /* get required image size */
+  wms_setup_extent(appdata.project.get(), &wms);
+
+  /* start building url */
+  std::string url = wmsUrl(wms, "Map&LAYERS=");
+
+  /* append layers */
+  const wms_layer_t::list::const_iterator selEnd = selected.end();
+  wms_layer_t::list::const_iterator selIt = selected.begin();
+  if(selIt != selEnd) {
+    url += (*selIt)->name;
+    for(++selIt; selIt != selEnd; selIt++) {
+      url += ',';
+      url += (*selIt)->name;
+    }
+  }
+
+  /* uses epsg4326 if possible */
+#if __cplusplus >= 201103L
+  const std::string srss = std::move(layers.front()->srs);
+#else
+  std::string srss;
+  srss.swap(layers.front()->srs);
+#endif
+  const char *srs = srss.empty() ? wms_layer_t::EPSG4326() : srss.c_str();
+
+  /* append styles entry */
+  url += "&STYLES=";
+
+  if(selected.size() > 1)
+    url += std::string(selected.size() - 1, ',');
+
+  /* build strings of min and max lat and lon to be used in url */
+  const std::string coords = appdata.project->bounds.print(',');
+
+  /* find preferred supported video format */
+  const FormatMap::const_iterator itEnd = ImageFormats.end();
+  FormatMap::const_iterator it = std::find_if(std::cbegin(ImageFormats), itEnd,
+                                              find_format_reverse_functor(wms.cap.request.getmap.format));
+  assert(it != itEnd);
+
+  char buf[64];
+  sprintf(buf, "&WIDTH=%d&HEIGHT=%d&FORMAT=", wms.width, wms.height);
+
+  /* build complete url */
+  const std::array<const char *, 7> parts = { {
+                          "&SRS=", srs, "&BBOX=", coords.c_str(),
+                          buf, it->first, "&reaspect=false"
+                          } };
+  for(unsigned int i = 0; i < parts.size(); i++)
+    url += parts[i];
+
+  const std::string filename = std::string(appdata.project->path) + "wms." +
+                               ImageFormatExtensions[it->second];
+
+  /* remove any existing image before */
+  wms_remove(appdata);
+
+  if(!net_io_download_file(appdata_t::window, url, filename, _("WMS layer")))
+    return;
+
+  /* there should be a matching file on disk now */
+  setBgImage(appdata, filename);
+}
+
+/* try to load an existing image into map */
+void wms_load(appdata_t &appdata) {
+  if(unlikely(ImageFormatExtensions.empty()))
+    initImageFormats();
+
+  const std::map<WmsImageFormat, const char *>::const_iterator itEnd = ImageFormatExtensions.end();
+  std::map<WmsImageFormat, const char *>::const_iterator it = ImageFormatExtensions.begin();
+
+  std::string filename = appdata.project->path + "/wms.";
+  const std::string::size_type extpos = filename.size();
+
+  for(; it != itEnd; it++) {
+    filename.erase(extpos);
+    filename += it->second;
+
+    appdata.map->bg.offset.x = appdata.project->wms_offset.x;
+    appdata.map->bg.offset.y = appdata.project->wms_offset.y;
+
+    if(setBgImage(appdata, filename))
+      return;
+  }
+
+  setMenuEntries(appdata.uicontrol.get(), false);
+}
+
+void wms_remove_file(project_t &project) {
+  if(unlikely(ImageFormatExtensions.empty()))
+    initImageFormats();
+
+  fdguard dirfd(project.path.c_str());
+  if(unlikely(!dirfd.valid()))
+    return;
+
+  std::string filename = "wms.";
+  const std::string::size_type extpos = filename.size();
+
+  const std::map<WmsImageFormat, const char *>::const_iterator itEnd = ImageFormatExtensions.end();
+  for(std::map<WmsImageFormat, const char *>::const_iterator it = ImageFormatExtensions.begin();
+      it != itEnd; it++) {
+    filename.erase(extpos);
+    filename += it->second;
+
+    unlinkat(project.dirfd, filename.c_str(), 0);
+  }
+}
+
+void wms_remove(appdata_t &appdata) {
+
+  /* this cancels any wms adjustment in progress */
+  if(appdata.map->action.type == MAP_ACTION_BG_ADJUST)
+    appdata.map->action_cancel();
+
+  setMenuEntries(appdata.uicontrol.get(), false);
+
+  appdata.map->remove_bg_image();
+
+  wms_remove_file(*appdata.project.get());
+}
+
+struct server_preset_s {
+  const char *name, *server;
+};
+
+static const std::array<struct server_preset_s, 1> default_servers = { {
+  { "Open Geospatial Consortium Web Services", "http://ows.terrestris.de/osm/service?" }
+  /* add more servers here ... */
+} };
+
+std::vector<wms_server_t *> wms_server_get_default(void) {
+  std::vector<wms_server_t *> servers;
+
+  for(unsigned int i = 0; i < default_servers.size(); i++) {
+    wms_server_t *cur = new wms_server_t();
+    cur->name = default_servers[i].name;
+    cur->server = default_servers[i].server;
+    servers.push_back(cur);
+  }
+
+  return servers;
+}
