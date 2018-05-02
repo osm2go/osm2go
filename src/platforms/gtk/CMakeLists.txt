@@ -92,6 +92,7 @@ else ()
 
 	set(USE_SVG_ICONS_DEFAULT On PARENT_SCOPE)
 endif ()
+target_compile_definitions(osm2go_platform_lib INTERFACE GTK_DISABLE_DEPRECATED)
 
 if (NOT libLocation_FOUND)
 	pkg_check_modules(GVFS REQUIRED IMPORTED_TARGET gnome-vfs-module-2.0)
