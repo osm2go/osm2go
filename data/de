@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Till Harbaum <till@harbaum.org>.
+ * Copyright (C) 2017 Rolf Eike Beer <eike@sf-mail.de>.
  *
  * This file is part of OSM2Go.
  *
@@ -17,24 +17,64 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef WMS_H
-#define WMS_H
+#ifndef UICONTROL_H
+#define UICONTROL_H
 
-#include <string>
-#include <vector>
+class statusbar_t;
 
-struct wms_server_t {
-  std::string name, server;
+class MainUi {
+protected:
+  MainUi(statusbar_t *s) : statusbar(s) {}
+
+  statusbar_t * const statusbar;
+public:
+  virtual ~MainUi() {}
+
+  enum menu_items {
+    MENU_ITEM_MAP_HIDE_SEL,
+    MENU_ITEM_MAP_SHOW_ALL,
+    MENU_ITEM_WMS_CLEAR,
+    MENU_ITEM_WMS_ADJUST,
+    MENU_ITEM_TRACK_EXPORT,
+    MENU_ITEM_TRACK_CLEAR,
+    MENU_ITEM_TRACK_ENABLE_GPS,
+    MENU_ITEM_TRACK_FOLLOW_GPS,
+    SUBMENU_VIEW,
+    SUBMENU_MAP,
+    MENU_ITEM_MAP_RELATIONS,
+    SUBMENU_WMS,
+    SUBMENU_TRACK,
+    MENU_ITEM_TRACK_IMPORT,
+    MENU_ITEM_MAP_UPLOAD,
+    MENU_ITEM_MAP_UNDO_CHANGES,
+  #ifndef FREMANTLE
+    MENU_ITEM_MAP_SAVE_CHANGES,
+  #endif
+    MENU_ITEMS_COUNT
+  };
+
+  enum NotificationFlags {
+    NoFlags = 0,
+    Brief = 1, ///< the message automatically disappears
+    Highlight = 2,
+    Busy = 4 ///< cleared by nullptr + Busy or when setting any other message
+  };
+
+  virtual void setActionEnable(menu_items item, bool en) = 0;
+
+  /**
+   * @brief show a non-dialog notification message to the user
+   * @param message the text to show
+   * @param flags flags to control notification behavior
+   *
+   * message may be nullptr to clear the current message.
+   */
+  void showNotification(const char *message, unsigned int flags = NoFlags);
+
+  /**
+   * @brief show a modal about box
+   */
+  void about_box();
 };
 
-struct appdata_t;
-struct project_t;
-
-void wms_import(appdata_t &appdata);
-void wms_load(appdata_t &appdata);
-void wms_remove(appdata_t &appdata);
-void wms_remove_file(project_t &project);
-
-std::vector<wms_server_t *> wms_server_get_default(void);
-
-#endif // WMS_H
+#endif /* UICONTROL_H */
