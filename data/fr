@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2008 Till Harbaum <till@harbaum.org>.
+ * Copyright (C) 2008 Andrew Chadwick <andrewc-osm2go@piffle.org>.
+ * Copyright (C) 2008-2009 Till Harbaum <till@harbaum.org>.
  *
  * This file is part of OSM2Go.
  *
@@ -17,143 +18,137 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <osm2go_platform.h>
-#include <osm2go_platform_gtk.h>
+#include <statusbar.h>
 
-#include <gtk/gtk.h>
-
+#include <appdata.h>
 #include <misc.h>
 
+#include <osm2go_platform.h>
+#include <osm2go_platform_gtk.h>
 #include <osm2go_cpp.h>
 
-bool osm2go_platform::init()
+class statusbar_gtk : public statusbar_t {
+public:
+  statusbar_gtk();
+
+  GtkStatusbar * const widget;
+  osm2go_platform::Timer brief_handler;
+  guint brief_mid;
+  guint cid;
+  guint mid;
+
+  void clear_message();
+  /**
+   * @brief flash up a brief, temporary message.
+   * @param msg the message to show
+   * @param timeout if the message should time out
+   *
+   * Once the message disappears, drop back to any persistent message set
+   * with set().
+   *
+   * If timeout is false, don't establish a handler. You'll have to clear it
+   * yourself later. If it's true, use STATUSBAR_DEFAULT_BRIEF_TIME.
+   */
+  void brief(const char *msg, bool timeout);
+
+  virtual void set(const char *msg, bool highlight) override;
+  virtual void banner_show_info(const char *text) override;
+  virtual void banner_busy_start(const char *text) override;
+  virtual void banner_busy_stop() override;
+};
+
+/*
+ * For non-Hildon builds, use the "brief" message in the statusbar to show
+ * what's happening.
+ */
+
+void statusbar_gtk::banner_busy_stop() {
+  clear_message();
+  gtk_widget_set_sensitive(appdata_t::window, TRUE);
+  gtk_grab_remove(GTK_WIDGET(widget));
+}
+
+void statusbar_gtk::banner_show_info(const char *text) {
+  banner_busy_stop();
+  brief(text, true);
+}
+
+void statusbar_gtk::banner_busy_start(const char *text) {
+  banner_busy_stop();
+  brief(text, false);
+  gtk_widget_set_sensitive(appdata_t::window, FALSE);
+  gtk_grab_add(GTK_WIDGET(widget));
+}
+
+static void statusbar_highlight(statusbar_gtk *statusbar, bool highlight) {
+  GtkWidget * const w = GTK_STATUSBAR(statusbar->widget)->label;
+  const GdkColor *col = highlight ? osm2go_platform::invalid_text_color() : nullptr;
+
+  gtk_widget_modify_fg(w, GTK_STATE_NORMAL, col);
+  gtk_widget_modify_text(w, GTK_STATE_NORMAL, col);
+  g_object_set(statusbar->widget, "has-resize-grip", FALSE, nullptr);
+}
+
+void statusbar_gtk::set(const char *msg, bool highlight) {
+  statusbar_highlight(this, highlight);
+
+  g_debug("%s: %s", __PRETTY_FUNCTION__, msg);
+
+  if (mid) {
+    gtk_statusbar_remove(widget, cid, mid);
+    mid = 0;
+  }
+
+  if (msg)
+    mid = gtk_statusbar_push(widget, cid, msg);
+}
+
+// Clear any brief message currently set, dropping back to the persistent one.
+
+static gboolean statusbar_brief_clear(gpointer data) {
+  statusbar_gtk *statusbar = static_cast<statusbar_gtk *>(data);
+  if (statusbar->brief_mid) {
+    gtk_statusbar_remove(GTK_STATUSBAR(statusbar->widget),
+                         statusbar->cid, statusbar->brief_mid);
+    statusbar->brief_mid = 0;
+    statusbar_highlight(statusbar, false);
+  }
+  return FALSE;
+}
+
+void statusbar_gtk::clear_message()
 {
-  return true;
+  brief_handler.stop();
+  statusbar_brief_clear(this);
 }
 
-void osm2go_platform::cleanup()
+void statusbar_gtk::brief(const char *msg, bool timeout)
+{
+  clear_message();
+  g_debug("%s: %s", __PRETTY_FUNCTION__, msg);
+  statusbar_highlight(this, true);
+  brief_mid = gtk_statusbar_push(widget, cid, msg);
+  if (brief_mid && timeout)
+    brief_handler.restart(STATUSBAR_DEFAULT_BRIEF_TIME, statusbar_brief_clear, this);
+}
+
+statusbar_gtk::statusbar_gtk()
+  : statusbar_t()
+  , widget(GTK_STATUSBAR(gtk_statusbar_new()))
+  , brief_mid(0)
+  , cid(gtk_statusbar_get_context_id(widget, "Msg"))
+  , mid(0)
 {
 }
 
-void osm2go_platform::open_url(const char* url)
+statusbar_t *statusbar_t::create()
 {
-  gtk_show_uri(nullptr, url, GDK_CURRENT_TIME, nullptr);
+  return new statusbar_gtk();
 }
 
-GtkWidget *osm2go_platform::notebook_new(void) {
-  return gtk_notebook_new();
-}
-
-GtkNotebook *osm2go_platform::notebook_get_gtk_notebook(GtkWidget *notebook) {
-  return GTK_NOTEBOOK(notebook);
-}
-
-void osm2go_platform::notebook_append_page(GtkWidget *notebook, GtkWidget *page, const char *label) {
-  GtkNotebook *nb = notebook_get_gtk_notebook(notebook);
-  gtk_notebook_append_page(nb, page, gtk_label_new(label));
-}
-
-GtkTreeView *osm2go_platform::tree_view_new()
+GtkWidget *osm2go_platform::statusBarWidget(statusbar_t *statusbar)
 {
-  return GTK_TREE_VIEW(gtk_tree_view_new());
-}
-
-GtkWidget *osm2go_platform::scrollable_container(GtkWidget *view)
-{
-  GtkWidget *container;
-  /* put view into a scrolled window */
-  GtkScrolledWindow *scrolled_window = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(nullptr,
-                                                                                   nullptr));
-  gtk_scrolled_window_set_policy(scrolled_window, GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_shadow_type(scrolled_window, GTK_SHADOW_ETCHED_IN);
-  container = GTK_WIDGET(scrolled_window);
-  gtk_container_add(GTK_CONTAINER(container), view);
-  return container;
-}
-
-GtkWidget *osm2go_platform::entry_new(osm2go_platform::EntryFlags)
-{
-  return gtk_entry_new();
-}
-
-bool osm2go_platform::isEntryWidget(GtkWidget *widget)
-{
-  return GTK_IS_ENTRY(widget) == TRUE;
-}
-
-GtkWidget *osm2go_platform::button_new_with_label(const char *label)
-{
-  return gtk_button_new_with_label(label);
-}
-
-GtkWidget *osm2go_platform::check_button_new_with_label(const char *label)
-{
-  return gtk_check_button_new_with_label(label);
-}
-
-bool osm2go_platform::isCheckButtonWidget(GtkWidget *widget)
-{
-  return GTK_IS_CHECK_BUTTON(widget) == TRUE;
-}
-
-void osm2go_platform::check_button_set_active(GtkWidget *button, bool active)
-{
-  gboolean state = active ? TRUE : FALSE;
-  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), state);
-}
-
-bool osm2go_platform::check_button_get_active(GtkWidget *button)
-{
-  return gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE;
-}
-
-/* the title is only used on fremantle with the picker widget */
-GtkWidget *osm2go_platform::combo_box_new(const char *)
-{
-  return gtk_combo_box_new_text();
-}
-
-GtkWidget *osm2go_platform::combo_box_entry_new(const char *)
-{
-  return gtk_combo_box_entry_new_text();
-}
-
-void osm2go_platform::combo_box_append_text(GtkWidget *cbox, const char *text)
-{
-  gtk_combo_box_append_text(GTK_COMBO_BOX(cbox), text);
-}
-
-void osm2go_platform::combo_box_set_active(GtkWidget *cbox, int index)
-{
-  gtk_combo_box_set_active(GTK_COMBO_BOX(cbox), index);
-}
-
-int osm2go_platform::combo_box_get_active(GtkWidget *cbox)
-{
-  return gtk_combo_box_get_active(GTK_COMBO_BOX(cbox));
-}
-
-std::string osm2go_platform::combo_box_get_active_text(GtkWidget *cbox)
-{
-  g_string ptr(gtk_combo_box_get_active_text(GTK_COMBO_BOX(cbox)));
-  std::string ret = ptr.get();
-  return ret;
-}
-
-bool osm2go_platform::isComboBoxWidget(GtkWidget *widget)
-{
-  return GTK_IS_COMBO_BOX(widget) == TRUE;
-}
-
-bool osm2go_platform::isComboBoxEntryWidget(GtkWidget *widget)
-{
-  return GTK_IS_COMBO_BOX_ENTRY(widget) == TRUE;
-}
-
-void osm2go_platform::setEntryText(GtkEntry *entry, const char *text, const char *placeholder)
-{
-  if(text == nullptr || *text == '\0')
-    gtk_entry_set_text(entry, placeholder);
-  else
-    gtk_entry_set_text(entry, text);
+  GtkWidget *zhbox = gtk_hbox_new(FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(zhbox), GTK_WIDGET(static_cast<statusbar_gtk *>(statusbar)->widget), TRUE, TRUE, 0);
+  return zhbox;
 }
