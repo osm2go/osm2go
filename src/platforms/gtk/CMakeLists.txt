@@ -82,7 +82,7 @@ if (MAEMO_FOUND)
 	# SVG icons do not work on my N900
 	set(USE_SVG_ICONS_DEFAULT Off PARENT_SCOPE)
 else ()
-	find_package(GTK2 REQUIRED)
+	find_package(GTK2 2.24 REQUIRED)
 
 	target_link_libraries(osm2go_platform_lib INTERFACE
 			${GTK2_TARGETS}

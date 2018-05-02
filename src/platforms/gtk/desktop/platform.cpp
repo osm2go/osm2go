@@ -110,17 +110,17 @@ bool osm2go_platform::check_button_get_active(GtkWidget *button)
 /* the title is only used on fremantle with the picker widget */
 GtkWidget *osm2go_platform::combo_box_new(const char *)
 {
-  return gtk_combo_box_new_text();
+  return gtk_combo_box_text_new();
 }
 
 GtkWidget *osm2go_platform::combo_box_entry_new(const char *)
 {
-  return gtk_combo_box_entry_new_text();
+  return gtk_combo_box_text_new_with_entry();
 }
 
 void osm2go_platform::combo_box_append_text(GtkWidget *cbox, const char *text)
 {
-  gtk_combo_box_append_text(GTK_COMBO_BOX(cbox), text);
+  gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(cbox), text);
 }
 
 void osm2go_platform::combo_box_set_active(GtkWidget *cbox, int index)
@@ -135,19 +135,28 @@ int osm2go_platform::combo_box_get_active(GtkWidget *cbox)
 
 std::string osm2go_platform::combo_box_get_active_text(GtkWidget *cbox)
 {
-  g_string ptr(gtk_combo_box_get_active_text(GTK_COMBO_BOX(cbox)));
+  g_string ptr(gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(cbox)));
   std::string ret = ptr.get();
   return ret;
 }
 
+static bool isCombo(GtkWidget *widget, bool entry)
+{
+  if(!GTK_IS_COMBO_BOX_TEXT(widget))
+    return false;
+  gboolean b;
+  g_object_get(widget, "has-entry", &b, nullptr);
+  return b == (entry ? TRUE : FALSE);
+}
+
 bool osm2go_platform::isComboBoxWidget(GtkWidget *widget)
 {
-  return GTK_IS_COMBO_BOX(widget) == TRUE;
+  return isCombo(widget, FALSE);
 }
 
 bool osm2go_platform::isComboBoxEntryWidget(GtkWidget *widget)
 {
-  return GTK_IS_COMBO_BOX_ENTRY(widget) == TRUE;
+  return isCombo(widget, TRUE);
 }
 
 void osm2go_platform::setEntryText(GtkEntry *entry, const char *text, const char *placeholder)
