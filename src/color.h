@@ -35,9 +35,14 @@ public:
             (static_cast<uint32_t>(cg & 0xff00) << 8)  |
             (static_cast<uint32_t>(cb & 0xff00)        | ca)); }
   inline color_t(unsigned int c) : value(c) {}
-  inline color_t(const color_t &other) : value(other.value) {}
   inline color_t &operator=(unsigned int c) { value = c; return *this; }
+#if __cplusplus >= 201103L
+  inline color_t(const color_t &other) = default;
+  inline color_t &operator=(const color_t &other) = default;
+#else
+  inline color_t(const color_t &other) : value(other.value) {}
   inline color_t &operator=(const color_t other) { value = other.value; return *this; }
+#endif
   inline operator unsigned int() const { return value; }
 
   inline uint32_t rgba() const { return value; }
