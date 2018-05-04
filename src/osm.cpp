@@ -2434,9 +2434,9 @@ void relation_t::members_by_type(unsigned int &nodes, unsigned int &ways, unsign
 node_t::node_t() noexcept
   : visible_item_t()
   , ways(0)
+  , pos(0, 0)
+  , lpos(0, 0)
 {
-  memset(&pos, 0, sizeof(pos));
-  memset(&lpos, 0, sizeof(lpos));
 }
 
 node_t::node_t(unsigned int ver, const lpos_t lp, const pos_t &p, item_id_t i) noexcept

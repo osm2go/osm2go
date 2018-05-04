@@ -484,6 +484,7 @@ void project_t::parse_osm() {
 
 project_t::project_t(map_state_t &ms, const std::string &n, const std::string &base_path)
   : map_state(ms)
+  , bounds(pos_t(0, 0), pos_t(0, 0))
   , name(n)
   , path(base_path +  name + '/')
   , data_dirty(false)
@@ -492,7 +493,6 @@ project_t::project_t(map_state_t &ms, const std::string &n, const std::string &b
   , osm(nullptr)
 {
   memset(&wms_offset, 0, sizeof(wms_offset));
-  memset(&bounds, 0, sizeof(bounds));
 }
 
 void project_t::adjustServer(const char *nserver, const std::string &def)
