@@ -35,11 +35,6 @@ struct elemstyle_condition_t {
       : key(strdup(k)), value(v ? strdup(v) : nullptr), isBool(false) {}
     elemstyle_condition_t(const char *k, bool b)
       : key(strdup(k)), boolValue(b), isBool(true) {}
-    elemstyle_condition_t &operator=(const elemstyle_condition_t &other)
-    {
-      memcpy(this, &other, sizeof(*this));
-      return *this;
-    }
 
     char * const key;
 #if __cplusplus < 201103L
@@ -49,11 +44,18 @@ struct elemstyle_condition_t {
       char *value;
       bool boolValue;
     };
+
+    elemstyle_condition_t &operator=(const elemstyle_condition_t &other)
+    {
+      memcpy(this, &other, sizeof(*this));
+      return *this;
+    }
 #else
     union {
       char * const value;
       const bool boolValue;
     };
+    elemstyle_condition_t &operator=(const elemstyle_condition_t &other) = default;
 #endif
     const bool isBool;
 
