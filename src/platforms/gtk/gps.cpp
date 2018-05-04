@@ -40,6 +40,8 @@
 #define MAXTAGLEN    8       /* maximum length of sentence tag name */
 
 struct gps_fix_t {
+  inline gps_fix_t(pos_t p, double a, double e)
+    : mode(0), pos(p), alt(a), eph(e) {}
     int    mode;	/* Mode of fix */
 #define MODE_NOT_SEEN	0	/* mode update not seen yet */
 #define MODE_NO_FIX	1	/* none */
@@ -53,6 +55,8 @@ struct gps_fix_t {
 typedef unsigned int gps_mask_t;
 
 struct gps_data_t {
+  inline gps_data_t()
+    : set(0), fix(pos_t(0, 0), 0, 0), status(0) {}
     gps_mask_t set;	/* has field been set since this was last cleared? */
 #define LATLON_SET	0x00000008u
 #define ALTITUDE_SET	0x00000010u
@@ -214,7 +218,6 @@ static void gps_unpack(char *buf, gps_data_t *gpsdata) {
 	  gpsdata->status = STATUS_NO_FIX;
 	  gps_clear_fix(&gpsdata->fix);
 	} else {
-          gps_fix_t nf;
 	  char tag[MAXTAGLEN+1], alt[20], eph[20], lat[20], lon[20], mode[2];
 	  int st = sscanf(sp+2,
 			  "%8s %*s %*s %19s %19s "
@@ -225,10 +228,7 @@ static void gps_unpack(char *buf, gps_data_t *gpsdata) {
 			  mode);
 	  if (st >= 5) {
 #define DEFAULT(val) (val[0] == '?') ? NAN : g_ascii_strtod(val, nullptr)
-	    nf.pos.lat = DEFAULT(lat);
-	    nf.pos.lon = DEFAULT(lon);
-	    nf.eph = DEFAULT(eph);
-	    nf.alt = DEFAULT(alt);
+          gps_fix_t nf(pos_t(DEFAULT(lat), DEFAULT(lon)), DEFAULT(alt), DEFAULT(eph));
 #undef DEFAULT
 	    if (st >= 6)
 	      nf.mode = (mode[0] == '?') ? MODE_NOT_SEEN : atoi(mode);
@@ -333,8 +333,6 @@ gpsd_state_t::gpsd_state_t(GpsCallback cb, void *context)
   , enable(false)
 {
   g_debug("GPS init: Using gpsd\n");
-
-  memset(&gpsdata, 0, sizeof(gpsdata));
 
   /* start a new thread to listen to gpsd */
 #if GLIB_CHECK_VERSION(2,32,0)
