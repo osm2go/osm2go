@@ -54,7 +54,7 @@ bool xml_get_prop_bool(xmlNode *node, const char *prop) {
   if(!prop_str)
     return false;
 
-  return (strcasecmp(reinterpret_cast<char *>(prop_str.get()), "true") == 0);
+  return (strcasecmp(prop_str, "true") == 0);
 }
 
 #ifndef FREMANTLE

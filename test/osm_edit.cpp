@@ -618,10 +618,12 @@ static void test_changeset()
   xmlString cs(osm_generate_xml_changeset("<&>", std::string()));
 
   assert_cmpstr(reinterpret_cast<char *>(cs.get()), message);
+  assert_cmpstr(cs, message);
 
   cs.reset(osm_generate_xml_changeset("testcase comment", "survey"));
 
   assert_cmpstr(reinterpret_cast<char *>(cs.get()), message_src);
+  assert_cmpstr(cs, message_src);
 }
 
 static void test_reverse()

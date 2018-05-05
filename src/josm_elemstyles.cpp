@@ -170,7 +170,7 @@ bool parse_color(xmlNode *a_node, const char *name, color_t &color)
 
   if(color_str) {
     ColorMap dummy;
-    ret = parse_color(reinterpret_cast<char *>(color_str.get()), color, dummy);
+    ret = parse_color(color_str, color, dummy);
   }
   return ret;
 }

@@ -85,11 +85,11 @@ bool project_read(const std::string &project_file, project_t *project,
 
           if(strcmp(reinterpret_cast<const char *>(node->name), "desc") == 0) {
             xmlString desc(xmlNodeListGetString(doc.get(), node->children, 1));
-            project->desc = reinterpret_cast<char *>(desc.get());
+            project->desc = static_cast<const char *>(desc);
             printf("desc = %s\n", desc.get());
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "server") == 0) {
             xmlString str(xmlNodeListGetString(doc.get(), node->children, 1));
-            project->adjustServer(reinterpret_cast<char *>(str.get()), defaultserver);
+            project->adjustServer(str, defaultserver);
             printf("server = %s\n", project->server(defaultserver).c_str());
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "map") == 0) {
             xmlString str(xmlGetProp(node, BAD_CAST "zoom"));
@@ -102,28 +102,28 @@ bool project_read(const std::string &project_file, project_t *project,
 
             str.reset(xmlGetProp(node, BAD_CAST "scroll-offset-x"));
             if(str)
-              project->map_state.scroll_offset.x = strtoul(reinterpret_cast<char *>(str.get()), nullptr, 10);
+              project->map_state.scroll_offset.x = strtoul(str, nullptr, 10);
 
             str.reset(xmlGetProp(node, BAD_CAST "scroll-offset-y"));
             if(str)
-              project->map_state.scroll_offset.y = strtoul(reinterpret_cast<char *>(str.get()), nullptr, 10);
+              project->map_state.scroll_offset.y = strtoul(str, nullptr, 10);
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "wms") == 0) {
             xmlString str(xmlGetProp(node, BAD_CAST "server"));
             if(str)
-              project->wms_server = reinterpret_cast<char *>(str.get());
+              project->wms_server = static_cast<const char *>(str);
 
             // upgrade old entries
             str.reset(xmlGetProp(node, BAD_CAST "path"));
             if(str)
-              project->wms_server += reinterpret_cast<char *>(str.get());
+              project->wms_server += static_cast<const char *>(str);
 
             str.reset(xmlGetProp(node, BAD_CAST "x-offset"));
             if(str)
-              project->wms_offset.x = strtoul(reinterpret_cast<char *>(str.get()), nullptr, 10);
+              project->wms_offset.x = strtoul(str, nullptr, 10);
 
             str.reset(xmlGetProp(node, BAD_CAST "y-offset"));
             if(str)
-              project->wms_offset.y = strtoul(reinterpret_cast<char *>(str.get()), nullptr, 10);
+              project->wms_offset.y = strtoul(str, nullptr, 10);
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "osm") == 0) {
             xmlString str(xmlNodeListGetString(doc.get(), node->children, 1));
             if(likely(str)) {
@@ -132,14 +132,12 @@ bool project_read(const std::string &project_file, project_t *project,
               /* make this a relative path if possible */
               /* if the project path actually is a prefix of this, */
               /* then just remove this prefix */
-              if(str.get()[0] == '/' &&
-                strlen(reinterpret_cast<char *>(str.get())) > project->path.size() &&
-                !strncmp(reinterpret_cast<char *>(str.get()), project->path.c_str(), project->path.size())) {
-
+              if(str.get()[0] == '/' && strlen(str) > project->path.size() &&
+                 !strncmp(str, project->path.c_str(), project->path.size())) {
                 project->osmFile = reinterpret_cast<char *>(str.get() + project->path.size());
                 printf("osm name converted to relative %s\n", project->osmFile.c_str());
               } else
-                project->osmFile = reinterpret_cast<char *>(str.get());
+                project->osmFile = static_cast<const char *>(str);
             }
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "min") == 0) {
             project->bounds.min = pos_t::fromXmlProperties(node);

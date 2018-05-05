@@ -117,8 +117,7 @@ bool osm_t::parse_tag(xmlNode *a_node, TagMap &tags) {
   xmlString key(xmlGetProp(a_node, BAD_CAST "k"));
   xmlString value(xmlGetProp(a_node, BAD_CAST "v"));
 
-  if(unlikely(!key || !value || strlen(reinterpret_cast<char *>(key.get())) == 0 ||
-                                strlen(reinterpret_cast<char *>(value.get())) == 0))
+  if(unlikely(!key || !value || strlen(key) == 0 || strlen(value) == 0))
     return false;
 
   const std::string k = reinterpret_cast<char *>(key.get());
@@ -139,7 +138,7 @@ node_t *osm_t::parse_way_nd(xmlNode *a_node) const {
   node_t *node = nullptr;
 
   if(prop) {
-    item_id_t id = strtoll(reinterpret_cast<char *>(prop.get()), nullptr, 10);
+    item_id_t id = strtoll(prop, nullptr, 10);
 
     /* search matching node */
     node = node_by_id(id);
@@ -221,8 +220,7 @@ void osm_t::parse_relation_member(xmlNode *a_node, std::vector<member_t> &member
   xmlString refstr(xmlGetProp(a_node, BAD_CAST "ref"));
   xmlString role(xmlGetProp(a_node, BAD_CAST "role"));
 
-  parse_relation_member(reinterpret_cast<char *>(tp.get()), reinterpret_cast<char *>(refstr.get()),
-                        reinterpret_cast<char *>(role.get()), members);
+  parse_relation_member(tp, refstr, role, members);
 }
 
 /* -------------------------- stream parser ------------------- */
@@ -285,8 +283,8 @@ static void process_tag(xmlTextReaderPtr reader, std::vector<tag_t> &tags) {
   xmlString k(xmlTextReaderGetAttribute(reader, BAD_CAST "k"));
   xmlString v(xmlTextReaderGetAttribute(reader, BAD_CAST "v"));
 
-  const char *key = reinterpret_cast<char *>(k.get());
-  const char *value = reinterpret_cast<char *>(v.get());
+  const char *key = k;
+  const char *value = v;
 
   if(likely(key != nullptr && value != nullptr && *key != '\0' && *value != '\0'))
     tags.push_back(tag_t(key, value));
@@ -300,12 +298,12 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
 {
   xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST "id"));
   if(likely(prop))
-    obj->id = strtoll(reinterpret_cast<char *>(prop.get()), nullptr, 10);
+    obj->id = strtoll(prop, nullptr, 10);
 
   /* new in api 0.6: */
   prop.reset(xmlTextReaderGetAttribute(reader, BAD_CAST "version"));
   if(likely(prop))
-    obj->version = strtoul(reinterpret_cast<char *>(prop.get()), nullptr, 10);
+    obj->version = strtoul(prop, nullptr, 10);
 
   prop.reset(xmlTextReaderGetAttribute(reader, BAD_CAST "user"));
   if(likely(prop)) {
@@ -313,18 +311,18 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
     xmlString puid(xmlTextReaderGetAttribute(reader, BAD_CAST "uid"));
     if(likely(puid)) {
       char *endp;
-      uid = strtol(reinterpret_cast<char *>(puid.get()), &endp, 10);
+      uid = strtol(puid, &endp, 10);
       if(unlikely(*endp)) {
         printf("WARNING: cannot parse uid '%s' for user '%s'\n", puid.get(), prop.get());
         uid = -1;
       }
     }
-    obj->user = osm_user_insert(osm, reinterpret_cast<char *>(prop.get()), uid);
+    obj->user = osm_user_insert(osm, prop, uid);
   }
 
   prop.reset(xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"));
   if(likely(prop))
-    obj->time = convert_iso8601(reinterpret_cast<char *>(prop.get()));
+    obj->time = convert_iso8601(prop);
 }
 
 static void process_node(xmlTextReaderPtr reader, osm_t::ref osm) {
@@ -373,7 +371,7 @@ static node_t *process_nd(xmlTextReaderPtr reader, osm_t::ref osm) {
   node_t *node = nullptr;
 
   if(likely(prop)) {
-    item_id_t id = strtoll(reinterpret_cast<char *>(prop.get()), nullptr, 10);
+    item_id_t id = strtoll(prop, nullptr, 10);
     /* search matching node */
     node = osm->node_by_id(id);
     if(unlikely(node == nullptr))
@@ -431,8 +429,7 @@ static bool process_member(xmlTextReaderPtr reader, osm_t::ref osm, std::vector<
   xmlString ref(xmlTextReaderGetAttribute(reader, BAD_CAST "ref"));
   xmlString role(xmlTextReaderGetAttribute(reader, BAD_CAST "role"));
 
-  return osm->parse_relation_member(reinterpret_cast<char *>(tp.get()), reinterpret_cast<char *>(ref.get()),
-                                    reinterpret_cast<char *>(role.get()), members);
+  return osm->parse_relation_member(tp, ref, role, members);
 }
 
 static void process_relation(xmlTextReaderPtr reader, osm_t::ref osm) {
@@ -495,7 +492,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
 
   xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST "upload"));
   if(unlikely(prop))
-    osm->uploadPolicy = parseUploadPolicy(reinterpret_cast<const char *>(prop.get()));
+    osm->uploadPolicy = parseUploadPolicy(prop);
 
   /* read next node */
   int num_elems = 0;

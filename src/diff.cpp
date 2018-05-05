@@ -203,7 +203,7 @@ static item_id_t xml_get_prop_int(xmlNode *node, const char *prop, item_id_t def
   xmlString str(xmlGetProp(node, BAD_CAST prop));
 
   if(str)
-    return strtoll(reinterpret_cast<char*>(str.get()), nullptr, 10);
+    return strtoll(str, nullptr, 10);
   else
     return def;
 }
@@ -213,9 +213,9 @@ static int xml_get_prop_state(xmlNode *node) {
 
   if(!str)
     return OSM_FLAG_DIRTY;
-  else if(strcmp(reinterpret_cast<char *>(str.get()), "new") == 0)
+  else if(strcmp(str, "new") == 0)
     return OSM_FLAG_DIRTY;
-  else if(likely(strcmp(reinterpret_cast<char *>(str.get()), "deleted") == 0))
+  else if(likely(strcmp(str, "deleted") == 0))
     return OSM_FLAG_DELETED;
 
   assert_unreachable();
@@ -543,8 +543,8 @@ unsigned int project_t::diff_restore() {
       if(strcmp(reinterpret_cast<const char *>(cur_node->name), "diff") == 0) {
         xmlString str(xmlGetProp(cur_node, BAD_CAST "name"));
 	if(str) {
-          const char *cstr = reinterpret_cast<const char *>(str.get());
-	  printf("diff for project %s\n", cstr);
+          const char *cstr = str;
+          printf("diff for project %s\n", cstr);
           if(unlikely(name != cstr)) {
             warningf(nullptr, _("Diff name (%s) does not match project name (%s)"),
                      cstr, name.c_str());

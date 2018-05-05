@@ -101,16 +101,16 @@ static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
           wms_layer->children.push_back(children);
       } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Name") == 0) {
         xmlString str(xmlNodeListGetString(doc, cur_node->children, 1));
-        wms_layer->name = reinterpret_cast<char *>(str.get());
+        wms_layer->name = static_cast<const char *>(str);
       } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Title") == 0) {
         xmlString str(xmlNodeListGetString(doc, cur_node->children, 1));
-        wms_layer->title = reinterpret_cast<char *>(str.get());
+        wms_layer->title = static_cast<const char *>(str);
       } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "SRS") == 0) {
         xmlString str(xmlNodeListGetString(doc, cur_node->children, 1));
-        if(strcmp(reinterpret_cast<char *>(str.get()), wms_layer_t::EPSG4326()) == 0)
+        if(strcmp(str, wms_layer_t::EPSG4326()) == 0)
           wms_layer->epsg4326 = true;
         else
-          wms_layer->srs = reinterpret_cast<char *>(str.get());
+          wms_layer->srs = static_cast<const char *>(str);
         printf("SRS = %s\n", str.get());
       } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "LatLonBoundingBox") == 0) {
         wms_layer->llbbox.bounds.min = pos_t::fromXmlProperties(cur_node, "miny", "minx");
@@ -145,9 +145,8 @@ static wms_getmap_t wms_cap_parse_getmap(xmlDocPtr doc, xmlNode *a_node) {
         xmlString nstr(xmlNodeListGetString(doc, cur_node->children, 1));
 
         if(nstr) {
-          const FormatMap::const_iterator it =
-                ImageFormats.find(reinterpret_cast<char *>(nstr.get()));
-         if(it != ImageFormats.end())
+          const FormatMap::const_iterator it = ImageFormats.find(nstr);
+          if(it != ImageFormats.end())
             wms_getmap.format |= it->second;
         }
       } else

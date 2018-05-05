@@ -33,7 +33,14 @@ struct xmlDelete {
   }
 };
 
-typedef std::unique_ptr<xmlChar, xmlDelete> xmlString;
+class xmlString : public std::unique_ptr<xmlChar, xmlDelete> {
+public:
+  xmlString(xmlChar *txt = nullptr)
+    : std::unique_ptr<xmlChar, xmlDelete>(txt) {}
+
+  operator const char *() const
+  { return reinterpret_cast<const char *>(get()); }
+};
 
 struct xmlDocDelete {
   inline void operator()(xmlDocPtr doc) {
