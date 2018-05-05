@@ -109,24 +109,24 @@ bool project_read(const std::string &project_file, project_t *project,
               project->map_state.scroll_offset.y = strtoul(str, nullptr, 10);
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "wms") == 0) {
             xmlString str(xmlGetProp(node, BAD_CAST "server"));
-            if(str)
+            if(!str.empty())
               project->wms_server = static_cast<const char *>(str);
 
             // upgrade old entries
             str.reset(xmlGetProp(node, BAD_CAST "path"));
-            if(str)
+            if(!str.empty())
               project->wms_server += static_cast<const char *>(str);
 
             str.reset(xmlGetProp(node, BAD_CAST "x-offset"));
-            if(str)
+            if(!str.empty())
               project->wms_offset.x = strtoul(str, nullptr, 10);
 
             str.reset(xmlGetProp(node, BAD_CAST "y-offset"));
-            if(str)
+            if(!str.empty())
               project->wms_offset.y = strtoul(str, nullptr, 10);
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "osm") == 0) {
             xmlString str(xmlNodeListGetString(doc.get(), node->children, 1));
-            if(likely(str)) {
+            if(likely(!str.empty())) {
               printf("osm = %s\n", str.get());
 
               /* make this a relative path if possible */

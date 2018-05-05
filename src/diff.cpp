@@ -542,20 +542,19 @@ unsigned int project_t::diff_restore() {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcmp(reinterpret_cast<const char *>(cur_node->name), "diff") == 0) {
         xmlString str(xmlGetProp(cur_node, BAD_CAST "name"));
-	if(str) {
+        if(!str.empty()) {
           const char *cstr = str;
           printf("diff for project %s\n", cstr);
           if(unlikely(name != cstr)) {
             warningf(nullptr, _("Diff name (%s) does not match project name (%s)"),
                      cstr, name.c_str());
             res |= DIFF_PROJECT_MISMATCH;
-	  }
-	}
+          }
+        }
 
         for(xmlNodePtr node_node = cur_node->children; node_node != nullptr;
             node_node = node_node->next) {
-	  if(node_node->type == XML_ELEMENT_NODE) {
-
+          if(node_node->type == XML_ELEMENT_NODE) {
             if(strcmp(reinterpret_cast<const char *>(node_node->name), node_t::api_string()) == 0)
               diff_restore_node(node_node, osm);
 

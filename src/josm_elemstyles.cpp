@@ -168,7 +168,7 @@ bool parse_color(xmlNode *a_node, const char *name, color_t &color)
   xmlString color_str(xmlGetProp(a_node, BAD_CAST name));
   bool ret = false;
 
-  if(color_str) {
+  if(!color_str.empty()) {
     ColorMap dummy;
     ret = parse_color(color_str, color, dummy);
   }

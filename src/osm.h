@@ -56,6 +56,7 @@ class relation_t;
 class way_t;
 class tag_t;
 typedef std::vector<way_t *> way_chain_t;
+class xmlString;
 
 struct object_t {
   enum type_t {
@@ -258,7 +259,7 @@ struct osm_t {
    */
   static bool parse_tag(xmlNode* a_node, TagMap &tags);
 
-  bool parse_relation_member(const char *tp, const char *ref, const char *role, std::vector<member_t> &members);
+  bool parse_relation_member(const xmlString &tp, const xmlString &ref, const xmlString &role, std::vector<member_t> &members);
   void parse_relation_member(xmlNode *a_node, std::vector<member_t> &members);
 
   node_t *parse_way_nd(xmlNode *a_node) const;

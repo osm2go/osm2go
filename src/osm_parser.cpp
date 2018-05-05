@@ -117,7 +117,7 @@ bool osm_t::parse_tag(xmlNode *a_node, TagMap &tags) {
   xmlString key(xmlGetProp(a_node, BAD_CAST "k"));
   xmlString value(xmlGetProp(a_node, BAD_CAST "v"));
 
-  if(unlikely(!key || !value || strlen(key) == 0 || strlen(value) == 0))
+  if(unlikely(key.empty() || value.empty()))
     return false;
 
   const std::string k = reinterpret_cast<char *>(key.get());
@@ -153,12 +153,12 @@ node_t *osm_t::parse_way_nd(xmlNode *a_node) const {
 
 /* ------------------- relation handling ------------------- */
 
-bool osm_t::parse_relation_member(const char *tp, const char *refstr, const char *role, std::vector<member_t> &members) {
-  if(unlikely(tp == nullptr)) {
+bool osm_t::parse_relation_member(const xmlString &tp, const xmlString &refstr, const xmlString &role, std::vector<member_t> &members) {
+  if(unlikely(tp.empty())) {
     printf("missing type for relation member\n");
     return false;
   }
-  if(unlikely(refstr == nullptr)) {
+  if(unlikely(refstr.empty())) {
     printf("missing ref for relation member\n");
     return false;
   }
@@ -171,14 +171,14 @@ bool osm_t::parse_relation_member(const char *tp, const char *refstr, const char
   else if(likely(strcmp(tp, relation_t::api_string()) == 0))
     type = object_t::RELATION;
   else {
-    printf("Unable to store illegal type '%s'\n", tp);
+    printf("Unable to store illegal type '%s'\n", tp.get());
     return false;
   }
 
   char *endp;
   item_id_t id = strtoll(refstr, &endp, 10);
   if(unlikely(*endp != '\0')) {
-    printf("Illegal ref '%s' for relation member\n", refstr);
+    printf("Illegal ref '%s' for relation member\n", refstr.get());
     return false;
   }
 
@@ -208,10 +208,8 @@ bool osm_t::parse_relation_member(const char *tp, const char *refstr, const char
     obj.id = id;
   }
 
-  if(role != nullptr && strlen(role) == 0)
-    role = nullptr;
-
-  members.push_back(member_t(obj, role));
+  const char *rstr = role.empty() ? nullptr : static_cast<const char *>(role);
+  members.push_back(member_t(obj, rstr));
   return true;
 }
 
@@ -283,13 +281,10 @@ static void process_tag(xmlTextReaderPtr reader, std::vector<tag_t> &tags) {
   xmlString k(xmlTextReaderGetAttribute(reader, BAD_CAST "k"));
   xmlString v(xmlTextReaderGetAttribute(reader, BAD_CAST "v"));
 
-  const char *key = k;
-  const char *value = v;
-
-  if(likely(key != nullptr && value != nullptr && *key != '\0' && *value != '\0'))
-    tags.push_back(tag_t(key, value));
+  if(likely(!k.empty() && !v.empty()))
+    tags.push_back(tag_t(k, v));
   else
-    printf("incomplete tag key/value %s/%s\n", key, value);
+    printf("incomplete tag key/value %s/%s\n", k.get(), v.get());
 
   skip_element(reader);
 }
@@ -370,7 +365,7 @@ static node_t *process_nd(xmlTextReaderPtr reader, osm_t::ref osm) {
   xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST "ref"));
   node_t *node = nullptr;
 
-  if(likely(prop)) {
+  if(likely(!prop.empty())) {
     item_id_t id = strtoll(prop, nullptr, 10);
     /* search matching node */
     node = osm->node_by_id(id);

@@ -40,6 +40,9 @@ public:
 
   operator const char *() const
   { return reinterpret_cast<const char *>(get()); }
+
+  inline bool empty() const
+  { return !operator bool() || *get() == '\0'; }
 };
 
 struct xmlDocDelete {
