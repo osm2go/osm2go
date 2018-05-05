@@ -113,27 +113,6 @@ time_t __attribute__((nonnull(1))) convert_iso8601(const char *str) {
 
 /* -------------------- tag handling ----------------------- */
 
-/**
- * @brief fill tag_t from XML values
- * @param k the key found in XML
- * @param v the value found in XML
- * @param tags the vector where the new tag will be added
- *
- * k and v will be freed.
- */
-static void tag_from_xml(xmlChar *k, xmlChar *v, std::vector<tag_t> &tags) {
-  const char *key = reinterpret_cast<char *>(k);
-  const char *value = reinterpret_cast<char *>(v);
-
-  if(likely(key != nullptr && value != nullptr && *key != '\0' && *value != '\0'))
-    tags.push_back(tag_t(key, value));
-  else
-    printf("incomplete tag key/value %s/%s\n", k, v);
-
-  xmlFree(k);
-  xmlFree(v);
-}
-
 bool osm_t::parse_tag(xmlNode *a_node, TagMap &tags) {
   xmlString key(xmlGetProp(a_node, BAD_CAST "k"));
   xmlString value(xmlGetProp(a_node, BAD_CAST "v"));
@@ -303,8 +282,17 @@ static bool process_bounds(xmlTextReaderPtr reader, bounds_t &bounds) {
 }
 
 static void process_tag(xmlTextReaderPtr reader, std::vector<tag_t> &tags) {
-  tag_from_xml(xmlTextReaderGetAttribute(reader, BAD_CAST "k"),
-               xmlTextReaderGetAttribute(reader, BAD_CAST "v"), tags);
+  xmlString k(xmlTextReaderGetAttribute(reader, BAD_CAST "k"));
+  xmlString v(xmlTextReaderGetAttribute(reader, BAD_CAST "v"));
+
+  const char *key = reinterpret_cast<char *>(k.get());
+  const char *value = reinterpret_cast<char *>(v.get());
+
+  if(likely(key != nullptr && value != nullptr && *key != '\0' && *value != '\0'))
+    tags.push_back(tag_t(key, value));
+  else
+    printf("incomplete tag key/value %s/%s\n", key, value);
+
   skip_element(reader);
 }
 
