@@ -1271,7 +1271,6 @@ map_t::map_t(appdata_t &a, map_highlight_t &hl)
   , style(appdata.style)
   , elements_drawn(0)
 {
-  memset(&selected, 0, sizeof(selected));
   memset(&bg, 0, sizeof(bg));
   memset(&action, 0, sizeof(action));
   memset(&pen_down, 0, sizeof(pen_down));
