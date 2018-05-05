@@ -50,9 +50,7 @@ public:
 
   static inline color_t transparent()
   {
-    color_t r;
-    r.value = 0;
-    return r;
+    return color_t(0);
   }
 } __attribute__ ((packed));
 
