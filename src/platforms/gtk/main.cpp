@@ -1000,7 +1000,7 @@ appdata_t::appdata_t(map_state_t &mstate)
   , style(style_load(settings_t::instance()->style))
   , gps_state(gps_state_t::create(track_t::gps_position_callback, this))
 {
-  memset(&track, 0, sizeof(track));
+  track.warn_cnt = 0;
 }
 
 appdata_t::~appdata_t() {
