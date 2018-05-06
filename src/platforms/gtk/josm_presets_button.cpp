@@ -736,7 +736,7 @@ void picker_add_functor::operator()(const presets_item_t *item)
   if(!(item->type & context->presets_mask))
     return;
 
-  const presets_item_named * const itemv = static_cast<typeof(itemv)>(item);
+  const presets_item_named * const itemv = static_cast<const presets_item_named *>(item);
 
   if(itemv->name.empty())
     return;
