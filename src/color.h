@@ -25,7 +25,6 @@
 class color_t {
   uint32_t value;
 public:
-  inline color_t() {}
   inline color_t(uint8_t cr, uint8_t cg, uint8_t cb, uint8_t ca = 0xff)
   { value = ((static_cast<uint32_t>(cr) << 24) |
             (static_cast<uint32_t>(cg) << 16) |
@@ -37,9 +36,11 @@ public:
   inline color_t(unsigned int c) : value(c) {}
   inline color_t &operator=(unsigned int c) { value = c; return *this; }
 #if __cplusplus >= 201103L
+  inline color_t() = default;
   inline color_t(const color_t &other) = default;
   inline color_t &operator=(const color_t &other) = default;
 #else
+  inline color_t() {}
   inline color_t(const color_t &other) : value(other.value) {}
   inline color_t &operator=(const color_t other) { value = other.value; return *this; }
 #endif
