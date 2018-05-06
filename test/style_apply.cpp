@@ -80,7 +80,8 @@ int main(int argc, char **argv)
 
   std::unique_ptr<osm_t> osm(new osm_t());
 
-  memset(&osm->bounds, 0, sizeof(osm->bounds));
+  osm->bounds.min = lpos_t(0, 0);
+  osm->bounds.max = lpos_t(0, 0);
 
   node_t * const node = osm->node_new(pos_t(0.0, 0.0));
   osm->node_attach(node);

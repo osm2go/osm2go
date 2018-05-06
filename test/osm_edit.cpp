@@ -73,8 +73,8 @@ static void test_trivial() {
   assert(!tags.hasTagCollisions());
 
   std::unique_ptr<osm_t> osm(new osm_t());
-  memset(&osm->bounds.min, 0, sizeof(osm->bounds.min));
-  memset(&osm->bounds.max, 0, sizeof(osm->bounds.max));
+  osm->bounds.min = lpos_t(0, 0);
+  osm->bounds.max = lpos_t(0, 0);
   assert_cmpstr(osm->sanity_check(), _("Invalid data in OSM file:\nBoundary box invalid!"));
   set_bounds(osm);
   assert_cmpstr(osm->sanity_check(), _("Invalid data in OSM file:\nNo drawable content found!"));
