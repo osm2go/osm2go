@@ -75,6 +75,14 @@
 
 #define USER_AGENT "OSM2go " VERSION " (https://github.com/osm2go/osm2go)"
 
+#if !GLIB_CHECK_VERSION(2,28,0)
+static void g_slist_free_full(GSList *list, GDestroyNotify free_func)
+{
+  g_slist_foreach(list, (GFunc) free_func, NULL);
+  g_slist_free(list);
+}
+#endif
+
 struct _OsmGpsMapPrivate
 {
     GHashTable *tile_queue;
@@ -482,8 +490,7 @@ osm_gps_map_free_trip (OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
     if (priv->trip_history) {
-        g_slist_foreach(priv->trip_history, (GFunc) g_free, NULL);
-        g_slist_free(priv->trip_history);
+        g_slist_free_full(priv->trip_history, g_free);
         priv->trip_history = NULL;
     }
 }
@@ -498,8 +505,7 @@ osm_gps_map_free_tracks (OsmGpsMap *map)
         GSList* tmp = priv->tracks;
         while (tmp != NULL)
         {
-            g_slist_foreach(tmp->data, (GFunc) g_free, NULL);
-            g_slist_free(tmp->data);
+            g_slist_free_full(tmp->data, g_free);
             tmp = g_slist_next(tmp);
         }
         g_slist_free(priv->tracks);
@@ -517,12 +523,7 @@ osm_gps_map_free_bounds(OsmGpsMap *map)
         GSList* tmp = priv->bounds;
         while (tmp != NULL)
         {
-#if GLIB_CHECK_VERSION(2,28,0)
-            g_slist_free_full(tmp->data, (GDestroyNotify) g_free);
-#else
-            g_slist_foreach(tmp->data, (GFunc) g_free, NULL);
-            g_slist_free(tmp->data);
-#endif
+            g_slist_free_full(tmp->data, g_free);
             tmp = g_slist_next(tmp);
         }
         g_slist_free(priv->bounds);
