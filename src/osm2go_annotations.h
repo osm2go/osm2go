@@ -21,10 +21,14 @@
 #define _ANNOTATIONS_H
 
 #include <osm2go_cpp.h>
+#include <osm2go_stl.h>
 
 #include <cassert>
 #include <cstring>
 #include <string>
+#if __cplusplus >= 201103L
+#include <type_traits>
+#endif
 
 // this omits magic to support every thinkable compiler until anyone really needs them
 
@@ -78,9 +82,9 @@ public:
 
 #define assert_cmpnum_op(a, op, b) \
        do { \
-         const typeof(a) ca = a; \
-         const typeof(b) cb = b; \
-         if (unlikely(!(ca op static_cast<typeof(a)>(cb)))) { \
+         const typeof(a) &ca = a; \
+         const typeof(b) &cb = b; \
+         if (unlikely(!(ca op static_cast<std::remove_const<typeof(a)>::type>(cb)))) { \
            __builtin_constant_p(b) ? \
              assert_num_tpl<typeof(ca)>(a,    #a, #op, #b, __FILE__, __PRETTY_FUNCTION__, __LINE__) : \
              assert_num_tpl<typeof(ca)>(a, b, #a, #op, #b, __FILE__, __PRETTY_FUNCTION__, __LINE__); \
