@@ -108,7 +108,7 @@ osm2go (1:0.9.5-maemo1) karmic; urgency=low
 osm2go (1:0.9.4-maemo1) karmic; urgency=low
 
   * greatly improve the number of supported tags and attributes in JOSM presets
-  * at list of last used presets to preset button menu
+  * add list of last used presets to preset button menu
   * do not update map if the new track position is visually at the same position than the last
 
  -- Rolf Eike Beer <eike@sf-mail.de>  Mon, 17 Apr 2017 10:53:44 +0100
