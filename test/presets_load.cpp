@@ -98,6 +98,10 @@ void counter::operator()(const presets_item_t *p)
   }
 }
 
+void display_value_verifactor(const std::string &value) {
+  assert(!value.empty());
+}
+
 void counter::operator()(const presets_element_t *w)
 {
   switch(w->type) {
@@ -108,10 +112,13 @@ void counter::operator()(const presets_element_t *w)
   case WIDGET_TYPE_SPACE:
   case WIDGET_TYPE_TEXT:
     break;
-  case WIDGET_TYPE_COMBO:
+  case WIDGET_TYPE_COMBO: {
     combos++;
-    combo_entries += static_cast<const presets_element_combo *>(w)->values.size();
+    const presets_element_combo *combo = static_cast<const presets_element_combo *>(w);
+    combo_entries += combo->values.size();
+    std::for_each(combo->display_values.begin(), combo->display_values.end(), display_value_verifactor);
     break;
+  }
   case WIDGET_TYPE_CHECK:
     checks++;
     break;

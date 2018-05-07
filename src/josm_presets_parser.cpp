@@ -760,7 +760,11 @@ void PresetSax::startElement(const char *name, const char **attrs)
       dumpState("found", "list_entry without value\n");
     } else {
       combo->values.push_back(value);
-      combo->display_values.push_back(NULL_OR_MAP_STR(a.find("display_value")));
+      const char *dv = NULL_OR_MAP_VAL(a.find("display_value"));
+      // make sure there is always a string to show, in case all elements have the
+      // default value the list will be cleared when the containing widget tag is
+      // closed
+      combo->display_values.push_back(dv == nullptr ? value : dv);
     }
     break;
   }
@@ -930,10 +934,20 @@ void PresetSax::endElement(const xmlChar *name)
     widgets.pop();
 #endif
     break;
+  case TagCombo: {
+    assert(!items.empty());
+    assert(!widgets.empty());
+    presets_element_combo * const combo = static_cast<presets_element_combo *>(widgets.top());
+    widgets.pop();
+    // this usually happens when the list if filled by <list_entry> tags and
+    // none of that has a display_value given
+    if(unlikely(combo->values == combo->display_values))
+      combo->display_values.clear();
+    break;
+  }
   case TagText:
   case TagKey:
   case TagCheck:
-  case TagCombo:
   case TagPresetLink:
     assert(!items.empty());
     assert(!widgets.empty());
