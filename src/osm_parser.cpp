@@ -291,8 +291,6 @@ static void process_tag(xmlTextReaderPtr reader, std::vector<tag_t> &tags) {
     tags.push_back(tag_t(k, v));
   else
     printf("incomplete tag key/value %s/%s\n", k.get(), v.get());
-
-  skip_element(reader);
 }
 
 static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader, osm_t::ref osm)
@@ -358,8 +356,8 @@ static void process_node(xmlTextReaderPtr reader, osm_t::ref osm) {
       const char *subname = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
       if(likely(strcmp(subname, "tag") == 0))
         process_tag(reader, tags);
-      else
-        skip_element(reader);
+
+      skip_element(reader);
     }
 
     ret = xmlTextReaderRead(reader);
@@ -369,10 +367,7 @@ static void process_node(xmlTextReaderPtr reader, osm_t::ref osm) {
 
 static node_t *process_nd(xmlTextReaderPtr reader, osm_t::ref osm) {
   xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST "ref"));
-  node_t *node = parse_node_ref(prop, osm.get());
-
-  skip_element(reader);
-  return node;
+  return parse_node_ref(prop, osm.get());
 }
 
 static void process_way(xmlTextReaderPtr reader, osm_t::ref osm) {
@@ -407,8 +402,9 @@ static void process_way(xmlTextReaderPtr reader, osm_t::ref osm) {
           way->node_chain.push_back(n);
       } else if(likely(strcmp(subname, "tag") == 0)) {
         process_tag(reader, tags);
-      } else
-        skip_element(reader);
+      }
+
+      skip_element(reader);
     }
     ret = xmlTextReaderRead(reader);
   }
@@ -451,12 +447,12 @@ static void process_relation(xmlTextReaderPtr reader, osm_t::ref osm) {
 
     if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
       const char *subname = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
-      if(strcmp(subname, "member") == 0) {
+      if(strcmp(subname, "member") == 0)
         process_member(reader, osm, relation->members);
-      } else if(likely(strcmp(subname, "tag") == 0)) {
+      else if(likely(strcmp(subname, "tag") == 0))
         process_tag(reader, tags);
-      } else
-        skip_element(reader);
+
+      skip_element(reader);
     }
     ret = xmlTextReaderRead(reader);
   }
