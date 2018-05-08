@@ -133,22 +133,28 @@ bool osm_t::parse_tag(xmlNode *a_node, TagMap &tags) {
 
 /* ------------------- way handling ------------------- */
 
-node_t *osm_t::parse_way_nd(xmlNode *a_node) const {
-  xmlString prop(xmlGetProp(a_node, BAD_CAST "ref"));
+static node_t *parse_node_ref(const xmlString &prop, const osm_t *osm)
+{
   node_t *node = nullptr;
 
-  if(prop) {
+  if(likely(!prop.empty())) {
     item_id_t id = strtoll(prop, nullptr, 10);
 
     /* search matching node */
-    node = node_by_id(id);
-    if(node == nullptr)
+    node = osm->node_by_id(id);
+    if(unlikely(node == nullptr))
       printf("Node id " ITEM_ID_FORMAT " not found\n", id);
     else
       node->ways++;
   }
 
   return node;
+}
+
+node_t *osm_t::parse_way_nd(xmlNode *a_node) const {
+  xmlString prop(xmlGetProp(a_node, BAD_CAST "ref"));
+
+  return parse_node_ref(prop, this);
 }
 
 /* ------------------- relation handling ------------------- */
@@ -363,17 +369,7 @@ static void process_node(xmlTextReaderPtr reader, osm_t::ref osm) {
 
 static node_t *process_nd(xmlTextReaderPtr reader, osm_t::ref osm) {
   xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST "ref"));
-  node_t *node = nullptr;
-
-  if(likely(!prop.empty())) {
-    item_id_t id = strtoll(prop, nullptr, 10);
-    /* search matching node */
-    node = osm->node_by_id(id);
-    if(unlikely(node == nullptr))
-      printf("Node id " ITEM_ID_FORMAT " not found\n", id);
-    else
-      node->ways++;
-  }
+  node_t *node = parse_node_ref(prop, osm.get());
 
   skip_element(reader);
   return node;
