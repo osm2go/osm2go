@@ -795,22 +795,20 @@ presets_context_t::presets_picker(const std::vector<presets_item_t *> &items,
                   matching_type_functor(presets_mask)) != lru.end()) {
     GtkTreeIter iter;
 
-    /* Append a row and fill in some data */
     gtk_list_store_prepend(store, &iter);
     gtk_list_store_set(store, &iter,
                        PRESETS_PICKER_COL_NAME, _("Last used presets"),
                        PRESETS_PICKER_COL_SUBMENU_ICON, subicon->buffer(),
-		       -1);
+                       -1);
   }
   if(show_recent) {
     GtkTreeIter     iter;
 
-    /* Append a row and fill in some data */
     gtk_list_store_prepend(store, &iter);
     gtk_list_store_set(store, &iter,
-		       PRESETS_PICKER_COL_NAME, _("Used presets"),
-		       PRESETS_PICKER_COL_SUBMENU_ICON, subicon->buffer(),
-		       -1);
+                       PRESETS_PICKER_COL_NAME, _("Used presets"),
+                       PRESETS_PICKER_COL_SUBMENU_ICON, subicon->buffer(),
+                       -1);
   }
 
   icons.icon_free(subicon);
