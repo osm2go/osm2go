@@ -316,13 +316,10 @@ style_t::style_t()
   background.color = 0xffffffff; // white
 }
 
-struct unref_icon {
-  icon_t &icons;
-  explicit unref_icon() : icons(icon_t::instance()) {}
-  void operator()(const style_t::IconCache::value_type &pair) {
-    icons.icon_free(pair.second);
-  }
-};
+static void unref_icon(const style_t::IconCache::value_type &pair)
+{
+  icon_t::instance().icon_free(pair.second);
+}
 
 style_t::~style_t()
 {
@@ -330,7 +327,7 @@ style_t::~style_t()
 
   josm_elemstyles_free(elemstyles);
 
-  std::for_each(node_icons.begin(), node_icons.end(), unref_icon());
+  std::for_each(node_icons.begin(), node_icons.end(), unref_icon);
 
   xmlFree(BAD_CAST name);
   xmlFree(BAD_CAST icon.path_prefix);
