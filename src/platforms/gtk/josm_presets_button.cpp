@@ -940,10 +940,16 @@ presets_element_t::attach_key *presets_element_combo::attach(preset_attach_conte
                                                              const std::string &preset) const
 {
   const std::string &pr = preset.empty() ? def : preset;
-  GtkWidget *ret = combo_box_new(text.c_str());
-  combo_box_append_text(ret, _("<unset>"));
-  int active = 0;
-  bool matched = false;
+  GtkWidget *ret;
+  int active = editable ? 0 : 1; // account for the extra "unset" entry for non-editable ones
+  bool matched = false; // no need to search if editable, the text will explicitely be set anyway
+
+  if(editable) {
+    ret = combo_box_entry_new(text.c_str());
+  } else {
+    ret = combo_box_new(text.c_str());
+    combo_box_append_text(ret, _("<unset>"));
+  }
 
   const std::vector<std::string> &d = display_values.empty() ? values : display_values;
 
@@ -953,12 +959,16 @@ presets_element_t::attach_key *presets_element_combo::attach(preset_attach_conte
     combo_box_append_text(ret, value.c_str());
 
     if(!matched && values[count] == pr) {
-      active = count + 1;
+      active += count;
       matched = true;
     }
   }
 
-  combo_box_set_active(ret, active);
+  if(editable && !matched) {
+    combo_box_set_active(ret, -1);
+    combo_box_set_active_text(ret, preset.c_str());
+  } else
+    combo_box_set_active(ret, active);
 #ifndef FREMANTLE
   attach_right(attctx, text.c_str(), ret);
 #else
@@ -971,11 +981,12 @@ presets_element_t::attach_key *presets_element_combo::attach(preset_attach_conte
 std::string presets_element_combo::getValue(presets_element_t::attach_key *akey) const
 {
   GtkWidget * const widget = reinterpret_cast<GtkWidget *>(akey);
-  assert(isComboBoxWidget(widget));
+  assert((!editable && isComboBoxWidget(widget)) ^
+         (editable && isComboBoxEntryWidget(widget)));
 
-  std::string txt = combo_box_get_active_text(widget);
+  const std::string txt = combo_box_get_active_text(widget);
 
-  if(txt == _("<unset>"))
+  if(!editable && txt == _("<unset>"))
     return std::string();
 
   if(display_values.empty())

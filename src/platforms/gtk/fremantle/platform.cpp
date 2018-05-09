@@ -212,8 +212,24 @@ GtkWidget *osm2go_platform::combo_box_new(const char *title) {
   return combo_box_new_with_selector(title, selector);
 }
 
+/**
+ * @brief extract current value of hildon_touch_selector_entry
+ *
+ * In contrast to the default hildon_touch_selector_entry_print_func() it will
+ * just return whatever is in the edit field, so that one can clear that field
+ * resulting in no value being set.
+ */
+static gchar *
+touch_selector_entry_print_func(HildonTouchSelector *selector, gpointer)
+{
+  HildonEntry *entry = hildon_touch_selector_entry_get_entry(HILDON_TOUCH_SELECTOR_ENTRY(selector));
+
+  return g_strdup(gtk_entry_get_text(GTK_ENTRY(entry)));
+}
+
 GtkWidget *osm2go_platform::combo_box_entry_new(const char *title) {
   GtkWidget *selector = hildon_touch_selector_entry_new_text();
+  hildon_touch_selector_set_print_func(HILDON_TOUCH_SELECTOR(selector), touch_selector_entry_print_func);
   return combo_box_new_with_selector(title, selector);
 }
 
@@ -233,6 +249,17 @@ int osm2go_platform::combo_box_get_active(GtkWidget *cbox) {
 
 std::string osm2go_platform::combo_box_get_active_text(GtkWidget *cbox) {
   return hildon_button_get_value(HILDON_BUTTON(cbox));
+}
+
+void osm2go_platform::combo_box_set_active_text(GtkWidget *cbox, const char *text)
+{
+  hildon_button_set_value(HILDON_BUTTON(cbox), text);
+  // explicitely set the text in the edit, which will not happen when setting the button
+  // text to something not in the model
+  HildonTouchSelector *selector = hildon_picker_button_get_selector(HILDON_PICKER_BUTTON(cbox));
+  HildonEntry *entry = hildon_touch_selector_entry_get_entry(HILDON_TOUCH_SELECTOR_ENTRY(selector));
+  gtk_entry_set_text(GTK_ENTRY(entry), text);
+  gtk_editable_select_region(GTK_EDITABLE(entry), 0, -1);
 }
 
 bool osm2go_platform::isComboBoxWidget(GtkWidget *widget)

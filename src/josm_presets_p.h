@@ -173,12 +173,13 @@ protected:
   virtual bool matchValue(const std::string &val) const override;
 public:
   presets_element_combo(const std::string &k, const std::string &txt,
-                       const std::string &deflt, const char *m,
-                       std::vector<std::string> vals, std::vector<std::string> dvals);
+                        const std::string &deflt, const char *m, std::vector<std::string> vals,
+                        std::vector<std::string> dvals, bool canEdit);
 
   const std::string def;
   std::vector<std::string> values;
   std::vector<std::string> display_values;
+  const bool editable;
 
   virtual attach_key *attach(preset_attach_context &attctx, const std::string &preset) const override;
   virtual std::string getValue(attach_key *akey) const override;

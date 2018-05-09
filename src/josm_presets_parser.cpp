@@ -725,7 +725,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   }
   case TagCombo: {
-    std::array<const char *, 7> names = { { "key", "text", "display_values", "match", "default", "delimiter", "values" } };
+    std::array<const char *, 8> names = { { "key", "text", "display_values", "match", "default", "delimiter", "values", "editable" } };
     const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 6);
     const AttrMap::const_iterator aitEnd = a.end();
 
@@ -736,6 +736,8 @@ void PresetSax::startElement(const char *name, const char **attrs)
     const char *display_values= NULL_OR_MAP_VAL(a.find("display_values"));
     const char *values = NULL_OR_MAP_VAL(a.find("values"));
     const char *del = NULL_OR_MAP_VAL(a.find("delimiter"));
+    const AttrMap::const_iterator ait = a.find("editable");
+    bool editable = ait == aitEnd || (strcmp(ait->second, "false") != 0);
 
     char delimiter = ',';
     if(del) {
@@ -751,7 +753,8 @@ void PresetSax::startElement(const char *name, const char **attrs)
     }
     widget = new presets_element_combo(key, text, def, match,
                                       presets_element_combo::split_string(values, delimiter),
-                                      presets_element_combo::split_string(display_values, delimiter));
+                                      presets_element_combo::split_string(display_values, delimiter),
+                                      editable);
     break;
   }
   case TagListEntry: {
@@ -1130,11 +1133,13 @@ presets_element_text::presets_element_text(const std::string &k, const std::stri
 
 presets_element_combo::presets_element_combo(const std::string &k, const std::string &txt,
                                            const std::string &deflt, const char *m,
-                                           std::vector<std::string> vals, std::vector<std::string> dvals)
+                                           std::vector<std::string> vals, std::vector<std::string> dvals,
+                                           bool canEdit)
   : presets_element_t(WIDGET_TYPE_COMBO, parseMatch(m), k, txt)
   , def(deflt)
   , values(vals)
   , display_values(dvals)
+  , editable(canEdit)
 {
 }
 

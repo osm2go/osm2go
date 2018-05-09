@@ -52,7 +52,7 @@ __&nbsp;__                   | match                         | supported |
 __&nbsp;__                   | display_values                | supported |
 __&nbsp;__                   | short_descriptions            | ignored   |
 __&nbsp;__                   | values_context                | ignored   |
-__&nbsp;__                   | editable                      | ignored   | always treated as "false"
+__&nbsp;__                   | editable                      | supported |
 __&nbsp;__                   | use_last_as_default           | ignored   |
 __&nbsp;__                   | values_searchable             | ignored   |
 __&nbsp;__                   | length                        | ignored   |

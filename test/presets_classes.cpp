@@ -97,7 +97,7 @@ static void checkComboMatch()
   presets_element_combo w_0(tag_testkey_testtext.first,
                            "visual text",
                            values.front(),
-                           nullptr, values, empty_vector);
+                           nullptr, values, empty_vector, true);
 
   assert_cmpnum(w_0.matches(VECTOR_ONE(tag_testkey_other)), 0);
   assert_cmpnum(w_0.matches(VECTOR_ONE(tag_testkey_testtext)), 0);
@@ -107,7 +107,7 @@ static void checkComboMatch()
   presets_element_combo w_ign(tag_testkey_testtext.first,
                              "visual text",
                              values.front(),
-                             "none", values, empty_vector);
+                             "none", values, empty_vector, true);
 
   assert_cmpnum(w_ign.matches(VECTOR_ONE(tag_testkey_other)), 0);
   assert_cmpnum(w_ign.matches(VECTOR_ONE(tag_testkey_testtext)), 0);
@@ -117,7 +117,7 @@ static void checkComboMatch()
   presets_element_combo w_bad(tag_testkey_testtext.first,
                              "visual text",
                              values.front(),
-                             "nonsense", values, empty_vector);
+                             "nonsense", values, empty_vector, true);
 
   assert_cmpnum(w_bad.matches(VECTOR_ONE(tag_testkey_other)), 0);
   assert_cmpnum(w_bad.matches(VECTOR_ONE(tag_testkey_testtext)), 0);
@@ -127,7 +127,7 @@ static void checkComboMatch()
   presets_element_combo w_key(tag_testkey_testtext.first,
                              "visual text",
                              values.front(),
-                             "key", values, empty_vector);
+                             "key", values, empty_vector, true);
 
   assert_cmpnum(w_key.matches(VECTOR_ONE(tag_testkey_other)), 1);
   assert_cmpnum(w_key.matches(VECTOR_ONE(tag_testkey_testtext)), 1);
@@ -137,7 +137,7 @@ static void checkComboMatch()
   presets_element_combo w_keyf(tag_testkey_testtext.first,
                               "visual text",
                               values.front(),
-                              "key!", values, empty_vector);
+                              "key!", values, empty_vector, true);
 
   assert_cmpnum(w_keyf.matches(VECTOR_ONE(tag_testkey_other)), 1);
   assert_cmpnum(w_keyf.matches(VECTOR_ONE(tag_testkey_testtext)), 1);
@@ -147,7 +147,7 @@ static void checkComboMatch()
   presets_element_combo w_kv(tag_testkey_testtext.first,
                             "visual text",
                             values.front(),
-                            "keyvalue", values, empty_vector);
+                            "keyvalue", values, empty_vector, true);
 
   assert_cmpnum(w_kv.matches(VECTOR_ONE(tag_testkey_other)), 0);
   assert_cmpnum(w_kv.matches(VECTOR_ONE(tag_testkey_testtext)), 1);
@@ -157,7 +157,7 @@ static void checkComboMatch()
   presets_element_combo w_kvf(tag_testkey_testtext.first,
                              "visual text",
                              values.front(),
-                             "keyvalue!", values, empty_vector);
+                             "keyvalue!", values, empty_vector, true);
 
   assert_cmpnum(w_kvf.matches(VECTOR_ONE(tag_testkey_other)), -1);
   assert_cmpnum(w_kvf.matches(VECTOR_ONE(tag_testkey_testtext)), 1);

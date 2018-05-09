@@ -1,3 +1,12 @@
+osm2go (1:0.9.12-maemo1) karmic; urgency=low
+
+  * fix scrolling to first used relation in relation edit
+  * also consider relation memberships when showing object description
+  * fix crashes with combo boxes in JOSM presets that are filled with list_entry elements
+  * allow free text entry for combo boxes in JOSM presets
+
+ -- Rolf Eike Beer <eike@sf-mail.de>  Sat, 21 Apr 2018 09:30:52 +0200
+
 osm2go (1:0.9.11-maemo1) karmic; urgency=low
 
   * project selection dialog can be shown on startup with "-p" argument

@@ -140,6 +140,11 @@ std::string osm2go_platform::combo_box_get_active_text(GtkWidget *cbox)
   return ret;
 }
 
+void osm2go_platform::combo_box_set_active_text(GtkWidget *cbox, const char *text)
+{
+  gtk_entry_set_text(GTK_ENTRY(gtk_bin_get_child(GTK_BIN(cbox))), text);
+}
+
 static bool isCombo(GtkWidget *widget, bool entry)
 {
   if(!GTK_IS_COMBO_BOX_TEXT(widget))

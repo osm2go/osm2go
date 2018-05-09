@@ -60,6 +60,7 @@ namespace osm2go_platform {
   void combo_box_set_active(GtkWidget *cbox, int index);
   int combo_box_get_active(GtkWidget *cbox);
   std::string combo_box_get_active_text(GtkWidget *cbox);
+  void combo_box_set_active_text(GtkWidget *cbox, const char *text);
   bool isComboBoxWidget(GtkWidget *widget);
   bool isComboBoxEntryWidget(GtkWidget *widget);
 
