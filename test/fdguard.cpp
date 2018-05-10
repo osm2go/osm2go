@@ -32,7 +32,7 @@ static void check_guard(int openfd, int &dirfd, const std::string &exepath)
   assert_cmpnum(static_cast<int>(rootfd), openfd);
   assert_cmpnum(static_cast<int>(ofd), dirfd);
 
-  dirguard dg(exepath.c_str());
+  dirguard dg(exepath);
   assert(dg.valid());
 }
 

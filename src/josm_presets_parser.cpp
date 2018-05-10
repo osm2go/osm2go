@@ -989,7 +989,7 @@ presets_items *presets_items::load(void) {
   // check for user presets
   std::string dirname = getenv("HOME");
   dirname += "/.local/share/osm2go/presets/";
-  dirguard dir(dirname.c_str());
+  dirguard dir(dirname);
 
   if(dir.valid()) {
     dirent *d;
@@ -1001,7 +1001,7 @@ presets_items *presets_items::load(void) {
         continue;
 
       const std::string dn = dirname + d->d_name + '/';
-      dirguard pdir(dn.c_str());
+      dirguard pdir(dn);
       if(likely(pdir.valid())) {
         // find first XML file inside those directories
         dirent *pd;

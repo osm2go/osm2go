@@ -71,11 +71,6 @@ void fdguard::swap(fdguard &other)
   const_cast<int &>(other.fd) = f;
 }
 
-dirguard::dirguard(const char *name)
-  : d(opendir(name))
-{
-}
-
 dirguard::dirguard(int fd)
   : d(fdopendir(dup(fd)))
 {

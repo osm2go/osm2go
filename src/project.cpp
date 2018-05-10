@@ -311,7 +311,7 @@ void project_delete(project_t *project) {
   printf("deleting project \"%s\"\n", project->name.c_str());
 
   /* remove entire directory from disk */
-  dirguard dir(project->path.c_str());
+  dirguard dir(project->path);
   if(likely(dir.valid())) {
     int dfd = dir.dirfd();
     dirent *d;

@@ -21,6 +21,7 @@
 #define FDGUARD_H
 
 #include <dirent.h>
+#include <string>
 
 #include <osm2go_cpp.h>
 
@@ -73,12 +74,15 @@ struct fdguard {
 };
 
 class dirguard {
-  DIR *d;
+  DIR * const d;
 public:
   /**
    * @brief opens the given directory
    */
-  explicit dirguard(const char *name);
+  explicit inline dirguard(const char *name) __attribute__((nonnull(2)))
+    : d(opendir(name)) {}
+  explicit inline dirguard(const std::string &name)
+    : d(opendir(name.c_str())) {}
   explicit dirguard(int fd);
   ~dirguard();
 
