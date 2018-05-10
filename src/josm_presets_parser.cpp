@@ -1009,7 +1009,7 @@ presets_items *presets_items::load(void) {
           if(pd->d_type == DT_DIR)
             continue;
           const size_t nlen = strlen(pd->d_name);
-          if(nlen > 4 && strcmp(pd->d_name + nlen - 4, ".xml") == 0) {
+          if(nlen > 4 && strcasecmp(pd->d_name + nlen - 4, ".xml") == 0) {
             presets->addFile(dn + pd->d_name, dn, pdir.dirfd());
             break;
           }
