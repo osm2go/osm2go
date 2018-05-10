@@ -208,7 +208,7 @@ static void track_write(const char *name, const track_t *track, xmlDoc *d) {
   xmlNodePtr trk_node;
   std::vector<track_seg_t>::const_iterator it = track->segments.begin();
   std::vector<track_seg_t>::const_iterator itEnd = track->segments.end();
-  std::unique_ptr<xmlDoc, xmlDocDelete> doc(d);
+  xmlDocGuard doc(d);
   if(doc) {
     xmlNodePtr cur_node;
     xmlNodePtr root_node = xmlDocGetRootElement(doc.get());

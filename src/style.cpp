@@ -180,7 +180,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
  */
 static bool style_parse(const std::string &fullname, xmlChar **fname,
                         bool name_only, style_t &style) {
-  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadFile(fullname.c_str(), nullptr, XML_PARSE_NONET));
+  xmlDocGuard doc(xmlReadFile(fullname.c_str(), nullptr, XML_PARSE_NONET));
   bool ret = false;
 
   /* parse the file and get the DOM */

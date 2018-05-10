@@ -183,7 +183,7 @@ void project_t::diff_save() const {
    * saving is completed */
   const std::string ndiff = path + "save.diff";
 
-  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlNewDoc(BAD_CAST "1.0"));
+  xmlDocGuard doc(xmlNewDoc(BAD_CAST "1.0"));
   xmlNodePtr root_node = xmlNewNode(nullptr, BAD_CAST "diff");
   xmlNewProp(root_node, BAD_CAST "name", BAD_CAST name.c_str());
   xmlDocSetRootElement(doc.get(), root_node);
@@ -526,7 +526,7 @@ unsigned int project_t::diff_restore() {
   fdguard difffd(dirfd, diff_name.c_str(), O_RDONLY);
 
   /* parse the file and get the DOM */
-  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadFd(difffd, nullptr, nullptr, XML_PARSE_NONET));
+  xmlDocGuard doc(xmlReadFd(difffd, nullptr, nullptr, XML_PARSE_NONET));
   if(unlikely(!doc)) {
     errorf(nullptr, _("Error: could not parse file %s\n"), diff_name.c_str());
     return DIFF_INVALID;

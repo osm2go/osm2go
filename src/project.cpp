@@ -63,7 +63,7 @@ std::string project_filename(const project_t *project) {
 bool project_read(const std::string &project_file, project_t *project,
                   const std::string &defaultserver, int basefd) {
   fdguard projectfd(basefd, project_file.c_str(), O_RDONLY);
-  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadFd(projectfd, project_file.c_str(), nullptr, XML_PARSE_NONET));
+  xmlDocGuard doc(xmlReadFd(projectfd, project_file.c_str(), nullptr, XML_PARSE_NONET));
 
   /* parse the file and get the DOM */
   if(unlikely(!doc)) {
@@ -185,7 +185,7 @@ bool project_t::save(osm2go_platform::Widget *parent) {
     dirfd.swap(nfd);
   }
 
-  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlNewDoc(BAD_CAST "1.0"));
+  xmlDocGuard doc(xmlNewDoc(BAD_CAST "1.0"));
   xmlNodePtr node, root_node = xmlNewNode(nullptr, BAD_CAST "proj");
   xmlNewProp(root_node, BAD_CAST "name", BAD_CAST name.c_str());
   if(data_dirty)

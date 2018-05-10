@@ -420,7 +420,7 @@ struct osm_delete_objects_final {
  * @param doc the document to upload
  * @returns if the operation was successful
  */
-static bool osmchange_upload(osm_upload_context_t &context, std::unique_ptr<xmlDoc, xmlDocDelete> &doc)
+static bool osmchange_upload(osm_upload_context_t &context, xmlDocGuard &doc)
 {
   /* make sure gui gets updated */
   osm2go_platform::process_events();
@@ -520,7 +520,7 @@ void osm_upload_context_t::upload(const osm_t::dirty_t &dirty)
     }
     if(!dirty.relations.deleted.empty() || !dirty.ways.deleted.empty() || !dirty.nodes.deleted.empty()) {
       append_str(_("Deleting objects:\n"));
-      std::unique_ptr<xmlDoc, xmlDocDelete> doc(osmchange_init());
+      xmlDocGuard doc(osmchange_init());
       xmlNodePtr del_node = xmlNewChild(xmlDocGetRootElement(doc.get()), nullptr, BAD_CAST "delete", nullptr);
       osmchange_delete(dirty, del_node, changeset.c_str());
 

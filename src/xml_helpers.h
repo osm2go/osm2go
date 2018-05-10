@@ -51,6 +51,8 @@ struct xmlDocDelete {
   }
 };
 
+typedef std::unique_ptr<xmlDoc, xmlDocDelete> xmlDocGuard;
+
 double xml_get_prop_float(xmlNode *node, const char *prop);
 bool xml_get_prop_bool(xmlNode *node, const char *prop);
 

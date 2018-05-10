@@ -395,7 +395,7 @@ wms_layer_t::list wms_get_layers(project_t *project, wms_t& wms)
   if(unlikely(ImageFormats.empty()))
     initImageFormats();
 
-  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadMemory(capmem.c_str(), capmem.size(),
+  xmlDocGuard doc(xmlReadMemory(capmem.c_str(), capmem.size(),
                                                           nullptr, nullptr, XML_PARSE_NONET));
 
   /* parse the file and get the DOM */

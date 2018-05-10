@@ -716,7 +716,7 @@ struct tag_to_xml {
 xmlChar *base_object_t::generate_xml(const std::string &changeset) const
 {
   char str[32];
-  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlNewDoc(BAD_CAST "1.0"));
+  xmlDocGuard doc(xmlNewDoc(BAD_CAST "1.0"));
   xmlNodePtr root_node = xmlNewNode(nullptr, BAD_CAST "osm");
   xmlDocSetRootElement(doc.get(), root_node);
 
@@ -780,7 +780,7 @@ xmlChar *osm_generate_xml_changeset(const std::string &comment,
   tag_t tag_comment = tag_t::uncached("comment", comment.c_str());
   tag_t tag_creator = tag_t::uncached("created_by", PACKAGE " v" VERSION);
 
-  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlNewDoc(BAD_CAST "1.0"));
+  xmlDocGuard doc(xmlNewDoc(BAD_CAST "1.0"));
   xmlNodePtr root_node = xmlNewNode(nullptr, BAD_CAST "osm");
   xmlDocSetRootElement(doc.get(), root_node);
 
