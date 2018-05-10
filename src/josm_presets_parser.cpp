@@ -183,7 +183,15 @@ class PresetSax {
 
   bool resolvePresetLink(presets_element_link* link, const std::string &id);
 
-  void dumpState(const char *before = nullptr, const char *after = nullptr) const;
+  /**
+   * @brief dump out the current object stack
+   * @param before message to print before the stack listing
+   * @param after0 first message to print after the stack listing
+   * @param after1 second message to print after the stack listing
+   *
+   * The line is always terminated with a LF.
+   */
+  void dumpState(const char *before = nullptr, const char *after0 = nullptr, const char *after1 = nullptr) const;
 
 public:
   explicit PresetSax(presets_items_internal &p, const std::string &b, int basefd);
@@ -290,7 +298,7 @@ const PresetSax::StateMap &PresetSax::preset_state_map() {
   return map;
 }
 
-void PresetSax::dumpState(const char *before, const char *after) const
+void PresetSax::dumpState(const char *before, const char *after0, const char *after1) const
 {
   if(before != nullptr)
     printf("%s ", before);
@@ -305,8 +313,14 @@ void PresetSax::dumpState(const char *before, const char *after) const
       printf("%s/", nit->name);
     }
   }
-  if(after != nullptr)
-    printf("%s", after);
+  if(after0 != nullptr) {
+    fputs(after0, stdout);
+    if(after1 != nullptr)
+      fputs(after1, stdout);
+  } else {
+    assert_null(after1);
+  }
+  puts("");
 }
 
 /**
@@ -501,7 +515,6 @@ void PresetSax::startElement(const char *name, const char **attrs)
                                              str_map_find<StateMap>(name));
   if(it == tags.end()) {
     dumpState("found unhandled", name);
-    printf("\n");
     state.push_back(UnknownTag);
     return;
   }
@@ -520,7 +533,6 @@ void PresetSax::startElement(const char *name, const char **attrs)
   if(std::find(it->newStates.begin(), it->newStates.end(), oldState) ==
      it->newStates.end()) {
     dumpState("found unexpected", name);
-    printf("\n");
     state.push_back(UnknownTag);
     return;
   }
@@ -597,7 +609,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
       // search again: the key must be the unlocalized name here
       itemsNames[findAttribute(attrs, "name", false)] = item;
     } else {
-      dumpState("found", "item without name\n");
+      dumpState("found", "item without name");
     }
     break;
   }
@@ -613,7 +625,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     // in laterLinks
     if(likely(!item->name.empty())) {
       if(unlikely(!id)) {
-        dumpState("found", "preset_link without preset_name\n");
+        dumpState("found", "preset_link without preset_name");
       } else {
         if(!resolvePresetLink(link, id))
         // these references may also target items that will only be added later
@@ -628,13 +640,12 @@ void PresetSax::startElement(const char *name, const char **attrs)
     const char *id = findAttribute(attrs, "ref", false);
     presets_item *ref = nullptr;
     if(unlikely(!id)) {
-      dumpState("found", "reference without ref\n");
+      dumpState("found", "reference without ref");
     } else {
       const ChunkMap::const_iterator ait = chunks.find(id);
-      if(unlikely(ait == chunks.end())) {
-        dumpState("found");
-        printf("reference with unresolved ref %s\n", id);
-      } else
+      if(unlikely(ait == chunks.end()))
+        dumpState("found", "reference with unresolved ref ", id);
+      else
         ref = ait->second;
     }
     widgets.push(new presets_element_reference(ref));
@@ -703,12 +714,12 @@ void PresetSax::startElement(const char *name, const char **attrs)
     presets_item * const item = static_cast<presets_item *>(items.top());
     const char *href = findAttribute(attrs, "href");
     if(unlikely(href == nullptr)) {
-      dumpState("ignoring", "link without href\n");
+      dumpState("ignoring", "link without href");
     } else {
       if(likely(item->link.empty()))
        item->link = href;
       else {
-        dumpState("found surplus", "link\n");
+        dumpState("found surplus", "link");
       }
     }
     break;
@@ -728,15 +739,14 @@ void PresetSax::startElement(const char *name, const char **attrs)
 
     char delimiter = ',';
     if(del) {
-      if(unlikely(strlen(del) != 1)) {
-        dumpState("found");
-        printf("combo with invalid delimiter '%s'\n", del);
-      } else
+      if(unlikely(strlen(del) != 1))
+        dumpState("found", "combo with invalid delimiter ", del);
+      else
         delimiter = *del;
     }
 
     if(unlikely(!values && display_values)) {
-      dumpState("found", "combo with display_values but not values\n");
+      dumpState("found", "combo with display_values but not values");
       display_values = nullptr;
     }
     widget = new presets_element_combo(key, text, def, match,
@@ -757,7 +767,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     const char *value = NULL_OR_MAP_VAL(a.find("value"));
 
     if(unlikely(!value)) {
-      dumpState("found", "list_entry without value\n");
+      dumpState("found", "list_entry without value");
     } else {
       combo->values.push_back(value);
       const char *dv = NULL_OR_MAP_VAL(a.find("display_value"));
@@ -790,7 +800,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
         char *endp;
         count = strtoul(cnt, &endp, 10);
         if(unlikely(*endp != '\0')) {
-          dumpState("ignoring invalid count value of", "role\n");
+          dumpState("ignoring invalid count value of", "role");
           count = 0;
         }
       }
@@ -853,7 +863,7 @@ void PresetSax::endElement(const xmlChar *name)
       assert((group->type & presets_item_t::TY_GROUP) != 0);
       *const_cast<unsigned int *>(&group->type) |= item->type;
       if(unlikely(!item->roles.empty() && (item->type & (presets_item_t::TY_RELATION | presets_item_t::TY_MULTIPOLYGON)) == 0)) {
-        dumpState("found", "item with roles, but type does not match relations or multipolygons\n");
+        dumpState("found", "item with roles, but type does not match relations or multipolygons");
         item->roles.clear();
       }
       break;
@@ -883,7 +893,7 @@ void PresetSax::endElement(const xmlChar *name)
     assert_cmpnum(chunk->type, presets_item_t::TY_ALL);
     items.pop();
     if(unlikely(chunk->name.empty())) {
-      dumpState("ignoring", "chunk without id\n");
+      dumpState("ignoring", "chunk without id");
       delete chunk;
       return;
     }
@@ -891,8 +901,7 @@ void PresetSax::endElement(const xmlChar *name)
     const std::string &id = chunk->name;
 
     if(chunks.find(id) != chunks.end()) {
-      dumpState("ignoring");
-      printf("chunk with duplicate id %s\n", id.c_str());
+      dumpState("ignoring", "chunk with duplicate id ", id.c_str());
       delete chunk;
     } else {
       chunks[id] = chunk;
@@ -920,7 +929,7 @@ void PresetSax::endElement(const xmlChar *name)
     presets_element_label * const label = static_cast<presets_element_label *>(widgets.top());
     widgets.pop();
     if(unlikely(label->text.empty())) {
-      dumpState("ignoring", "label without text\n");
+      dumpState("ignoring", "label without text");
       delete label;
     } else {
       static_cast<presets_item *>(items.top())->widgets.push_back(label);
