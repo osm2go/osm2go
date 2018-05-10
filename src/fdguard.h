@@ -53,13 +53,13 @@ struct fdguard {
    */
   explicit fdguard(int basefd, const char *pathname, int flags);
 #if __cplusplus >= 201103L
-  fdguard(fdguard &&other)
+  inline fdguard(fdguard &&other)
     : fd(other.fd)
   {
     const_cast<int &>(other.fd) = -1;
   }
-  fdguard(const fdguard &other) O2G_DELETED_FUNCTION;
-  fdguard &operator=(const fdguard &other) O2G_DELETED_FUNCTION;
+  fdguard(const fdguard &other) = delete;
+  fdguard &operator=(const fdguard &other) = delete;
 #else
   fdguard(const fdguard &other);
   fdguard &operator=(const fdguard &other);
