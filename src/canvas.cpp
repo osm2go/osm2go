@@ -103,30 +103,17 @@ struct item_info_find {
   }
 };
 
-static canvas_item_info_t *canvas_item_get_info(canvas_t *canvas,
-						canvas_item_t *item) {
+void canvas_t::item_info_push(canvas_item_t *item) {
   /* search for item in all chains */
   for(unsigned int group = 0; group < CANVAS_GROUPS; group++) {
-    const std::vector<canvas_item_info_t *>::const_iterator itEnd = canvas->item_info[group].end();
-    std::vector<canvas_item_info_t *>::const_iterator it = std::find_if(std::cbegin(canvas->item_info[group]),
-                                                                        itEnd, item_info_find(item));
-    if(it != itEnd)
-      return *it;
+    std::vector<canvas_item_info_t *> &info_group = item_info[group];
+    const std::vector<canvas_item_info_t *>::iterator itEnd = info_group.end();
+    std::vector<canvas_item_info_t *>::iterator it = std::find_if(info_group.begin(), itEnd,
+                                                                  item_info_find(item));
+    if(it != itEnd) {
+      std::rotate(it, it + 1, itEnd);
+      return;
+    }
   }
-  return nullptr;
-}
-
-void canvas_t::item_info_push(canvas_item_t *item) {
-  canvas_item_info_t *info = canvas_item_get_info(this, item);
-  assert(info != nullptr);
-
-  printf("pushing item_info %p to background\n", info);
-  assert(info->canvas == this);
-
-  std::vector<canvas_item_info_t *> &info_group = item_info[info->group];
-  const std::vector<canvas_item_info_t *>::reverse_iterator itEnd = info_group.rend();
-  std::vector<canvas_item_info_t *>::reverse_iterator it = std::find(info_group.rbegin(),
-                                                                     itEnd, info);
-
-  std::rotate(it, it + 1, itEnd);
+  assert_unreachable();
 }
