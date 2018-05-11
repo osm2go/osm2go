@@ -715,16 +715,7 @@ void map_t::pen_down_item() {
 
 /* Limitations on the amount by which we can scroll. Keeps part of the
  * map visible at all times */
-static void map_limit_scroll(map_t *map, canvas_t::canvas_unit_t unit, int &sx, int &sy) {
-
-  /* get scale factor for pixel->meter conversion. set to 1 if */
-  /* given coordinates are already in meters */
-  double scale = (unit == canvas_t::UNIT_METER) ? 1.0 : map->canvas->get_zoom();
-
-  /* convert pixels to meters if necessary */
-  double sx_cu = sx / scale;
-  double sy_cu = sy / scale;
-
+static void map_limit_scroll(map_t *map, int &sx, int &sy) {
   /* get size of visible area in canvas units (meters) */
   canvas_dimensions dim = map->canvas->get_viewport_dimensions(canvas_t::UNIT_METER) / 2;
 
@@ -735,14 +726,14 @@ static void map_limit_scroll(map_t *map, canvas_t::canvas_unit_t unit, int &sx, 
   int min_sx_cu = 0.95 * (bounds.min.x - dim.width);
   int max_sy_cu = 0.95 * (bounds.max.y + dim.height);
   int max_sx_cu = 0.95 * (bounds.max.x + dim.width);
-  if (sy_cu < min_sy_cu)
-    sy = min_sy_cu * scale;
-  else if (sy_cu > max_sy_cu)
-    sy = max_sy_cu * scale;
-  if (sx_cu < min_sx_cu)
-    sx = min_sx_cu * scale;
-  else if (sx_cu > max_sx_cu)
-    sx = max_sx_cu * scale;
+  if (sy < min_sy_cu)
+    sy = min_sy_cu;
+  else if (sy > max_sy_cu)
+    sy = max_sy_cu;
+  if (sx < min_sx_cu)
+    sx = min_sx_cu;
+  else if (sx > max_sx_cu)
+    sx = max_sx_cu;
 }
 
 /* Limit a proposed zoom factor to sane ranges.
@@ -802,13 +793,12 @@ bool map_t::scroll_to_if_offscreen(const lpos_t lpos) {
   // Viewport dimensions in canvas space
 
   /* get size of visible area in canvas units (meters) */
-  double pix_per_meter = canvas->get_zoom();
   canvas_dimensions dim = canvas->get_viewport_dimensions(canvas_t::UNIT_METER);
 
   // Is the point still onscreen?
   bool recentre_needed = false;
   int sx, sy;
-  canvas->scroll_get(canvas_t::UNIT_METER, sx, sy);
+  canvas->scroll_get(sx, sy);
   int viewport_left   = sx - dim.width / 2;
   int viewport_right  = sx + dim.width / 2;
   int viewport_top    = sy - dim.height / 2;
@@ -831,11 +821,11 @@ bool map_t::scroll_to_if_offscreen(const lpos_t lpos) {
 
   if(recentre_needed) {
     // Just centre both at once
-    int new_sx = pix_per_meter * lpos.x; // XXX (lpos.x - (aw/2));
-    int new_sy = pix_per_meter * lpos.y; // XXX (lpos.y - (ah/2));
+    int new_sx = lpos.x; // XXX (lpos.x - (aw/2));
+    int new_sy = lpos.y; // XXX (lpos.y - (ah/2));
 
-    map_limit_scroll(this, canvas_t::UNIT_PIXEL, new_sx, new_sy);
-    canvas->scroll_to(canvas_t::UNIT_PIXEL, new_sx, new_sy);
+    map_limit_scroll(this, new_sx, new_sy);
+    canvas->scroll_to(new_sx, new_sy);
   }
   return true;
 }
@@ -874,15 +864,14 @@ void map_t::set_zoom(double zoom, bool update_scroll_offsets) {
     if (!at_zoom_limit) {
       /* zooming affects the scroll offsets */
       int sx, sy;
-      canvas->scroll_get(canvas_t::UNIT_PIXEL, sx, sy);
-      map_limit_scroll(this, canvas_t::UNIT_PIXEL, sx, sy);
+      canvas->scroll_get(sx, sy);
+      map_limit_scroll(this, sx, sy);
 
       // keep the map visible
-      canvas->scroll_to(canvas_t::UNIT_PIXEL, sx, sy);
+      canvas->scroll_to(sx, sy);
     }
 
-    canvas->scroll_get(canvas_t::UNIT_METER, state.scroll_offset.x,
-                       state.scroll_offset.y);
+    canvas->scroll_get(state.scroll_offset.x, state.scroll_offset.y);
   }
 
   if(gps_item) {
@@ -909,13 +898,14 @@ static bool distance_above(map_t *map, int x, int y, int limit) {
 /* scroll a certain step */
 void map_t::scroll_step(int x, int y) {
   int sx, sy;
-  canvas->scroll_get(canvas_t::UNIT_PIXEL, sx, sy);
-  sx += x;
-  sy += y;
-  map_limit_scroll(this, canvas_t::UNIT_PIXEL, sx, sy);
-  canvas->scroll_to(canvas_t::UNIT_PIXEL, sx, sy);
+  double zoom = canvas->get_zoom();
+  canvas->scroll_get(sx, sy);
+  sx += x / zoom;
+  sy += y / zoom;
+  map_limit_scroll(this, sx, sy);
+  canvas->scroll_to(sx, sy);
 
-  canvas->scroll_get(canvas_t::UNIT_METER, state.scroll_offset.x, state.scroll_offset.y);
+  canvas->scroll_get(state.scroll_offset.x, state.scroll_offset.y);
 }
 
 bool map_t::item_is_selected_node(const map_item_t *map_item) const {
@@ -1301,11 +1291,9 @@ void map_t::init() {
   printf("restore scroll position %d/%d\n",
          state.scroll_offset.x, state.scroll_offset.y);
 
-  map_limit_scroll(this, canvas_t::UNIT_METER,
-                   state.scroll_offset.x, state.scroll_offset.y);
-  canvas->scroll_to(canvas_t::UNIT_METER, state.scroll_offset.x, state.scroll_offset.y);
+  map_limit_scroll(this, state.scroll_offset.x, state.scroll_offset.y);
+  canvas->scroll_to(state.scroll_offset.x, state.scroll_offset.y);
 }
-
 
 void map_t::clear(clearLayers layers) {
   printf("freeing map contents\n");

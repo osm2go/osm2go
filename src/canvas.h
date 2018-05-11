@@ -135,7 +135,7 @@ public:
 
   canvas_dimensions get_viewport_dimensions(canvas_unit_t unit) const;
   lpos_t window2world(int x, int y) const;
-  void scroll_get(canvas_unit_t unit, int &sx, int &sy) const;
+  void scroll_get(int &sx, int &sy) const;
 
   /****** manipulating the canvas ******/
   void set_background(color_t bg_color);
@@ -143,7 +143,7 @@ public:
   canvas_item_t *get_item_at(lpos_t pos) const;
   void set_zoom(double zoom);
   double get_zoom() const;
-  void scroll_to(canvas_unit_t unit, int sx, int sy);
+  void scroll_to(int sx, int sy);
   void set_bounds(int minx, int miny, int maxx, int maxy);
   void item_to_bottom(canvas_item_t *item);
 

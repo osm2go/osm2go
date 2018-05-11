@@ -138,7 +138,7 @@ canvas_dimensions canvas_t::get_viewport_dimensions(canvas_unit_t unit) const {
 }
 
 /* get scroll position in meters/pixels */
-void canvas_t::scroll_get(canvas_unit_t unit, int &sx, int &sy) const {
+void canvas_t::scroll_get(int &sx, int &sy) const {
   GooCanvas *gc = GOO_CANVAS(widget);
   gdouble zoom = goo_canvas_get_scale(gc);
 
@@ -150,23 +150,13 @@ void canvas_t::scroll_get(canvas_unit_t unit, int &sx, int &sy) const {
   hs += widget->allocation.width/(2*zoom);
   vs += widget->allocation.height/(2*zoom);
 
-  if(unit == canvas_t::UNIT_PIXEL) {
-    /* make values zoom independant */
-    sx = hs * zoom;
-    sy = vs * zoom;
-  } else {
-    sx = hs;
-    sy = vs;
-  }
+  sx = hs;
+  sy = vs;
 }
 
 /* set scroll position in meters/pixels */
-void canvas_t::scroll_to(canvas_unit_t unit, int sx, int sy) {
+void canvas_t::scroll_to(int sx, int sy) {
   gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(widget));
-
-  if(unit != canvas_t::UNIT_METER) {
-    sx /= zoom; sy /= zoom;
-  }
 
   /* adjust to screen center */
   sx -= widget->allocation.width / (2 * zoom);
