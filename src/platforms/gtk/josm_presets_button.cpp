@@ -570,6 +570,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
       char *text = nullptr;
       gtk_tree_model_get(model, &iter, PRESETS_PICKER_COL_NAME, &text, -1);
       g_string textGuard(text);
+      assert(textGuard);
       if (strcmp(text, _("Used presets")) == 0)
         sub = context->preset_picker_recent();
       else
@@ -791,25 +792,17 @@ presets_context_t::presets_picker(const std::vector<presets_item_t *> &items,
   const std::vector<presets_item_t *> &lru = static_cast<const presets_items_internal *>(presets)->lru;
 
   if(top_level &&
-     std::find_if(lru.begin(), lru.end(),
-                  matching_type_functor(presets_mask)) != lru.end()) {
-    GtkTreeIter iter;
-
-    gtk_list_store_prepend(store, &iter);
-    gtk_list_store_set(store, &iter,
+     std::find_if(lru.begin(), lru.end(), matching_type_functor(presets_mask)) != lru.end())
+    gtk_list_store_insert_with_values(store, nullptr, 0,
                        PRESETS_PICKER_COL_NAME, _("Last used presets"),
                        PRESETS_PICKER_COL_SUBMENU_ICON, subicon->buffer(),
                        -1);
-  }
-  if(show_recent) {
-    GtkTreeIter     iter;
 
-    gtk_list_store_prepend(store, &iter);
-    gtk_list_store_set(store, &iter,
+  if(show_recent)
+    gtk_list_store_insert_with_values(store, nullptr, 0,
                        PRESETS_PICKER_COL_NAME, _("Used presets"),
                        PRESETS_PICKER_COL_SUBMENU_ICON, subicon->buffer(),
                        -1);
-  }
 
   icons.icon_free(subicon);
 
