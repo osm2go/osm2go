@@ -96,8 +96,6 @@ canvas_goocanvas::canvas_goocanvas()
   g_signal_connect_swapped(w, "destroy",
                            G_CALLBACK(canvas_delete), this);
 
-  g_object_set_data(w, "canvas-pointer", this);
-
   g_object_set(w, "anchor", GTK_ANCHOR_CENTER, nullptr);
 
   gtk_widget_set_events(widget,
@@ -475,15 +473,10 @@ void canvas_item_circle::set_radius(int radius) {
                nullptr);
 }
 
-void canvas_item_t::to_bottom() {
-  GooCanvasItem *gitem = static_cast<GooCanvasItem *>(this);
+void canvas_t::item_to_bottom(canvas_item_t *item) {
+  GooCanvasItem *gitem = static_cast<GooCanvasItem *>(item);
   goo_canvas_item_lower(gitem, nullptr);
-  canvas_t *canvas =
-    static_cast<canvas_t *>(g_object_get_data(G_OBJECT(goo_canvas_item_get_canvas(gitem)),
-                                              "canvas-pointer"));
-
-  assert(canvas != nullptr);
-  canvas->item_info_push(this);
+  item_info_push(item);
 }
 
 void canvas_item_t::set_zoom_max(float zoom_max) {

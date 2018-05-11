@@ -1133,7 +1133,7 @@ void map_t::button_release(int x, int y) {
         if(selected.item == nullptr) {
           printf("  item has no visible representation to push\n");
         } else {
-          selected.item->to_bottom();
+          canvas->item_to_bottom(selected.item);
 
           /* update clicked item, to correctly handle the click */
           pen_down_item();

@@ -76,7 +76,6 @@ struct canvas_item_t {
   void set_zoom_max(float zoom_max);
   void set_dashed(unsigned int line_width, unsigned int dash_length_on,
                   unsigned int dash_length_off);
-  void to_bottom();
   void set_user_data(map_item_t *data, void (*c_handler)(map_item_t *));
   map_item_t *get_user_data();
   void destroy_connect(void (*c_handler)(void *), void *data);
@@ -146,6 +145,7 @@ public:
   double get_zoom() const;
   void scroll_to(canvas_unit_t unit, int sx, int sy);
   void set_bounds(int minx, int miny, int maxx, int maxy);
+  void item_to_bottom(canvas_item_t *item);
 
   /***** creating/destroying items ******/
   canvas_item_circle *circle_new(canvas_group_t group,
