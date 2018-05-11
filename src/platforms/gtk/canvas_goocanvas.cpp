@@ -129,18 +129,13 @@ double canvas_t::get_zoom() const {
 
 canvas_dimensions canvas_t::get_viewport_dimensions(canvas_unit_t unit) const {
   // Canvas viewport dimensions
-  canvas_dimensions ret;
-
   const GtkAllocation &a = widget->allocation;
-  if(unit == canvas_t::UNIT_PIXEL) {
-    ret.width = a.width;
-    ret.height = a.height;
-  } else {
+  canvas_dimensions ret(a.width, a.height);
+
+  if(unit == canvas_t::UNIT_METER)
     /* convert to meters by dividing by zoom */
-    gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(widget));
-    ret.width = a.width / zoom;
-    ret.height = a.height / zoom;
-  }
+    ret /= goo_canvas_get_scale(GOO_CANVAS(widget));
+
   return ret;
 }
 

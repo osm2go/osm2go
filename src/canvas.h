@@ -104,11 +104,18 @@ struct canvas_item_pixmap : public canvas_item_t {
 };
 
 struct canvas_dimensions {
+  canvas_dimensions(double w, double h)
+    : width(w), height(h) {}
   double width, height;
   inline canvas_dimensions operator/(double d) const {
     canvas_dimensions ret = *this;
-    ret.width /= d; ret.height /= d;
+    ret /= d;
     return ret;
+  }
+  inline canvas_dimensions &operator/=(double d) {
+    width /= d;
+    height /= d;
+    return *this;
   }
 };
 
