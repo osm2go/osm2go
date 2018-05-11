@@ -91,8 +91,8 @@ canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_group_t g, can
   , num_points(p.size())
   , points(new lpos_t[p.size()])
 {
-  for(unsigned int i = 0; i < num_points; i++)
-    points[i] = p[i];
+  // data() is a C++11 extension, but gcc has it since at least 4.2
+  memcpy(points.get(), p.data(), p.size() * sizeof(points[0]));
 }
 
 struct item_info_find {
