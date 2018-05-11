@@ -335,12 +335,11 @@ static void on_tag_last(info_tag_context_t *context) {
 static GtkTreeIter store_append(GtkListStore *store, const std::string &key,
                                 const std::string &value, bool collision) {
   GtkTreeIter iter;
-  gtk_list_store_append(store, &iter);
-  gtk_list_store_set(store, &iter,
-                     TAG_COL_KEY, key.c_str(),
-                     TAG_COL_VALUE, value.c_str(),
-                     TAG_COL_COLLISION, collision ? TRUE : FALSE,
-                     -1);
+  gtk_list_store_insert_with_values(store, &iter, -1,
+                                    TAG_COL_KEY,       key.c_str(),
+                                    TAG_COL_VALUE,     value.c_str(),
+                                    TAG_COL_COLLISION, collision ? TRUE : FALSE,
+                                    -1);
   return iter;
 }
 

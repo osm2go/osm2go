@@ -280,11 +280,10 @@ GtkTreeIter store_fill_functor::operator()(const wms_server_t *srv)
 {
   GtkTreeIter iter;
 
-  gtk_list_store_append(store, &iter);
-  gtk_list_store_set(store, &iter,
-                     WMS_SERVER_COL_NAME, srv->name.c_str(),
-                     WMS_SERVER_COL_DATA, srv,
-                     -1);
+  gtk_list_store_insert_with_values(store, &iter, -1,
+                                    WMS_SERVER_COL_NAME, srv->name.c_str(),
+                                    WMS_SERVER_COL_DATA, srv,
+                                    -1);
 
   return iter;
 }
@@ -480,16 +479,14 @@ struct fitting_layers_functor {
 
 void fitting_layers_functor::operator()(const wms_layer_t *layer)
 {
-  GtkTreeIter iter;
   bool fits = layer->llbbox.valid && wms_llbbox_fits(project, layer->llbbox);
 
   /* Append a row and fill in some data */
-  gtk_list_store_append(store, &iter);
-  gtk_list_store_set(store, &iter,
-                     LAYER_COL_TITLE, layer->title.c_str(),
-                     LAYER_COL_FITS, fits ? TRUE : FALSE,
-                     LAYER_COL_DATA, layer,
-                     -1);
+  gtk_list_store_insert_with_values(store, nullptr, -1,
+                                    LAYER_COL_TITLE, layer->title.c_str(),
+                                    LAYER_COL_FITS, fits ? TRUE : FALSE,
+                                    LAYER_COL_DATA, layer,
+                                    -1);
 }
 
 static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t::list &layers) {

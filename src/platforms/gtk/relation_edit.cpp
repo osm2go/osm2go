@@ -269,13 +269,12 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
   const bool isMember = it != relation->members.end();
 
   /* Append a row and fill in some data */
-  gtk_list_store_append(context.store.get(), &iter);
-  gtk_list_store_set(context.store.get(), &iter,
-     RELITEM_COL_TYPE, relation->tags.get_value("type"),
-     RELITEM_COL_ROLE, isMember ? it->role : nullptr,
-     RELITEM_COL_NAME, name.c_str(),
-     RELITEM_COL_DATA, relation,
-     -1);
+  gtk_list_store_insert_with_values(context.store.get(), &iter, -1,
+                                    RELITEM_COL_TYPE, relation->tags.get_value("type"),
+                                    RELITEM_COL_ROLE, isMember ? it->role : nullptr,
+                                    RELITEM_COL_NAME, name.c_str(),
+                                    RELITEM_COL_DATA, relation,
+                                    -1);
 
   /* select all relations the current object is part of */
 
@@ -479,15 +478,14 @@ void members_list_functor::operator()(const member_t &member)
   const std::string &name = member.object.is_real() ? member.object.get_name(*osm.get()) : std::string();
 
   /* Append a row and fill in some data */
-  gtk_list_store_append(store, &iter);
-  gtk_list_store_set(store, &iter,
-     MEMBER_COL_TYPE, member.object.type_string(),
-     MEMBER_COL_ID,   id.c_str(),
-     MEMBER_COL_NAME, name.c_str(),
-     MEMBER_COL_ROLE, member.role,
-     MEMBER_COL_REF_ONLY, member.object.type >= object_t::NODE_ID,
-     MEMBER_COL_DATA, &member,
-     -1);
+  gtk_list_store_insert_with_values(store, &iter, -1,
+                                    MEMBER_COL_TYPE, member.object.type_string(),
+                                    MEMBER_COL_ID,       id.c_str(),
+                                    MEMBER_COL_NAME,     name.c_str(),
+                                    MEMBER_COL_ROLE,     member.role,
+                                    MEMBER_COL_REF_ONLY, member.object.type >= object_t::NODE_ID,
+                                    MEMBER_COL_DATA,     &member,
+                                    -1);
 }
 
 static GtkWidget *member_list_widget(member_context_t &context) {
@@ -626,14 +624,12 @@ static void on_relation_add(relation_context_t *context) {
 
     /* Append a row and fill in some data */
     GtkTreeIter iter;
-    gtk_list_store_append(context->store.get(), &iter);
-    gtk_list_store_set(context->store.get(), &iter,
-		       RELATION_COL_TYPE,
-		       relation->tags.get_value("type"),
-		       RELATION_COL_NAME, name.c_str(),
-		       RELATION_COL_MEMBERS, relation->members.size(),
-		       RELATION_COL_DATA, relation,
-		       -1);
+    gtk_list_store_insert_with_values(context->store.get(), &iter, -1,
+                                      RELATION_COL_TYPE,    relation->tags.get_value("type"),
+                                      RELATION_COL_NAME,    name.c_str(),
+                                      RELATION_COL_MEMBERS, relation->members.size(),
+                                      RELATION_COL_DATA,    relation,
+                                      -1);
 
     gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
   }
@@ -718,16 +714,14 @@ void relation_list_widget_functor::operator()(const relation_t *rel)
     return;
 
   const std::string &name = rel->descriptive_name();
-  GtkTreeIter iter;
 
   /* Append a row and fill in some data */
-  gtk_list_store_append(store, &iter);
-  gtk_list_store_set(store, &iter,
-                     RELATION_COL_TYPE, rel->tags.get_value("type"),
-                     RELATION_COL_NAME, name.c_str(),
-                     RELATION_COL_MEMBERS, rel->members.size(),
-                     RELATION_COL_DATA, rel,
-                     -1);
+  gtk_list_store_insert_with_values(store, nullptr, -1,
+                                    RELATION_COL_TYPE, rel->tags.get_value("type"),
+                                    RELATION_COL_NAME, name.c_str(),
+                                    RELATION_COL_MEMBERS, rel->members.size(),
+                                    RELATION_COL_DATA, rel,
+                                    -1);
 }
 
 static GtkWidget *relation_list_widget(relation_context_t &context) {

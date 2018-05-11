@@ -358,13 +358,13 @@ static void on_project_new(select_context_t *context) {
     GtkTreeIter iter;
     const gchar *status_stock_id = project_get_status_icon_stock_id(
                                          context->appdata.project.get(), project);
-    gtk_list_store_append(GTK_LIST_STORE(context->store.get()), &iter);
-    gtk_list_store_set(GTK_LIST_STORE(context->store.get()), &iter,
-		       PROJECT_COL_NAME,        project->name.c_str(),
-		       PROJECT_COL_STATUS,      status_stock_id,
-		       PROJECT_COL_DESCRIPTION, project->desc.c_str(),
-		       PROJECT_COL_DATA,        project,
-		       -1);
+    gtk_list_store_insert_with_values(GTK_LIST_STORE(context->store.get()), &iter,
+                                      context->projects.size(),
+                                      PROJECT_COL_NAME,        project->name.c_str(),
+                                      PROJECT_COL_STATUS,      status_stock_id,
+                                      PROJECT_COL_DESCRIPTION, project->desc.c_str(),
+                                      PROJECT_COL_DATA,        project,
+                                      -1);
 
     GtkTreeSelection *selection = list_get_selection(context->list);
     gtk_tree_selection_select_iter(selection, &iter);
@@ -485,13 +485,12 @@ void project_list_add::operator()(const project_t *project)
   const gchar *status_stock_id = project_get_status_icon_stock_id(
                                          cur_proj, project);
   /* Append a row and fill in some data */
-  gtk_list_store_append(store, &iter);
-  gtk_list_store_set(store, &iter,
-                     PROJECT_COL_NAME,        project->name.c_str(),
-                     PROJECT_COL_STATUS,      status_stock_id,
-                     PROJECT_COL_DESCRIPTION, project->desc.c_str(),
-                     PROJECT_COL_DATA,        project,
-                     -1);
+  gtk_list_store_insert_with_values(store, &iter, -1,
+                                    PROJECT_COL_NAME,        project->name.c_str(),
+                                    PROJECT_COL_STATUS,      status_stock_id,
+                                    PROJECT_COL_DESCRIPTION, project->desc.c_str(),
+                                    PROJECT_COL_DATA,        project,
+                                    -1);
 
   /* decide if to select this project because it matches the current position */
   if(check_pos && project->bounds.contains(pos)) {
