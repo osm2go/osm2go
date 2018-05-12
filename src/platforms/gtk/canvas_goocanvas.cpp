@@ -311,7 +311,7 @@ static gint item_at_compare(gconstpointer i, gconstpointer f)
 
   const canvas_t::item_mapping_t::const_iterator it = fc.canvas->item_mapping.find(const_cast<canvas_item_t *>(citem));
   if(it == fc.canvas->item_mapping.end()) {
-    printf("item %p not in canvas map\n", citem);
+    g_debug("item %p not in canvas map\n", citem);
     return -1;
   }
 
@@ -547,4 +547,37 @@ int canvas_t::get_item_segment(const canvas_item_t *item, lpos_t pos) const {
 
   return canvas_item_info_get_segment(static_cast<const canvas_item_info_poly *>(it->second),
                                       pos.x, pos.y, 0);
+}
+
+bool canvas_t::isVisible(const lpos_t lpos) const
+{
+  // Viewport dimensions in canvas space
+
+  /* get size of visible area in canvas units (meters) */
+  const canvas_dimensions dim = get_viewport_dimensions(canvas_t::UNIT_METER);
+
+  // Is the point still onscreen?
+  int sx, sy;
+  scroll_get(sx, sy);
+  int viewport_left   = sx - dim.width / 2;
+  int viewport_right  = sx + dim.width / 2;
+  int viewport_top    = sy - dim.height / 2;
+  int viewport_bottom = sy + dim.height / 2;
+
+  if (lpos.x > viewport_right) {
+    g_debug("** off right edge (%d > %d)\n", lpos.x, viewport_right);
+    return true;
+  } else if (lpos.x < viewport_left) {
+    g_debug("** off left edge (%d < %d)\n", lpos.x, viewport_left);
+    return true;
+  }
+  if (lpos.y > viewport_bottom) {
+    g_debug("** off bottom edge (%d > %d)\n", lpos.y, viewport_bottom);
+    return true;
+  } else if (lpos.y < viewport_top) {
+    g_debug("** off top edge (%d < %d)\n", lpos.y, viewport_top);
+    return true;
+  }
+
+  return false;
 }

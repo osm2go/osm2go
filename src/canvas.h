@@ -162,9 +162,16 @@ public:
   void item_info_push(canvas_item_t *item);
 
   /**
-  * @brief get the polygon/polyway segment a certain coordinate is over
-  */
+   * @brief get the polygon/polyway segment a certain coordinate is over
+   */
   int get_item_segment(const canvas_item_t *item, lpos_t pos) const;
+
+  /**
+   * @brief check if the given coordinate is currently visible on screen
+   *
+   * The coordinate must be within the project bounds.
+   */
+  bool isVisible(const lpos_t lpos) const;
 };
 
 #endif // CANVAS_H

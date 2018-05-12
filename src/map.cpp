@@ -778,36 +778,7 @@ bool map_t::scroll_to_if_offscreen(const lpos_t lpos) {
     return false;
   }
 
-  // Viewport dimensions in canvas space
-
-  /* get size of visible area in canvas units (meters) */
-  canvas_dimensions dim = canvas->get_viewport_dimensions(canvas_t::UNIT_METER);
-
-  // Is the point still onscreen?
-  bool recentre_needed = false;
-  int sx, sy;
-  canvas->scroll_get(sx, sy);
-  int viewport_left   = sx - dim.width / 2;
-  int viewport_right  = sx + dim.width / 2;
-  int viewport_top    = sy - dim.height / 2;
-  int viewport_bottom = sy + dim.height / 2;
-
-  if (lpos.x > viewport_right) {
-    printf("** off right edge (%d > %d)\n", lpos.x, viewport_right);
-    recentre_needed = true;
-  } else if (lpos.x < viewport_left) {
-    printf("** off left edge (%d < %d)\n", lpos.x, viewport_left);
-    recentre_needed = true;
-  }
-  if (lpos.y > viewport_bottom) {
-    printf("** off bottom edge (%d > %d)\n", lpos.y, viewport_bottom);
-    recentre_needed = true;
-  } else if (lpos.y < viewport_top) {
-    printf("** off top edge (%d < %d)\n", lpos.y, viewport_top);
-    recentre_needed = true;
-  }
-
-  if(recentre_needed) {
+  if(!canvas->isVisible(lpos)) {
     // Just centre both at once
     int new_sx = lpos.x; // XXX (lpos.x - (aw/2));
     int new_sy = lpos.y; // XXX (lpos.y - (ah/2));
@@ -815,6 +786,7 @@ bool map_t::scroll_to_if_offscreen(const lpos_t lpos) {
     map_limit_scroll(this, new_sx, new_sy);
     canvas->scroll_to(new_sx, new_sy);
   }
+
   return true;
 }
 
