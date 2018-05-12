@@ -726,14 +726,8 @@ static void map_limit_scroll(map_t *map, int &sx, int &sy) {
   int min_sx_cu = 0.95 * (bounds.min.x - dim.width);
   int max_sy_cu = 0.95 * (bounds.max.y + dim.height);
   int max_sx_cu = 0.95 * (bounds.max.x + dim.width);
-  if (sy < min_sy_cu)
-    sy = min_sy_cu;
-  else if (sy > max_sy_cu)
-    sy = max_sy_cu;
-  if (sx < min_sx_cu)
-    sx = min_sx_cu;
-  else if (sx > max_sx_cu)
-    sx = max_sx_cu;
+  sy = std::min(std::max(sy, min_sy_cu), max_sy_cu);
+  sx = std::min(std::max(sx, min_sx_cu), max_sx_cu);
 }
 
 /* Limit a proposed zoom factor to sane ranges.
@@ -743,36 +737,30 @@ static bool map_limit_zoom(map_t *map, double &zoom) {
     const bounds_t &bounds = map->appdata.project->osm->bounds;
 
     /* get size of visible area in pixels and convert to meters of intended */
-    /* zoom by deviding by zoom (which is basically pix/m) */
+    /* zoom by dividing by zoom (which is basically pix/m) */
     canvas_dimensions dim = map->canvas->get_viewport_dimensions(canvas_t::UNIT_PIXEL) / zoom;
 
-    double oldzoom = zoom;
     if (dim.height < dim.width) {
-      int lim_h = dim.height * 0.95;
-      const int min_y = bounds.min.y;
-      const int max_y = bounds.max.y;
+      double lim_h = dim.height * 0.95;
+      int delta_y = bounds.max.y - bounds.min.y;
 
-      if (max_y-min_y < lim_h) {
-          double corr = (static_cast<double>(max_y) - min_y) / lim_h;
-          zoom /= corr;
-      }
+      if (delta_y < lim_h)
+          zoom /= (delta_y / lim_h);
+      else
+        return false;
     } else {
-      int lim_w = dim.width * 0.95;
-      const int min_x = bounds.min.x;
-      const int max_x = bounds.max.x;
+      double lim_w = dim.width * 0.95;
+      int delta_x = bounds.max.x - bounds.min.x;
 
-      if (max_x-min_x < lim_w) {
-          double corr = (static_cast<double>(max_x) - min_x) / lim_w;
-          zoom /= corr;
-      }
+      if (delta_x < lim_w)
+          zoom /= (delta_x / lim_w);
+      else
+        return false;
     }
-    if (zoom != oldzoom) {
-        printf("Can't zoom further out (%f)\n", zoom);
-        return true;
-    }
-    return false;
+
+    printf("Can't zoom further out (%f)\n", zoom);
+    return true;
 }
-
 
 /*
  * Scroll the map to a point if that point is currently offscreen.
