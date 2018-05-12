@@ -714,7 +714,7 @@ void map_t::pen_down_item() {
 }
 
 /* Limitations on the amount by which we can scroll. Keeps part of the
- * map visible at all times */
+ * map visible at all times. Then scroll to the new position. */
 static void map_limit_scroll(map_t *map, int &sx, int &sy) {
   /* get size of visible area in canvas units (meters) */
   canvas_dimensions dim = map->canvas->get_viewport_dimensions(canvas_t::UNIT_METER) / 2;
@@ -728,6 +728,8 @@ static void map_limit_scroll(map_t *map, int &sx, int &sy) {
   int max_sx_cu = 0.95 * (bounds.max.x + dim.width);
   sy = std::min(std::max(sy, min_sy_cu), max_sy_cu);
   sx = std::min(std::max(sx, min_sx_cu), max_sx_cu);
+
+  map->canvas->scroll_to(sx, sy);
 }
 
 /* Limit a proposed zoom factor to sane ranges.
@@ -767,8 +769,7 @@ static bool map_limit_zoom(map_t *map, double &zoom) {
  * Return true if this was possible, false if position is outside
  * working area
  */
-bool map_t::scroll_to_if_offscreen(const lpos_t lpos) {
-
+bool map_t::scroll_to_if_offscreen(lpos_t lpos) {
   // Ignore anything outside the working area
   if(unlikely(!appdata.project->osm))
     return false;
@@ -778,14 +779,9 @@ bool map_t::scroll_to_if_offscreen(const lpos_t lpos) {
     return false;
   }
 
-  if(!canvas->isVisible(lpos)) {
+  if(!canvas->isVisible(lpos))
     // Just centre both at once
-    int new_sx = lpos.x; // XXX (lpos.x - (aw/2));
-    int new_sy = lpos.y; // XXX (lpos.y - (ah/2));
-
-    map_limit_scroll(this, new_sx, new_sy);
-    canvas->scroll_to(new_sx, new_sy);
-  }
+    map_limit_scroll(this, lpos.x, lpos.y);
 
   return true;
 }
@@ -826,9 +822,6 @@ void map_t::set_zoom(double zoom, bool update_scroll_offsets) {
       int sx, sy;
       canvas->scroll_get(sx, sy);
       map_limit_scroll(this, sx, sy);
-
-      // keep the map visible
-      canvas->scroll_to(sx, sy);
     }
 
     canvas->scroll_get(state.scroll_offset.x, state.scroll_offset.y);
@@ -863,7 +856,6 @@ void map_t::scroll_step(int x, int y) {
   sx += x / zoom;
   sy += y / zoom;
   map_limit_scroll(this, sx, sy);
-  canvas->scroll_to(sx, sy);
 
   canvas->scroll_get(state.scroll_offset.x, state.scroll_offset.y);
 }
@@ -1252,7 +1244,6 @@ void map_t::init() {
          state.scroll_offset.x, state.scroll_offset.y);
 
   map_limit_scroll(this, state.scroll_offset.x, state.scroll_offset.y);
-  canvas->scroll_to(state.scroll_offset.x, state.scroll_offset.y);
 }
 
 void map_t::clear(clearLayers layers) {

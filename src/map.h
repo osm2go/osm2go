@@ -176,7 +176,7 @@ public:
   void set_action(map_action_t action);
   bool item_is_selected_way(const map_item_t *map_item) const;
   bool item_is_selected_node(const map_item_t *map_item) const;
-  bool scroll_to_if_offscreen(const lpos_t lpos);
+  bool scroll_to_if_offscreen(lpos_t lpos);
 
   /* track stuff */
   void track_draw(TrackVisibility visibiliy, track_t &track);
