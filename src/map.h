@@ -203,6 +203,7 @@ public:
 
   /* various functions required by map_edit */
   map_item_t *item_at(int x, int y);
+  map_item_t *item_at(lpos_t pos);
 
   void pen_down_item();
 
@@ -245,27 +246,22 @@ public:
 protected:
   // edit functions
   void way_cut_highlight(map_item_t *item, int x, int y);
-  void way_cut(int x, int y);
+  void way_cut(lpos_t pos);
 
   void way_add_begin();
-  void way_add_segment(int x, int y);
+  void way_add_segment(lpos_t pos);
   void way_add_cancel();
   void way_add_ok();
 
-  void way_node_add_highlight(map_item_t *item, int x, int y);
+  void way_node_add_highlight(map_item_t *item, lpos_t pos);
 
-  void way_node_add(int x, int y);
+  void way_node_add(lpos_t pos);
 
   void node_move(map_item_t *map_item, int ex, int ey);
 
   void way_reverse();
 
   // highlighting
-
-  /**
-  * @brief draw highlight cursor on screen coordinates
-  */
-  void hl_cursor_draw(int x, int y, unsigned int radius);
 
   /**
   * @brief draw highlight cursor on map coordinates
@@ -277,7 +273,7 @@ protected:
 
 private:
   void touchnode_clear();
-  void touchnode_update(int x, int y);
+  void touchnode_update(lpos_t pos);
 };
 
 #endif // MAP_H

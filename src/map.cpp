@@ -655,7 +655,11 @@ static void map_free_map_item_chains(appdata_t &appdata) {
 
 /* get the item at position x, y */
 map_item_t *map_t::item_at(int x, int y) {
-  canvas_item_t *item = canvas->get_item_at(canvas->window2world(x, y));
+  return item_at(canvas->window2world(x, y));
+}
+
+map_item_t *map_t::item_at(lpos_t pos) {
+  canvas_item_t *item = canvas->get_item_at(pos);
 
   if(!item) {
     printf("  there's no item\n");
@@ -954,8 +958,7 @@ void hl_nodes::operator()(node_t* node)
     res_node = node;
 }
 
-void map_t::touchnode_update(int x, int y) {
-  lpos_t pos = canvas->window2world(x, y);
+void map_t::touchnode_update(lpos_t pos) {
   hl_cursor_draw(pos, style->node.radius);
 
   touchnode_clear();
@@ -1020,7 +1023,7 @@ void map_t::button_press(float x, float y) {
   switch(action.type) {
 
   case MAP_ACTION_WAY_NODE_ADD:
-    way_node_add_highlight(pen_down.on_item, x, y);
+    way_node_add_highlight(pen_down.on_item, canvas->window2world(x, y));
     break;
 
   case MAP_ACTION_WAY_CUT:
@@ -1028,11 +1031,11 @@ void map_t::button_press(float x, float y) {
     break;
 
   case MAP_ACTION_NODE_ADD:
-    hl_cursor_draw(x, y, style->node.radius);
+    hl_cursor_draw(canvas->window2world(x, y), style->node.radius);
     break;
 
   case MAP_ACTION_WAY_ADD:
-    touchnode_update(x, y);
+    touchnode_update(canvas->window2world(x, y));
     break;
 
   default:
@@ -1124,21 +1127,21 @@ void map_t::button_release(int x, int y) {
     printf("released after WAY ADD\n");
     hl_cursor_clear();
 
-    way_add_segment(x, y);
+    way_add_segment(canvas->window2world(x, y));
     break;
 
   case MAP_ACTION_WAY_NODE_ADD:
     printf("released after WAY NODE ADD\n");
     hl_cursor_clear();
 
-    way_node_add(x, y);
+    way_node_add(canvas->window2world(x, y));
     break;
 
   case MAP_ACTION_WAY_CUT:
     printf("released after WAY CUT\n");
     hl_cursor_clear();
 
-    way_cut(x, y);
+    way_cut(canvas->window2world(x, y));
     break;
 
   default:
@@ -1152,6 +1155,7 @@ void map_t::handle_motion(int x, int y)
   if(!pen_down.drag)
     pen_down.drag = distance_above(this, x, y, MAP_DRAG_LIMIT);
 
+  lpos_t pos;
   /* drag */
   switch(action.type) {
   case MAP_ACTION_BG_ADJUST:
@@ -1164,26 +1168,28 @@ void map_t::handle_motion(int x, int y)
       if(!pen_down.on_selected_node)
         scroll_step(pen_down.at.x - x, pen_down.at.y - y);
       else
-        touchnode_update(x, y);
+        touchnode_update(canvas->window2world(x, y));
     }
     break;
 
   case MAP_ACTION_NODE_ADD:
-    hl_cursor_draw(x, y, style->node.radius);
+    hl_cursor_draw(canvas->window2world(x, y), style->node.radius);
     break;
 
   case MAP_ACTION_WAY_ADD:
-    touchnode_update(x, y);
+    touchnode_update(canvas->window2world(x, y));
     break;
 
   case MAP_ACTION_WAY_NODE_ADD:
     hl_cursor_clear();
-    way_node_add_highlight(item_at(x, y), x, y);
+    pos = canvas->window2world(x, y);
+    way_node_add_highlight(item_at(pos), pos);
     break;
 
   case MAP_ACTION_WAY_CUT:
     hl_cursor_clear();
-    way_cut_highlight(item_at(x, y), x, y);
+    pos = canvas->window2world(x, y);
+    way_cut_highlight(item_at(pos), x, y);
     break;
 
   default:

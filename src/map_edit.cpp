@@ -53,11 +53,7 @@ struct check_first_last_node {
   }
 };
 
-void map_t::way_add_segment(int x, int y) {
-
-  /* convert mouse position to canvas (world) position */
-  lpos_t pos = canvas->window2world(x, y);
-
+void map_t::way_add_segment(lpos_t pos) {
   /* check if this was a double click. This is the case if */
   /* the last node placed is less than 5 pixels from the current */
   /* position */
@@ -273,20 +269,16 @@ void map_t::way_add_ok() {
 
 /* -------------------------- way_node_add ----------------------- */
 
-void map_t::way_node_add_highlight(map_item_t *item, int x, int y) {
-  if(item_is_selected_way(item)) {
-    lpos_t pos = canvas->window2world(x, y);
-    if(canvas->get_item_segment(item->item, pos) >= 0)
-      hl_cursor_draw(pos, style->node.radius);
-  }
+void map_t::way_node_add_highlight(map_item_t *item, lpos_t pos) {
+  if(item_is_selected_way(item) && canvas->get_item_segment(item->item, pos) >= 0)
+    hl_cursor_draw(pos, style->node.radius);
 }
 
-void map_t::way_node_add(int px, int py) {
+void map_t::way_node_add(lpos_t pos) {
   /* check if we are still hovering above the selected way */
-  map_item_t *item = item_at(px, py);
+  map_item_t *item = item_at(pos);
   if(item_is_selected_way(item)) {
     /* convert mouse position to canvas (world) position */
-    lpos_t pos = canvas->window2world(px, py);
     int insert_after = canvas->get_item_segment(item->item, pos) + 1;
     if(insert_after > 0) {
       /* create new node */
@@ -350,17 +342,15 @@ void map_t::way_cut_highlight(map_item_t *item, int x, int y) {
 }
 
 /* cut the currently selected way at the current cursor position */
-void map_t::way_cut(int px, int py) {
-
+void map_t::way_cut(lpos_t pos) {
   /* check if we are still hovering above the selected way */
-  map_item_t *item = item_at(px, py);
+  map_item_t *item = item_at(pos);
   bool cut_at_node = item_is_selected_node(item);
 
   if(!item_is_selected_way(item) && !cut_at_node)
     return;
 
   /* convert mouse position to canvas (world) position */
-  lpos_t pos = canvas->window2world(px, py);
 
   node_chain_t::iterator cut_at;
   way_t *way = nullptr;

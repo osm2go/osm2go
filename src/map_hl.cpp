@@ -38,10 +38,6 @@ void map_highlight_t::clear()
 }
 
 /* create a new item for the cursor */
-void map_t::hl_cursor_draw(int x, int y, unsigned int radius) {
-  hl_cursor_draw(canvas->window2world(x, y), radius);
-}
-
 void map_t::hl_cursor_draw(lpos_t pos, unsigned int radius) {
   delete cursor;
 
