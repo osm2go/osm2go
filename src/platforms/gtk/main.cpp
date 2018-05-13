@@ -332,19 +332,15 @@ cb_menu_fullscreen(appdata_t *, GtkCheckMenuItem *item) {
 #endif
 
 static void
-cb_menu_zoomin(appdata_t *appdata) {
-  if(!appdata->map) return;
-
-  appdata->map->set_zoom(appdata->map->state.zoom * ZOOM_FACTOR_MENU, true);
-  g_debug("zoom is now %f\n", appdata->map->state.zoom);
+cb_menu_zoomin(map_t *map) {
+  map->set_zoom(map->state.zoom * ZOOM_FACTOR_MENU, true);
+  g_debug("zoom is now %f\n", map->state.zoom);
 }
 
 static void
-cb_menu_zoomout(appdata_t *appdata) {
-  if(!appdata->map) return;
-
-  appdata->map->set_zoom(appdata->map->state.zoom / ZOOM_FACTOR_MENU, true);
-  g_debug("zoom is now %f\n", appdata->map->state.zoom);
+cb_menu_zoomout(map_t *map) {
+  map->set_zoom(map->state.zoom / ZOOM_FACTOR_MENU, true);
+  g_debug("zoom is now %f\n", map->state.zoom);
 }
 
 static void
@@ -622,12 +618,12 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
     KeySequence(GDK_F11), item);
 
   menu_append_new_item(
-    &appdata, submenu, G_CALLBACK(cb_menu_zoomin), _("Zoom _in"),
+    appdata.map, submenu, G_CALLBACK(cb_menu_zoomin), _("Zoom _in"),
     "zoom-in", "<OSM2Go-Main>/View/ZoomIn",
     KeySequence(GDK_comma, GDK_CONTROL_MASK));
 
   menu_append_new_item(
-    &appdata, submenu, G_CALLBACK(cb_menu_zoomout), _("Zoom _out"),
+    appdata.map, submenu, G_CALLBACK(cb_menu_zoomout), _("Zoom _out"),
     "zoom-out", "<OSM2Go-Main>/View/ZoomOut",
     KeySequence(GDK_period, GDK_CONTROL_MASK));
 
@@ -1196,8 +1192,8 @@ static int application_run(const char *proj)
 #ifndef FREMANTLE
   icon_button(appdata.map, "detailup_thumb",   G_CALLBACK(cb_menu_view_detail_inc), sbar);
   icon_button(appdata.map, "detaildown_thumb", G_CALLBACK(cb_menu_view_detail_dec), sbar);
-  appdata.btn_zoom_out = icon_button(&appdata, "zoom-in", G_CALLBACK(cb_menu_zoomout), sbar);
-  appdata.btn_zoom_in = icon_button(&appdata, "zoom-out", G_CALLBACK(cb_menu_zoomin), sbar);
+  appdata.btn_zoom_out = icon_button(appdata.map, "zoom-in", G_CALLBACK(cb_menu_zoomout), sbar);
+  appdata.btn_zoom_in = icon_button(appdata.map, "zoom-out", G_CALLBACK(cb_menu_zoomin), sbar);
 #endif
   gtk_box_pack_start(GTK_BOX(vbox), sbar, FALSE, FALSE, 0);
 
@@ -1209,9 +1205,9 @@ static int application_run(const char *proj)
 
   GtkWidget *ivbox = gtk_vbox_new(FALSE, 0);
   appdata.btn_zoom_in =
-    icon_button(&appdata, "zoomin_thumb",   G_CALLBACK(cb_menu_zoomin), ivbox);
+    icon_button(appdata.map, "zoomin_thumb",   G_CALLBACK(cb_menu_zoomin), ivbox);
   appdata.btn_zoom_out =
-    icon_button(&appdata, "zoomout_thumb",  G_CALLBACK(cb_menu_zoomout), ivbox);
+    icon_button(appdata.map, "zoomout_thumb",  G_CALLBACK(cb_menu_zoomout), ivbox);
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, FALSE, FALSE, 0);
 
   ivbox = gtk_vbox_new(FALSE, 0);
