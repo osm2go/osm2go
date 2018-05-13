@@ -767,9 +767,6 @@ static bool map_limit_zoom(const bounds_t &bounds, const canvas_t *canvas, doubl
  */
 bool map_t::scroll_to_if_offscreen(lpos_t lpos) {
   // Ignore anything outside the working area
-  if(unlikely(!appdata.project->osm))
-    return false;
-
   if (!appdata.project->osm->bounds.contains(lpos)) {
     printf("cannot scroll to (%d, %d): outside the working area\n", lpos.x, lpos.y);
     return false;
