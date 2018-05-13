@@ -566,18 +566,18 @@ bool canvas_t::isVisible(const lpos_t lpos) const
 
   if (lpos.x > viewport_right) {
     g_debug("** off right edge (%d > %d)\n", lpos.x, viewport_right);
-    return true;
+    return false;
   } else if (lpos.x < viewport_left) {
     g_debug("** off left edge (%d < %d)\n", lpos.x, viewport_left);
-    return true;
+    return false;
   }
   if (lpos.y > viewport_bottom) {
     g_debug("** off bottom edge (%d > %d)\n", lpos.y, viewport_bottom);
-    return true;
+    return false;
   } else if (lpos.y < viewport_top) {
     g_debug("** off top edge (%d < %d)\n", lpos.y, viewport_top);
-    return true;
+    return false;
   }
 
-  return false;
+  return true;
 }
