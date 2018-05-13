@@ -559,25 +559,15 @@ bool canvas_t::isVisible(const lpos_t lpos) const
   // Is the point still onscreen?
   int sx, sy;
   scroll_get(sx, sy);
-  int viewport_left   = sx - dim.width / 2;
-  int viewport_right  = sx + dim.width / 2;
-  int viewport_top    = sy - dim.height / 2;
-  int viewport_bottom = sy + dim.height / 2;
 
-  if (lpos.x > viewport_right) {
-    g_debug("** off right edge (%d > %d)\n", lpos.x, viewport_right);
+  if (lpos.x > sx + dim.width / 2)
     return false;
-  } else if (lpos.x < viewport_left) {
-    g_debug("** off left edge (%d < %d)\n", lpos.x, viewport_left);
+  else if (lpos.x < sx - dim.width / 2)
     return false;
-  }
-  if (lpos.y > viewport_bottom) {
-    g_debug("** off bottom edge (%d > %d)\n", lpos.y, viewport_bottom);
+  else if (lpos.y > sy + dim.height / 2)
     return false;
-  } else if (lpos.y < viewport_top) {
-    g_debug("** off top edge (%d < %d)\n", lpos.y, viewport_top);
+  else if (lpos.y < sy - dim.height / 2)
     return false;
-  }
 
   return true;
 }
