@@ -137,7 +137,7 @@ canvas_dimensions canvas_t::get_viewport_dimensions(canvas_unit_t unit) const {
   return ret;
 }
 
-/* get scroll position in meters/pixels */
+/* get scroll position in meters */
 void canvas_t::scroll_get(int &sx, int &sy) const {
   GooCanvas *gc = GOO_CANVAS(widget);
   gdouble zoom = goo_canvas_get_scale(gc);
@@ -154,7 +154,7 @@ void canvas_t::scroll_get(int &sx, int &sy) const {
   sy = vs;
 }
 
-/* set scroll position in meters/pixels */
+/* set scroll position in meters */
 void canvas_t::scroll_to(int sx, int sy) {
   gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(widget));
 
