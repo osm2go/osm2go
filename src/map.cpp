@@ -954,20 +954,23 @@ void hl_nodes::operator()(node_t* node)
     res_node = node;
 }
 
-static void map_touchnode_update(map_t *map, int x, int y) {
-  map->touchnode_clear();
+void map_t::touchnode_update(int x, int y) {
+  lpos_t pos = canvas->window2world(x, y);
+  hl_cursor_draw(pos, style->node.radius);
+
+  touchnode_clear();
 
   const node_t *cur_node = nullptr;
 
   /* the "current node" which is the one we are working on and which */
   /* should not be highlighted depends on the action */
-  switch(map->action.type) {
+  switch(action.type) {
 
     /* in idle mode the dragged node is not highlighted */
   case MAP_ACTION_IDLE:
-    assert(map->pen_down.on_item != nullptr);
-    assert_cmpnum(map->pen_down.on_item->object.type, object_t::NODE);
-    cur_node = map->pen_down.on_item->object.node;
+    assert(pen_down.on_item != nullptr);
+    assert_cmpnum(pen_down.on_item->object.type, object_t::NODE);
+    cur_node = pen_down.on_item->object.node;
     break;
 
   default:
@@ -975,26 +978,24 @@ static void map_touchnode_update(map_t *map, int x, int y) {
   }
 
   /* check if we are close to one of the other nodes */
-  lpos_t pos = map->canvas->window2world(x, y);
   node_t *rnode = nullptr;
-  hl_nodes fc(cur_node, pos, map, rnode);
-  std::map<item_id_t, node_t *> &nodes = map->appdata.project->osm->nodes;
+  hl_nodes fc(cur_node, pos, this, rnode);
+  std::map<item_id_t, node_t *> &nodes = appdata.project->osm->nodes;
   std::for_each(nodes.begin(), nodes.end(), fc);
 
   if(rnode != nullptr) {
-    delete map->touchnode;
+    delete touchnode;
 
-    map->touchnode = map->canvas->circle_new(CANVAS_GROUP_DRAW, rnode->lpos.x, rnode->lpos.y,
-                                             2 * map->style->node.radius, 0,
-                                             map->style->highlight.touch_color);
+    touchnode = canvas->circle_new(CANVAS_GROUP_DRAW, rnode->lpos.x, rnode->lpos.y,
+                                   2 * style->node.radius, 0, style->highlight.touch_color);
 
-    map->touchnode_node = rnode;
+    touchnode_node = rnode;
   }
 
   /* during way creation also nodes of the new way */
   /* need to be searched */
-  if(!map->touchnode && map->action.way && map->action.way->node_chain.size() > 1) {
-    const node_chain_t &chain = map->action.way->node_chain;
+  if(touchnode == nullptr && action.way != nullptr && action.way->node_chain.size() > 1) {
+    const node_chain_t &chain = action.way->node_chain;
     std::for_each(chain.begin(), chain.end() - 1, fc);
   }
 }
@@ -1031,8 +1032,7 @@ void map_t::button_press(float x, float y) {
     break;
 
   case MAP_ACTION_WAY_ADD:
-    hl_cursor_draw(x, y, style->node.radius);
-    map_touchnode_update(this, x, y);
+    touchnode_update(x, y);
     break;
 
   default:
@@ -1163,10 +1163,8 @@ void map_t::handle_motion(int x, int y)
       /* just scroll if we didn't drag an selected item */
       if(!pen_down.on_selected_node)
         scroll_step(pen_down.at.x - x, pen_down.at.y - y);
-      else {
-        hl_cursor_draw(x, y, style->node.radius);
-        map_touchnode_update(this, x, y);
-      }
+      else
+        touchnode_update(x, y);
     }
     break;
 
@@ -1175,8 +1173,7 @@ void map_t::handle_motion(int x, int y)
     break;
 
   case MAP_ACTION_WAY_ADD:
-    hl_cursor_draw(x, y, style->node.radius);
-    map_touchnode_update(this, x, y);
+    touchnode_update(x, y);
     break;
 
   case MAP_ACTION_WAY_NODE_ADD:

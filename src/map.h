@@ -206,7 +206,6 @@ public:
 
   void pen_down_item();
 
-  void touchnode_clear();
   /**
    * @brief get the current touchnode and remove the screen item
    *
@@ -275,6 +274,10 @@ protected:
   void hl_cursor_clear();
 
   void hl_segment_draw(unsigned int width, const std::vector<lpos_t> &points);
+
+private:
+  void touchnode_clear();
+  void touchnode_update(int x, int y);
 };
 
 #endif // MAP_H
