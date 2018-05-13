@@ -734,31 +734,27 @@ static void map_limit_scroll(map_t *map, int &sx, int &sy) {
 
 /* Limit a proposed zoom factor to sane ranges.
  * Specifically the map is allowed to be no smaller than the viewport. */
-static bool map_limit_zoom(map_t *map, double &zoom) {
-    // Data rect minimum and maximum
-    const bounds_t &bounds = map->appdata.project->osm->bounds;
-
+static bool map_limit_zoom(const bounds_t &bounds, const canvas_t *canvas, double &zoom) {
     /* get size of visible area in pixels and convert to meters of intended */
     /* zoom by dividing by zoom (which is basically pix/m) */
-    canvas_dimensions dim = map->canvas->get_viewport_dimensions(canvas_t::UNIT_PIXEL) / zoom;
+    canvas_dimensions dim = canvas->get_viewport_dimensions(canvas_t::UNIT_PIXEL) / zoom;
+
+    double limit;
+    int delta;
 
     if (dim.height < dim.width) {
-      double lim_h = dim.height * 0.95;
-      int delta_y = bounds.max.y - bounds.min.y;
-
-      if (delta_y < lim_h)
-          zoom /= (delta_y / lim_h);
-      else
-        return false;
+      limit = dim.height;
+      delta = bounds.max.y - bounds.min.y;
     } else {
-      double lim_w = dim.width * 0.95;
-      int delta_x = bounds.max.x - bounds.min.x;
-
-      if (delta_x < lim_w)
-          zoom /= (delta_x / lim_w);
-      else
-        return false;
+      limit = dim.width;
+      delta = bounds.max.x - bounds.min.x;
     }
+    limit *= 0.95;
+
+    if (delta >= limit)
+      return false;
+
+    zoom /= (delta / limit);
 
     printf("Can't zoom further out (%f)\n", zoom);
     return true;
@@ -809,7 +805,7 @@ static void map_deselect_if_zoom_below_zoom_max(map_t *map) {
 #define GPS_RADIUS_LIMIT  3.0
 
 void map_t::set_zoom(double zoom, bool update_scroll_offsets) {
-  bool at_zoom_limit = map_limit_zoom(this, zoom);
+  bool at_zoom_limit = map_limit_zoom(appdata.project->osm->bounds, canvas, zoom);
 
   state.zoom = zoom;
   canvas->set_zoom(state.zoom);
