@@ -149,7 +149,6 @@ public:
     bool drag;
     map_item_t *on_item;
     struct { int x,y; } at;    // point mouse button was last pressed
-    struct { int x,y; } so;    // initial scroll offset
     bool on_selected_node;      // the currently clicked node
                                 // (may be part of a selected way)
   } pen_down;
