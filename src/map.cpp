@@ -256,7 +256,7 @@ void map_t::select_way(way_t *way) {
   /* a way needs at least 2 points to be drawn */
   assert(map_item->object.way == way);
   const std::vector<lpos_t> &points = points_from_node_chain(way);
-  if(!points.empty()) {
+  if(likely(!points.empty())) {
     /* create a copy of this map item and mark it as being a highlight */
     map_item_t *new_map_item = new map_item_t(*map_item);
     new_map_item->highlight = true;
@@ -294,7 +294,7 @@ void relation_select_functor::operator()(member_t& member)
     way_t *way = member.object.way;
     /* a way needs at least 2 points to be drawn */
     const std::vector<lpos_t> &points = points_from_node_chain(way);
-    if(!points.empty()) {
+    if(likely(!points.empty())) {
       if(way->draw.flags & OSM_DRAW_FLAG_AREA)
         item = map->canvas->polygon_new(CANVAS_GROUP_WAYS_HL, points, 0, 0,
                                   map->style->highlight.color);
