@@ -269,8 +269,6 @@ protected:
   void hl_cursor_draw(lpos_t pos, unsigned int radius);
   void hl_cursor_clear();
 
-  void hl_segment_draw(unsigned int width, const std::vector<lpos_t> &points);
-
 private:
   void touchnode_clear();
   void touchnode_update(lpos_t pos);

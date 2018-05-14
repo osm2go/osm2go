@@ -45,11 +45,6 @@ void map_t::hl_cursor_draw(lpos_t pos, unsigned int radius) {
                               0, style->highlight.node_color);
 }
 
-/* special highlight for segments. use when cutting ways */
-void map_t::hl_segment_draw(unsigned int width, const std::vector<lpos_t> &points) {
-  cursor = canvas->polyline_new(CANVAS_GROUP_DRAW, points, width, style->highlight.node_color);
-}
-
 void map_t::hl_cursor_clear()
 {
   delete cursor;
