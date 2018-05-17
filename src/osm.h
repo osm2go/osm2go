@@ -291,14 +291,18 @@ struct osm_t {
    * @param first first node
    * @param second second node
    * @param conflict if any conflicts (e.g. incompatible tags) were detected
+   * @param mergeways adjacent ways that can be merged
    * @return the remaining node (may be any of first and second)
    *
    * This merges the nodes on the position of second, joining the tags together
    * and moving all way and relation memberships to the remaining node.
    *
+   * If both nodes are the endpoint of ways mergeways will contain these ways,
+   * otherwise it is set to nullptr.
+   *
    * The victim node is deleted.
    */
-  node_t *mergeNodes(node_t *first, node_t *second, bool &conflict);
+  node_t *mergeNodes(node_t *first, node_t *second, bool &conflict, way_t *(&mergeways)[2]);
 
   /**
    * @brief merge 2 ways

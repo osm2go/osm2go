@@ -281,7 +281,15 @@ bool osm_t::checkObjectPersistence(const object_t &first, const object_t &second
   return !nret;
 }
 
-node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict)
+struct find_way_ends {
+  const node_t * const node;
+  explicit find_way_ends(const node_t *n) : node(n) {}
+  bool operator()(const std::pair<item_id_t, way_t *> &p) {
+    return p.second->ends_with_node(node);
+  }
+};
+
+node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict, way_t *(&mergeways)[2])
 {
   node_t *keep = first, *remove = second;
 
@@ -293,9 +301,23 @@ node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict)
   keep->lpos = second->lpos;
   keep->pos = second->pos;
 
+  mergeways[0] = nullptr;
+  mergeways[1] = nullptr;
+  bool mayMerge = keep->ways == 1 && remove->ways == 1; // if there could be mergeable ways
+
   const std::map<item_id_t, way_t *>::iterator witEnd = ways.end();
-  for(std::map<item_id_t, way_t *>::iterator wit = ways.begin();
-      remove->ways > 0 && wit != witEnd; wit++) {
+  const std::map<item_id_t, way_t *>::iterator witBegin = ways.begin();
+  std::map<item_id_t, way_t *>::iterator wit;
+  if(mayMerge) {
+    // only ways ending in that node are considered
+    wit = std::find_if(witBegin, witEnd, find_way_ends(keep));
+    if(wit != witEnd)
+      mergeways[0] = wit->second;
+    else
+      mayMerge = false;
+  }
+
+  for(wit = witBegin; remove->ways > 0 && wit != witEnd; wit++) {
     way_t * const way = wit->second;
     const node_chain_t::iterator itBegin = way->node_chain.begin();
     node_chain_t::iterator it = itBegin;
@@ -310,6 +332,14 @@ node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict)
         it = way->node_chain.erase(it);
         itEnd = way->node_chain.end();
       } else {
+        if(mayMerge) {
+          if(way->ends_with_node(remove)) {
+            mergeways[1] = way;
+          } else {
+            mergeways[0] = nullptr;
+            mayMerge = false; // unused from now on, but to be sure
+          }
+        }
         /* replace by keep */
         *it = keep;
         // no need to check this one again

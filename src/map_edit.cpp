@@ -442,14 +442,6 @@ void redraw_way::operator()(const std::pair<item_id_t, way_t *> &p)
   map->draw(way);
 }
 
-struct find_way_ends {
-  const node_t * const node;
-  explicit find_way_ends(const node_t *n) : node(n) {}
-  bool operator()(const std::pair<item_id_t, way_t *> &p) {
-    return p.second->ends_with_node(node);
-  }
-};
-
 void map_t::node_move(map_item_t *map_item, int ex, int ey) {
   osm_t::ref osm = appdata.project->osm;
 
@@ -480,23 +472,10 @@ void map_t::node_move(map_item_t *map_item, int ex, int ey) {
       // only offer to join ways if they come from the different nodes, not
       // if e.g. one node has 2 ways and the other has none
       way_t *ways2join[2] = { nullptr, nullptr };
-      if(node->ways > 0 && tn->ways > 0) {
+      if(node->ways > 0 && tn->ways > 0)
         ways2join_cnt = node->ways + tn->ways;
-        if(ways2join_cnt == 2) {
-          const std::map<item_id_t, way_t *>::iterator witEnd = osm->ways.end();
-          const std::map<item_id_t, way_t *>::iterator witBegin = osm->ways.begin();
-          const std::map<item_id_t, way_t *>::iterator way0It = std::find_if(witBegin, witEnd,
-                                                                             find_way_ends(node));
-          const std::map<item_id_t, way_t *>::iterator way1It = std::find_if(witBegin, witEnd,
-                                                                             find_way_ends(tn));
-          assert(way0It != witEnd);
-          assert(way1It != witEnd);
-          ways2join[0] = way0It->second;
-          ways2join[1] = way1It->second;
-        }
-      }
 
-      node = osm->mergeNodes(node, tn, conflict);
+      node = osm->mergeNodes(node, tn, conflict, ways2join);
       // make sure the object marked as selected is the surviving node
       selected.object = node;
 
@@ -510,9 +489,9 @@ void map_t::node_move(map_item_t *map_item, int ex, int ey) {
 
       if(ways2join_cnt > 2) {
         message_dlg(_("Too many ways to join"),
-                    _("More than two ways now end on this node. Joining more "
+                    _("More than two ways that contain this node. Joining more "
                       "than two ways is not yet implemented, sorry"));
-      } else if(ways2join_cnt == 2 &&
+      } else if(ways2join_cnt == 2 && ways2join[0] != nullptr &&
                 yes_no_f(nullptr, MISC_AGAIN_ID_JOIN_WAYS, _("Join ways?"),
                          _("Do you want to join the dragged way with the one you dropped it on?"))) {
         printf("  about to join ways #" ITEM_ID_FORMAT " and #" ITEM_ID_FORMAT "\n",

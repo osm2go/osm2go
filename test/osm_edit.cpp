@@ -943,6 +943,7 @@ static void test_merge_nodes()
   std::unique_ptr<osm_t> o(new osm_t());
   set_bounds(o);
 
+  /// ==================
   // join 2 new nodes
   lpos_t oldpos(10, 10);
   lpos_t newpos(20, 20);
@@ -952,14 +953,18 @@ static void test_merge_nodes()
   o->node_attach(n2);
 
   bool conflict = true;
+  way_t *ways2join[2];
 
-  node_t *n = o->mergeNodes(n1, n2, conflict);
+  node_t *n = o->mergeNodes(n1, n2, conflict, ways2join);
   assert(n == n1);
   assert(n->lpos == newpos);
   assert(!conflict);
   assert_cmpnum(o->nodes.size(), 1);
   assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
+  assert_null(ways2join[0]);
+  assert_null(ways2join[1]);
 
+  /// ==================
   // join a new and an old node, the old one should be preserved
   n2 = o->node_new(oldpos);
   n2->id = 1234;
@@ -967,13 +972,16 @@ static void test_merge_nodes()
   o->nodes[n2->id] = n2;
 
   conflict = true;
-  n = o->mergeNodes(n2, n1, conflict);
+  n = o->mergeNodes(n2, n1, conflict, ways2join);
   assert(n == n2);
   assert(n->lpos == newpos);
   assert(!conflict);
   assert_cmpnum(o->nodes.size(), 1);
   assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
+  assert_null(ways2join[0]);
+  assert_null(ways2join[1]);
 
+  /// ==================
   // do the same join again, but with swapped arguments
   n2->lpos = newpos;
   n2->flags = 0;
@@ -981,17 +989,20 @@ static void test_merge_nodes()
   o->node_attach(n1);
 
   conflict = true;
-  n = o->mergeNodes(n1, n2, conflict);
+  n = o->mergeNodes(n1, n2, conflict, ways2join);
   assert(n == n2);
   // order is important for the position, but nothing else
   assert(n->lpos == newpos);
   assert(!conflict);
   assert_cmpnum(o->nodes.size(), 1);
   assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
+  assert_null(ways2join[0]);
+  assert_null(ways2join[1]);
 
   o->node_free(n);
   assert_cmpnum(o->nodes.size(), 0);
 
+  /// ==================
   // start new
   n1 = o->node_new(oldpos);
   n2 = o->node_new(newpos);
@@ -1005,7 +1016,7 @@ static void test_merge_nodes()
   o->way_attach(w);
   w->append_node(n2);
 
-  n = o->mergeNodes(n1, n2, conflict);
+  n = o->mergeNodes(n1, n2, conflict, ways2join);
   assert(n == n2);
   assert(n->lpos == newpos);
   assert(!conflict);
@@ -1013,11 +1024,14 @@ static void test_merge_nodes()
   assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
   assert_cmpnum(w->node_chain.size(), 1);
   assert(w->node_chain.front() == n2);
+  assert_null(ways2join[0]);
+  assert_null(ways2join[1]);
 
   o->way_delete(w);
   assert_cmpnum(o->nodes.size(), 0);
   assert_cmpnum(o->ways.size(), 0);
 
+  /// ==================
   // now check with relation membership
   relation_t *r = new relation_t(0);
   o->relation_attach(r);
@@ -1029,7 +1043,7 @@ static void test_merge_nodes()
   conflict = true;
   r->members.push_back(member_t(object_t(n2)));
 
-  n = o->mergeNodes(n1, n2, conflict);
+  n = o->mergeNodes(n1, n2, conflict, ways2join);
   assert(n == n2);
   assert(n->lpos == newpos);
   assert(!conflict);
@@ -1037,6 +1051,8 @@ static void test_merge_nodes()
   assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
   assert_cmpnum(r->members.size(), 1);
   assert(r->members.front().object == n2);
+  assert_null(ways2join[0]);
+  assert_null(ways2join[1]);
 
   o->relation_delete(r);
   assert_cmpnum(o->nodes.size(), 1);
@@ -1045,6 +1061,7 @@ static void test_merge_nodes()
   o->node_delete(o->nodes.begin()->second);
   assert_cmpnum(o->nodes.size(), 0);
 
+  /// ==================
   // now put both into a way, the way of the second node should be updated
   for(int i = 0; i < 3; i++) {
     w = new way_t(0);
@@ -1098,7 +1115,7 @@ static void test_merge_nodes()
   assert_cmpnum(o->nodes.size(), 5);
 
   conflict = true;
-  n = o->mergeNodes(n1, n2, conflict);
+  n = o->mergeNodes(n1, n2, conflict, ways2join);
   assert(n == n1);
   assert(n->lpos == newpos);
   assert(!conflict);
@@ -1117,6 +1134,8 @@ static void test_merge_nodes()
   assert(o->relations.begin()->second->members.front() == object_t(n1));
   assert(r->members.front().object == n1);
   assert_cmpnum(r->flags, OSM_FLAG_DIRTY);
+  assert_null(ways2join[0]);
+  assert_null(ways2join[1]);
 
   // while at it: test backwards mapping to containing objects
   way_chain_t wchain;
@@ -1125,7 +1144,31 @@ static void test_merge_nodes()
   assert(std::find(wchain.begin(), wchain.end(), o->ways.begin()->second) != wchain.end());
   assert(std::find(wchain.begin(), wchain.end(), w) != wchain.end());
 
+  /// ==================
+  // now join 2 nodes which both terminate one way
+  assert_cmpnum(o->ways.size(), 3);
+  o->way_delete(w);
+  w = o->ways.begin()->second;
+  assert_cmpnum(w->node_chain.size(), 2);
+  assert(w->node_chain.front() == n1);
+
+  n2 = o->node_new(newpos);
+  o->node_attach(n2);
+  n1->ways--;
+  w->node_chain.front() = n2;
+  n2->ways++;
+
+  n = o->mergeNodes(n1, n2, conflict, ways2join);
+  assert(n == n1);
+  assert(ways2join[0] == w || ways2join[1] == w);
+  assert(ways2join[0] != ways2join[1]);
+  assert(ways2join[0]->ends_with_node(n1));
+  assert(ways2join[1]->ends_with_node(n1));
+  assert_cmpnum(n1->ways, 2);
+
+  /// ==================
   // the relation with the highest id (since all are negative)
+  // test is unrelated to the rest
   assert_cmpstr(r->descriptive_name(), "<ID #-1>");
 }
 
