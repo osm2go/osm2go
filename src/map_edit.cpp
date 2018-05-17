@@ -289,7 +289,7 @@ void map_t::way_node_add(lpos_t pos) {
       way_t *way = item->object.way;
 
       /* search correct position */
-      way->node_chain.insert(way->node_chain.begin() + insert_after + 1, node);
+      way->node_chain.insert(way->node_chain.begin() + insert_after, node);
 
       /* clear selection */
       item_deselect();
