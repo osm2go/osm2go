@@ -814,14 +814,11 @@ void map_t::set_zoom(double zoom, bool update_scroll_offsets) {
   map_deselect_if_zoom_below_zoom_max(this);
 
   if(update_scroll_offsets) {
-    if (!at_zoom_limit) {
-      /* zooming affects the scroll offsets */
-      int sx, sy;
-      canvas->scroll_get(sx, sy);
-      map_limit_scroll(this, sx, sy);
-    }
-
     canvas->scroll_get(state.scroll_offset.x, state.scroll_offset.y);
+
+    if (!at_zoom_limit)
+      /* zooming affects the scroll offsets */
+      map_limit_scroll(this, state.scroll_offset.x, state.scroll_offset.y);
   }
 
   if(gps_item) {
@@ -847,14 +844,11 @@ static bool distance_above(map_t *map, int x, int y, int limit) {
 
 /* scroll a certain step */
 void map_t::scroll_step(int x, int y) {
-  int sx, sy;
   double zoom = canvas->get_zoom();
-  canvas->scroll_get(sx, sy);
-  sx += x / zoom;
-  sy += y / zoom;
-  map_limit_scroll(this, sx, sy);
-
   canvas->scroll_get(state.scroll_offset.x, state.scroll_offset.y);
+  state.scroll_offset.x += x / zoom;
+  state.scroll_offset.y += y / zoom;
+  map_limit_scroll(this, state.scroll_offset.x, state.scroll_offset.y);
 }
 
 bool map_t::item_is_selected_node(const map_item_t *map_item) const {
