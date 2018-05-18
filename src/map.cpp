@@ -1019,23 +1019,24 @@ void map_t::button_press(float x, float y) {
   /* might want to drag that */
   pen_down.on_selected_node = item_is_selected_node(pen_down.on_item);
 
+  lpos_t pos = canvas->window2world(x, y);
   /* button press */
   switch(action.type) {
 
   case MAP_ACTION_WAY_NODE_ADD:
-    way_node_add_highlight(pen_down.on_item, canvas->window2world(x, y));
+    way_node_add_highlight(pen_down.on_item, pos);
     break;
 
   case MAP_ACTION_WAY_CUT:
-    way_cut_highlight(pen_down.on_item, x, y);
+    way_cut_highlight(pen_down.on_item, pos);
     break;
 
   case MAP_ACTION_NODE_ADD:
-    hl_cursor_draw(canvas->window2world(x, y), style->node.radius);
+    hl_cursor_draw(pos, style->node.radius);
     break;
 
   case MAP_ACTION_WAY_ADD:
-    touchnode_update(canvas->window2world(x, y));
+    touchnode_update(pos);
     break;
 
   default:
@@ -1189,7 +1190,7 @@ void map_t::handle_motion(int x, int y)
   case MAP_ACTION_WAY_CUT:
     hl_cursor_clear();
     pos = canvas->window2world(x, y);
-    way_cut_highlight(item_at(pos), x, y);
+    way_cut_highlight(item_at(pos), pos);
     break;
 
   default:

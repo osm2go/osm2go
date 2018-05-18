@@ -320,10 +320,9 @@ void map_t::way_node_add(lpos_t pos) {
 
 /* -------------------------- way_node_cut ----------------------- */
 
-void map_t::way_cut_highlight(map_item_t *item, int x, int y) {
+void map_t::way_cut_highlight(map_item_t *item, lpos_t pos) {
 
   if(item_is_selected_way(item)) {
-    lpos_t pos = canvas->window2world(x, y);
     int seg = canvas->get_item_segment(item->item, pos);
     if(seg >= 0) {
       unsigned int width = (item->object.way->draw.flags & OSM_DRAW_FLAG_BG) ?

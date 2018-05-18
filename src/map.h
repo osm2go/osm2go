@@ -245,7 +245,7 @@ public:
 
 protected:
   // edit functions
-  void way_cut_highlight(map_item_t *item, int x, int y);
+  void way_cut_highlight(map_item_t *item, lpos_t pos);
   void way_cut(lpos_t pos);
 
   void way_add_begin();
