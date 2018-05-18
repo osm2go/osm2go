@@ -577,9 +577,10 @@ void map_t::way_reverse() {
     g_string msg2(g_strdup_printf(ngettext("%u relation", "%u relations",
                                           n_roles_flipped), n_roles_flipped));
     msg.reset(g_strdup_printf(_("%s & %s updated"), msg1.get(), msg2.get()));
-  }
-  if (msg)
-    appdata.uicontrol->showNotification(msg.get(), MainUi::Brief);
+  } else
+    return;
+
+  appdata.uicontrol->showNotification(msg.get(), MainUi::Brief);
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai
