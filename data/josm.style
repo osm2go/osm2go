@@ -7,7 +7,7 @@
         <background color="black"/>
         <track width="6" color="#0000ff40" gps-color="#00008040"/>
         <highlight color="#ffff00c0" node-color="#ff0000c0"  touch-color="#0000ffc0" width="2"/>
-	<frisket mult="3" color="#00000000">
+	<frisket color="#00000000">
   		<border width="20" color="#ff0000c0"/>
 	</frisket>
 	<icon enable="true" path-prefix="standard" scale="0.5"/>
