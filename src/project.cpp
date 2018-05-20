@@ -94,7 +94,7 @@ bool project_read(const std::string &project_file, project_t *project,
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "map") == 0) {
             xmlString str(xmlGetProp(node, BAD_CAST "zoom"));
             if(str)
-              project->map_state.zoom = xml_parse_float(str);
+              project->map_state.zoom = std::min(xml_parse_float(str), 50.0);
 
             str.reset(xmlGetProp(node, BAD_CAST "detail"));
             if(str)
