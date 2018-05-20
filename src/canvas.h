@@ -143,7 +143,15 @@ public:
   void set_background(color_t bg_color);
   void erase(unsigned int group_mask);
   canvas_item_t *get_item_at(lpos_t pos) const;
-  void set_zoom(double zoom);
+  /**
+   * @brief set new zoom level
+   * @param zoom the intended zoom level
+   * @return the zoom factor actually set
+   *
+   * The zoom factor is limited so the visible map size is never smaller than
+   * the screen dimensions.
+   */
+  double set_zoom(double zoom);
   double get_zoom() const;
   void scroll_to(int sx, int sy);
   void scroll_step(int dx, int dy);

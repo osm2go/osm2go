@@ -723,34 +723,6 @@ static void map_limit_scroll(map_t *map, int sx, int sy) {
   map->canvas->scroll_get(map->state.scroll_offset.x, map->state.scroll_offset.y);
 }
 
-/* Limit a proposed zoom factor to sane ranges.
- * Specifically the map is allowed to be no smaller than the viewport. */
-static bool map_limit_zoom(const bounds_t &bounds, const canvas_t *canvas, double &zoom) {
-    /* get size of visible area in pixels and convert to meters of intended */
-    /* zoom by dividing by zoom (which is basically pix/m) */
-    canvas_dimensions dim = canvas->get_viewport_dimensions(canvas_t::UNIT_PIXEL) / zoom;
-
-    double limit;
-    int delta;
-
-    if (dim.height < dim.width) {
-      limit = dim.height;
-      delta = bounds.max.y - bounds.min.y;
-    } else {
-      limit = dim.width;
-      delta = bounds.max.x - bounds.min.x;
-    }
-    limit *= 0.95;
-
-    if (delta >= limit)
-      return false;
-
-    zoom /= (delta / limit);
-
-    printf("Can't zoom further out (%f)\n", zoom);
-    return true;
-}
-
 /*
  * Scroll the map to a point if that point is currently offscreen.
  * Return true if this was possible, false if position is outside
@@ -773,10 +745,8 @@ bool map_t::scroll_to_if_offscreen(lpos_t lpos) {
 #define GPS_RADIUS_LIMIT  3.0
 
 void map_t::set_zoom(double zoom, bool update_scroll_offsets) {
-  bool at_zoom_limit = map_limit_zoom(appdata.project->osm->bounds, canvas, zoom);
-
-  state.zoom = zoom;
-  canvas->set_zoom(state.zoom);
+  state.zoom = canvas->set_zoom(zoom);
+  bool at_zoom_limit = zoom != state.zoom;
 
   /* Deselects the current way or node if its zoom_max
    * means that it's not going to render at the current map zoom. */
@@ -1195,11 +1165,11 @@ void map_t::init() {
   /* update canvas background color */
   set_bg_color_from_style();
 
-  /* set initial zoom */
+  // must be set before zoom so the valid dimension can be checked by canvas
+  canvas->set_bounds(bounds.min, bounds.max);
+
   set_zoom(state.zoom, false);
   paint();
-
-  canvas->set_bounds(bounds.min, bounds.max);
 
   printf("restore scroll position %d/%d\n",
          state.scroll_offset.x, state.scroll_offset.y);

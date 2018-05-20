@@ -124,8 +124,36 @@ lpos_t canvas_t::window2world(int x, int y) const {
   return lpos_t(sx, sy);
 }
 
-void canvas_t::set_zoom(gdouble zoom) {
+double canvas_t::set_zoom(double zoom) {
+  /* Limit a proposed zoom factor to sane ranges.
+   * Specifically the map is allowed to be no smaller than the viewport. */
+
+  /* get size of visible area in pixels and convert to meters of intended */
+  /* zoom by dividing by zoom (which is basically pix/m) */
+  canvas_dimensions dim = get_viewport_dimensions(canvas_t::UNIT_PIXEL) / zoom;
+
+  double limit;
+  int delta;
+
+  canvas_goocanvas *gcanvas = static_cast<canvas_goocanvas *>(this);
+  if (dim.height < dim.width) {
+    limit = dim.height;
+    delta = gcanvas->bounds.max.y - gcanvas->bounds.min.y;
+  } else {
+    limit = dim.width;
+    delta = gcanvas->bounds.max.x - gcanvas->bounds.min.x;
+  }
+  limit *= 0.95;
+
+  if (delta < limit) {
+    zoom /= (delta / limit);
+
+    printf("Can't zoom further out (%f)\n", zoom);
+  }
+
   goo_canvas_set_scale(GOO_CANVAS(widget), zoom);
+
+  return zoom;
 }
 
 double canvas_t::get_zoom() const {
