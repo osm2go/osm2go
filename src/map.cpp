@@ -719,19 +719,6 @@ void map_t::pen_down_item() {
 /* Limitations on the amount by which we can scroll. Keeps part of the
  * map visible at all times. Then scroll to the new position. */
 static void map_limit_scroll(map_t *map, int sx, int sy) {
-  /* get size of visible area in canvas units (meters) */
-  canvas_dimensions dim = map->canvas->get_viewport_dimensions(canvas_t::UNIT_METER) / 2;
-
-  // Data rect minimum and maximum
-  // limit stops - prevent scrolling beyond these
-  const bounds_t &bounds = map->appdata.project->osm->bounds;
-  int min_sy_cu = 0.95 * (bounds.min.y - dim.height);
-  int min_sx_cu = 0.95 * (bounds.min.x - dim.width);
-  int max_sy_cu = 0.95 * (bounds.max.y + dim.height);
-  int max_sx_cu = 0.95 * (bounds.max.x + dim.width);
-  sy = std::min(std::max(sy, min_sy_cu), max_sy_cu);
-  sx = std::min(std::max(sx, min_sx_cu), max_sx_cu);
-
   map->canvas->scroll_to(sx, sy);
   map->canvas->scroll_get(map->state.scroll_offset.x, map->state.scroll_offset.y);
 }

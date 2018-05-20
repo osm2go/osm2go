@@ -70,6 +70,10 @@ struct canvas_goocanvas : public canvas_t {
   std::array<GooCanvasItem *, CANVAS_GROUPS> group;
 
   std::array<std::vector<canvas_item_info_t *>, CANVAS_GROUPS> item_info;
+
+  struct {
+    lpos_t min, max;
+  } bounds;
 };
 
 canvas_t *canvas_t::create() {
@@ -102,6 +106,9 @@ canvas_goocanvas::canvas_goocanvas()
                         GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
                         GDK_SCROLL_MASK | GDK_POINTER_MOTION_MASK |
                         GDK_POINTER_MOTION_HINT_MASK);
+
+  bounds.min = lpos_t(0, 0);
+  bounds.max = lpos_t(0, 0);
 }
 
 /* ------------------------ accessing the canvas ---------------------- */
@@ -156,6 +163,19 @@ void canvas_t::scroll_get(int &sx, int &sy) const {
 
 /* set scroll position in meters */
 void canvas_t::scroll_to(int sx, int sy) {
+  /* get size of visible area in canvas units (meters) */
+  canvas_dimensions dim = get_viewport_dimensions(canvas_t::UNIT_METER) / 2;
+
+  canvas_goocanvas *gcanvas = static_cast<canvas_goocanvas *>(this);
+  // Data rect minimum and maximum
+  // limit stops - prevent scrolling beyond these
+  int min_sy_cu = 0.95 * (gcanvas->bounds.min.y - dim.height);
+  int min_sx_cu = 0.95 * (gcanvas->bounds.min.x - dim.width);
+  int max_sy_cu = 0.95 * (gcanvas->bounds.max.y + dim.height);
+  int max_sx_cu = 0.95 * (gcanvas->bounds.max.x + dim.width);
+  sy = std::min(std::max(sy, min_sy_cu), max_sy_cu);
+  sx = std::min(std::max(sx, min_sx_cu), max_sx_cu);
+
   gdouble zoom = get_zoom();
 
   /* adjust to screen center */
@@ -182,6 +202,9 @@ void canvas_t::set_bounds(lpos_t min, lpos_t max) {
   g_assert_cmpint(max.y, >, 0);
   goo_canvas_set_bounds(GOO_CANVAS(widget), min.x * CANVAS_FRISKET_SCALE, min.y * CANVAS_FRISKET_SCALE,
                                             max.x * CANVAS_FRISKET_SCALE, max.y * CANVAS_FRISKET_SCALE);
+  canvas_goocanvas *gcanvas = static_cast<canvas_goocanvas *>(this);
+  gcanvas->bounds.min = min;
+  gcanvas->bounds.max = max;
 }
 
 /* ------------------- creating and destroying objects ---------------- */
