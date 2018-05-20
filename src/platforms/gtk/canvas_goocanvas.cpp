@@ -165,6 +165,16 @@ void canvas_t::scroll_to(int sx, int sy) {
   goo_canvas_scroll_to(GOO_CANVAS(widget), sx, sy);
 }
 
+void canvas_t::scroll_step(int dx, int dy)
+{
+  GooCanvas *gc = GOO_CANVAS(widget);
+  gdouble hs = gtk_adjustment_get_value(gc->hadjustment) + dx;
+  gdouble vs = gtk_adjustment_get_value(gc->vadjustment) + dy;
+  goo_canvas_convert_from_pixels(gc, &hs, &vs);
+
+  goo_canvas_scroll_to(GOO_CANVAS(widget), hs, vs);
+}
+
 void canvas_t::set_bounds(int minx, int miny, int maxx, int maxy) {
   goo_canvas_set_bounds(GOO_CANVAS(widget), minx, miny, maxx, maxy);
 }

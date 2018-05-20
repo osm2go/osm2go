@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2008 Till Harbaum <till@harbaum.org>.
  *
@@ -845,10 +846,8 @@ static bool distance_above(const map_t *map, int x, int y, int limit) {
 
 /* scroll a certain step */
 void map_t::scroll_step(int x, int y) {
-  double zoom = canvas->get_zoom();
+  canvas->scroll_step(x, y);
   canvas->scroll_get(state.scroll_offset.x, state.scroll_offset.y);
-  state.scroll_offset.x += x / zoom;
-  state.scroll_offset.y += y / zoom;
   map_limit_scroll(this, state.scroll_offset.x, state.scroll_offset.y);
 }
 
