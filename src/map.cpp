@@ -785,26 +785,6 @@ bool map_t::scroll_to_if_offscreen(lpos_t lpos) {
   return true;
 }
 
-/* Deselects the current way or node if its zoom_max
- * means that it's not going to render at the current map zoom. */
-static void map_deselect_if_zoom_below_zoom_max(map_t *map) {
-  if (map->selected.object.type == object_t::WAY) {
-    printf("will deselect way if zoomed below %f\n",
-            map->selected.object.way->zoom_max);
-    if (map->state.zoom < map->selected.object.way->zoom_max) {
-      printf("  deselecting way!\n");
-      map->item_deselect();
-    }
-  } else if (map->selected.object.type == object_t::NODE) {
-    printf("will deselect node if zoomed below %f\n",
-            map->selected.object.node->zoom_max);
-    if (map->state.zoom < map->selected.object.node->zoom_max) {
-      printf("  deselecting node!\n");
-      map->item_deselect();
-    }
-  }
-}
-
 #define GPS_RADIUS_LIMIT  3.0
 
 void map_t::set_zoom(double zoom, bool update_scroll_offsets) {
@@ -813,7 +793,14 @@ void map_t::set_zoom(double zoom, bool update_scroll_offsets) {
   state.zoom = zoom;
   canvas->set_zoom(state.zoom);
 
-  map_deselect_if_zoom_below_zoom_max(this);
+  /* Deselects the current way or node if its zoom_max
+   * means that it's not going to render at the current map zoom. */
+  if(selected.object.type == object_t::WAY || selected.object.type == object_t::NODE) {
+    float zmax = static_cast<visible_item_t *>(selected.object.obj)->zoom_max;
+
+    if(state.zoom < zmax)
+      item_deselect();
+  }
 
   if(update_scroll_offsets) {
     canvas->scroll_get(state.scroll_offset.x, state.scroll_offset.y);
