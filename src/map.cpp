@@ -653,10 +653,6 @@ static void map_free_map_item_chains(appdata_t &appdata) {
 }
 
 /* get the item at position x, y */
-map_item_t *map_t::item_at(int x, int y) {
-  return item_at(canvas->window2world(x, y));
-}
-
 map_item_t *map_t::item_at(lpos_t pos) {
   canvas_item_t *item = canvas->get_item_at(pos);
 
@@ -686,7 +682,7 @@ map_item_t *map_t::item_at(lpos_t pos) {
 
 /* get the real item (no highlight) at x, y */
 void map_t::pen_down_item() {
-  pen_down.on_item = item_at(pen_down.at.x, pen_down.at.y);
+  pen_down.on_item = item_at(canvas->window2world(pen_down.at.x, pen_down.at.y));
 
   /* no item or already a real one */
   if(!pen_down.on_item || !pen_down.on_item->highlight)

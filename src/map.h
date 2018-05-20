@@ -202,7 +202,6 @@ public:
   void detail_normal();
 
   /* various functions required by map_edit */
-  map_item_t *item_at(int x, int y);
   map_item_t *item_at(lpos_t pos);
 
   void pen_down_item();
