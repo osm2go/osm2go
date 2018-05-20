@@ -1212,7 +1212,7 @@ void map_t::init() {
   set_zoom(state.zoom, false);
   paint();
 
-  canvas->set_bounds(bounds.min.x, bounds.min.y, bounds.max.x, bounds.max.y);
+  canvas->set_bounds(bounds.min, bounds.max);
 
   printf("restore scroll position %d/%d\n",
          state.scroll_offset.x, state.scroll_offset.y);

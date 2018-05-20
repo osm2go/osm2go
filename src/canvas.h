@@ -147,7 +147,7 @@ public:
   double get_zoom() const;
   void scroll_to(int sx, int sy);
   void scroll_step(int dx, int dy);
-  void set_bounds(int minx, int miny, int maxx, int maxy);
+  void set_bounds(lpos_t min, lpos_t max);
   void item_to_bottom(canvas_item_t *item);
 
   /***** creating/destroying items ******/

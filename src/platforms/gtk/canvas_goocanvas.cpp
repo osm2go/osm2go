@@ -175,13 +175,13 @@ void canvas_t::scroll_step(int dx, int dy)
   goo_canvas_scroll_to(GOO_CANVAS(widget), hs, vs);
 }
 
-void canvas_t::set_bounds(int minx, int miny, int maxx, int maxy) {
-  g_assert_cmpint(minx, <, 0);
-  g_assert_cmpint(miny, <, 0);
-  g_assert_cmpint(maxx, >, 0);
-  g_assert_cmpint(maxy, >, 0);
-  goo_canvas_set_bounds(GOO_CANVAS(widget), minx * CANVAS_FRISKET_SCALE, miny * CANVAS_FRISKET_SCALE,
-                                            maxx * CANVAS_FRISKET_SCALE, maxy * CANVAS_FRISKET_SCALE);
+void canvas_t::set_bounds(lpos_t min, lpos_t max) {
+  g_assert_cmpint(min.x, <, 0);
+  g_assert_cmpint(min.y, <, 0);
+  g_assert_cmpint(max.x, >, 0);
+  g_assert_cmpint(max.y, >, 0);
+  goo_canvas_set_bounds(GOO_CANVAS(widget), min.x * CANVAS_FRISKET_SCALE, min.y * CANVAS_FRISKET_SCALE,
+                                            max.x * CANVAS_FRISKET_SCALE, max.y * CANVAS_FRISKET_SCALE);
 }
 
 /* ------------------- creating and destroying objects ---------------- */
