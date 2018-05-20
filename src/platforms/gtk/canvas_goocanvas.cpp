@@ -172,17 +172,14 @@ void canvas_t::set_bounds(int minx, int miny, int maxx, int maxy) {
 /* ------------------- creating and destroying objects ---------------- */
 
 void canvas_t::erase(unsigned int group_mask) {
-  int group;
-
   canvas_goocanvas *gcanvas = static_cast<canvas_goocanvas *>(this);
+  GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(widget));
 
-  for(group=0;group<CANVAS_GROUPS;group++) {
-
+  /* create the groups */
+  for(unsigned int group = 0; group < gcanvas->group.size(); group++) {
     if(group_mask & (1<<group)) {
-      gint children = goo_canvas_item_get_n_children(gcanvas->group[group]);
-      g_debug("Removing %d children from group %d", children, group);
-      while(children--)
-	goo_canvas_item_remove_child(gcanvas->group[group], children);
+      goo_canvas_item_remove(gcanvas->group[group]);
+      gcanvas->group[group] = goo_canvas_group_new(root, nullptr);
     }
   }
 }
