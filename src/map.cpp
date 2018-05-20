@@ -735,9 +735,8 @@ bool map_t::scroll_to_if_offscreen(lpos_t lpos) {
     return false;
   }
 
-  if(!canvas->isVisible(lpos))
-    // Just centre both at once
-    map_limit_scroll(this, lpos.x, lpos.y);
+  if(!canvas->ensureVisible(lpos))
+    canvas->scroll_get(state.scroll_offset.x, state.scroll_offset.y);
 
   return true;
 }

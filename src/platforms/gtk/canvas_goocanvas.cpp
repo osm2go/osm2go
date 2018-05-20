@@ -92,6 +92,7 @@ struct canvas_goocanvas : public canvas_t {
   } bounds;
 
   canvas_dimensions get_viewport_dimensions() const;
+  bool isVisible(const lpos_t lpos) const;
 };
 
 canvas_t *canvas_t::create() {
@@ -629,7 +630,7 @@ int canvas_t::get_item_segment(const canvas_item_t *item, lpos_t pos) const {
                                       pos.x, pos.y, 0);
 }
 
-bool canvas_t::isVisible(const lpos_t lpos) const
+bool canvas_goocanvas::isVisible(const lpos_t lpos) const
 {
   // Viewport dimensions in canvas space
 
@@ -648,6 +649,16 @@ bool canvas_t::isVisible(const lpos_t lpos) const
     return false;
   else if (lpos.y < sy - dim.height / 2)
     return false;
+
+  return true;
+}
+
+bool canvas_t::ensureVisible(const lpos_t lpos)
+{
+  if(static_cast<canvas_goocanvas *>(this)->isVisible(lpos))
+    return false;
+
+  scroll_to(lpos.x, lpos.y);
 
   return true;
 }

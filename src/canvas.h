@@ -159,11 +159,12 @@ public:
   int get_item_segment(const canvas_item_t *item, lpos_t pos) const;
 
   /**
-   * @brief check if the given coordinate is currently visible on screen
+   * @brief make sure the given coordinate is visible on screen
+   * @return if the position must be read new
    *
    * The coordinate must be within the project bounds.
    */
-  bool isVisible(const lpos_t lpos) const;
+  bool ensureVisible(const lpos_t lpos);
 };
 
 #endif // CANVAS_H
