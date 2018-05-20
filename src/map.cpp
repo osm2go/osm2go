@@ -586,26 +586,24 @@ static void map_frisket_draw(map_t *map, const bounds_t &bounds) {
   if(map->style->frisket.color & 0xff) {
     color_t color = map->style->frisket.color;
 
-    float mult = map->style->frisket.mult;
-
     /* top rectangle */
-    map_frisket_rectangle(points, mult * bounds.min.x, mult * bounds.max.x,
-                          mult * bounds.min.y, bounds.min.y);
+    map_frisket_rectangle(points, CANVAS_FRISKET_SCALE * bounds.min.x, CANVAS_FRISKET_SCALE * bounds.max.x,
+                                  CANVAS_FRISKET_SCALE * bounds.min.y,                        bounds.min.y);
     map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points, 1, color_t::transparent(), color);
 
     /* bottom rectangle */
-    map_frisket_rectangle(points, mult * bounds.min.x, mult * bounds.max.x,
-                          bounds.max.y, mult * bounds.max.y);
+    map_frisket_rectangle(points, CANVAS_FRISKET_SCALE * bounds.min.x, CANVAS_FRISKET_SCALE * bounds.max.x,
+                                                         bounds.max.y, CANVAS_FRISKET_SCALE * bounds.max.y);
     map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points, 1, color_t::transparent(), color);
 
     /* left rectangle */
-    map_frisket_rectangle(points, mult * bounds.min.x, bounds.min.x,
-                          mult * bounds.min.y, mult * bounds.max.y);
+    map_frisket_rectangle(points, CANVAS_FRISKET_SCALE * bounds.min.x,                        bounds.min.x,
+                                  CANVAS_FRISKET_SCALE * bounds.min.y, CANVAS_FRISKET_SCALE * bounds.max.y);
     map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points, 1, color_t::transparent(), color);
 
     /* right rectangle */
-    map_frisket_rectangle(points, bounds.max.x, mult * bounds.max.x,
-                          mult * bounds.min.y, mult * bounds.max.y);
+    map_frisket_rectangle(points,                        bounds.max.x, CANVAS_FRISKET_SCALE * bounds.max.x,
+                                  CANVAS_FRISKET_SCALE * bounds.min.y, CANVAS_FRISKET_SCALE * bounds.max.y);
     map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points, 1, color_t::transparent(), color);
   }
 
@@ -1214,9 +1212,7 @@ void map_t::init() {
   set_zoom(state.zoom, false);
   paint();
 
-  float mult = style->frisket.mult;
-  canvas->set_bounds(mult * bounds.min.x, mult * bounds.min.y,
-                     mult * bounds.max.x, mult * bounds.max.y);
+  canvas->set_bounds(bounds.min.x, bounds.min.y, bounds.max.x, bounds.max.y);
 
   printf("restore scroll position %d/%d\n",
          state.scroll_offset.x, state.scroll_offset.y);

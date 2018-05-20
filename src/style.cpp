@@ -83,7 +83,6 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
   style.highlight.arrow_color  = 0x0000ff80;  // arrows are blue
   style.highlight.arrow_limit  = 4.0;
 
-  style.frisket.mult           = 2.0;
   style.frisket.color          = 0xffffffff;
   style.frisket.border.present = true;
   style.frisket.border.width   = 6.0;
@@ -122,12 +121,6 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
         style.way.zoom_max = parse_scale_max(cur_node);
 
       } else if(strcmp(nodename, "frisket") == 0) {
-        // the size of the visible screen area in contrast to the map size. Must not be smaller
-        // than 1 for obvious reasons, and must be smaller than 3 as you could scroll so much to
-        // a side that nothing of the map would be visible anymore. Limiting it to 2 makes sure
-        // that if you scroll out as much as possible at least half of the screen is still covered
-        // with the map.
-        style.frisket.mult = std::max(1.0, std::min(2.0, xml_get_prop_float(cur_node, "mult")));
         parse_color(cur_node, "color", style.frisket.color);
         style.frisket.border.present = false;
 

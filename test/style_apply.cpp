@@ -64,7 +64,6 @@ int main(int argc, char **argv)
   assert_cmpnum(style->frisket.border.color, 0xff0000c0);
   assert_cmpnum(style->frisket.border.width, 20.75);
   assert_cmpnum(style->frisket.color, 0x0f0f0fff);
-  assert_cmpnum(style->frisket.mult, 3.5);
   assert_cmpnum(style->highlight.color, 0xffff00c0);
   assert_cmpnum(style->highlight.node_color, 0xff00000c);
   assert_cmpnum(style->highlight.touch_color, 0x0000ffc0);

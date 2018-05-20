@@ -34,6 +34,8 @@
 
 /* --------- generic canvas --------- */
 
+#define CANVAS_FRISKET_SCALE 2.0
+
 typedef enum {
   CANVAS_GROUP_BG=0,       // 0: background layer (wms overlay)
   CANVAS_GROUP_POLYGONS,   // 1: polygons (forrests, buildings, lakes) */

@@ -64,7 +64,6 @@ struct style_t {
   } area;
 
   struct {
-    float mult;
     color_t color;
 
     struct {
