@@ -58,6 +58,22 @@ struct canvas_points_deleter {
 
 typedef std::unique_ptr<GooCanvasPoints, canvas_points_deleter> pointGuard;
 
+struct canvas_dimensions {
+  canvas_dimensions(double w, double h)
+    : width(w), height(h) {}
+  double width, height;
+  inline canvas_dimensions operator/(double d) const {
+    canvas_dimensions ret = *this;
+    ret /= d;
+    return ret;
+  }
+  inline canvas_dimensions &operator/=(double d) {
+    width /= d;
+    height /= d;
+    return *this;
+  }
+};
+
 // since struct _GooCanvasItem does not exist, but is defined as an interface type
 // in the GooCanvas headers define it here and inherit from it to get the internal
 // casting type safe
@@ -74,6 +90,8 @@ struct canvas_goocanvas : public canvas_t {
   struct {
     lpos_t min, max;
   } bounds;
+
+  canvas_dimensions get_viewport_dimensions() const;
 };
 
 canvas_t *canvas_t::create() {
@@ -128,14 +146,14 @@ double canvas_t::set_zoom(double zoom) {
   /* Limit a proposed zoom factor to sane ranges.
    * Specifically the map is allowed to be no smaller than the viewport. */
 
+  canvas_goocanvas *gcanvas = static_cast<canvas_goocanvas *>(this);
   /* get size of visible area in pixels and convert to meters of intended */
   /* zoom by dividing by zoom (which is basically pix/m) */
-  canvas_dimensions dim = get_viewport_dimensions(canvas_t::UNIT_PIXEL) / zoom;
+  const GtkAllocation &dim = widget->allocation;
 
   double limit;
   int delta;
 
-  canvas_goocanvas *gcanvas = static_cast<canvas_goocanvas *>(this);
   if (dim.height < dim.width) {
     limit = dim.height;
     delta = gcanvas->bounds.max.y - gcanvas->bounds.min.y;
@@ -143,7 +161,7 @@ double canvas_t::set_zoom(double zoom) {
     limit = dim.width;
     delta = gcanvas->bounds.max.x - gcanvas->bounds.min.x;
   }
-  limit *= 0.95;
+  limit *= 0.95 / zoom;
 
   if (delta < limit) {
     zoom /= (delta / limit);
@@ -160,14 +178,13 @@ double canvas_t::get_zoom() const {
   return goo_canvas_get_scale(GOO_CANVAS(widget));
 }
 
-canvas_dimensions canvas_t::get_viewport_dimensions(canvas_unit_t unit) const {
+canvas_dimensions canvas_goocanvas::get_viewport_dimensions() const {
   // Canvas viewport dimensions
   const GtkAllocation &a = widget->allocation;
   canvas_dimensions ret(a.width, a.height);
 
-  if(unit == canvas_t::UNIT_METER)
-    /* convert to meters by dividing by zoom */
-    ret /= get_zoom();
+  /* convert to meters by dividing by zoom */
+  ret /= get_zoom();
 
   return ret;
 }
@@ -191,10 +208,10 @@ void canvas_t::scroll_get(int &sx, int &sy) const {
 
 /* set scroll position in meters */
 void canvas_t::scroll_to(int sx, int sy) {
-  /* get size of visible area in canvas units (meters) */
-  canvas_dimensions dim = get_viewport_dimensions(canvas_t::UNIT_METER) / 2;
-
   canvas_goocanvas *gcanvas = static_cast<canvas_goocanvas *>(this);
+  /* get size of visible area in canvas units (meters) */
+  canvas_dimensions dim = gcanvas->get_viewport_dimensions() / 2;
+
   // Data rect minimum and maximum
   // limit stops - prevent scrolling beyond these
   int min_sy_cu = 0.95 * (gcanvas->bounds.min.y - dim.height);
@@ -617,7 +634,7 @@ bool canvas_t::isVisible(const lpos_t lpos) const
   // Viewport dimensions in canvas space
 
   /* get size of visible area in canvas units (meters) */
-  const canvas_dimensions dim = get_viewport_dimensions(canvas_t::UNIT_METER);
+  const canvas_dimensions dim = static_cast<const canvas_goocanvas *>(this)->get_viewport_dimensions();
 
   // Is the point still onscreen?
   int sx, sy;

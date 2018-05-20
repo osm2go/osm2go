@@ -104,29 +104,11 @@ struct canvas_item_pixmap : public canvas_item_t {
   void image_move(int x, int y, float hscale, float vscale);
 };
 
-struct canvas_dimensions {
-  canvas_dimensions(double w, double h)
-    : width(w), height(h) {}
-  double width, height;
-  inline canvas_dimensions operator/(double d) const {
-    canvas_dimensions ret = *this;
-    ret /= d;
-    return ret;
-  }
-  inline canvas_dimensions &operator/=(double d) {
-    width /= d;
-    height /= d;
-    return *this;
-  }
-};
-
 class canvas_t {
 protected:
   explicit canvas_t(osm2go_platform::Widget *w);
 
 public:
-  enum canvas_unit_t { UNIT_METER = 0, UNIT_PIXEL };
-
   static canvas_t *create();
 
   osm2go_platform::Widget * const widget;
@@ -135,7 +117,6 @@ public:
 
   std::array<std::vector<canvas_item_info_t *>, CANVAS_GROUPS> item_info;
 
-  canvas_dimensions get_viewport_dimensions(canvas_unit_t unit) const;
   lpos_t window2world(int x, int y) const;
   void scroll_get(int &sx, int &sy) const;
 
