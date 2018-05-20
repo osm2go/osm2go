@@ -132,7 +132,7 @@ canvas_dimensions canvas_t::get_viewport_dimensions(canvas_unit_t unit) const {
 
   if(unit == canvas_t::UNIT_METER)
     /* convert to meters by dividing by zoom */
-    ret /= goo_canvas_get_scale(GOO_CANVAS(widget));
+    ret /= get_zoom();
 
   return ret;
 }
@@ -156,7 +156,7 @@ void canvas_t::scroll_get(int &sx, int &sy) const {
 
 /* set scroll position in meters */
 void canvas_t::scroll_to(int sx, int sy) {
-  gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(widget));
+  gdouble zoom = get_zoom();
 
   /* adjust to screen center */
   sx -= widget->allocation.width / (2 * zoom);
