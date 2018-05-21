@@ -260,10 +260,14 @@ void canvas_t::erase(unsigned int group_mask) {
   GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(widget));
 
   /* create the groups */
-  for(unsigned int group = 0; group < gcanvas->group.size(); group++) {
-    if(group_mask & (1<<group)) {
+  for(unsigned int group = 0; group < gcanvas->group.size() && group_mask != 0; group++) {
+    if(group_mask & (1 << group)) {
       goo_canvas_item_remove(gcanvas->group[group]);
       gcanvas->group[group] = goo_canvas_group_new(root, nullptr);
+      // restore z-order
+      if(group < gcanvas->group.size() - 1)
+        goo_canvas_item_lower(gcanvas->group[group], gcanvas->group[group + 1]);
+      group_mask ^= 1 << group;
     }
   }
 }
