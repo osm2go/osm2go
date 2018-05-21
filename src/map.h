@@ -93,8 +93,8 @@ struct map_state_t {
   void reset();
 
   float zoom;                          // zoom level (1.0 = 1m/pixel
-  float detail;                        // deatil level (1.0 = normal)
-  struct { int x,y; } scroll_offset;  // initial scroll offset
+  float detail;                        // detail level (1.0 = normal)
+  struct { int x,y; } scroll_offset;   // initial scroll offset
 };
 
 class map_t {
