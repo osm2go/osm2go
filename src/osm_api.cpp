@@ -521,8 +521,7 @@ void osm_upload_context_t::upload(const osm_t::dirty_t &dirty)
     if(!dirty.relations.deleted.empty() || !dirty.ways.deleted.empty() || !dirty.nodes.deleted.empty()) {
       append_str(_("Deleting objects:\n"));
       xmlDocGuard doc(osmchange_init());
-      xmlNodePtr del_node = xmlNewChild(xmlDocGetRootElement(doc.get()), nullptr, BAD_CAST "delete", nullptr);
-      osmchange_delete(dirty, del_node, changeset.c_str());
+      osmchange_delete(dirty, xmlDocGetRootElement(doc.get()), changeset.c_str());
 
       // deletion was successful, remove the objects
       if(osmchange_upload(*this, doc)) {
