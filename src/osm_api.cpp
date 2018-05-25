@@ -145,8 +145,8 @@ struct curl_data_t {
 static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *stream) {
   curl_data_t *p = static_cast<curl_data_t *>(stream);
 
-  //  printf("request to read %d items of size %d, pointer = %p\n",
-  //  nmemb, size, p->ptr);
+//   printf("request to read %zu items of size %zu, pointer = %p\n",
+//      nmemb, size, p->ptr);
 
   if(nmemb * size > static_cast<size_t>(p->len))
     nmemb = p->len/size;
@@ -278,6 +278,12 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
 
   std::unique_ptr<CURL, curl_deleter> &curl = context.curl;
   CURLcode res;
+
+  // drop now unneeded values from the previous transfers
+  curl_easy_setopt(curl.get(), CURLOPT_READFUNCTION, nullptr);
+  curl_easy_setopt(curl.get(), CURLOPT_READDATA, nullptr);
+  curl_easy_setopt(curl.get(), CURLOPT_INFILESIZE, -1);
+  curl_easy_setopt(curl.get(), CURLOPT_UPLOAD, 0);
 
   /* specify target URL, and note that this URL should include a file
      name, not only a directory */
