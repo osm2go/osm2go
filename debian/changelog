@@ -4,8 +4,14 @@ osm2go (1:0.9.12-maemo1) karmic; urgency=low
   * also consider relation memberships when showing object description
   * fix crashes with combo boxes in JOSM presets that are filled with list_entry elements
   * allow free text entry for combo boxes in JOSM presets
+  * check case insensitive for *.xml extension on user presets
+  * prevent a presets menu crash observed on Fremantle
+  * fix merging nodes with one way both that are not at the end of the way
+  * fix wrong position when inserting new nodes to a way
+  * remove "mult" property of <frisket> and always limit the visible area to a sensible range
+  * fix crash and other bugs when uploading deletions
 
- -- Rolf Eike Beer <eike@sf-mail.de>  Sat, 21 Apr 2018 09:30:52 +0200
+ -- Rolf Eike Beer <eike@sf-mail.de>  Sat, 26 May 2018 20:47:43 +0200
 
 osm2go (1:0.9.11-maemo1) karmic; urgency=low
 
