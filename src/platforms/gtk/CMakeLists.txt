@@ -40,7 +40,7 @@ if (NOT CSTDINT_HEADER)
 				${CMAKE_CURRENT_SOURCE_DIR}/tr1wrappers)
 endif ()
 
-pkg_search_module(GooCanvas REQUIRED IMPORTED_TARGET goocanvas)
+pkg_check_modules(GooCanvas REQUIRED IMPORTED_TARGET goocanvas)
 target_sources(osm2go_lib PRIVATE
 	src/platforms/gtk/canvas_goocanvas.cpp
 )
@@ -100,7 +100,7 @@ if (NOT libLocation_FOUND)
 	target_link_libraries(osm2go_platform_lib_private INTERFACE PkgConfig::GVFS)
 endif ()
 
-pkg_search_module(SOUP REQUIRED IMPORTED_TARGET libsoup-2.4)
+pkg_check_modules(SOUP REQUIRED IMPORTED_TARGET libsoup-2.4)
 
 add_subdirectory(osm-gps-map)
 target_link_libraries(osm2go_platform_lib_private INTERFACE osm-gps-map)
