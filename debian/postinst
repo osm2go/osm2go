@@ -14,13 +14,13 @@ fi
 # determine path to use. Since the environment variables 
 # (INTERNAL_MMC_MOUNTPOINT etc) are too unreliable, we
 # search for mountpoints ourselves 
-if [ "`mount | grep /home/user/MyDocs`" != "" ]; then
+if mount | grep -q /home/user/MyDocs; then
   echo "MMC-PATH: mount /home/user/MyDocs"
   MMC_PATH=/home/user/MyDocs
-elif [ "`mount | grep /media/mmc2`" != "" ]; then
+elif mount | grep -q /media/mmc2; then
   echo "MMC-PATH: mount /media/mmc2"
   MMC_PATH=/media/mmc2
-elif [ "$HOME" != "" ]; then
+elif [ -n "$HOME" ]; then
   echo "MMC-PATH: HOME env"
   MMC_PATH=$HOME
 else
