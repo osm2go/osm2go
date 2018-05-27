@@ -166,13 +166,11 @@ public:
 };
 
 /**
- * @brief a combo box with pre-defined values
+ * @brief base class for elements that allow to choose between multiple values
  */
-class presets_element_combo : public presets_element_t {
-protected:
-  virtual bool matchValue(const std::string &val) const override;
+class presets_element_selectable : public presets_element_t {
 public:
-  presets_element_combo(const std::string &k, const std::string &txt,
+  presets_element_selectable(presets_element_type_t t, const std::string &k, const std::string &txt,
                         const std::string &deflt, const char *m, std::vector<std::string> vals,
                         std::vector<std::string> dvals, bool canEdit);
 
@@ -181,13 +179,25 @@ public:
   std::vector<std::string> display_values;
   const bool editable;
 
+  static std::vector<std::string> split_string(const char *str, char delimiter);
+};
+
+/**
+ * @brief a combo box with pre-defined values
+ */
+class presets_element_combo : public presets_element_selectable {
+protected:
+  virtual bool matchValue(const std::string &val) const override;
+public:
+  presets_element_combo(const std::string &k, const std::string &txt,
+                        const std::string &deflt, const char *m, std::vector<std::string> vals,
+                        std::vector<std::string> dvals, bool canEdit);
+
   virtual attach_key *attach(preset_attach_context &attctx, const std::string &preset) const override;
   virtual std::string getValue(attach_key *akey) const override;
   virtual unsigned int rows() const override {
     return 1;
   }
-
-  static std::vector<std::string> split_string(const char *str, char delimiter);
 };
 
 /**

@@ -752,8 +752,8 @@ void PresetSax::startElement(const char *name, const char **attrs)
       display_values = nullptr;
     }
     widget = new presets_element_combo(key, text, def, match,
-                                      presets_element_combo::split_string(values, delimiter),
-                                      presets_element_combo::split_string(display_values, delimiter),
+                                      presets_element_selectable::split_string(values, delimiter),
+                                      presets_element_selectable::split_string(display_values, delimiter),
                                       editable);
     break;
   }
@@ -1131,11 +1131,11 @@ presets_element_text::presets_element_text(const std::string &k, const std::stri
 {
 }
 
-presets_element_combo::presets_element_combo(const std::string &k, const std::string &txt,
-                                           const std::string &deflt, const char *m,
-                                           std::vector<std::string> vals, std::vector<std::string> dvals,
-                                           bool canEdit)
-  : presets_element_t(WIDGET_TYPE_COMBO, parseMatch(m), k, txt)
+presets_element_selectable::presets_element_selectable(presets_element_type_t t, const std::string &k,
+                                                       const std::string &txt, const std::string &deflt,
+                                                       const char *m, std::vector<std::string> vals,
+                                                       std::vector<std::string> dvals, bool canEdit)
+  : presets_element_t(t, parseMatch(m), k, txt)
   , def(deflt)
   , values(vals)
   , display_values(dvals)
@@ -1143,7 +1143,7 @@ presets_element_combo::presets_element_combo(const std::string &k, const std::st
 {
 }
 
-std::vector<std::string> presets_element_combo::split_string(const char *str, const char delimiter)
+std::vector<std::string> presets_element_selectable::split_string(const char *str, const char delimiter)
 {
   std::vector<std::string> ret;
 
@@ -1163,6 +1163,14 @@ std::vector<std::string> presets_element_combo::split_string(const char *str, co
   shrink_to_fit(ret);
 
   return ret;
+}
+
+presets_element_combo::presets_element_combo(const std::string &k, const std::string &txt,
+                                           const std::string &deflt, const char *m,
+                                           std::vector<std::string> vals, std::vector<std::string> dvals,
+                                           bool canEdit)
+  : presets_element_selectable(WIDGET_TYPE_COMBO, k, txt, deflt, m, vals, dvals, canEdit)
+{
 }
 
 presets_element_key::presets_element_key(const std::string &k, const std::string &val,
