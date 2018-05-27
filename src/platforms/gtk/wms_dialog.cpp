@@ -453,16 +453,16 @@ struct fitting_layers_functor {
   std::size_t &index;
   fitting_layers_functor(GtkListStore *s, const project_t *p, std::size_t &idx)
     : store(s), project(p), index(idx) {}
-  void operator()(const wms_layer_t *layer);
+  void operator()(const wms_layer_t &layer);
 };
 
-void fitting_layers_functor::operator()(const wms_layer_t *layer)
+void fitting_layers_functor::operator()(const wms_layer_t &layer)
 {
-  bool fits = layer->llbbox.valid && wms_llbbox_fits(project, layer->llbbox);
+  bool fits = layer.llbbox.valid && wms_llbbox_fits(project, layer.llbbox);
 
   /* Append a row and fill in some data */
   gtk_list_store_insert_with_values(store, nullptr, -1,
-                                    LAYER_COL_TITLE, layer->title.c_str(),
+                                    LAYER_COL_TITLE, layer.title.c_str(),
                                     LAYER_COL_FITS, fits ? TRUE : FALSE,
                                     LAYER_COL_DATA, index++,
                                     -1);
@@ -571,7 +571,7 @@ void wms_import(appdata_t &appdata) {
   if(!wms_server_dialog(appdata, &wms))
     return;
 
-  wms_layer_t::list layers = wms_get_layers(appdata.project.get(), wms);
+  const wms_layer_t::list layers = wms_get_layers(appdata.project.get(), wms);
   if(layers.empty())
     return;
 
@@ -579,6 +579,4 @@ void wms_import(appdata_t &appdata) {
 
   if(wms_layer_dialog(&ctx, layers))
     wms_get_selected_layer(appdata, wms, layers, ctx.selected);
-
-  wms_layers_free(layers);
 }

@@ -49,9 +49,8 @@ struct wms_layer_t {
                        bool epsg = false,
                        const wms_llbbox_t &x = wms_llbbox_t())
     : title(t), name(n), srs(s), epsg4326(epsg), llbbox(x) {}
-  ~wms_layer_t();
 
-  typedef std::vector<wms_layer_t *> list;
+  typedef std::vector<wms_layer_t> list;
 
   std::string title;
   std::string name;
@@ -87,7 +86,6 @@ struct wms_cap_t {
 struct wms_t {
   wms_t(const std::string &s)
     : server(s), width(0), height(0) {}
-  ~wms_t();
 
   std::string server;
   int width, height;
@@ -95,7 +93,6 @@ struct wms_t {
   wms_cap_t cap;
 };
 
-void wms_layers_free(wms_layer_t::list &layers);
 bool wms_llbbox_fits(const project_t *project, const wms_llbbox_t &llbbox);
 wms_layer_t::list wms_get_layers(project_t *project, wms_t &wms);
 void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
