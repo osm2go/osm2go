@@ -140,6 +140,7 @@ class PresetSax {
     TagKey,
     TagText,
     TagCombo,
+    TagMultiselect,
     TagListEntry,
     TagCheck,
     TagLabel,
@@ -257,14 +258,15 @@ const PresetSax::StateMap &PresetSax::preset_state_map() {
 #if __cplusplus >= 201103L
     const std::vector<State> item_chunks = { TagChunk, TagItem };
     const std::vector<State> pr_gr = { TagPresets, TagGroup };
+    const std::vector<State> selectables = { TagCombo, TagMultiselect };
 # define VECTOR_ONE(a) { a }
 #else
-    std::vector<State> item_chunks(2);
-    item_chunks[0] = TagChunk;
+    std::vector<State> item_chunks(2, TagChunk);
     item_chunks[1] = TagItem;
-    std::vector<State> pr_gr(2);
-    pr_gr[0] = TagPresets;
+    std::vector<State> pr_gr(2, TagPresets);
     pr_gr[1] = TagGroup;
+    std::vector<State> selectables(2, TagCombo);
+    selectables[1] = TagMultiselect;
 # define VECTOR_ONE(a) std::vector<State>(1, (a))
 #endif
 
@@ -283,7 +285,8 @@ const PresetSax::StateMap &PresetSax::preset_state_map() {
     map.push_back(StateMap::value_type("key", TagKey, item_chunks));
     map.push_back(StateMap::value_type("text", TagText, item_chunks));
     map.push_back(StateMap::value_type("combo", TagCombo, item_chunks));
-    map.push_back(StateMap::value_type("list_entry", TagListEntry, VECTOR_ONE(TagCombo)));
+    map.push_back(StateMap::value_type("multiselect", TagMultiselect, item_chunks));
+    map.push_back(StateMap::value_type("list_entry", TagListEntry, selectables));
     map.push_back(StateMap::value_type("check", TagCheck, item_chunks));
     map.push_back(StateMap::value_type("label", TagLabel, item_chunks));
     map.push_back(StateMap::value_type("space", TagSpace, item_chunks));
@@ -757,11 +760,53 @@ void PresetSax::startElement(const char *name, const char **attrs)
                                       editable);
     break;
   }
+  case TagMultiselect: {
+    std::array<const char *, 8> names = { { "key", "text", "display_values", "match", "default", "delimiter", "values", "rows" } };
+    const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 6);
+    const AttrMap::const_iterator aitEnd = a.end();
+
+    const std::string &key = NULL_OR_MAP_STR(a.find("key"));
+    const std::string &text = NULL_OR_MAP_STR(a.find("text"));
+    const std::string &def = NULL_OR_MAP_STR(a.find("default"));
+    const char *match = NULL_OR_MAP_VAL(a.find("match"));
+    const char *display_values= NULL_OR_MAP_VAL(a.find("display_values"));
+    const char *values = NULL_OR_MAP_VAL(a.find("values"));
+    const char *del = NULL_OR_MAP_VAL(a.find("delimiter"));
+    const char *rowstr = NULL_OR_MAP_VAL(a.find("rows"));
+
+    char delimiter = ';';
+    if(del != nullptr) {
+      if(unlikely(strlen(del) != 1))
+        dumpState("found", "combo with invalid delimiter ", del);
+      else
+        delimiter = *del;
+    }
+
+    if(unlikely(!values && display_values)) {
+      dumpState("found", "combo with display_values but not values");
+      display_values = nullptr;
+    }
+
+    unsigned int rows = 0;
+    if(rowstr != nullptr) {
+      char *endp;
+      rows = strtoul(rowstr, &endp, 10);
+      if(unlikely(*endp != '\0')) {
+        dumpState("ignoring invalid count value of", "role");
+        rows = 0;
+      }
+    }
+
+    widget = new presets_element_multiselect(key, text, def, match, delimiter,
+                                      presets_element_selectable::split_string(values, delimiter),
+                                      presets_element_selectable::split_string(display_values, delimiter), rows);
+    break;
+  }
   case TagListEntry: {
     assert(!items.empty());
     assert(!widgets.empty());
-    assert_cmpnum(widgets.top()->type, WIDGET_TYPE_COMBO);
-    presets_element_combo * const combo = static_cast<presets_element_combo *>(widgets.top());
+    assert(widgets.top()->type == WIDGET_TYPE_COMBO || widgets.top()->type == WIDGET_TYPE_MULTISELECT);
+    presets_element_selectable * const sel = static_cast<presets_element_selectable *>(widgets.top());
 
     std::array<const char *, 2> names = { { "display_value", "value" } };
     const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 3);
@@ -772,12 +817,12 @@ void PresetSax::startElement(const char *name, const char **attrs)
     if(unlikely(!value)) {
       dumpState("found", "list_entry without value");
     } else {
-      combo->values.push_back(value);
+      sel->values.push_back(value);
       const char *dv = NULL_OR_MAP_VAL(a.find("display_value"));
       // make sure there is always a string to show, in case all elements have the
       // default value the list will be cleared when the containing widget tag is
       // closed
-      combo->display_values.push_back(dv == nullptr ? value : dv);
+      sel->display_values.push_back(dv == nullptr ? value : dv);
     }
     break;
   }
@@ -955,6 +1000,21 @@ void PresetSax::endElement(const xmlChar *name)
     // none of that has a display_value given
     if(unlikely(combo->values == combo->display_values))
       combo->display_values.clear();
+    break;
+  }
+  case TagMultiselect: {
+    assert(!items.empty());
+    assert(!widgets.empty());
+    presets_element_multiselect * const ms = static_cast<presets_element_multiselect *>(widgets.top());
+    widgets.pop();
+    if(unlikely(ms->key.empty())) {
+      dumpState("ignoring", "multiselect without key");
+      delete ms;
+    }
+    // this usually happens when the list if filled by <list_entry> tags and
+    // none of that has a display_value given
+    if(unlikely(ms->values == ms->display_values))
+      ms->display_values.clear();
     break;
   }
   case TagText:
@@ -1170,6 +1230,18 @@ presets_element_combo::presets_element_combo(const std::string &k, const std::st
                                            std::vector<std::string> vals, std::vector<std::string> dvals,
                                            bool canEdit)
   : presets_element_selectable(WIDGET_TYPE_COMBO, k, txt, deflt, m, vals, dvals, canEdit)
+{
+}
+
+presets_element_multiselect::presets_element_multiselect(const std::string &k, const std::string &txt,
+                                                         const std::string &deflt, const char *m, char del,
+                                                         std::vector<std::string> vals,
+                                                         std::vector<std::string> dvals, unsigned int rws)
+  : presets_element_selectable(WIDGET_TYPE_MULTISELECT, k, txt, deflt, m, vals, dvals, false)
+  , delimiter(del)
+#ifndef FREMANTLE
+  , rows_height(rws == 0 ? std::min(8, static_cast<int>(vals.size())) : rws)
+#endif
 {
 }
 

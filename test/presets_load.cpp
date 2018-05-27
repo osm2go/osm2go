@@ -64,17 +64,18 @@ struct counter {
   unsigned int &items;
   unsigned int &separators;
   unsigned int &combos;
-  unsigned int &combo_entries;
+  unsigned int &multis;
+  unsigned int &list_entries;
   unsigned int &labels;
   unsigned int &keys;
   unsigned int &checks;
   unsigned int &refs;
   unsigned int &plinks;
   unsigned int &roles;
-  counter(unsigned int &gr, unsigned int &it, unsigned int &sep, unsigned int &c,
-          unsigned int &ce, unsigned int &lb, unsigned int &ky,  unsigned int &chk,
-          unsigned int &rf, unsigned int &pl, unsigned int &rl)
-    : groups(gr), items(it), separators(sep), combos(c), combo_entries(ce),
+  counter(unsigned int &gr,  unsigned int &it, unsigned int &sep, unsigned int &c,
+          unsigned int &mu,  unsigned int &ce, unsigned int &lb,  unsigned int &ky,
+          unsigned int &chk, unsigned int &rf, unsigned int &pl,  unsigned int &rl)
+    : groups(gr), items(it), separators(sep), combos(c), multis(mu), list_entries(ce),
       labels(lb), keys(ky), checks(chk), refs(rf), plinks(pl), roles(rl) {}
   void operator()(const presets_item_t *p);
   void operator()(const presets_element_t *w);
@@ -114,9 +115,16 @@ void counter::operator()(const presets_element_t *w)
     break;
   case WIDGET_TYPE_COMBO: {
     combos++;
-    const presets_element_combo *combo = static_cast<const presets_element_combo *>(w);
-    combo_entries += combo->values.size();
-    std::for_each(combo->display_values.begin(), combo->display_values.end(), display_value_verifactor);
+    const presets_element_selectable *sel = static_cast<const presets_element_selectable *>(w);
+    list_entries += sel->values.size();
+    std::for_each(sel->display_values.begin(), sel->display_values.end(), display_value_verifactor);
+    break;
+  }
+  case WIDGET_TYPE_MULTISELECT: {
+    multis++;
+    const presets_element_selectable *sel = static_cast<const presets_element_selectable *>(w);
+    list_entries += sel->values.size();
+    std::for_each(sel->display_values.begin(), sel->display_values.end(), display_value_verifactor);
     break;
   }
   case WIDGET_TYPE_CHECK:
@@ -247,14 +255,15 @@ int main(int argc, char **argv)
   unsigned int items = 0;
   unsigned int separators = 0;
   unsigned int combos = 0;
-  unsigned int combo_entries = 0;
+  unsigned int multis = 0;
+  unsigned int list_entries = 0;
   unsigned int labels = 0;
   unsigned int keys = 0;
   unsigned int checks = 0;
   unsigned int refs = 0;
   unsigned int plinks = 0;
   unsigned int roles = 0;
-  counter cnt(groups, items, separators, combos, combo_entries, labels, keys, checks, refs, plinks, roles);
+  counter cnt(groups, items, separators, combos, multis, list_entries, labels, keys, checks, refs, plinks, roles);
 
   std::for_each(presets->items.begin(), presets->items.end(), cnt);
   std::for_each(presets->chunks.begin(), presets->chunks.end(), cnt);
@@ -266,7 +275,8 @@ int main(int argc, char **argv)
     << "items: " << items << std::endl
     << "separators: " << separators << std::endl
     << "combos: " << combos << std::endl
-    << "combo_entries: " << combo_entries << std::endl
+    << "multis: " << multis << std::endl
+    << "list_entries: " << list_entries << std::endl
     << "labels: " << labels << std::endl
     << "keys: " << keys << std::endl
     << "checks: " << checks << std::endl

@@ -233,6 +233,7 @@ void get_widget_functor::operator()(const presets_element_t* w)
   case WIDGET_TYPE_KEY:
   case WIDGET_TYPE_CHECK:
   case WIDGET_TYPE_COMBO:
+  case WIDGET_TYPE_MULTISELECT:
   case WIDGET_TYPE_TEXT:
     text = w->getValue(akey);
     break;
@@ -986,6 +987,38 @@ presets_element_t::attach_key *presets_element_combo::attach(preset_attach_conte
 }
 
 std::string presets_element_combo::getValue(presets_element_t::attach_key *akey) const
+{
+  return osm2go_platform::select_widget_value(reinterpret_cast<GtkWidget *>(akey));
+}
+
+presets_element_t::attach_key *presets_element_multiselect::attach(preset_attach_context &attctx,
+                                                                   const std::string &preset) const
+{
+  const std::string &pr = preset.empty() ? def : preset;
+
+  GtkListStore *store = selectorModel(values, display_values);
+  GtkWidget *ret = osm2go_platform::select_widget_wrapped(text.c_str(), GTK_TREE_MODEL(store),
+                                                          osm2go_platform::AllowMultiSelection,
+                                                          &delimiter);
+  g_object_unref(store);
+
+  const std::vector<unsigned int> &indexes = matchedIndexes(pr);
+
+  select_widget_select(ret, indexes);
+
+#ifndef FREMANTLE
+  // arbitrary number for height scaling
+  gtk_widget_set_size_request(ret, -1, rows_height * 24);
+
+  attach_right(attctx, text.c_str(), ret);
+#else
+  attach_both(attctx, ret);
+#endif
+
+  return reinterpret_cast<presets_element_t::attach_key *>(ret);
+}
+
+std::string presets_element_multiselect::getValue(presets_element_t::attach_key *akey) const
 {
   return osm2go_platform::select_widget_value(reinterpret_cast<GtkWidget *>(akey));
 }

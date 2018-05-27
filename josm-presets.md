@@ -57,24 +57,24 @@ __&nbsp;__                   | use_last_as_default           | ignored   |
 __&nbsp;__                   | values_searchable             | ignored   |
 __&nbsp;__                   | length                        | ignored   |
 __&nbsp;__                   | values_no_i18n                | ignored   |
-__&lt;multiselect&gt;__      |                               | ignored   |
-__&nbsp;__                   | key                           | ignored   |
-__&nbsp;__                   | text                          | ignored   |
+__&lt;multiselect&gt;__      |                               | supported |
+__&nbsp;__                   | key                           | supported | required
+__&nbsp;__                   | text                          | supported |
 __&nbsp;__                   | text_context                  | ignored   |
-__&nbsp;__                   | values                        | ignored   |
+__&nbsp;__                   | values                        | supported |
 __&nbsp;__                   | values_sort                   | ignored   |
-__&nbsp;__                   | delimiter                     | ignored   |
-__&nbsp;__                   | default                       | ignored   |
-__&nbsp;__                   | match                         | ignored   |
-__&nbsp;__                   | display_values                | ignored   |
+__&nbsp;__                   | delimiter                     | supported |
+__&nbsp;__                   | default                       | supported |
+__&nbsp;__                   | match                         | supported |
+__&nbsp;__                   | display_values                | supported |
 __&nbsp;__                   | short_descriptions            | ignored   |
 __&nbsp;__                   | values_context                | ignored   |
-__&nbsp;__                   | editable                      | ignored   |
+__&nbsp;__                   | editable                      | ignored   | always treated as false
 __&nbsp;__                   | use_last_as_default           | ignored   |
 __&nbsp;__                   | values_searchable             | ignored   |
 __&nbsp;__                   | length                        | ignored   |
 __&nbsp;__                   | values_no_i18n                | ignored   |
-__&nbsp;__                   | rows                          | ignored   |
+__&nbsp;__                   | rows                          | supported | ignored on Hildon
 __&lt;list_entry&gt;__       |                               | supported |
 __&nbsp;__                   | value                         | supported | required
 __&nbsp;__                   | display_value                 | supported |

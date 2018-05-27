@@ -35,6 +35,7 @@ enum presets_element_type_t {
   WIDGET_TYPE_SEPARATOR,
   WIDGET_TYPE_SPACE,
   WIDGET_TYPE_COMBO,
+  WIDGET_TYPE_MULTISELECT,
   WIDGET_TYPE_CHECK,
   WIDGET_TYPE_TEXT,
   WIDGET_TYPE_KEY,
@@ -192,6 +193,34 @@ public:
   presets_element_combo(const std::string &k, const std::string &txt,
                         const std::string &deflt, const char *m, std::vector<std::string> vals,
                         std::vector<std::string> dvals, bool canEdit);
+
+  virtual attach_key *attach(preset_attach_context &attctx, const std::string &preset) const override;
+  virtual std::string getValue(attach_key *akey) const override;
+  virtual unsigned int rows() const override {
+    return 1;
+  }
+};
+
+/**
+ * @brief a combo box with pre-defined values
+ */
+class presets_element_multiselect : public presets_element_selectable {
+protected:
+  /**
+   * @brief check which selection items are matched by preset
+   */
+  std::vector<unsigned int> matchedIndexes(const std::string &preset) const;
+
+  virtual bool matchValue(const std::string &val) const override;
+public:
+  presets_element_multiselect(const std::string &k, const std::string &txt,
+                              const std::string &deflt, const char *m, char del,
+                              std::vector<std::string> vals, std::vector<std::string> dvals, unsigned int rws);
+
+  const char delimiter;
+#ifndef FREMANTLE
+  const unsigned int rows_height;
+#endif
 
   virtual attach_key *attach(preset_attach_context &attctx, const std::string &preset) const override;
   virtual std::string getValue(attach_key *akey) const override;

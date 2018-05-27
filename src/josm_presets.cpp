@@ -192,6 +192,52 @@ bool presets_element_combo::matchValue(const std::string &val) const
   return std::find(values.begin(), values.end(), val) != values.end();
 }
 
+std::vector<unsigned int> presets_element_multiselect::matchedIndexes(const std::string &preset) const
+{
+  std::vector<unsigned int> indexes;
+
+  if(preset.empty())
+    return indexes;
+
+  std::vector<std::string> parts;
+  std::string::size_type pos = preset.find(delimiter);
+  const std::vector<std::string>::const_iterator itEnd = values.end();
+  const std::vector<std::string>::const_iterator itBegin = values.begin();
+
+  std::vector<std::string>::const_iterator it;
+  if(pos == std::string::npos) {
+    it = std::find(itBegin, itEnd, preset);
+  } else {
+    // the first one
+    it = std::find(itBegin, itEnd, preset.substr(0, pos));
+    if(it != itEnd)
+      indexes.push_back(it - itBegin);
+    // skip first delimiter
+    pos++;
+    // all indermediate ones
+    std::string::size_type newpos = preset.find(delimiter, pos);
+    while(newpos != std::string::npos) {
+      it = std::find(itBegin, itEnd, preset.substr(pos, newpos - pos));
+      if(it != itEnd)
+        indexes.push_back(it - itBegin);
+      pos = newpos + 1;
+      newpos = preset.find(delimiter, pos);
+    }
+    // the last one
+    it = std::find(itBegin, itEnd, preset.substr(pos));
+  }
+
+  if(it != itEnd)
+    indexes.push_back(it - itBegin);
+
+  return indexes;
+}
+
+bool presets_element_multiselect::matchValue(const std::string &val) const
+{
+  return !matchedIndexes(val).empty();
+}
+
 bool presets_element_key::matchValue(const std::string &val) const
 {
   return (value == val);
