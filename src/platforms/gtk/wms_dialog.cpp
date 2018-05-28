@@ -410,13 +410,12 @@ enum {
 /* fremantle finger scrolling, but fortunately the fremantle */
 /* default behaviour already is what we want. */
 static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event, gpointer) {
-  if(event->window == gtk_tree_view_get_bin_window(GTK_TREE_VIEW(widget))) {
+  GtkTreeView * const view = GTK_TREE_VIEW(widget);
+  if(event->window == gtk_tree_view_get_bin_window(view)) {
     GtkTreePath *path;
 
-    if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),
-		     event->x, event->y, &path, nullptr, nullptr, nullptr)) {
-      GtkTreeSelection *sel =
-	gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
+    if(gtk_tree_view_get_path_at_pos(view, event->x, event->y, &path, nullptr, nullptr, nullptr)) {
+      GtkTreeSelection *sel = gtk_tree_view_get_selection(view);
 
       if(!gtk_tree_selection_path_is_selected(sel, path))
 	gtk_tree_selection_select_path(sel, path);
