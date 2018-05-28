@@ -431,49 +431,29 @@ static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event, gpoint
 
 struct selected_context {
   const project_t *project;
-  wms_layer_t::list selected;
-  explicit selected_context(const project_t *p) : project(p) {}
+  std::vector<std::size_t> selected;
+  GtkTreeView *view;
+  explicit selected_context(const project_t *p) : project(p), view(nullptr) {}
 };
 
-static void changed(GtkTreeSelection *sel, gpointer user_data) {
-  /* we need to know what changed in order to let the user acknowlege it! */
-  wms_layer_t::list * const selected = static_cast<wms_layer_t::list *>(user_data);
-
+static void changed(GtkTreeSelection *sel) {
   /* get view from selection ... */
   GtkTreeView *view = gtk_tree_selection_get_tree_view(sel);
   assert(view != nullptr);
 
-  /* ... and get model from view */
-  GtkTreeModel *model = gtk_tree_view_get_model(view);
-  assert(model != nullptr);
-
-  /* walk the entire store */
-  GtkTreeIter iter;
-  gboolean ok = gtk_tree_model_get_iter_first(model, &iter);
-  selected->clear();
-  while(ok) {
-    wms_layer_t *layer = nullptr;
-
-    gboolean en;
-    gtk_tree_model_get(model, &iter, LAYER_COL_DATA, &layer, LAYER_COL_FITS, &en, -1);
-    assert(layer != nullptr);
-
-    if(en == TRUE && gtk_tree_selection_iter_is_selected(sel, &iter) == TRUE)
-      selected->push_back(layer);
-
-    ok = gtk_tree_model_iter_next(model, &iter);
-  }
+  gboolean okEn = gtk_tree_selection_count_selected_rows(sel) > 0 ? TRUE : FALSE;
 
   GtkWidget *dialog = gtk_widget_get_toplevel(GTK_WIDGET(view));
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
-                                    GTK_RESPONSE_ACCEPT,
-                                    selected->empty() ? FALSE : TRUE);
+                                    GTK_RESPONSE_ACCEPT, okEn);
 }
 
 struct fitting_layers_functor {
   GtkListStore * const store;
   const project_t * const project;
-  fitting_layers_functor(GtkListStore *s, const project_t *p) : store(s), project(p) {}
+  std::size_t &index;
+  fitting_layers_functor(GtkListStore *s, const project_t *p, std::size_t &idx)
+    : store(s), project(p), index(idx) {}
   void operator()(const wms_layer_t *layer);
 };
 
@@ -485,12 +465,13 @@ void fitting_layers_functor::operator()(const wms_layer_t *layer)
   gtk_list_store_insert_with_values(store, nullptr, -1,
                                     LAYER_COL_TITLE, layer->title.c_str(),
                                     LAYER_COL_FITS, fits ? TRUE : FALSE,
-                                    LAYER_COL_DATA, layer,
+                                    LAYER_COL_DATA, index++,
                                     -1);
 }
 
 static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t::list &layers) {
   GtkTreeView * const view = tree_view_new();
+  context->view = view;
 
   /* change list mode to "multiple" */
   GtkTreeSelection *selection =
@@ -505,7 +486,7 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
 
   /* build the store */
   std::unique_ptr<GtkListStore, g_object_deleter> store(gtk_list_store_new(LAYER_NUM_COLS,
-      G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_POINTER));
+      G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_ULONG));
 
   /* --- "Title" column --- */
   GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
@@ -521,12 +502,26 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
 
   gtk_tree_view_set_model(view, GTK_TREE_MODEL(store.get()));
 
+  std::size_t index = 0;
   std::for_each(layers.begin(), layers.end(),
-                fitting_layers_functor(store.get(), context->project));
+                fitting_layers_functor(store.get(), context->project, index));
 
-  g_signal_connect(selection, "changed", G_CALLBACK(changed), &context->selected);
+  g_signal_connect(selection, "changed", G_CALLBACK(changed), nullptr);
 
   return scrollable_container(GTK_WIDGET(view));
+}
+
+static void
+layer_selection_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer data)
+{
+  std::vector<std::size_t> * const selected = static_cast<std::vector<std::size_t> *>(data);
+
+  gboolean en;
+  gulong l;
+  gtk_tree_model_get(model, iter, LAYER_COL_DATA, &l, LAYER_COL_FITS, &en, -1);
+
+  if(en == TRUE)
+    selected->push_back(l);
 }
 
 static bool wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &layer) {
@@ -546,7 +541,14 @@ static bool wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &lay
 
   gtk_widget_show_all(dialog.get());
 
-  return (GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog.get())));
+  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog.get()))) {
+    gtk_tree_selection_selected_foreach(gtk_tree_view_get_selection(ctx->view),
+                                        layer_selection_foreach, &ctx->selected);
+
+    return true;
+  } else {
+    return false;
+  }
 }
 
 void wms_import(appdata_t &appdata) {
