@@ -95,34 +95,43 @@ static wms_server_t *get_selection(GtkTreeSelection *selection) {
   return nullptr;
 }
 
+struct server_select_context {
+  GtkTreeSelection *selection;
+  wms_t *wms;
+  wms_server_t *server;
+};
+
+static gboolean
+server_select_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer data)
+{
+  server_select_context * const ctx = static_cast<server_select_context *>(data);
+  wms_server_t *server = nullptr;
+  gtk_tree_model_get(model, iter, WMS_SERVER_COL_DATA, &server, -1);
+  assert(server != nullptr);
+
+  if(ctx->wms->server == server->server) {
+    gtk_tree_selection_select_iter(ctx->selection, iter);
+    ctx->server = server;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 const wms_server_t *wms_server_context_t::select_server() const
 {
   if(wms->server.empty())
     return nullptr;
 
   /* if the projects settings match a list entry, then select this */
+  server_select_context ctx;
+  ctx.selection = list_get_selection(list);
+  ctx.wms = wms;
+  ctx.server = nullptr;
 
-  GtkTreeSelection *selection = list_get_selection(list);
+  gtk_tree_model_foreach(GTK_TREE_MODEL(store.get()), server_select_foreach, &ctx);
 
-  /* walk the entire store to get all values */
-  wms_server_t *server = nullptr;
-  GtkTreeIter iter;
-
-  bool valid = (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store.get()), &iter) == TRUE);
-
-  while(valid) {
-    gtk_tree_model_get(GTK_TREE_MODEL(store.get()), &iter, WMS_SERVER_COL_DATA, &server, -1);
-    assert(server != nullptr);
-
-    if(wms->server == server->server) {
-       gtk_tree_selection_select_iter(selection, &iter);
-       return server;
-    }
-
-    valid = (gtk_tree_model_iter_next(GTK_TREE_MODEL(store.get()), &iter) == TRUE);
-  }
-
-  return nullptr;
+  return ctx.server;
 }
 
 static void wms_server_selected(wms_server_context_t *context,

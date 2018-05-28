@@ -80,23 +80,35 @@ static void changed(GtkTreeSelection *, gpointer user_data) {
   list_button_enable(GTK_WIDGET(list), LIST_BUTTON_EDIT, selected);
 }
 
+struct update_collisions_context {
+  inline update_collisions_context(const std::string &k, const osm_t::TagMap &t)
+    : checkAll(k.empty()), key(k), tags(t) {}
+  const bool checkAll;
+  const std::string &key;
+  const osm_t::TagMap &tags;
+};
+
+static gboolean
+update_collisions_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer data)
+{
+  const update_collisions_context * const ctx = static_cast<update_collisions_context *>(data);
+
+  const gchar *key = nullptr;
+  gtk_tree_model_get(model, iter, TAG_COL_KEY, &key, -1);
+  assert(key != nullptr);
+  if(ctx->checkAll || ctx->key == key)
+    gtk_list_store_set(GTK_LIST_STORE(model), iter,
+                       TAG_COL_COLLISION, (ctx->tags.count(key) > 1) ? TRUE : FALSE,
+                       -1);
+
+  return FALSE;
+}
+
 void info_tag_context_t::update_collisions(const std::string &k)
 {
-  GtkTreeIter iter;
-  const bool checkAll = k.empty();
+  update_collisions_context ctx(k, tags);
 
-  /* walk the entire store to get all values */
-  if(gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store.get()), &iter)) {
-    do {
-      const gchar *key = nullptr;
-      gtk_tree_model_get(GTK_TREE_MODEL(store.get()), &iter, TAG_COL_KEY, &key, -1);
-      assert(key != nullptr);
-      if(checkAll || k == key)
-        gtk_list_store_set(store.get(), &iter,
-           TAG_COL_COLLISION, (tags.count(key) > 1) ? TRUE : FALSE, -1);
-
-    } while(gtk_tree_model_iter_next(GTK_TREE_MODEL(store.get()), &iter));
-  }
+  gtk_tree_model_foreach(GTK_TREE_MODEL(store.get()), update_collisions_foreach, &ctx);
 }
 
 struct value_match_functor {
@@ -198,23 +210,37 @@ static bool tag_edit(GtkWindow *window, std::string &k, std::string &v) {
   return false;
 }
 
+struct select_item_context {
+  inline select_item_context(const std::string &key, const std::string &value, GtkWidget *l)
+    : k(key), v(value), list(l) {}
+  const std::string &k;
+  const std::string &v;
+  GtkWidget * const list;
+};
+
+static gboolean
+select_item_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer data)
+{
+  const select_item_context * const context = static_cast<select_item_context *>(data);
+  const gchar *key = nullptr, *value = nullptr;
+  gtk_tree_model_get(model, iter,
+                      TAG_COL_KEY, &key,
+                      TAG_COL_VALUE, &value,
+                     -1);
+  assert(key != nullptr);
+  assert(value != nullptr);
+  if(context->k == key && context->v == value) {
+    gtk_tree_selection_select_iter(list_get_selection(context->list), iter);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 static void select_item(const std::string &k, const std::string &v, info_tag_context_t *context) {
-  GtkTreeIter iter;
-  gtk_tree_model_get_iter_first(GTK_TREE_MODEL(context->store.get()), &iter);
-  // just a linear search as there is not match between the tagmap order and the
-  // store order
-  do {
-    const gchar *key = nullptr, *value = nullptr;
-    gtk_tree_model_get(GTK_TREE_MODEL(context->store.get()), &iter,
-                       TAG_COL_KEY, &key,
-                       TAG_COL_VALUE, &value, -1);
-    assert(key != nullptr);
-    assert(value != nullptr);
-    if(k == key && v == value) {
-      gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
-      return;
-    }
-  } while(gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store.get()), &iter));
+  select_item_context ctx(k, v, context->list);
+
+  gtk_tree_model_foreach(GTK_TREE_MODEL(context->store.get()), select_item_foreach, &ctx);
 }
 
 static void on_tag_edit(info_tag_context_t *context) {

@@ -233,6 +233,18 @@ static void callback_modified_name(GtkWidget *widget, name_callback_context_t *c
 				    GTK_RESPONSE_ACCEPT, ok);
 }
 
+static gboolean
+project_delete_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer data)
+{
+  project_t *prj = nullptr;
+  gtk_tree_model_get(model, iter, PROJECT_COL_DATA, &prj, -1);
+  if(prj == data) {
+    gtk_list_store_remove(GTK_LIST_STORE(model), iter);
+    return TRUE;
+  } else
+    return FALSE;
+}
+
 static bool project_delete_gui(select_context_t *context, project_t *project) {
   g_debug("deleting project \"%s\"", project->name.c_str());
 
@@ -250,18 +262,7 @@ static bool project_delete_gui(select_context_t *context, project_t *project) {
   }
 
   /* remove from view */
-  GtkTreeIter iter;
-  GtkTreeModel *model = GTK_TREE_MODEL(context->store.get());
-  if(gtk_tree_model_get_iter_first(model, &iter)) {
-    do {
-      project_t *prj = nullptr;
-      gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &prj, -1);
-      if(prj == project) {
-        gtk_list_store_remove(context->store.get(), &iter);
-        break;
-      }
-    } while(gtk_tree_model_iter_next(model, &iter));
-  }
+  gtk_tree_model_foreach(GTK_TREE_MODEL(context->store.get()), project_delete_foreach, project);
 
   /* de-chain entry from project list */
   const std::vector<project_t *>::iterator itEnd = context->projects.end();
@@ -446,24 +447,25 @@ static void on_project_edit(select_context_t *context) {
   view_selected(context->dialog, project);
 }
 
+static gboolean
+project_update_all_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer data)
+{
+  project_t *prj = nullptr;
+  gtk_tree_model_get(model, iter, PROJECT_COL_DATA, &prj, -1);
+  /* if the project was already downloaded do it again */
+  if(osm_file_exists(prj)) {
+    g_debug("found %s to update", prj->name.c_str());
+    if (!osm_download(GTK_WIDGET(data), prj))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 static void
 on_project_update_all(select_context_t *context)
 {
-  GtkTreeIter iter;
-  GtkTreeModel *model = GTK_TREE_MODEL(context->store.get());
-  if(gtk_tree_model_get_iter_first(model, &iter)) {
-    
-    do {
-      project_t *prj = nullptr;
-      gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &prj, -1);
-      /* if the project was already downloaded do it again */
-      if(osm_file_exists(prj)) {
-        g_debug("found %s to update", prj->name.c_str());
-        if (!osm_download(GTK_WIDGET(context->dialog), prj))
-          break;
-      }
-    } while(gtk_tree_model_iter_next(model, &iter));
-  }
+  gtk_tree_model_foreach(GTK_TREE_MODEL(context->store.get()), project_update_all_foreach, context->dialog);
 }
 
 struct project_list_add {
