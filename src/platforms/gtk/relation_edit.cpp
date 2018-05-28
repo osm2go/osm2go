@@ -190,10 +190,12 @@ static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
 		       RELITEM_COL_DATA, &relation, -1);
     assert(relation != nullptr);
 
-    const std::vector<member_t>::const_iterator itEnd = relation->members.end();
+    const std::vector<member_t>::iterator itEnd = relation->members.end();
     const std::vector<member_t>::iterator it = relation->find_member_object(context->item);
 
-    if(it == itEnd && gtk_tree_selection_iter_is_selected(sel, &iter)) {
+    gboolean isSelected = gtk_tree_selection_iter_is_selected(sel, &iter);
+
+    if(it == itEnd && isSelected == TRUE) {
       g_debug("selected: " ITEM_ID_FORMAT, relation->id);
 
       /* either accept this or unselect again */
@@ -205,7 +207,7 @@ static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
         gtk_tree_selection_unselect_iter(sel, &iter);
 
       break;
-    } else if(it != itEnd && !gtk_tree_selection_iter_is_selected(sel, &iter)) {
+    } else if(it != itEnd && isSelected == FALSE) {
       g_debug("deselected: " ITEM_ID_FORMAT, relation->id);
 
       relation->remove_member(it);
