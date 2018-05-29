@@ -26,7 +26,6 @@
 #include <osm2go_cpp.h>
 #include <osm2go_stl.h>
 
-class color_t;
 typedef struct _GtkWidget GtkWidget;
 
 namespace osm2go_platform {
@@ -36,16 +35,6 @@ namespace osm2go_platform {
     void operator()(GtkWidget *mem);
   };
   typedef std::unique_ptr<GtkWidget, gtk_widget_deleter> WidgetGuard;
-
-  /**
-   * @brief process all pending GUI events
-   */
-  void process_events();
-
-  /**
-   * @brief simple interface to the systems web browser
-   */
-  void open_url(const char *url);
 
   class Timer {
     guint id;
@@ -81,23 +70,8 @@ namespace osm2go_platform {
 
     void reset();
   };
-
-  /**
-   * @brief parses a string representation of a color value using
-   * @param str the string to parse
-   * @param color the color object to update
-   * @returns if the given string is a valid color
-   *
-   * The string is expected to begin with a '#'.
-   */
-  bool parse_color_string(const char *str, color_t &color) __attribute__((nonnull(1)));
-
-  /**
-   * @brief converts a character string to a double in local-unaware fashion
-   * @param str the string to parse
-   * @returns the parsed value or NAN if str == nullptr
-   */
-  double string_to_double(const char *str);
 };
+
+#include "../osm2go_platform_common.h"
 
 #endif // OSM2GO_PLATFORM_H
