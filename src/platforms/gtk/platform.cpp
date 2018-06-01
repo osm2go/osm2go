@@ -64,18 +64,6 @@ struct combo_add_string {
   }
 };
 
-GtkWidget *osm2go_platform::string_select_widget(const char *title, const std::vector<std::string> &entries, int match) {
-  GtkWidget *cbox = osm2go_platform::combo_box_new(title);
-
-  /* fill combo box with entries */
-  std::for_each(entries.begin(), entries.end(), combo_add_string(cbox));
-
-  if(match >= 0)
-    osm2go_platform::combo_box_set_active(cbox, match);
-
-  return cbox;
-}
-
 void osm2go_platform::dialog_size_hint(GtkWindow *window, osm2go_platform::DialogSizeHint hint)
 {
   static const gint dialog_sizes[][2] = {

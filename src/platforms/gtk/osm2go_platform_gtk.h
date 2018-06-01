@@ -54,7 +54,13 @@ namespace osm2go_platform {
   bool check_button_get_active(GtkWidget *button);
   bool isCheckButtonWidget(GtkWidget *widget);
 
-  GtkWidget *combo_box_new(const char *title);
+  /**
+   * @brief create a new combo box
+   * @param title the title string (only used on Fremantle)
+   * @param items the texts to fill
+   * @param active the item to preselect or -1 for none
+   */
+  GtkWidget *combo_box_new(const char *title, const std::vector<const char *> &items = std::vector<const char *>(), int active = -1);
   GtkWidget *combo_box_entry_new(const char *title);
   void combo_box_append_text(GtkWidget *cbox, const char *text);
   void combo_box_set_active(GtkWidget *cbox, int index);
@@ -63,8 +69,6 @@ namespace osm2go_platform {
   void combo_box_set_active_text(GtkWidget *cbox, const char *text);
   bool isComboBoxWidget(GtkWidget *widget);
   bool isComboBoxEntryWidget(GtkWidget *widget);
-
-  GtkWidget *string_select_widget(const char *title, const std::vector<std::string> &entries, int match);
 
   void setEntryText(GtkEntry *entry, const char *text, const char *placeholder);
 

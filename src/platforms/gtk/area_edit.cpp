@@ -796,10 +796,10 @@ bool area_edit_t::run() {
   gtk_table_attach_defaults(table,
 			    context.extent.height, 1, 2, 2, 3);
 
-  context.extent.mil_km = combo_box_new(_("Unit"));
-  combo_box_append_text(context.extent.mil_km, _("mi"));
-  combo_box_append_text(context.extent.mil_km, _("km"));
-  combo_box_set_active(context.extent.mil_km, 1); // km
+  std::vector<const char *> units(2);
+  units[0] = _("mi");
+  units[1] = _("km");
+  context.extent.mil_km = osm2go_platform::combo_box_new(_("Unit"), units, 1);
 
   gtk_table_attach(table, context.extent.mil_km, 2, 3, 1, 3,
 		   static_cast<GtkAttachOptions>(0), static_cast<GtkAttachOptions>(0),

@@ -944,12 +944,10 @@ presets_element_t::attach_key *presets_element_combo::attach(preset_attach_conte
   int active = editable ? 0 : 1; // account for the extra "unset" entry for non-editable ones
   bool matched = false; // no need to search if editable, the text will explicitely be set anyway
 
-  if(editable) {
+  if(editable)
     ret = combo_box_entry_new(text.c_str());
-  } else {
-    ret = combo_box_new(text.c_str());
-    combo_box_append_text(ret, _("<unset>"));
-  }
+  else
+    ret = combo_box_new(text.c_str(), std::vector<const char *>(1, _("<unset>")));
 
   const std::vector<std::string> &d = display_values.empty() ? values : display_values;
 

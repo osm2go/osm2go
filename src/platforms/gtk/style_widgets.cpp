@@ -43,8 +43,8 @@ struct combo_add_styles {
   int cnt;
   int &match;
   const std::string &currentstyle;
-  std::vector<std::string> &styles;
-  combo_add_styles(const std::string &sname, int &m, std::vector<std::string> &s)
+  std::vector<const char *> &styles;
+  combo_add_styles(const std::string &sname, int &m, std::vector<const char *> &s)
     : cnt(0), match(m), currentstyle(sname), styles(s) {}
   void operator()(const std::pair<std::string, std::string> &pair);
 };
@@ -54,7 +54,7 @@ void combo_add_styles::operator()(const std::pair<std::string, std::string> &pai
   if(match < 0 && style_basename(pair.second) == currentstyle)
     match = cnt;
 
-  styles.push_back(pair.first);
+  styles.push_back(pair.first.c_str());
 
   cnt++;
 }
@@ -67,11 +67,11 @@ static GtkWidget *style_select_widget(const std::string &currentstyle,
 
   /* fill combo box with presets */
   int match = -1;
-  std::vector<std::string> stylesNames;
+  std::vector<const char *> stylesNames;
   std::for_each(styles.begin(), styles.end(),
                 combo_add_styles(currentstyle, match, stylesNames));
 
-  return osm2go_platform::string_select_widget(_("Style"), stylesNames, match);
+  return osm2go_platform::combo_box_new(_("Style"), stylesNames, match);
 }
 
 GtkWidget *style_select_widget(const std::string &currentstyle) {

@@ -233,14 +233,13 @@ cb_menu_map_show_all(appdata_t *appdata) {
 /* ---------------------------------------------------------- */
 
 GtkWidget *track_vis_select_widget(TrackVisibility current) {
-  std::vector<std::string> labels;
+  std::vector<const char *> labels;
   labels.push_back(_("Hide tracks"));
   labels.push_back(_("Show current position"));
   labels.push_back(_("Show current segment"));
   labels.push_back(_("Show all segments"));
 
-  return osm2go_platform::string_select_widget(_("Track visibility"), labels,
-                                               static_cast<int>(current));
+  return osm2go_platform::combo_box_new(_("Track visibility"), labels, static_cast<int>(current));
 }
 
 #ifndef FREMANTLE

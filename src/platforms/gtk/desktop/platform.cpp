@@ -20,9 +20,10 @@
 #include <osm2go_platform.h>
 #include <osm2go_platform_gtk.h>
 
-#include <gtk/gtk.h>
-
 #include <misc.h>
+
+#include <algorithm>
+#include <gtk/gtk.h>
 
 #include <osm2go_cpp.h>
 
@@ -107,10 +108,26 @@ bool osm2go_platform::check_button_get_active(GtkWidget *button)
   return gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE;
 }
 
+struct combo_add_string {
+  GtkComboBoxText * const cbox;
+  explicit combo_add_string(GtkWidget *w) : cbox(GTK_COMBO_BOX_TEXT(w)) {}
+  inline void operator()(const char *entry) {
+    gtk_combo_box_text_append_text(cbox, entry);
+  }
+};
+
 /* the title is only used on fremantle with the picker widget */
-GtkWidget *osm2go_platform::combo_box_new(const char *)
+GtkWidget *osm2go_platform::combo_box_new(const char *, const std::vector<const char *> &items, int active)
 {
-  return gtk_combo_box_text_new();
+  GtkWidget *cbox = gtk_combo_box_text_new();
+
+  /* fill combo box with entries */
+  std::for_each(items.begin(), items.end(), combo_add_string(cbox));
+
+  if(active >= 0)
+    osm2go_platform::combo_box_set_active(cbox, active);
+
+  return cbox;
 }
 
 GtkWidget *osm2go_platform::combo_box_entry_new(const char *)

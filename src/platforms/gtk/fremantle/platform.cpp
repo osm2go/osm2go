@@ -22,8 +22,7 @@
 
 #include "dbus.h"
 
-#include <osm2go_cpp.h>
-
+#include <algorithm>
 #include <hildon/hildon-check-button.h>
 #include <hildon/hildon-entry.h>
 #include <hildon/hildon-pannable-area.h>
@@ -31,6 +30,8 @@
 #include <hildon/hildon-touch-selector-entry.h>
 #include <libosso.h>
 #include <tablet-browser-interface.h>
+
+#include <osm2go_cpp.h>
 
 static osso_context_t *osso_context;
 
@@ -206,10 +207,26 @@ static GtkWidget *combo_box_new_with_selector(const gchar *title, GtkWidget *sel
   return button;
 }
 
-/* the title is only used on fremantle with the picker widget */
-GtkWidget *osm2go_platform::combo_box_new(const char *title) {
+struct combo_add_string {
+  HildonTouchSelector * const selector;
+  explicit combo_add_string(HildonTouchSelector *sel) : selector(sel) {}
+  inline void operator()(const char *entry) {
+    hildon_touch_selector_append_text(selector, entry);
+  }
+};
+
+GtkWidget *osm2go_platform::combo_box_new(const char *title, const std::vector<const char *> &items, int active)
+{
   GtkWidget *selector = hildon_touch_selector_new_text();
-  return combo_box_new_with_selector(title, selector);
+  GtkWidget *cbox = combo_box_new_with_selector(title, selector);
+
+  /* fill combo box with entries */
+  std::for_each(items.begin(), items.end(), combo_add_string(HILDON_TOUCH_SELECTOR(selector)));
+
+  if(active >= 0)
+    osm2go_platform::combo_box_set_active(cbox, active);
+
+  return cbox;
 }
 
 /**
