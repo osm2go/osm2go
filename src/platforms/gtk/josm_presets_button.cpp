@@ -994,7 +994,10 @@ std::string presets_element_combo::getValue(presets_element_t::attach_key *akey)
   const std::vector<std::string>::const_iterator it = std::find(display_values.begin(),
                                                                 display_values.end(),
                                                                 txt);
-  assert(it != display_values.end());
+  if(!editable)
+    assert(it != display_values.end());
+  else if(it == display_values.end())
+    return txt;
 
   // get the value corresponding to the displayed string
   return values[it - display_values.begin()];
