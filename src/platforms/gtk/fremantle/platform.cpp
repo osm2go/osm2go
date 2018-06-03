@@ -21,6 +21,7 @@
 #include <osm2go_platform_gtk.h>
 
 #include "dbus.h"
+#include "misc.h"
 
 #include <algorithm>
 #include <hildon/hildon-check-button.h>
@@ -287,6 +288,46 @@ bool osm2go_platform::isComboBoxWidget(GtkWidget *widget)
 bool osm2go_platform::isComboBoxEntryWidget(GtkWidget *widget)
 {
   return HILDON_IS_PICKER_BUTTON(widget) == TRUE;
+}
+
+GtkWidget *osm2go_platform::select_widget(const char *title, GtkTreeModel *model, unsigned int flags)
+{
+  HildonTouchSelector *selector;
+
+  switch (flags) {
+  case NoSelectionFlags:
+    selector = HILDON_TOUCH_SELECTOR(hildon_touch_selector_new_text());
+    break;
+  case AllowEditing:
+    selector = HILDON_TOUCH_SELECTOR(hildon_touch_selector_entry_new_text());
+    hildon_touch_selector_set_print_func(selector, touch_selector_entry_print_func);
+    hildon_touch_selector_entry_set_text_column(HILDON_TOUCH_SELECTOR_ENTRY(selector), 1);
+    break;
+  }
+
+  hildon_touch_selector_set_model(selector, 0, model);
+
+  return combo_box_new_with_selector(title, GTK_WIDGET(selector));
+}
+
+std::string osm2go_platform::select_widget_value(GtkWidget *widget)
+{
+  HildonTouchSelector *selector = hildon_picker_button_get_selector(HILDON_PICKER_BUTTON(widget));
+
+  if(HILDON_IS_TOUCH_SELECTOR_ENTRY(selector)) {
+    return combo_box_get_active_text(widget);
+  } else {
+    GtkTreeModel *model = hildon_touch_selector_get_model(selector, 0);
+    int row = hildon_picker_button_get_active(HILDON_PICKER_BUTTON(widget));
+    GtkTreeIter iter;
+    gboolean b = gtk_tree_model_iter_nth_child(model, &iter, nullptr, row);
+    g_assert(b == TRUE);
+    gchar *s;
+    gtk_tree_model_get(model, &iter, 1, &s, -1);
+    g_string guard(s);
+    std::string ret = s;
+    return ret;
+  }
 }
 
 void osm2go_platform::setEntryText(GtkEntry *entry, const char *text, const char *placeholder)

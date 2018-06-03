@@ -936,29 +936,48 @@ presets_element_t::attach_key *presets_element_label::attach(preset_attach_conte
   return nullptr;
 }
 
-presets_element_t::attach_key *presets_element_combo::attach(preset_attach_context &attctx,
-                                                             const std::string &preset) const
+static GtkListStore *
+selectorModel(const std::vector<std::string> &values, const std::vector<std::string> &display_values)
 {
-  const std::string &pr = preset.empty() ? def : preset;
-  GtkWidget *ret;
-  int active = editable ? 0 : 1; // account for the extra "unset" entry for non-editable ones
-  bool matched = false; // no need to search if editable, the text will explicitely be set anyway
-
-  if(editable)
-    ret = combo_box_entry_new(text.c_str());
-  else
-    ret = combo_box_new(text.c_str(), std::vector<const char *>(1, _("<unset>")));
+  GtkListStore *store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
 
   const std::vector<std::string> &d = display_values.empty() ? values : display_values;
 
   for(std::vector<std::string>::size_type count = 0; count < d.size(); count++) {
     const std::string &value = d[count].empty() ? values[count] : d[count];
 
-    combo_box_append_text(ret, value.c_str());
+    gtk_list_store_insert_with_values(store, nullptr, -1, 0, value.c_str(), 1, values[count].c_str(), -1);
+  }
 
-    if(!matched && values[count] == pr) {
-      active += count;
+  return store;
+}
+
+presets_element_t::attach_key *presets_element_combo::attach(preset_attach_context &attctx,
+                                                             const std::string &preset) const
+{
+  const std::string &pr = preset.empty() ? def : preset;
+  GtkWidget *ret;
+  int active = editable ? 0 : 1; // account for the extra "unset" entry for non-editable ones
+  bool matched = false;
+
+  GtkListStore *store = selectorModel(values, display_values);
+
+  if(editable) {
+    ret = select_widget(text.c_str(), GTK_TREE_MODEL(store), osm2go_platform::AllowEditing);
+  } else {
+    gtk_list_store_insert_with_values(store, nullptr, 0, 0, _("unset"), 1, "", -1);
+    ret = select_widget(text.c_str(), GTK_TREE_MODEL(store));
+  }
+
+  g_object_unref(store);
+
+  if(!pr.empty()) {
+    const std::vector<std::string>::const_iterator itEnd = values.end();
+    const std::vector<std::string>::const_iterator itBegin = values.begin();
+    const std::vector<std::string>::const_iterator it = std::find(itBegin, itEnd, pr);
+    if(it != itEnd) {
       matched = true;
+      active += (it - itBegin);
     }
   }
 
@@ -978,29 +997,7 @@ presets_element_t::attach_key *presets_element_combo::attach(preset_attach_conte
 
 std::string presets_element_combo::getValue(presets_element_t::attach_key *akey) const
 {
-  GtkWidget * const widget = reinterpret_cast<GtkWidget *>(akey);
-  assert((!editable && isComboBoxWidget(widget)) ^
-         (editable && isComboBoxEntryWidget(widget)));
-
-  const std::string txt = combo_box_get_active_text(widget);
-
-  if(!editable && txt == _("<unset>"))
-    return std::string();
-
-  if(display_values.empty())
-    return txt;
-
-  // map back from display string to value string
-  const std::vector<std::string>::const_iterator it = std::find(display_values.begin(),
-                                                                display_values.end(),
-                                                                txt);
-  if(!editable)
-    assert(it != display_values.end());
-  else if(it == display_values.end())
-    return txt;
-
-  // get the value corresponding to the displayed string
-  return values[it - display_values.begin()];
+  return osm2go_platform::select_widget_value(reinterpret_cast<GtkWidget *>(akey));
 }
 
 presets_element_t::attach_key *presets_element_checkbox::attach(preset_attach_context &attctx,

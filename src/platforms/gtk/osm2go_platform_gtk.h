@@ -62,6 +62,7 @@ namespace osm2go_platform {
    */
   GtkWidget *combo_box_new(const char *title, const std::vector<const char *> &items = std::vector<const char *>(), int active = -1);
   GtkWidget *combo_box_entry_new(const char *title);
+
   void combo_box_append_text(GtkWidget *cbox, const char *text);
   void combo_box_set_active(GtkWidget *cbox, int index);
   int combo_box_get_active(GtkWidget *cbox);
@@ -69,6 +70,29 @@ namespace osm2go_platform {
   void combo_box_set_active_text(GtkWidget *cbox, const char *text);
   bool isComboBoxWidget(GtkWidget *widget);
   bool isComboBoxEntryWidget(GtkWidget *widget);
+
+  enum SelectionFlags {
+    NoSelectionFlags    = 0,
+    AllowEditing        = (1<<1)   ///< if the user may enter custom text
+  };
+  /**
+   * @brief create a widget that let's the user do a selection
+   * @param title the dialog title on Fremantle
+   * @param model the model containing the values
+   * @param flags flags which type of widget is created
+   *
+   * @model should have 2 columns, the first containing the text that is
+   * displayed, the second with the values that are returned. Both must be
+   * of type G_TYPE_STRING.
+   *
+   * The widget takes a reference on the model.
+   */
+  GtkWidget *select_widget(const char *title, GtkTreeModel *model, unsigned int flags = NoSelectionFlags) __attribute__((nonnull(1, 2)));
+
+  /**
+   * @brief return the value selected with the select widget
+   */
+  std::string select_widget_value(GtkWidget *widget);
 
   void setEntryText(GtkEntry *entry, const char *text, const char *placeholder);
 

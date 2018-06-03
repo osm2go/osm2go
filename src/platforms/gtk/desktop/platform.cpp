@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <gtk/gtk.h>
 
+#include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
 
 bool osm2go_platform::init()
@@ -179,6 +180,55 @@ bool osm2go_platform::isComboBoxWidget(GtkWidget *widget)
 bool osm2go_platform::isComboBoxEntryWidget(GtkWidget *widget)
 {
   return isCombo(widget, TRUE);
+}
+
+GtkWidget *osm2go_platform::select_widget(const char *, GtkTreeModel *model, unsigned int flags)
+{
+  GtkWidget *ret;
+
+  switch (flags) {
+  case NoSelectionFlags:
+    ret = gtk_combo_box_new_with_model(model);
+    break;
+  case AllowEditing:
+    ret = gtk_combo_box_new_with_model_and_entry(model);
+    gtk_combo_box_set_entry_text_column(GTK_COMBO_BOX(ret), 1);
+    break;
+  }
+
+  GtkCellRenderer *rnd = gtk_cell_renderer_text_new();
+  GtkCellLayout *cell = GTK_CELL_LAYOUT(ret);
+  gtk_cell_layout_clear(cell);
+  gtk_cell_layout_pack_start(cell, rnd, TRUE);
+  gtk_cell_layout_add_attribute(cell, rnd, "text", 0);
+
+  return ret;
+}
+
+std::string osm2go_platform::select_widget_value(GtkWidget *widget)
+{
+  gboolean b;
+  std::string ret;
+
+  g_object_get(widget, "has-entry", &b, nullptr);
+  if(b == TRUE) {
+    ret = gtk_entry_get_text(GTK_ENTRY(gtk_bin_get_child(GTK_BIN(widget))));
+  } else {
+    GtkComboBox *cbox = GTK_COMBO_BOX(widget);
+    int row = gtk_combo_box_get_active(cbox);
+    g_assert_cmpint(row, >=, 0);
+    GtkTreeModel *model = gtk_combo_box_get_model(cbox);
+    g_assert_nonnull(model);
+    GtkTreeIter iter;
+    b = gtk_tree_model_iter_nth_child(model, &iter, nullptr, row);
+    g_assert_true(b);
+    gchar *s;
+    gtk_tree_model_get(model, &iter, 1, &s, -1);
+    g_string guard(s);
+    ret = s;
+  }
+
+  return ret;
 }
 
 void osm2go_platform::setEntryText(GtkEntry *entry, const char *text, const char *placeholder)

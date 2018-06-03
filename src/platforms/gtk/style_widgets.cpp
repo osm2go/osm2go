@@ -59,6 +59,21 @@ void combo_add_styles::operator()(const std::pair<std::string, std::string> &pai
   cnt++;
 }
 
+struct selector_model_functor {
+  GtkListStore * const store;
+  int cnt;
+  int &match;
+  const std::string &currentstyle;
+  selector_model_functor(GtkListStore *s, int &m, const std::string &current)
+    : store(s), cnt(0), match(m), currentstyle(current) { }
+  inline void operator()(const std::pair<std::string, std::string> &pair) {
+    gtk_list_store_insert_with_values(store, nullptr, -1, 0, pair.first.c_str(), 1, pair.second.c_str(), -1);
+    if(match < 0 && style_basename(pair.second) == currentstyle)
+      match = cnt;
+    cnt++;
+  }
+};
+
 static GtkWidget *style_select_widget(const std::string &currentstyle,
                                       const std::map<std::string, std::string> &styles) {
   /* there must be at least one style, otherwise */
@@ -67,31 +82,29 @@ static GtkWidget *style_select_widget(const std::string &currentstyle,
 
   /* fill combo box with presets */
   int match = -1;
-  std::vector<const char *> stylesNames;
-  std::for_each(styles.begin(), styles.end(),
-                combo_add_styles(currentstyle, match, stylesNames));
+  GtkListStore *store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
 
-  return osm2go_platform::combo_box_new(_("Style"), stylesNames, match);
+  std::for_each(styles.begin(), styles.end(), selector_model_functor(store, match, currentstyle));
+
+  GtkWidget *ret = osm2go_platform::select_widget(_("Style"), GTK_TREE_MODEL(store));
+  g_object_unref(store);
+  osm2go_platform::combo_box_set_active(ret, match);
+  return ret;
 }
 
 GtkWidget *style_select_widget(const std::string &currentstyle) {
   return style_select_widget(currentstyle, style_scan());
 }
 
-static void style_change(appdata_t &appdata, const std::string &name,
-                         const std::map<std::string, std::string> &styles) {
-  const std::map<std::string, std::string>::const_iterator it = styles.find(name);
-
-  assert(it != styles.end());
-  const std::string &new_style = style_basename(it->second);
-
+static void style_change(appdata_t &appdata, const std::string &style_path) {
+  const std::string &new_style = style_basename(style_path);
   /* check if style has really been changed */
   if(settings_t::instance()->style == new_style)
     return;
 
-  style_t *nstyle = style_load_fname(it->second);
+  style_t *nstyle = style_load_fname(style_path);
   if (nstyle == nullptr) {
-    errorf(nullptr, _("Error loading style %s"), it->second.c_str());
+    errorf(nullptr, _("Error loading style %s"), style_path.c_str());
     return;
   }
 
@@ -125,8 +138,7 @@ void style_select(appdata_t *appdata) {
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
 
-  const std::map<std::string, std::string> &styles = style_scan();
-  GtkWidget *cbox = style_select_widget(settings_t::instance()->style, styles);
+  GtkWidget *cbox = style_select_widget(settings_t::instance()->style, style_scan());
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
   gtk_box_pack_start(GTK_BOX(hbox), gtk_label_new(_("Style:")), TRUE, TRUE, 0);
@@ -141,21 +153,21 @@ void style_select(appdata_t *appdata) {
     return;
   }
 
-  const std::string &style = combo_box_get_active_text(cbox);
+  const std::string &style = osm2go_platform::select_widget_value(cbox);
   g_debug("user clicked ok on %s", style.c_str());
 
   dialog.reset();
 
-  style_change(*appdata, style, styles);
+  style_change(*appdata, style);
 }
 #endif
 
 void style_change(appdata_t &appdata, GtkWidget *widget) {
-  const std::string &style = combo_box_get_active_text(widget);
+  const std::string &style = osm2go_platform::select_widget_value(widget);
   if(style.empty())
     return;
 
-  style_change(appdata, style, style_scan());
+  style_change(appdata, style);
 }
 
 //vim:et:ts=8:sw=2:sts=2:ai
