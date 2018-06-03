@@ -56,14 +56,6 @@ void osm2go_platform::Timer::stop()
   }
 }
 
-struct combo_add_string {
-  GtkWidget * const cbox;
-  explicit combo_add_string(GtkWidget *w) : cbox(w) {}
-  void operator()(const std::string &entry) {
-    osm2go_platform::combo_box_append_text(cbox, entry.c_str());
-  }
-};
-
 void osm2go_platform::dialog_size_hint(GtkWindow *window, osm2go_platform::DialogSizeHint hint)
 {
   static const gint dialog_sizes[][2] = {
