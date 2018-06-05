@@ -407,7 +407,6 @@ static bool wms_server_dialog(appdata_t &appdata, wms_t *wms) {
 
 enum {
   LAYER_COL_TITLE = 0,
-  LAYER_COL_FITS,
   LAYER_COL_DATA,
   LAYER_NUM_COLS
 };
@@ -467,12 +466,12 @@ struct fitting_layers_functor {
 
 void fitting_layers_functor::operator()(const wms_layer_t &layer)
 {
-  bool fits = layer.llbbox.valid && wms_llbbox_fits(project, layer.llbbox);
+  if(!layer.llbbox.valid || !wms_llbbox_fits(project, layer.llbbox))
+    return;
 
   /* Append a row and fill in some data */
   gtk_list_store_insert_with_values(store, nullptr, -1,
                                     LAYER_COL_TITLE, layer.title.c_str(),
-                                    LAYER_COL_FITS, fits ? TRUE : FALSE,
                                     LAYER_COL_DATA, index++,
                                     -1);
 }
@@ -494,7 +493,7 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
 
   /* build the store */
   std::unique_ptr<GtkListStore, g_object_deleter> store(gtk_list_store_new(LAYER_NUM_COLS,
-      G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_ULONG));
+      G_TYPE_STRING, G_TYPE_ULONG));
 
   /* --- "Title" column --- */
   GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
@@ -502,7 +501,6 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
   GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
 		 _("Title"), renderer,
 		 "text", LAYER_COL_TITLE,
-		 "sensitive", LAYER_COL_FITS,
 		 nullptr);
 
   gtk_tree_view_column_set_expand(column, TRUE);
@@ -524,12 +522,10 @@ layer_selection_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, g
 {
   std::vector<std::size_t> * const selected = static_cast<std::vector<std::size_t> *>(data);
 
-  gboolean en;
   gulong l;
-  gtk_tree_model_get(model, iter, LAYER_COL_DATA, &l, LAYER_COL_FITS, &en, -1);
+  gtk_tree_model_get(model, iter, LAYER_COL_DATA, &l, -1);
 
-  if(en == TRUE)
-    selected->push_back(l);
+  selected->push_back(l);
 }
 
 static bool wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &layer) {
