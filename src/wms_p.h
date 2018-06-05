@@ -96,7 +96,6 @@ struct wms_t {
 bool wms_llbbox_fits(const project_t *project, const wms_llbbox_t &llbbox);
 wms_layer_t::list wms_get_layers(project_t *project, wms_t &wms);
 void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
-                            const wms_layer_t::list &layers,
-                            const std::vector<std::size_t> &selected);
+                            const std::string &layers, const std::string &srss);
 
 #endif // WMS_P_H

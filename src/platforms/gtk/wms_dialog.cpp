@@ -528,7 +528,8 @@ layer_selection_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, g
   selected->push_back(l);
 }
 
-static bool wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &layer) {
+static std::string wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &layers)
+{
   osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("WMS layer selection"),
                                               GTK_WINDOW(appdata_t::window),
                                               GTK_DIALOG_MODAL,
@@ -541,18 +542,27 @@ static bool wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &lay
 
   /* layer list */
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
-                    wms_layer_widget(ctx, layer), TRUE, TRUE, 0);
+                    wms_layer_widget(ctx, layers), TRUE, TRUE, 0);
 
   gtk_widget_show_all(dialog.get());
 
-  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog.get()))) {
-    gtk_tree_selection_selected_foreach(gtk_tree_view_get_selection(ctx->view),
-                                        layer_selection_foreach, &ctx->selected);
+  if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog.get())))
+    return std::string();
 
-    return true;
-  } else {
-    return false;
+  gtk_tree_selection_selected_foreach(gtk_tree_view_get_selection(ctx->view),
+                                      layer_selection_foreach, &ctx->selected);
+
+  std::string l; // the selected layer names
+
+  const std::vector<std::size_t>::const_iterator selEnd = ctx->selected.end();
+  std::vector<std::size_t>::const_iterator selIt = ctx->selected.begin();
+  if(selIt != selEnd) {
+    l += layers[*selIt].name;
+    for(++selIt; selIt != selEnd; selIt++)
+      l += ',' + layers[*selIt].name;
   }
+
+  return l;
 }
 
 void wms_import(appdata_t &appdata) {
@@ -582,6 +592,7 @@ void wms_import(appdata_t &appdata) {
 
   selected_context ctx(appdata.project.get());
 
-  if(wms_layer_dialog(&ctx, layers))
-    wms_get_selected_layer(appdata, wms, layers, ctx.selected);
+  const std::string &l = wms_layer_dialog(&ctx, layers);
+  if(!l.empty())
+    wms_get_selected_layer(appdata, wms, l, layers.front().srs);
 }

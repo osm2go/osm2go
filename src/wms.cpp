@@ -423,30 +423,15 @@ wms_layer_t::list wms_get_layers(project_t *project, wms_t& wms)
 }
 
 void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
-                            const wms_layer_t::list &layers,
-                            const std::vector<std::size_t> &selected)
+                            const std::string &layers, const std::string &srss)
 {
   /* get required image size */
   wms_setup_extent(appdata.project.get(), &wms);
 
   /* start building url */
-  std::string url = wmsUrl(wms, "Map&LAYERS=");
-
-  /* append layers */
-  const std::vector<std::size_t>::const_iterator selEnd = selected.end();
-  std::vector<std::size_t>::const_iterator selIt = selected.begin();
-  if(selIt != selEnd) {
-    url += layers[*selIt].name;
-    for(++selIt; selIt != selEnd; selIt++)
-      url += ',' + layers[*selIt].name;
-  }
+  std::string url = wmsUrl(wms, "Map&LAYERS=") + layers;
 
   /* uses epsg4326 if possible */
-#if __cplusplus >= 201103L
-  const std::string srss = std::move(layers.front().srs);
-#else
-  const std::string srss = layers.front().srs;
-#endif
   const char *srs = srss.empty() ? wms_layer_t::EPSG4326() : srss.c_str();
 
   /* append styles entry */
