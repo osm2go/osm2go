@@ -360,15 +360,45 @@ std::string osm2go_platform::select_widget_value(GtkWidget *widget)
     return combo_box_get_active_text(widget);
   } else {
     GtkTreeModel *model = hildon_touch_selector_get_model(selector, 0);
-    int row = hildon_picker_button_get_active(HILDON_PICKER_BUTTON(widget));
-    GtkTreeIter iter;
-    gboolean b = gtk_tree_model_iter_nth_child(model, &iter, nullptr, row);
-    g_assert(b == TRUE);
-    gchar *s;
-    gtk_tree_model_get(model, &iter, 1, &s, -1);
-    g_string guard(s);
-    std::string ret = s;
+    std::string ret;
+
+    if(hildon_touch_selector_get_column_selection_mode(selector) ==
+       HILDON_TOUCH_SELECTOR_SELECTION_MODE_MULTIPLE) {
+      // the button has already the properly formatted result
+      ret = hildon_button_get_value(HILDON_BUTTON(widget));
+    } else {
+      int row = hildon_picker_button_get_active(HILDON_PICKER_BUTTON(widget));
+      GtkTreeIter iter;
+      gboolean b = gtk_tree_model_iter_nth_child(model, &iter, nullptr, row);
+      g_assert(b == TRUE);
+      gchar *s;
+      gtk_tree_model_get(model, &iter, 1, &s, -1);
+      g_string guard(s);
+      ret = s;
+    }
+
     return ret;
+  }
+}
+
+void osm2go_platform::select_widget_select(GtkWidget *widget, const std::vector<unsigned int> &indexes)
+{
+  HildonTouchSelector *selector = hildon_picker_button_get_selector(HILDON_PICKER_BUTTON(widget));
+
+  if(HILDON_IS_TOUCH_SELECTOR_ENTRY(selector) ||
+     hildon_touch_selector_get_column_selection_mode(selector) !=
+         HILDON_TOUCH_SELECTOR_SELECTION_MODE_MULTIPLE) {
+    assert_cmpnum(indexes.size(), 1);
+    hildon_picker_button_set_active(HILDON_PICKER_BUTTON(widget), indexes.front());
+  } else {
+    GtkTreeIter iter;
+    GtkTreeModel *model = hildon_touch_selector_get_model(selector, 0);
+
+    for(size_t i = 0; i < indexes.size(); i++) {
+      gboolean b = gtk_tree_model_iter_nth_child(model, &iter, nullptr, indexes[i]);
+      g_assert(b == TRUE);
+      hildon_touch_selector_select_iter(selector, 0, &iter, FALSE);
+    }
   }
 }
 
