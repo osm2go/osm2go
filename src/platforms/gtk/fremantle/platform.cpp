@@ -32,6 +32,7 @@
 #include <libosso.h>
 #include <tablet-browser-interface.h>
 
+#include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
 
 static osso_context_t *osso_context;
@@ -290,7 +291,41 @@ bool osm2go_platform::isComboBoxEntryWidget(GtkWidget *widget)
   return HILDON_IS_PICKER_BUTTON(widget) == TRUE;
 }
 
-GtkWidget *osm2go_platform::select_widget(const char *title, GtkTreeModel *model, unsigned int flags)
+static gchar *
+select_print_func(HildonTouchSelector *selector, gpointer data)
+{
+  GList *selected_rows = hildon_touch_selector_get_selected_rows(selector, 0);
+  const char delimiter = *static_cast<const char *>(data);
+
+  if(selected_rows == nullptr)
+    return g_strdup("");
+
+  GtkTreeModel *model = hildon_touch_selector_get_model(selector, 0);
+
+  std::string result;
+  g_string guard;
+
+  for (GList *item = selected_rows; item != nullptr; item = g_list_next(item)) {
+    GtkTreeIter iter;
+    gtk_tree_model_get_iter(model, &iter, static_cast<GtkTreePath *>(item->data));
+
+    gchar *current_string = nullptr;
+    gtk_tree_model_get(model, &iter, 1, &current_string, -1);
+    guard.reset(current_string);
+
+    result += current_string;
+    result += delimiter;
+  }
+
+  g_list_foreach(selected_rows, reinterpret_cast<GFunc>(gtk_tree_path_free), nullptr);
+  g_list_free(selected_rows);
+
+  result.resize(result.size() - 1);
+
+  return g_strdup(result.c_str());
+}
+
+GtkWidget *osm2go_platform::select_widget(const char *title, GtkTreeModel *model, unsigned int flags, const char *delimiter)
 {
   HildonTouchSelector *selector;
 
@@ -303,6 +338,13 @@ GtkWidget *osm2go_platform::select_widget(const char *title, GtkTreeModel *model
     hildon_touch_selector_set_print_func(selector, touch_selector_entry_print_func);
     hildon_touch_selector_entry_set_text_column(HILDON_TOUCH_SELECTOR_ENTRY(selector), 1);
     break;
+  case AllowMultiSelection:
+    selector = HILDON_TOUCH_SELECTOR(hildon_touch_selector_new_text());
+    hildon_touch_selector_set_print_func_full(selector, select_print_func, const_cast<char *>(delimiter), nullptr);
+    hildon_touch_selector_set_column_selection_mode(selector, HILDON_TOUCH_SELECTOR_SELECTION_MODE_MULTIPLE);
+    break;
+  default:
+    assert_unreachable();
   }
 
   hildon_touch_selector_set_model(selector, 0, model);

@@ -73,26 +73,34 @@ namespace osm2go_platform {
 
   enum SelectionFlags {
     NoSelectionFlags    = 0,
-    AllowEditing        = (1<<1)   ///< if the user may enter custom text
+    AllowEditing        = (1<<1),  ///< if the user may enter custom text
+    AllowMultiSelection = (1<<2)
   };
   /**
    * @brief create a widget that let's the user do a selection
    * @param title the dialog title on Fremantle
    * @param model the model containing the values
    * @param flags flags which type of widget is created
+   * @param delimiter the delimiter to use when joining multiple values
    *
    * @model should have 2 columns, the first containing the text that is
    * displayed, the second with the values that are returned. Both must be
    * of type G_TYPE_STRING.
    *
-   * The widget takes a reference on the model.
+   * The widget takes a reference on the model. Only the first character of delimiter
+   * is used, so it may be a pointer to a single char.
    */
-  GtkWidget *select_widget(const char *title, GtkTreeModel *model, unsigned int flags = NoSelectionFlags) __attribute__((nonnull(1, 2)));
+  GtkWidget *select_widget(const char *title, GtkTreeModel *model, unsigned int flags = NoSelectionFlags, const char *delimiter = ";") __attribute__((nonnull(1, 2)));
 
   /**
    * @brief return the value selected with the select widget
    */
   std::string select_widget_value(GtkWidget *widget);
+
+  /**
+   * @brief select one or more items
+   */
+  void select_widget_select(GtkWidget *widget, const std::vector<unsigned int> &indexes);
 
   void setEntryText(GtkEntry *entry, const char *text, const char *placeholder);
 

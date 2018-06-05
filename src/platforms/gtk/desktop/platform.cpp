@@ -23,6 +23,7 @@
 #include <misc.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <gtk/gtk.h>
 
 #include <osm2go_annotations.h>
@@ -182,9 +183,10 @@ bool osm2go_platform::isComboBoxEntryWidget(GtkWidget *widget)
   return isCombo(widget, TRUE);
 }
 
-GtkWidget *osm2go_platform::select_widget(const char *, GtkTreeModel *model, unsigned int flags)
+GtkWidget *osm2go_platform::select_widget(const char *, GtkTreeModel *model, unsigned int flags, const char *delimiter)
 {
   GtkWidget *ret;
+  GtkCellRenderer *rnd = gtk_cell_renderer_text_new();
 
   switch (flags) {
   case NoSelectionFlags:
@@ -194,9 +196,23 @@ GtkWidget *osm2go_platform::select_widget(const char *, GtkTreeModel *model, uns
     ret = gtk_combo_box_new_with_model_and_entry(model);
     gtk_combo_box_set_entry_text_column(GTK_COMBO_BOX(ret), 1);
     break;
+  case AllowMultiSelection: {
+    GtkTreeView *tree = GTK_TREE_VIEW(gtk_tree_view_new_with_model(model));
+    gtk_tree_selection_set_mode(gtk_tree_view_get_selection(tree), GTK_SELECTION_MULTIPLE);
+    gtk_tree_view_set_headers_visible(tree, FALSE);
+    uintptr_t ch = *delimiter;
+    g_object_set_data(G_OBJECT(tree), "user delimiter", reinterpret_cast<gpointer>(ch));
+    GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(nullptr, rnd,
+                                                                         "text", 0,
+                                                                         nullptr);
+    gtk_tree_view_append_column(tree, column);
+
+    return scrollable_container(GTK_WIDGET(tree));
+  }
+  default:
+    assert_unreachable();
   }
 
-  GtkCellRenderer *rnd = gtk_cell_renderer_text_new();
   GtkCellLayout *cell = GTK_CELL_LAYOUT(ret);
   gtk_cell_layout_clear(cell);
   gtk_cell_layout_pack_start(cell, rnd, TRUE);
@@ -209,26 +225,72 @@ std::string osm2go_platform::select_widget_value(GtkWidget *widget)
 {
   gboolean b;
   std::string ret;
+  g_string guard;
 
-  g_object_get(widget, "has-entry", &b, nullptr);
-  if(b == TRUE) {
-    ret = gtk_entry_get_text(GTK_ENTRY(gtk_bin_get_child(GTK_BIN(widget))));
+  if(GTK_IS_COMBO_BOX(widget)) {
+    g_object_get(widget, "has-entry", &b, nullptr);
+    if(b == TRUE) {
+      ret = gtk_entry_get_text(GTK_ENTRY(gtk_bin_get_child(GTK_BIN(widget))));
+    } else {
+      GtkComboBox *cbox = GTK_COMBO_BOX(widget);
+      int row = gtk_combo_box_get_active(cbox);
+      g_assert_cmpint(row, >=, 0);
+      GtkTreeModel *model = gtk_combo_box_get_model(cbox);
+      g_assert_nonnull(model);
+      GtkTreeIter iter;
+      b = gtk_tree_model_iter_nth_child(model, &iter, nullptr, row);
+      g_assert_true(b);
+      gchar *s;
+      gtk_tree_model_get(model, &iter, 1, &s, -1);
+      guard.reset(s);
+      ret = s;
+    }
   } else {
-    GtkComboBox *cbox = GTK_COMBO_BOX(widget);
-    int row = gtk_combo_box_get_active(cbox);
-    g_assert_cmpint(row, >=, 0);
-    GtkTreeModel *model = gtk_combo_box_get_model(cbox);
-    g_assert_nonnull(model);
-    GtkTreeIter iter;
-    b = gtk_tree_model_iter_nth_child(model, &iter, nullptr, row);
-    g_assert_true(b);
-    gchar *s;
-    gtk_tree_model_get(model, &iter, 1, &s, -1);
-    g_string guard(s);
-    ret = s;
+    GtkTreeView *tree = GTK_TREE_VIEW(gtk_bin_get_child(GTK_BIN(widget)));
+    GtkTreeSelection *selection = gtk_tree_view_get_selection(tree);
+    assert(selection != nullptr);
+    GtkTreeModel *model;
+    GList *selected_rows = gtk_tree_selection_get_selected_rows(selection, &model);
+
+    gpointer p = g_object_get_data(G_OBJECT(tree), "user delimiter");
+    char delimiter = reinterpret_cast<uintptr_t>(p);
+
+    for (GList *item = selected_rows; item != nullptr; item = g_list_next(item)) {
+      GtkTreeIter iter;
+      gtk_tree_model_get_iter(model, &iter, static_cast<GtkTreePath *>(item->data));
+
+      gchar *current_string;
+      gtk_tree_model_get(model, &iter, 1, &current_string, -1);
+      guard.reset(current_string);
+
+      if(!ret.empty())
+        ret += delimiter;
+      ret += current_string;
+    }
+
+    g_list_free_full(selected_rows, reinterpret_cast<GDestroyNotify>(gtk_tree_path_free));
   }
 
   return ret;
+}
+
+void osm2go_platform::select_widget_select(GtkWidget *widget, const std::vector<unsigned int> &indexes)
+{
+  if(GTK_IS_COMBO_BOX(widget)) {
+    assert_cmpnum(indexes.size(), 1);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(widget), indexes.front());
+  } else {
+    GtkTreeIter iter;
+    GtkTreeView *tree = GTK_TREE_VIEW(gtk_bin_get_child(GTK_BIN(widget)));
+    GtkTreeModel *model = gtk_tree_view_get_model(tree);
+    GtkTreeSelection *selection = gtk_tree_view_get_selection(tree);
+
+    for(size_t i = 0; i < indexes.size(); i++) {
+      gboolean b = gtk_tree_model_iter_nth_child(model, &iter, nullptr, indexes[i]);
+      g_assert(b == TRUE);
+      gtk_tree_selection_select_iter(selection, &iter);
+    }
+  }
 }
 
 void osm2go_platform::setEntryText(GtkEntry *entry, const char *text, const char *placeholder)
