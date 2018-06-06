@@ -319,7 +319,7 @@ void track_export(const track_t *track, const char *filename) {
 /* ----------------------  loading track --------------------------- */
 
 bool track_restore(appdata_t &appdata) {
-  const project_t *project = appdata.project.get();
+  project_t::ref project = appdata.project;
 
   /* first try to open a backup which is only present if saving the */
   /* actual diff didn't succeed */

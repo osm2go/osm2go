@@ -296,7 +296,7 @@ cb_menu_save_changes(appdata_t *appdata) {
 
 static void
 cb_menu_undo_changes(appdata_t *appdata) {
-  project_t * const project = appdata->project.get();
+  project_t::ref project = appdata->project;
   // if there is nothing to clean then don't ask
   if (!project->diff_file_present() && project->osm->is_clean(true))
     return;

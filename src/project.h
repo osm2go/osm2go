@@ -35,6 +35,8 @@ struct map_state_t;
 struct osm_t;
 
 struct project_t {
+  typedef const std::unique_ptr<project_t> &ref;
+
   project_t(map_state_t &ms, const std::string &n, const std::string &base_path);
 
   inline const std::string &server(const std::string &def) const

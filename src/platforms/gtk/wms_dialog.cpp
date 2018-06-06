@@ -437,10 +437,10 @@ static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event, gpoint
 #endif
 
 struct selected_context {
-  const project_t *project;
+  project_t::ref project;
   std::vector<std::size_t> selected;
   GtkTreeView *view;
-  explicit selected_context(const project_t *p) : project(p), view(nullptr) {}
+  explicit selected_context(project_t::ref p) : project(p), view(nullptr) {}
 };
 
 static void changed(GtkTreeSelection *sel) {
@@ -457,9 +457,9 @@ static void changed(GtkTreeSelection *sel) {
 
 struct fitting_layers_functor {
   GtkListStore * const store;
-  const project_t * const project;
+  project_t::ref project;
   std::size_t &index;
-  fitting_layers_functor(GtkListStore *s, const project_t *p, std::size_t &idx)
+  fitting_layers_functor(GtkListStore *s, project_t::ref p, std::size_t &idx)
     : store(s), project(p), index(idx) {}
   void operator()(const wms_layer_t &layer);
 };
@@ -586,11 +586,11 @@ void wms_import(appdata_t &appdata) {
   if(!wms_server_dialog(appdata, &wms))
     return;
 
-  const wms_layer_t::list layers = wms_get_layers(appdata.project.get(), wms);
+  const wms_layer_t::list layers = wms_get_layers(appdata.project, wms);
   if(layers.empty())
     return;
 
-  selected_context ctx(appdata.project.get());
+  selected_context ctx(appdata.project);
 
   const std::string &l = wms_layer_dialog(&ctx, layers);
   if(!l.empty())

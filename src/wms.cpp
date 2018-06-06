@@ -255,7 +255,7 @@ static void wms_setup_extent(project_t *project, wms_t *wms) {
 
 /* ---------------------- use ------------------- */
 
-bool wms_llbbox_fits(const project_t *project, const wms_llbbox_t &llbbox) {
+bool wms_llbbox_fits(project_t::ref project, const wms_llbbox_t &llbbox) {
   return ((project->bounds.min.lat >= llbbox.bounds.min.lat) &&
           (project->bounds.min.lon >= llbbox.bounds.min.lon) &&
           (project->bounds.max.lat <= llbbox.bounds.max.lat) &&
@@ -354,7 +354,7 @@ static std::string wmsUrl(const wms_t &wms, const char *get)
   return url;
 }
 
-wms_layer_t::list wms_get_layers(project_t *project, wms_t& wms)
+wms_layer_t::list wms_get_layers(project_t::ref project, wms_t& wms)
 {
   wms_layer_t::list layers;
 

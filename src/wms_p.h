@@ -21,12 +21,11 @@
 #define WMS_P_H
 
 #include "pos.h"
+#include "project.h"
 
 #include <map>
 #include <string>
 #include <vector>
-
-struct project_t;
 
 enum WmsImageFormat {
   WMS_FORMAT_JPG = (1<<0),
@@ -93,8 +92,8 @@ struct wms_t {
   wms_cap_t cap;
 };
 
-bool wms_llbbox_fits(const project_t *project, const wms_llbbox_t &llbbox);
-wms_layer_t::list wms_get_layers(project_t *project, wms_t &wms);
+bool wms_llbbox_fits(project_t::ref project, const wms_llbbox_t &llbbox);
+wms_layer_t::list wms_get_layers(project_t::ref project, wms_t &wms);
 void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
                             const std::string &layers, const std::string &srss);
 

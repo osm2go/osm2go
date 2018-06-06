@@ -336,7 +336,7 @@ static project_t *project_new(select_context_t *context) {
  * @return the stock identifier
  */
 static const gchar *
-project_get_status_icon_stock_id(const project_t *current,
+project_get_status_icon_stock_id(project_t::ref current,
                                  const project_t *project) {
   /* is this the currently open project? */
   if(current && current->name == project->name)
@@ -357,8 +357,8 @@ static void on_project_new(select_context_t *context) {
     context->projects.push_back(project);
 
     GtkTreeIter iter;
-    const gchar *status_stock_id = project_get_status_icon_stock_id(
-                                         context->appdata.project.get(), project);
+    const gchar *status_stock_id = project_get_status_icon_stock_id(context->appdata.project,
+                                                                    project);
     gtk_list_store_insert_with_values(GTK_LIST_STORE(context->store.get()), &iter,
                                       context->projects.size(),
                                       PROJECT_COL_NAME,        project->name.c_str(),
@@ -397,7 +397,7 @@ static void on_project_edit(select_context_t *context) {
 
     //     gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
     appdata_t &appdata = context->appdata;
-    const gchar *status_stock_id = project_get_status_icon_stock_id(appdata.project.get(), project);
+    const gchar *status_stock_id = project_get_status_icon_stock_id(appdata.project, project);
     gtk_list_store_set(GTK_LIST_STORE(model), &iter,
                        PROJECT_COL_NAME, project->name.c_str(),
                        PROJECT_COL_STATUS, status_stock_id,
@@ -470,13 +470,13 @@ on_project_update_all(select_context_t *context)
 
 struct project_list_add {
   GtkListStore * const store;
-  const project_t * const cur_proj;
+  project_t::ref cur_proj;
   pos_t pos;
   bool check_pos;
   GtkTreeIter &seliter;
   bool &has_sel;
   project_list_add(GtkListStore *s, appdata_t &a, GtkTreeIter &l, bool &h)
-    : store(s), cur_proj(a.project.get()), pos(a.gps_state->get_pos()), check_pos(pos.valid())
+    : store(s), cur_proj(a.project), pos(a.gps_state->get_pos()), check_pos(pos.valid())
     , seliter(l), has_sel(h) {}
   void operator()(const project_t *project);
 };
