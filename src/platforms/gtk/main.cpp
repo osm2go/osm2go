@@ -180,7 +180,7 @@ cb_menu_upload(appdata_t *appdata) {
   if(appdata->project->check_demo())
     return;
 
-  osm_upload(*appdata, appdata->project.get());
+  osm_upload(*appdata);
 }
 
 static void

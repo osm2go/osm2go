@@ -50,13 +50,13 @@ using namespace osm2go_platform;
 
 class osm_upload_context_gtk : public osm_upload_context_t {
 public:
-  osm_upload_context_gtk(appdata_t &a, project_t *p, const char *c, const char *s);
+  osm_upload_context_gtk(appdata_t &a, project_t::ref p, const char *c, const char *s);
 
   GtkTextBuffer * const logbuffer;
   GtkTextView * const logview;
 };
 
-osm_upload_context_t::osm_upload_context_t(appdata_t &a, project_t *p, const char *c, const char *s)
+osm_upload_context_t::osm_upload_context_t(appdata_t &a, project_t::ref p, const char *c, const char *s)
   : appdata(a)
   , osm(p->osm)
   , project(p)
@@ -97,7 +97,7 @@ void osm_upload_context_t::appendf(const char *colname, const char *fmt, ...) {
   append_str(buf.get(), colname);
 }
 
-osm_upload_context_gtk::osm_upload_context_gtk(appdata_t &a, project_t *p, const char *c, const char *s)
+osm_upload_context_gtk::osm_upload_context_gtk(appdata_t &a, project_t::ref p, const char *c, const char *s)
   : osm_upload_context_t(a, p, c, s)
   , logbuffer(gtk_text_buffer_new(nullptr))
   , logview(GTK_TEXT_VIEW(gtk_text_view_new_with_buffer(logbuffer)))
@@ -198,7 +198,8 @@ static void info_more(const osm_t::dirty_t &context, GtkWidget *parent) {
 }
 #endif
 
-void osm_upload(appdata_t &appdata, project_t *project) {
+void osm_upload(appdata_t &appdata) {
+  project_t::ref project = appdata.project;
   if(unlikely(project->osm->uploadPolicy == osm_t::Upload_Blocked)) {
     g_debug("Upload prohibited");
     return;
@@ -367,7 +368,7 @@ void osm_upload(appdata_t &appdata, project_t *project) {
   if(project->data_dirty) {
     context.append_str(_("Server data has been modified.\nDownloading updated osm data ...\n"));
 
-    bool reload_map = osm_download(dialog.get(), project);
+    bool reload_map = osm_download(dialog.get(), project.get());
     if(likely(reload_map)) {
       context.append_str(_("Download successful!\nThe map will be reloaded.\n"));
       project->data_dirty = false;
@@ -384,19 +385,19 @@ void osm_upload(appdata_t &appdata, project_t *project) {
 
       context.append_str(_("Reloading map ...\n"));
 
-      if(unlikely(!appdata.project->osm->is_clean(false)))
+      if(unlikely(!project->osm->is_clean(false)))
         context.append_str(_("*** DIFF IS NOT CLEAN ***\nSomething went wrong during "
                              "upload,\nproceed with care!\n"), COLOR_ERR);
 
       /* redraw the entire map by destroying all map items and redrawing them */
       context.append_str(_("Cleaning up ...\n"));
-      appdata.project->diff_save();
+      project->diff_save();
       appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
 
       context.append_str(_("Loading OSM ...\n"));
-      appdata.project->parse_osm();
+      project->parse_osm();
       context.append_str(_("Applying diff ...\n"));
-      diff_restore(appdata.project.get(), appdata.uicontrol.get());
+      diff_restore(project.get(), appdata.uicontrol.get());
       context.append_str(_("Painting ...\n"));
       appdata.map->paint();
       context.append_str(_("Done!\n"));

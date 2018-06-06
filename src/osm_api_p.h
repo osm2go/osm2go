@@ -25,6 +25,7 @@
 #include "osm.h"
 
 #include "net_io.h"
+#include "project.h"
 
 #include <curl/curl.h>
 #include <memory>
@@ -37,11 +38,11 @@ struct project_t;
 
 class osm_upload_context_t {
 public:
-  osm_upload_context_t(appdata_t &a, project_t *p, const char *c, const char *s);
+  osm_upload_context_t(appdata_t &a, project_t::ref p, const char *c, const char *s);
 
   appdata_t &appdata;
   osm_t::ref osm;
-  project_t * const project;
+  project_t::ref project;
   const std::string urlbasestr; ///< API base URL, will always end in '/'
 
   std::string changeset;
