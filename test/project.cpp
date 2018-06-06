@@ -71,7 +71,7 @@ static void testSave(const std::string &tmpdir, const char *empty_proj)
   map_state_t dummystate;
   project_t project(dummystate, proj_name, tmpdir);
 
-  assert(project.save(nullptr));
+  assert(project.save());
 
   const std::string &pfile = project_filename(&project);
 

@@ -1019,7 +1019,7 @@ appdata_t::~appdata_t() {
 
   /* save project file */
   if(project)
-    project->save(nullptr);
+    project->save();
 }
 
 void appdata_t::track_clear()
