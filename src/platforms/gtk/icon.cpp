@@ -34,6 +34,7 @@
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
+#include "osm2go_platform_gtk.h"
 #include <osm2go_stl.h>
 
 class icon_buffer : public icon_t {

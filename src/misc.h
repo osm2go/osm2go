@@ -73,19 +73,4 @@ std::string find_file(const std::string &n);
 bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags,
               const char *title, const char *fmt, ...) __attribute__((format (printf, 4, 5)));
 
-// simplified form of unique_ptr
-struct g_deleter {
-  inline void operator()(gpointer mem) {
-    g_free(mem);
-  }
-};
-
-typedef std::unique_ptr<gchar, g_deleter> g_string;
-
-struct g_object_deleter {
-  inline void operator()(gpointer obj) {
-    g_object_unref(obj);
-  }
-};
-
 #endif // MISC_H

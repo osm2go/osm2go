@@ -35,6 +35,7 @@
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
+#include "osm2go_platform_gtk.h"
 #include "osm2go_stl.h"
 
 #define ST_ENTRY(a) std::pair<const char *, typeof(a) *>(#a, &a)

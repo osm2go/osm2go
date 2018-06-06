@@ -33,6 +33,7 @@
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
+#include "osm2go_platform_gtk.h"
 
 static void
 vmessage(osm2go_platform::Widget *parent, GtkMessageType type, GtkButtonsType buttons,
