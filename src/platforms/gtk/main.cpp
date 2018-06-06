@@ -136,7 +136,7 @@ void appdata_t::main_ui_enable() {
 
   iconbar->setToolbarEnable(osm_valid == TRUE);
   /* disable all menu entries related to map */
-  uicontrol->setActionEnable(MainUi::SUBMENU_MAP, project.get());
+  uicontrol->setActionEnable(MainUi::SUBMENU_MAP, static_cast<bool>(project));
 
   // those icons that get enabled or disabled depending on OSM data being loaded
 #ifndef FREMANTLE
