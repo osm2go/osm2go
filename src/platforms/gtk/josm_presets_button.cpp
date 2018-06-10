@@ -856,6 +856,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event) {
 
   // remove all references to the widgets, they will be destroyed together with the dialog
   presets_context_t::instance->submenus.clear();
+  presets_context_t::instance->subwidget = nullptr;
 
   // then delete the dialog, it would delete the submenus first otherwise
   dialog.reset();
