@@ -635,17 +635,7 @@ static GtkWidget *presets_picker_embed(GtkTreeView *view, GtkListStore *store,
 
   gtk_tree_selection_unselect_all(select);
 
-  /* put this inside a scrolled view */
-  GtkWidget *c;
-#ifndef FREMANTLE
-  c = gtk_scrolled_window_new (nullptr, nullptr);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(c),
-				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-#else
-  c = hildon_pannable_area_new();
-#endif
-  gtk_container_add(GTK_CONTAINER(c), GTK_WIDGET(view));
-  return c;
+  return osm2go_platform::scrollable_container(GTK_WIDGET(view), false);
 }
 
 static GtkTreeIter preset_insert_item(const presets_item_named *item, icon_t &icons,

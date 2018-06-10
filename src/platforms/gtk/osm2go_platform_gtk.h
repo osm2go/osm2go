@@ -37,7 +37,7 @@ namespace osm2go_platform {
   GtkNotebook *notebook_get_gtk_notebook(GtkWidget *notebook);
 
   GtkTreeView *tree_view_new();
-  GtkWidget *scrollable_container(GtkWidget *view);
+  GtkWidget *scrollable_container(GtkWidget *view, bool shadowed = true);
 
   /* unified widgets */
   enum EntryFlags {

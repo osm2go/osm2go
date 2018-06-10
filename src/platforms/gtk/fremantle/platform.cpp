@@ -136,7 +136,7 @@ GtkTreeView *osm2go_platform::tree_view_new()
   return GTK_TREE_VIEW(hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT));
 }
 
-GtkWidget *osm2go_platform::scrollable_container(GtkWidget *view)
+GtkWidget *osm2go_platform::scrollable_container(GtkWidget *view, bool)
 {
   /* put view into a pannable area */
   GtkWidget *container = hildon_pannable_area_new();
