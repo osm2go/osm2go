@@ -28,6 +28,7 @@
 #include <hildon/hildon-entry.h>
 #include <hildon/hildon-pannable-area.h>
 #include <hildon/hildon-picker-button.h>
+#include <hildon/hildon-picker-dialog.h>
 #include <hildon/hildon-touch-selector-entry.h>
 #include <libosso.h>
 #include <tablet-browser-interface.h>
@@ -332,6 +333,11 @@ select_print_func_str(HildonTouchSelector *selector, gpointer data)
   return result;
 }
 
+/**
+ * @brief custom print function for multiselects
+ * @param selector the selector to monitor
+ * @param data ASCII value of the delimiter casted to a pointer
+ */
 static gchar *
 select_print_func(HildonTouchSelector *selector, gpointer data)
 {
@@ -368,9 +374,112 @@ GtkWidget *osm2go_platform::select_widget(GtkTreeModel *model, unsigned int flag
   return GTK_WIDGET(selector);
 }
 
+/**
+ * @brief save the list of the initially selected indexes to the selector
+ *
+ * This list is used when the dialog is cancelled and reopened to show the initial
+ * selection again. One could think that one could dive into HildonPickerDialogPrivate
+ * and use the current_selection member for that, but this always seems to hold the
+ * current selection, i.e. the one that was just cancelled.
+ */
+static void
+set_index_list(HildonTouchSelector *selector, const std::vector<unsigned int> &indexes)
+{
+  if(indexes.empty()) {
+    g_object_set_data(G_OBJECT(selector), "selected indexes", nullptr);
+  } else {
+    // save the index list for reuse when the dialog is cancelled
+    unsigned int *idxlist = static_cast<unsigned int *>(calloc(indexes.size() + 1, sizeof(*idxlist)));
+    memcpy(idxlist, indexes.data(), sizeof(*idxlist) * indexes.size());
+    // terminate list
+    idxlist[indexes.size()] = static_cast<unsigned int>(-1);
+    g_object_set_data_full(G_OBJECT(selector), "selected indexes", idxlist, free);
+  }
+}
+
+/**
+ * @brief handle "done" button in multiselect dialogs
+ *
+ * This updates the saved index list to the new accepted state.
+ */
+static void
+multiselect_response(GtkDialog *dialog, gint response_id)
+{
+  if(response_id != GTK_RESPONSE_OK)
+    return;
+
+  HildonTouchSelector *selector = hildon_picker_dialog_get_selector(HILDON_PICKER_DIALOG(dialog));
+  g_assert(selector != nullptr);
+  GListGuard selected_rows(hildon_touch_selector_get_selected_rows(selector, 0));
+
+  GtkTreeModel *model = hildon_touch_selector_get_model(selector, 0);
+
+  std::vector<unsigned int> indexes(g_list_length(selected_rows.get()), -1);
+  indexes.clear();
+
+  for (GList *item = selected_rows.get(); item != nullptr; item = g_list_next(item)) {
+    GtkTreeIter iter;
+    GtkTreePath *path = static_cast<GtkTreePath *>(item->data);
+    gtk_tree_model_get_iter(model, &iter, path);
+    g_assert_cmpint(gtk_tree_path_get_depth(path), ==, 1);
+    const gint *idx = gtk_tree_path_get_indices(path);
+    g_assert(idx != nullptr);
+
+    indexes.push_back(*idx);
+  }
+
+  set_index_list(selector, indexes);
+}
+
+// taken from libhildon, but using the correct type for selector to avoid needless casts
+typedef struct _HildonPickerButtonPrivate {
+  HildonTouchSelector *selector;
+  GtkWidget *dialog;
+  gchar *done_button_text;
+  guint disable_value_changed : 1;
+} HildonPickerButtonPrivate;
+
+/**
+ * @brief change the signal handlers for the "Done" button of the Hildon picker button
+ */
+static void
+multiselect_button_callback(GtkWidget *widget)
+{
+  // get the internal dialog created in the default "clicked" handler of the picker button
+  _HildonPickerButtonPrivate *priv = G_TYPE_INSTANCE_GET_PRIVATE(widget, HILDON_TYPE_PICKER_BUTTON, HildonPickerButtonPrivate);
+  // disconnect all signals with nullptr as data
+  // These are:
+  // -the "delete-event" callback restored later
+  // -one unknown connection (TODO)
+  // -the default "response" handler that prohibits empty selections in the multiselect
+  //  This is the actual target of this operation.
+  g_signal_handlers_disconnect_matched(priv->dialog, G_SIGNAL_MATCH_DATA, 0, 0, nullptr, nullptr, nullptr);
+  // connections must use nullptr as argument again so they will not sum up if the button is clicked multiple times
+  g_signal_connect(priv->dialog, "delete-event", G_CALLBACK(gtk_widget_hide_on_delete), nullptr);
+  g_signal_connect(priv->dialog, "response", G_CALLBACK(multiselect_response), nullptr);
+
+  // now restore the selection to what it initially was
+  // otherwise one may open the dialog, change the selection, cancel,
+  // open it again and still find the selection from last time
+  const unsigned int *idxlist = static_cast<unsigned int *>(g_object_get_data(G_OBJECT(priv->selector), "selected indexes"));
+  hildon_touch_selector_unselect_all(priv->selector, 0);
+  if(idxlist != nullptr) {
+    GtkTreeModel *model = hildon_touch_selector_get_model(priv->selector, 0);
+    for(size_t i = 0; idxlist[i] != static_cast<unsigned int>(-1); i++) {
+      GtkTreeIter iter;
+      gboolean b = gtk_tree_model_iter_nth_child(model, &iter, nullptr, idxlist[i]);
+      g_assert(b == TRUE);
+      hildon_touch_selector_select_iter(priv->selector, 0, &iter, FALSE);
+    }
+  }
+}
+
 GtkWidget *osm2go_platform::select_widget_wrapped(const char *title, GtkTreeModel *model, unsigned int flags, const char *delimiter)
 {
-  return picker_button(title, select_widget(model, flags, delimiter));
+  GtkWidget *ret = picker_button(title, select_widget(model, flags, delimiter));
+  if(flags & AllowMultiSelection)
+    g_signal_connect_after(ret, "clicked", G_CALLBACK(multiselect_button_callback), nullptr);
+  return ret;
 }
 
 std::string osm2go_platform::select_widget_value(GtkWidget *widget)
@@ -433,14 +542,16 @@ void osm2go_platform::select_widget_select(GtkWidget *widget, const std::vector<
     assert_cmpnum(indexes.size(), 1);
     hildon_picker_button_set_active(HILDON_PICKER_BUTTON(widget), indexes.front());
   } else {
-    GtkTreeIter iter;
     GtkTreeModel *model = hildon_touch_selector_get_model(selector, 0);
 
     for(size_t i = 0; i < indexes.size(); i++) {
+      GtkTreeIter iter;
       gboolean b = gtk_tree_model_iter_nth_child(model, &iter, nullptr, indexes[i]);
       g_assert(b == TRUE);
       hildon_touch_selector_select_iter(selector, 0, &iter, FALSE);
     }
+
+    set_index_list(selector, indexes);
   }
 }
 
