@@ -759,7 +759,6 @@ struct matching_type_functor {
 
 /**
  * @brief create a picker list for preset items
- * @param context the tag context
  * @param items the list of presets to show
  * @param top_level if a "Used Presets" subentry should be created
  *
