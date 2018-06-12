@@ -189,7 +189,8 @@ static void on_value_changed(HildonPickerButton *widget) {
   g_signal_emit_by_name(widget, "changed");
 }
 
-static GtkWidget *combo_box_new_with_selector(const gchar *title, GtkWidget *selector) {
+static GtkWidget *picker_button(const gchar *title, GtkWidget *selector)
+{
   GtkWidget *button =
     hildon_picker_button_new(static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT |
                                                          HILDON_SIZE_AUTO_WIDTH),
@@ -220,7 +221,7 @@ struct combo_add_string {
 GtkWidget *osm2go_platform::combo_box_new(const char *title, const std::vector<const char *> &items, int active)
 {
   GtkWidget *selector = hildon_touch_selector_new_text();
-  GtkWidget *cbox = combo_box_new_with_selector(title, selector);
+  GtkWidget *cbox = picker_button(title, selector);
 
   /* fill combo box with entries */
   std::for_each(items.begin(), items.end(), combo_add_string(HILDON_TOUCH_SELECTOR(selector)));
@@ -249,7 +250,7 @@ touch_selector_entry_print_func(HildonTouchSelector *selector, gpointer)
 GtkWidget *osm2go_platform::combo_box_entry_new(const char *title) {
   GtkWidget *selector = hildon_touch_selector_entry_new_text();
   hildon_touch_selector_set_print_func(HILDON_TOUCH_SELECTOR(selector), touch_selector_entry_print_func);
-  return combo_box_new_with_selector(title, selector);
+  return picker_button(title, selector);
 }
 
 void osm2go_platform::combo_box_append_text(GtkWidget *cbox, const char *text) {
@@ -349,7 +350,7 @@ GtkWidget *osm2go_platform::select_widget(const char *title, GtkTreeModel *model
 
   hildon_touch_selector_set_model(selector, 0, model);
 
-  return combo_box_new_with_selector(title, GTK_WIDGET(selector));
+  return picker_button(title, GTK_WIDGET(selector));
 }
 
 std::string osm2go_platform::select_widget_value(GtkWidget *widget)
