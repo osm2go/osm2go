@@ -86,7 +86,7 @@ static GtkWidget *style_select_widget(const std::string &currentstyle,
 
   std::for_each(styles.begin(), styles.end(), selector_model_functor(store, match, currentstyle));
 
-  GtkWidget *ret = osm2go_platform::select_widget(_("Style"), GTK_TREE_MODEL(store));
+  GtkWidget *ret = osm2go_platform::select_widget_wrapped(_("Style"), GTK_TREE_MODEL(store));
   g_object_unref(store);
   osm2go_platform::combo_box_set_active(ret, match);
   return ret;

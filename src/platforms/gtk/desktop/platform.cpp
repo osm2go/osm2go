@@ -184,7 +184,7 @@ bool osm2go_platform::isComboBoxEntryWidget(GtkWidget *widget)
   return isCombo(widget, TRUE);
 }
 
-GtkWidget *osm2go_platform::select_widget(const char *, GtkTreeModel *model, unsigned int flags, const char *delimiter)
+GtkWidget *osm2go_platform::select_widget(GtkTreeModel *model, unsigned int flags, const char *delimiter)
 {
   GtkWidget *ret;
   GtkCellRenderer *rnd = gtk_cell_renderer_text_new();
@@ -220,6 +220,11 @@ GtkWidget *osm2go_platform::select_widget(const char *, GtkTreeModel *model, uns
   gtk_cell_layout_add_attribute(cell, rnd, "text", 0);
 
   return ret;
+}
+
+GtkWidget *osm2go_platform::select_widget_wrapped(const char *, GtkTreeModel *model, unsigned int flags, const char *delimiter)
+{
+  return select_widget(model, flags, delimiter);
 }
 
 std::string osm2go_platform::select_widget_value(GtkWidget *widget)
@@ -273,6 +278,13 @@ std::string osm2go_platform::select_widget_value(GtkWidget *widget)
   }
 
   return ret;
+}
+
+bool osm2go_platform::select_widget_has_selection(GtkWidget *widget)
+{
+  GtkTreeView *tree = GTK_TREE_VIEW(gtk_bin_get_child(GTK_BIN(widget)));
+  g_assert_nonnull(tree);
+  return gtk_tree_selection_count_selected_rows(gtk_tree_view_get_selection(tree)) > 0;
 }
 
 void osm2go_platform::select_widget_select(GtkWidget *widget, const std::vector<unsigned int> &indexes)

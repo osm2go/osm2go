@@ -76,6 +76,22 @@ namespace osm2go_platform {
     AllowEditing        = (1<<1),  ///< if the user may enter custom text
     AllowMultiSelection = (1<<2)
   };
+
+  /**
+   * @brief create a widget that let's the user do a selection
+   * @param model the model containing the values
+   * @param flags flags which type of widget is created
+   * @param delimiter the delimiter to use when joining multiple values
+   *
+   * @model should have 2 columns, the first containing the text that is
+   * displayed, the second with the values that are returned. Both must be
+   * of type G_TYPE_STRING.
+   *
+   * The widget takes a reference on the model. Only the first character of delimiter
+   * is used, so it may be a pointer to a single char.
+   */
+  GtkWidget *select_widget(GtkTreeModel *model, unsigned int flags = NoSelectionFlags, const char *delimiter = ";") __attribute__((nonnull(1)));
+
   /**
    * @brief create a widget that let's the user do a selection
    * @param title the dialog title on Fremantle
@@ -89,13 +105,25 @@ namespace osm2go_platform {
    *
    * The widget takes a reference on the model. Only the first character of delimiter
    * is used, so it may be a pointer to a single char.
+   *
+   * This puts the select_widget() behind a picker button on Fremantle. It just
+   * returns the select_widget() on desktop systems.
    */
-  GtkWidget *select_widget(const char *title, GtkTreeModel *model, unsigned int flags = NoSelectionFlags, const char *delimiter = ";") __attribute__((nonnull(1, 2)));
+  GtkWidget *select_widget_wrapped(const char *title, GtkTreeModel *model, unsigned int flags = NoSelectionFlags, const char *delimiter = ";") __attribute__((nonnull(1, 2)));
 
   /**
    * @brief return the value selected with the select widget
+   * @param widget the widget returned by select_widget_wrapped()
    */
   std::string select_widget_value(GtkWidget *widget);
+
+  /**
+   * @brief check if the given widget has a selection
+   * @param widget the widget returned by select_widget()
+   *
+   * This only makes sense for widgets created with AllowMultiSelection.
+   */
+  bool select_widget_has_selection(GtkWidget *widget);
 
   /**
    * @brief select one or more items

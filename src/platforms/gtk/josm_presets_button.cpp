@@ -953,10 +953,10 @@ presets_element_t::attach_key *presets_element_combo::attach(preset_attach_conte
   GtkListStore *store = selectorModel(values, display_values);
 
   if(editable) {
-    ret = select_widget(text.c_str(), GTK_TREE_MODEL(store), osm2go_platform::AllowEditing);
+    ret = select_widget_wrapped(text.c_str(), GTK_TREE_MODEL(store), osm2go_platform::AllowEditing);
   } else {
     gtk_list_store_insert_with_values(store, nullptr, 0, 0, _("unset"), 1, "", -1);
-    ret = select_widget(text.c_str(), GTK_TREE_MODEL(store));
+    ret = select_widget_wrapped(text.c_str(), GTK_TREE_MODEL(store));
   }
 
   g_object_unref(store);

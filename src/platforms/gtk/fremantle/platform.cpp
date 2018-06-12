@@ -292,21 +292,30 @@ bool osm2go_platform::isComboBoxEntryWidget(GtkWidget *widget)
   return HILDON_IS_PICKER_BUTTON(widget) == TRUE;
 }
 
-static gchar *
-select_print_func(HildonTouchSelector *selector, gpointer data)
+struct g_list_deleter {
+  void operator()(GList *list) {
+    g_list_foreach(list, reinterpret_cast<GFunc>(gtk_tree_path_free), nullptr);
+    g_list_free(list);
+  }
+};
+
+typedef std::unique_ptr<GList, g_list_deleter> GListGuard;
+
+static std::string
+select_print_func_str(HildonTouchSelector *selector, gpointer data)
 {
-  GList *selected_rows = hildon_touch_selector_get_selected_rows(selector, 0);
+  GListGuard selected_rows(hildon_touch_selector_get_selected_rows(selector, 0));
   const char delimiter = *static_cast<const char *>(data);
 
-  if(selected_rows == nullptr)
-    return g_strdup("");
+  if(!selected_rows)
+    return std::string();
 
   GtkTreeModel *model = hildon_touch_selector_get_model(selector, 0);
 
   std::string result;
   g_string guard;
 
-  for (GList *item = selected_rows; item != nullptr; item = g_list_next(item)) {
+  for (GList *item = selected_rows.get(); item != nullptr; item = g_list_next(item)) {
     GtkTreeIter iter;
     gtk_tree_model_get_iter(model, &iter, static_cast<GtkTreePath *>(item->data));
 
@@ -318,15 +327,18 @@ select_print_func(HildonTouchSelector *selector, gpointer data)
     result += delimiter;
   }
 
-  g_list_foreach(selected_rows, reinterpret_cast<GFunc>(gtk_tree_path_free), nullptr);
-  g_list_free(selected_rows);
-
   result.resize(result.size() - 1);
 
-  return g_strdup(result.c_str());
+  return result;
 }
 
-GtkWidget *osm2go_platform::select_widget(const char *title, GtkTreeModel *model, unsigned int flags, const char *delimiter)
+static gchar *
+select_print_func(HildonTouchSelector *selector, gpointer data)
+{
+  return g_strdup(select_print_func_str(selector, data).c_str());
+}
+
+GtkWidget *osm2go_platform::select_widget(GtkTreeModel *model, unsigned int flags, const char *delimiter)
 {
   HildonTouchSelector *selector;
 
@@ -339,36 +351,58 @@ GtkWidget *osm2go_platform::select_widget(const char *title, GtkTreeModel *model
     hildon_touch_selector_set_print_func(selector, touch_selector_entry_print_func);
     hildon_touch_selector_entry_set_text_column(HILDON_TOUCH_SELECTOR_ENTRY(selector), 1);
     break;
-  case AllowMultiSelection:
+  case AllowMultiSelection: {
     selector = HILDON_TOUCH_SELECTOR(hildon_touch_selector_new_text());
     hildon_touch_selector_set_print_func_full(selector, select_print_func, const_cast<char *>(delimiter), nullptr);
     hildon_touch_selector_set_column_selection_mode(selector, HILDON_TOUCH_SELECTOR_SELECTION_MODE_MULTIPLE);
+    uintptr_t ch = *delimiter;
+    g_object_set_data(G_OBJECT(selector), "user delimiter", reinterpret_cast<gpointer>(ch));
     break;
+  }
   default:
     assert_unreachable();
   }
 
   hildon_touch_selector_set_model(selector, 0, model);
 
-  return picker_button(title, GTK_WIDGET(selector));
+  return GTK_WIDGET(selector);
+}
+
+GtkWidget *osm2go_platform::select_widget_wrapped(const char *title, GtkTreeModel *model, unsigned int flags, const char *delimiter)
+{
+  return picker_button(title, select_widget(model, flags, delimiter));
 }
 
 std::string osm2go_platform::select_widget_value(GtkWidget *widget)
 {
-  HildonTouchSelector *selector = hildon_picker_button_get_selector(HILDON_PICKER_BUTTON(widget));
+  // this may be called both for a wrapped and bare widget
+  HildonTouchSelector *selector;
+  if(HILDON_IS_TOUCH_SELECTOR(widget))
+    selector = HILDON_TOUCH_SELECTOR(widget);
+  else
+    selector = hildon_picker_button_get_selector(HILDON_PICKER_BUTTON(widget));
+  g_assert(selector != nullptr);
 
   if(HILDON_IS_TOUCH_SELECTOR_ENTRY(selector)) {
-    return combo_box_get_active_text(widget);
+    HildonEntry *entry = hildon_touch_selector_entry_get_entry(HILDON_TOUCH_SELECTOR_ENTRY(selector));
+
+    return gtk_entry_get_text(GTK_ENTRY(entry));
   } else {
     GtkTreeModel *model = hildon_touch_selector_get_model(selector, 0);
     std::string ret;
 
     if(hildon_touch_selector_get_column_selection_mode(selector) ==
        HILDON_TOUCH_SELECTOR_SELECTION_MODE_MULTIPLE) {
+      // the fastest way to repeat the check if this is a wrapped widget or not
+      if(reinterpret_cast<GtkWidget *>(selector) == widget) {
+        gpointer p = g_object_get_data(G_OBJECT(selector), "user delimiter");
+        char ch = reinterpret_cast<uintptr_t>(p);
+        ret = select_print_func_str(selector, &ch);
+      } else
       // the button has already the properly formatted result
-      ret = hildon_button_get_value(HILDON_BUTTON(widget));
+        ret = hildon_button_get_value(HILDON_BUTTON(widget));
     } else {
-      int row = hildon_picker_button_get_active(HILDON_PICKER_BUTTON(widget));
+      int row = hildon_touch_selector_get_active(selector, 0);
       GtkTreeIter iter;
       gboolean b = gtk_tree_model_iter_nth_child(model, &iter, nullptr, row);
       g_assert(b == TRUE);
@@ -380,6 +414,13 @@ std::string osm2go_platform::select_widget_value(GtkWidget *widget)
 
     return ret;
   }
+}
+
+bool osm2go_platform::select_widget_has_selection(GtkWidget *widget)
+{
+  g_assert(HILDON_IS_TOUCH_SELECTOR(widget));
+  GListGuard sel(hildon_touch_selector_get_selected_rows(HILDON_TOUCH_SELECTOR(widget), 0));
+  return static_cast<bool>(sel);
 }
 
 void osm2go_platform::select_widget_select(GtkWidget *widget, const std::vector<unsigned int> &indexes)
