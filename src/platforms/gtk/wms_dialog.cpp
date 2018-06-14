@@ -261,10 +261,6 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
       wms_server->name = gtk_entry_get_text(GTK_ENTRY(name));
 
     wms_server->server = gtk_entry_get_text(GTK_ENTRY(server));
-#ifndef FREMANTLE
-    if(unlikely(wms_server->server == _("<server url>")))
-      wms_server->server.clear();
-#endif
     g_debug("setting URL for WMS server %s to %s", wms_server->name.c_str(), wms_server->server.c_str());
 
     /* set texts below */

@@ -308,8 +308,6 @@ void osm2go_platform::select_widget_select(GtkWidget *widget, const std::vector<
 
 void osm2go_platform::setEntryText(GtkEntry *entry, const char *text, const char *placeholder)
 {
-  if(text == nullptr || *text == '\0')
-    gtk_entry_set_text(entry, placeholder);
-  else
-    gtk_entry_set_text(entry, text);
+  gtk_entry_set_text(entry, text);
+  gtk_widget_set_tooltip_text(GTK_WIDGET(entry), placeholder);
 }
