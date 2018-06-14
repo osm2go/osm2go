@@ -40,6 +40,9 @@
 #include <memory>
 #include <strings.h>
 #include <vector>
+#ifdef FREMANTLE
+#include <hildon/hildon-picker-dialog.h>
+#endif
 
 #include <osm2go_annotations.h>
 #include <osm2go_stl.h>
@@ -407,60 +410,30 @@ static bool wms_server_dialog(appdata_t &appdata, wms_t *wms) {
 
 enum {
   LAYER_COL_TITLE = 0,
-  LAYER_COL_DATA,
+  LAYER_COL_NAME,
   LAYER_NUM_COLS
 };
 
-#ifndef FREMANTLE
-/* we handle these events on our own in order to implement */
-/* a very direct selection mechanism (multiple selections usually */
-/* require the control key to be pressed). This interferes with */
-/* fremantle finger scrolling, but fortunately the fremantle */
-/* default behaviour already is what we want. */
-static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event, gpointer) {
-  GtkTreeView * const view = GTK_TREE_VIEW(widget);
-  if(event->window == gtk_tree_view_get_bin_window(view)) {
-    GtkTreePath *path;
-
-    if(gtk_tree_view_get_path_at_pos(view, event->x, event->y, &path, nullptr, nullptr, nullptr)) {
-      GtkTreeSelection *sel = gtk_tree_view_get_selection(view);
-
-      if(!gtk_tree_selection_path_is_selected(sel, path))
-	gtk_tree_selection_select_path(sel, path);
-      else
-	gtk_tree_selection_unselect_path(sel, path);
-    }
-    return TRUE;
-  }
-  return FALSE;
-}
+#ifdef FREMANTLE
+#define DIALOG_RESULT_OK GTK_RESPONSE_OK
+#else
+#define DIALOG_RESULT_OK GTK_RESPONSE_ACCEPT
 #endif
 
-struct selected_context {
-  project_t::ref project;
-  std::vector<std::size_t> selected;
-  GtkTreeView *view;
-  explicit selected_context(project_t::ref p) : project(p), view(nullptr) {}
-};
+static void layer_changed(GtkWidget *widget)
+{
+  gboolean okEn = osm2go_platform::select_widget_has_selection(widget) ? TRUE : FALSE;
 
-static void changed(GtkTreeSelection *sel) {
-  /* get view from selection ... */
-  GtkTreeView *view = gtk_tree_selection_get_tree_view(sel);
-  assert(view != nullptr);
-
-  gboolean okEn = gtk_tree_selection_count_selected_rows(sel) > 0 ? TRUE : FALSE;
-
-  GtkWidget *dialog = gtk_widget_get_toplevel(GTK_WIDGET(view));
+  GtkWidget *dialog = gtk_widget_get_toplevel(GTK_WIDGET(widget));
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
-                                    GTK_RESPONSE_ACCEPT, okEn);
+                                    DIALOG_RESULT_OK, okEn);
 }
 
 struct fitting_layers_functor {
   GtkListStore * const store;
   project_t::ref project;
-  std::size_t &index;
-  fitting_layers_functor(GtkListStore *s, project_t::ref p, std::size_t &idx)
-    : store(s), project(p), index(idx) {}
+  fitting_layers_functor(GtkListStore *s, project_t::ref p)
+    : store(s), project(p) {}
   void operator()(const wms_layer_t &layer);
 };
 
@@ -472,64 +445,38 @@ void fitting_layers_functor::operator()(const wms_layer_t &layer)
   /* Append a row and fill in some data */
   gtk_list_store_insert_with_values(store, nullptr, -1,
                                     LAYER_COL_TITLE, layer.title.c_str(),
-                                    LAYER_COL_DATA, index++,
+                                    LAYER_COL_NAME, layer.name.c_str(),
                                     -1);
 }
 
-static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t::list &layers) {
-  GtkTreeView * const view = tree_view_new();
-  context->view = view;
-
-  /* change list mode to "multiple" */
-  GtkTreeSelection *selection =
-    gtk_tree_view_get_selection(view);
-  gtk_tree_selection_set_mode(selection, GTK_SELECTION_MULTIPLE);
-
-#ifndef FREMANTLE
-  /* catch views button-press event for our custom handling */
-  g_signal_connect(view, "button-press-event",
-		   G_CALLBACK(on_view_clicked), nullptr);
-#endif
-
+static GtkWidget *wms_layer_widget(project_t::ref project, const wms_layer_t::list &layers) {
   /* build the store */
   std::unique_ptr<GtkListStore, g_object_deleter> store(gtk_list_store_new(LAYER_NUM_COLS,
-      G_TYPE_STRING, G_TYPE_ULONG));
-
-  /* --- "Title" column --- */
-  GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, nullptr );
-  GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
-		 _("Title"), renderer,
-		 "text", LAYER_COL_TITLE,
-		 nullptr);
-
-  gtk_tree_view_column_set_expand(column, TRUE);
-  gtk_tree_view_insert_column(view, column, -1);
-
-  gtk_tree_view_set_model(view, GTK_TREE_MODEL(store.get()));
-
-  std::size_t index = 0;
+      G_TYPE_STRING, G_TYPE_STRING));
   std::for_each(layers.begin(), layers.end(),
-                fitting_layers_functor(store.get(), context->project, index));
+                fitting_layers_functor(store.get(), project));
 
-  g_signal_connect(selection, "changed", G_CALLBACK(changed), nullptr);
+  GtkWidget *widget = osm2go_platform::select_widget(GTK_TREE_MODEL(store.get()),
+                                                     osm2go_platform::AllowMultiSelection, ",");
 
-  return scrollable_container(GTK_WIDGET(view));
+#ifdef FREMANTLE
+  g_signal_connect_swapped(widget,
+#else
+  g_signal_connect_swapped(gtk_tree_view_get_selection(GTK_TREE_VIEW(gtk_bin_get_child(GTK_BIN(widget)))),
+#endif
+                           "changed", G_CALLBACK(layer_changed), widget);
+
+  return widget;
 }
 
-static void
-layer_selection_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer data)
+static std::string wms_layer_dialog(project_t::ref project, const wms_layer_t::list &layers)
 {
-  std::vector<std::size_t> * const selected = static_cast<std::vector<std::size_t> *>(data);
-
-  gulong l;
-  gtk_tree_model_get(model, iter, LAYER_COL_DATA, &l, -1);
-
-  selected->push_back(l);
-}
-
-static std::string wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &layers)
-{
+  GtkWidget *sel_widget = wms_layer_widget(project, layers);
+#ifdef FREMANTLE
+  osm2go_platform::WidgetGuard dialog(hildon_picker_dialog_new(GTK_WINDOW(appdata_t::window)));
+  hildon_picker_dialog_set_selector(HILDON_PICKER_DIALOG(dialog.get()),
+                                    HILDON_TOUCH_SELECTOR(sel_widget));
+#else
   osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("WMS layer selection"),
                                               GTK_WINDOW(appdata_t::window),
                                               GTK_DIALOG_MODAL,
@@ -538,31 +485,19 @@ static std::string wms_layer_dialog(selected_context *ctx, const wms_layer_t::li
                                               nullptr));
 
   dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_LARGE);
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT, FALSE);
 
   /* layer list */
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
-                    wms_layer_widget(ctx, layers), TRUE, TRUE, 0);
+                    sel_widget, TRUE, TRUE, 0);
+#endif
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()), DIALOG_RESULT_OK, FALSE);
 
   gtk_widget_show_all(dialog.get());
 
-  if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog.get())))
+  if(DIALOG_RESULT_OK != gtk_dialog_run(GTK_DIALOG(dialog.get())))
     return std::string();
 
-  gtk_tree_selection_selected_foreach(gtk_tree_view_get_selection(ctx->view),
-                                      layer_selection_foreach, &ctx->selected);
-
-  std::string l; // the selected layer names
-
-  const std::vector<std::size_t>::const_iterator selEnd = ctx->selected.end();
-  std::vector<std::size_t>::const_iterator selIt = ctx->selected.begin();
-  if(selIt != selEnd) {
-    l += layers[*selIt].name;
-    for(++selIt; selIt != selEnd; selIt++)
-      l += ',' + layers[*selIt].name;
-  }
-
-  return l;
+  return osm2go_platform::select_widget_value(sel_widget);
 }
 
 void wms_import(appdata_t &appdata) {
@@ -590,9 +525,7 @@ void wms_import(appdata_t &appdata) {
   if(layers.empty())
     return;
 
-  selected_context ctx(appdata.project);
-
-  const std::string &l = wms_layer_dialog(&ctx, layers);
+  const std::string &l = wms_layer_dialog(appdata.project, layers);
   if(!l.empty())
     wms_get_selected_layer(appdata, wms, l, layers.front().srs);
 }
