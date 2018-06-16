@@ -703,16 +703,11 @@ void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
 
   /* apply the last line mod entry that has been found during search */
   if(line_mod) {
-    printf("applying last matching line mod to way #" ITEM_ID_FORMAT "\n",
-	   way->id);
     way->draw.width = line_mod_apply_width(way->draw.width, &line_mod->line);
 
     /* special case: the way does not have a background, but it is to */
     /* be modified */
-    if((line_mod->bg.mod != ES_MOD_NONE) &&
-       (!(way->draw.flags & OSM_DRAW_FLAG_BG))) {
-      printf("forcing background\n");
-
+    if(line_mod->bg.mod != ES_MOD_NONE && !(way->draw.flags & OSM_DRAW_FLAG_BG)) {
       /* add a background in black color */
       way->draw.flags |= OSM_DRAW_FLAG_BG;
       way->draw.bg.color = (0) | 0xff;
