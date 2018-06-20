@@ -996,6 +996,10 @@ void PresetSax::endElement(const xmlChar *name)
     assert(!widgets.empty());
     presets_element_combo * const combo = static_cast<presets_element_combo *>(widgets.top());
     widgets.pop();
+    if(unlikely(combo->key.empty())) {
+      dumpState("ignoring", "combo without key");
+      delete combo;
+    }
     // this usually happens when the list if filled by <list_entry> tags and
     // none of that has a display_value given
     if(unlikely(combo->values == combo->display_values))
