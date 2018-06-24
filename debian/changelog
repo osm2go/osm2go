@@ -1,3 +1,12 @@
+osm2go (1:0.9.13-maemo1) karmic; urgency=low
+
+  * fix crash when editable preset combo box has custom value
+  * WMS: do not show non-fitting layers in selection dialog
+  * remove stale reference when using "used presets" twice
+  * JOSM presets: add support for multiselects
+
+ -- Rolf Eike Beer <eike@sf-mail.de>  Sun, 24 Jun 2018 12:05:21 +0200
+
 osm2go (1:0.9.12-maemo1) karmic; urgency=low
 
   * fix scrolling to first used relation in relation edit
