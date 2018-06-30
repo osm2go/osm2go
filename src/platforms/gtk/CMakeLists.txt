@@ -100,8 +100,6 @@ if (NOT libLocation_FOUND)
 	target_link_libraries(osm2go_platform_lib_private INTERFACE PkgConfig::GVFS)
 endif ()
 
-pkg_check_modules(SOUP REQUIRED IMPORTED_TARGET libsoup-2.4)
-
 add_subdirectory(osm-gps-map)
 target_link_libraries(osm2go_platform_lib_private INTERFACE osm-gps-map)
 

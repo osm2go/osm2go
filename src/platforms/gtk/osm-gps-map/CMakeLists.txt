@@ -12,6 +12,8 @@ add_library(osm-gps-map STATIC
 	osm-gps-map-osd-select.h
 )
 
+pkg_check_modules(SOUP REQUIRED IMPORTED_TARGET libsoup-2.4)
+
 target_link_libraries(osm-gps-map
 	PRIVATE
 		PkgConfig::SOUP
