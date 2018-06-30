@@ -35,8 +35,8 @@ include(CheckIncludeFileCXX)
 
 check_include_file_cxx(cstdint CSTDINT_HEADER)
 if (NOT CSTDINT_HEADER)
-	target_include_directories(osm2go_platform_lib
-			INTERFACE
+	target_include_directories(osm2go_lib
+			PUBLIC
 				${CMAKE_CURRENT_SOURCE_DIR}/tr1wrappers)
 endif ()
 
@@ -62,7 +62,7 @@ if (MAEMO_FOUND)
 	pkg_check_modules(GPSBT IMPORTED_TARGET gpsbt)
 	if (GPSBT_FOUND)
 		target_link_libraries(osm2go_platform_lib_private INTERFACE PkgConfig::GPSBT)
-		target_compile_definitions(osm2go_platform_lib_private INTERFACE ENABLE_GPSBT)
+		target_compile_definitions(osm2go_lib PRIVATE ENABLE_GPSBT)
 	else ()
 		pkg_check_modules(libLocation IMPORTED_TARGET liblocation)
 		if (libLocation_FOUND)
@@ -131,10 +131,6 @@ if (MAEMO_FOUND)
 	install(PROGRAMS $<TARGET_FILE:osm2go>
 		DESTINATION ${DATA_DIR}
 		RENAME ${PROJECT_NAME}.bin)
-	install(DIRECTORY
-		DESTINATION ${CMAKE_INSTALL_BINDIR})
-	install(CODE
-		"execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink  ${DATA_DIR}/${PROJECT_NAME}.bin \$ENV{DESTDIR}${CMAKE_INSTALL_FULL_BINDIR}/${PROJECT_NAME})")
 else ()
 	install(CODE
 		"message(STATUS \"Not Optifying binary\")")

@@ -29,3 +29,8 @@ configure_file(${osm2go_SOURCE_DIR}/debian/control.in ${osm2go_BINARY_DIR}/debia
 if (libLocation_FOUND)
 	target_sources(osm2go_lib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/gps_liblocation.cpp)
 endif ()
+
+install(DIRECTORY
+	DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(CODE
+	"execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink  ${DATA_DIR}/${PROJECT_NAME}.bin \$ENV{DESTDIR}${CMAKE_INSTALL_FULL_BINDIR}/${PROJECT_NAME})")
