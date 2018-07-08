@@ -512,7 +512,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
   GtkTreeIter   iter;
   GtkTreeModel *model;
 
-  if(!gtk_tree_selection_get_selected(selection, &model, &iter))
+  if(gtk_tree_selection_get_selected(selection, &model, &iter) != TRUE)
     return;
 
   presets_item_named *item = nullptr;
@@ -1026,9 +1026,9 @@ std::string presets_element_multiselect::getValue(presets_element_t::attach_key 
 presets_element_t::attach_key *presets_element_checkbox::attach(preset_attach_context &attctx,
                                                                 const std::string &preset) const
 {
-  gboolean deflt;
+  bool deflt;
   if(!preset.empty())
-    deflt = matchValue(preset) ? TRUE : FALSE;
+    deflt = matchValue(preset);
   else
     deflt = def;
 

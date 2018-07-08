@@ -173,7 +173,7 @@ changed(GtkTreeSelection *selection, gpointer userdata) {
   GtkTreeModel *model = nullptr;
   GtkTreeIter iter;
 
-  gboolean sel = gtk_tree_selection_get_selected(selection, &model, &iter);
+  bool sel = gtk_tree_selection_get_selected(selection, &model, &iter) == TRUE;
   if(sel) {
     project_t *project = nullptr;
     gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
@@ -590,7 +590,7 @@ static void project_filesize(project_context_t *context) {
     str = _("Not downloaded!");
 
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
-				      GTK_RESPONSE_ACCEPT, !context->is_new);
+				      GTK_RESPONSE_ACCEPT, context->is_new == TRUE ? FALSE : TRUE);
 
   } else {
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, nullptr);
@@ -618,7 +618,7 @@ static void project_filesize(project_context_t *context) {
     } else
       str = _("Outdated, please download!");
 
-    gboolean en = (!context->is_new || !project->data_dirty) ? TRUE : FALSE;
+    gboolean en = (context->is_new != TRUE || !project->data_dirty) ? TRUE : FALSE;
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
                                       GTK_RESPONSE_ACCEPT, en);
   }

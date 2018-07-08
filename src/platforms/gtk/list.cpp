@@ -193,7 +193,7 @@ static void on_row_activated(GtkTreeView *treeview,
 
   g_debug("row activated");
 
-  if(gtk_tree_model_get_iter(model, &iter, path)) {
+  if(gtk_tree_model_get_iter(model, &iter, path) == TRUE) {
     assert(g_object_get_data(G_OBJECT(userdata), "priv") != nullptr);
 
     GtkWidget *toplevel = gtk_widget_get_toplevel(GTK_WIDGET(treeview));

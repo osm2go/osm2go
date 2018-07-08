@@ -253,7 +253,7 @@ static void on_tag_edit(info_tag_context_t *context) {
     return;
   }
 
-  if(!gtk_tree_selection_get_selected(sel, &model, &iter)) {
+  if(gtk_tree_selection_get_selected(sel, &model, &iter) != TRUE) {
     g_debug("nothing selected");
     return;
   }

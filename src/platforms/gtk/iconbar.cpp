@@ -193,7 +193,7 @@ void iconbar_t::map_action_idle(bool idle, const object_t &selected) {
 
 void iconbar_t::setToolbarEnable(bool en)
 {
-  gtk_widget_set_sensitive(GTK_WIDGET(static_cast<iconbar_gtk *>(this)->toolbar), en);
+  gtk_widget_set_sensitive(GTK_WIDGET(static_cast<iconbar_gtk *>(this)->toolbar), en ? TRUE : FALSE);
 }
 
 bool iconbar_t::isCancelEnabled() const

@@ -267,7 +267,7 @@ void settings_t::save() const {
       it != bitEnd; it++) {
     key = keybase + it->first;
 
-    gconf_client_set_bool(client.get(), key.c_str(), *(it->second), nullptr);
+    gconf_client_set_bool(client.get(), key.c_str(), *(it->second) ? TRUE : FALSE, nullptr);
   }
 
   key = keybase + "track_visibility";

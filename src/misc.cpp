@@ -66,16 +66,17 @@ bool xml_get_prop_bool(xmlNode *node, const char *prop) {
 #define RESPONSE_NO   GTK_RESPONSE_CANCEL
 #endif
 
-static void on_toggled(GtkWidget *button, int *flags) {
-  gboolean active = osm2go_platform::check_button_get_active(button) ? TRUE : FALSE;
+static void on_toggled(GtkWidget *button, const int *flags)
+{
+  gboolean not_active = osm2go_platform::check_button_get_active(button) ? FALSE : TRUE;
 
-  GtkWidget *dialog = gtk_widget_get_toplevel(button);
+  GtkDialog *dialog = GTK_DIALOG(gtk_widget_get_toplevel(button));
 
   if(*flags & MISC_AGAIN_FLAG_DONT_SAVE_NO)
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), RESPONSE_NO, !active);
+    gtk_dialog_set_response_sensitive(dialog, RESPONSE_NO, not_active);
 
   if(*flags & MISC_AGAIN_FLAG_DONT_SAVE_YES)
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), RESPONSE_YES, !active);
+    gtk_dialog_set_response_sensitive(dialog, RESPONSE_YES, not_active);
 }
 
 bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags, const char *title,

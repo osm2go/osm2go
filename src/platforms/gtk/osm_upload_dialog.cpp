@@ -140,7 +140,7 @@ static gboolean cb_focus_in(GtkTextView *view, GdkEventFocus *, GtkTextBuffer *b
 
   g_object_set_data(G_OBJECT(view), "first_click", GINT_TO_POINTER(FALSE));
 
-  if(first_click) {
+  if(first_click == TRUE) {
     GtkTextIter start, end;
     gtk_text_buffer_get_start_iter(buffer, &start);
     gtk_text_buffer_get_end_iter(buffer, &end);

@@ -88,7 +88,7 @@ static wms_server_t *get_selection(GtkTreeSelection *selection) {
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
-  if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
+  if(gtk_tree_selection_get_selected(selection, &model, &iter) == TRUE) {
     wms_server_t *wms_server;
     gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &wms_server, -1);
     assert(wms_server != nullptr);
@@ -150,7 +150,8 @@ static void wms_server_selected(wms_server_context_t *context,
     gtk_label_set_text(GTK_LABEL(context->server_label), selected->server.c_str());
   } else {
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
-                                      GTK_RESPONSE_ACCEPT, !context->wms->server.empty());
+                                      GTK_RESPONSE_ACCEPT,
+                                      context->wms->server.empty() ? FALSE : TRUE);
 
     gtk_label_set_text(GTK_LABEL(context->server_label), context->wms->server.c_str());
   }
@@ -170,7 +171,7 @@ static void on_server_remove(wms_server_context_t *context) {
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
-  if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
+  if(gtk_tree_selection_get_selected(selection, &model, &iter) == TRUE) {
     wms_server_t *server = nullptr;
     gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &server, -1);
 
@@ -216,8 +217,7 @@ static void callback_modified_name(GtkWidget *widget) {
 }
 
 /* edit url and path of a given wms server entry */
-bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
-                     wms_server_t *wms_server) {
+bool wms_server_edit(wms_server_context_t *context, bool edit_name, wms_server_t *wms_server) {
   osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Edit WMS Server"),
                                               GTK_WINDOW(context->dialog),
                                               GTK_DIALOG_MODAL,
@@ -237,7 +237,7 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
   gtk_table_attach_defaults(GTK_TABLE(table), name, 1, 2, 0, 1);
   gtk_entry_set_activates_default(GTK_ENTRY(name), TRUE);
-  gtk_widget_set_sensitive(GTK_WIDGET(name), edit_name);
+  gtk_widget_set_sensitive(GTK_WIDGET(name), edit_name ? TRUE : FALSE);
   g_signal_connect(name, "changed", G_CALLBACK(callback_modified_name), nullptr);
 
   label = gtk_label_new(_("Server:"));
@@ -275,7 +275,7 @@ static void on_server_edit(wms_server_context_t *context) {
   wms_server_t *server = get_selection(list_get_selection(context->list));
   assert(server != nullptr);
 
-  wms_server_edit(context, FALSE, server);
+  wms_server_edit(context, false, server);
 }
 
 struct store_fill_functor {
@@ -306,7 +306,7 @@ static void on_server_add(wms_server_context_t *context) {
      !context->appdata.project->wms_server.empty())
     newserver->server = context->appdata.project->wms_server;
 
-  if(!wms_server_edit(context, TRUE, newserver)) {
+  if(!wms_server_edit(context, true, newserver)) {
     /* user has cancelled request. remove newly added item */
     g_debug("user clicked cancel");
 

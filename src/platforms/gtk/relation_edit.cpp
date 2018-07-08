@@ -230,12 +230,12 @@ static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event, gpoint
   if(event->window == gtk_tree_view_get_bin_window(GTK_TREE_VIEW(widget))) {
     GtkTreePath *path;
 
-    if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),
-		     event->x, event->y, &path, nullptr, nullptr, nullptr)) {
+    if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), event->x, event->y, &path,
+                                     nullptr, nullptr, nullptr) == TRUE) {
       GtkTreeSelection *sel =
 	gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
 
-      if(!gtk_tree_selection_path_is_selected(sel, path))
+      if(gtk_tree_selection_path_is_selected(sel, path) != TRUE)
 	gtk_tree_selection_select_path(sel, path);
       else
 	gtk_tree_selection_unselect_path(sel, path);
@@ -393,7 +393,7 @@ static relation_t *get_selected_relation(relation_context_t *context) {
   GtkTreeIter       iter;
 
   selection = list_get_selection(context->list);
-  if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
+  if(gtk_tree_selection_get_selected(selection, &model, &iter) == TRUE) {
     relation_t *relation;
     gtk_tree_model_get(model, &iter, RELATION_COL_DATA, &relation, -1);
     return(relation);
@@ -419,7 +419,7 @@ relation_list_changed(GtkTreeSelection *selection, gpointer userdata) {
   GtkTreeModel *model = nullptr;
   GtkTreeIter iter;
 
-  if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
+  if(gtk_tree_selection_get_selected(selection, &model, &iter) == TRUE) {
     relation_t *relation = nullptr;
     gtk_tree_model_get(model, &iter, RELATION_COL_DATA, &relation, -1);
     relation_list_selected(list, relation);
@@ -449,7 +449,7 @@ member_list_selection_func(GtkTreeSelection *, GtkTreeModel *model,
                            GtkTreePath *path, gboolean, gpointer) {
   GtkTreeIter iter;
 
-  if(gtk_tree_model_get_iter(model, &iter, path)) {
+  if(gtk_tree_model_get_iter(model, &iter, path) == TRUE) {
     assert_cmpnum(gtk_tree_path_get_depth(path), 1);
 
     const member_t *member = nullptr;
@@ -483,7 +483,7 @@ void members_list_functor::operator()(const member_t &member)
                                     MEMBER_COL_ID,       id.c_str(),
                                     MEMBER_COL_NAME,     name.c_str(),
                                     MEMBER_COL_ROLE,     member.role,
-                                    MEMBER_COL_REF_ONLY, member.object.type >= object_t::NODE_ID,
+                                    MEMBER_COL_REF_ONLY, (member.object.type >= object_t::NODE_ID) ? TRUE : FALSE,
                                     MEMBER_COL_DATA,     &member,
                                     -1);
 }

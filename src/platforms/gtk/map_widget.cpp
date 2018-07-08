@@ -135,7 +135,7 @@ gboolean map_internal::map_motion_notify_event(GtkWidget *, GdkEventMotion *even
   last_time = event->time;
 #endif
 
-  if(gtk_events_pending())
+  if(gtk_events_pending() == TRUE)
     return FALSE;
 
   if(!map->pen_down.is)
@@ -225,7 +225,7 @@ static gboolean map_autosave(gpointer data) {
 
   /* only do this if root window has focus as otherwise */
   /* a dialog may be open and modifying the basic structures */
-  if(gtk_window_is_active(GTK_WINDOW(appdata_t::window))) {
+  if(gtk_window_is_active(GTK_WINDOW(appdata_t::window)) == TRUE) {
     g_debug("autosave ...");
 
     if(likely(map->appdata.project)) {

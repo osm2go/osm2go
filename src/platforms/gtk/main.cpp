@@ -153,7 +153,7 @@ void appdata_t::main_ui_enable() {
     MainUi::SUBMENU_WMS
   } };
   for(unsigned int i = 0; i < osm_active_items.size(); i++)
-    uicontrol->setActionEnable(osm_active_items[i], osm_valid);
+    uicontrol->setActionEnable(osm_active_items[i], osm_valid == TRUE);
 
   gtk_widget_set_sensitive(static_cast<appdata_internal *>(this)->btn_zoom_in, osm_valid);
   gtk_widget_set_sensitive(static_cast<appdata_internal *>(this)->btn_zoom_out, osm_valid);
@@ -381,7 +381,7 @@ cb_menu_track_import(appdata_t *appdata) {
 
   settings_t::ref settings = settings_t::instance();
   if(!settings->track_path.empty()) {
-    if(!g_file_test(settings->track_path.c_str(), G_FILE_TEST_EXISTS)) {
+    if(g_file_test(settings->track_path.c_str(), G_FILE_TEST_EXISTS) != TRUE) {
       std::string::size_type slashpos = settings->track_path.rfind('/');
       if(slashpos != std::string::npos) {
         settings->track_path[slashpos] = '\0';  // seperate path from file
@@ -451,7 +451,7 @@ cb_menu_track_export(appdata_t *appdata) {
   g_debug("set filename <%s>\n", settings->track_path.c_str());
 
   if(!settings->track_path.empty()) {
-    if(!g_file_test(settings->track_path.c_str(), G_FILE_TEST_EXISTS)) {
+    if(g_file_test(settings->track_path.c_str(), G_FILE_TEST_EXISTS) != TRUE) {
       std::string::size_type slashpos = settings->track_path.rfind('/');
       if(slashpos != std::string::npos) {
         settings->track_path[slashpos] = '\0';  // seperate path from file
@@ -474,7 +474,7 @@ cb_menu_track_export(appdata_t *appdata) {
     if(filename) {
       g_debug("export to %s\n", filename.get());
 
-      if(!g_file_test(filename.get(), G_FILE_TEST_EXISTS) ||
+      if(g_file_test(filename.get(), G_FILE_TEST_EXISTS) != TRUE ||
          yes_no_f(dialog.get(), MISC_AGAIN_ID_EXPORT_OVERWRITE | MISC_AGAIN_FLAG_DONT_SAVE_NO,
                   _("Overwrite existing file"),
                   _("The file already exists. "

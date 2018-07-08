@@ -553,7 +553,7 @@ on_map_button_press_event(GtkWidget *widget,
   if(osd->check(osd, TRUE, event->x, event->y) != OSD_NONE)
     return FALSE;
 
-  if(osm_gps_map_osd_get_state(map))
+  if(osm_gps_map_osd_get_state(map) == TRUE)
     return FALSE;
 
   /* remove existing marker */
@@ -589,7 +589,7 @@ on_map_motion_notify_event(GtkWidget *widget,
   }
 
   /* returning true here disables dragging in osm-gps-map */
-  return !osm_gps_map_osd_get_state(map);
+  return osm_gps_map_osd_get_state(map) == TRUE ? FALSE : TRUE;
 }
 
 static gboolean
@@ -641,7 +641,7 @@ on_map_button_release_event(GtkWidget *widget,
     return FALSE;
 
   /* returning true here disables dragging in osm-gps-map */
-  return !osm_gps_map_osd_get_state(map);
+  return osm_gps_map_osd_get_state(map) == TRUE ? FALSE : TRUE;
 }
 
 /* updating the map while the user manually changes some coordinates */

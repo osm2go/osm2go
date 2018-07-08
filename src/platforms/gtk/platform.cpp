@@ -38,7 +38,7 @@ void osm2go_platform::gtk_widget_deleter::operator()(GtkWidget *mem) {
 
 void osm2go_platform::process_events()
 {
-  while(gtk_events_pending())
+  while(gtk_events_pending() == TRUE)
     gtk_main_iteration();
 }
 
@@ -102,7 +102,7 @@ bool osm2go_platform::parse_color_string(const char *str, color_t &color)
     return (*err == '\0');
   } else {
     GdkColor gdk_color;
-    if(gdk_color_parse(str, &gdk_color)) {
+    if(gdk_color_parse(str, &gdk_color) == TRUE) {
       color = color_t(gdk_color.red, gdk_color.green, gdk_color.blue);
       return true;
     }
