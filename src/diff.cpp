@@ -96,10 +96,10 @@ xmlNodePtr diff_save_objects::diff_save_state_n_id(const base_object_t *obj,
 
 struct diff_save_nodes : diff_save_objects {
   explicit diff_save_nodes(xmlNodePtr r) : diff_save_objects(r) { }
-  void operator()(const std::pair<item_id_t, node_t *> pair);
+  void operator()(const std::pair<item_id_t, node_t *> &pair);
 };
 
-void diff_save_nodes::operator()(const std::pair<item_id_t, node_t *> pair)
+void diff_save_nodes::operator()(const std::pair<item_id_t, node_t *> &pair)
 {
   const node_t * const node = pair.second;
   if(!node->flags)
@@ -118,10 +118,10 @@ void diff_save_nodes::operator()(const std::pair<item_id_t, node_t *> pair)
 
 struct diff_save_ways : diff_save_objects {
   explicit diff_save_ways(xmlNodePtr r) : diff_save_objects(r) { }
-  void operator()(const std::pair<item_id_t, way_t *> pair);
+  void operator()(const std::pair<item_id_t, way_t *> &pair);
 };
 
-void diff_save_ways::operator()(const std::pair<item_id_t, way_t *> pair)
+void diff_save_ways::operator()(const std::pair<item_id_t, way_t *> &pair)
 {
   const way_t * const way = pair.second;
   if(!way->flags)
@@ -143,11 +143,11 @@ void diff_save_ways::operator()(const std::pair<item_id_t, way_t *> pair)
 
 struct diff_save_relations : diff_save_objects {
   explicit diff_save_relations(xmlNodePtr r) : diff_save_objects(r) { }
-  void operator()(const std::pair<item_id_t, relation_t *> pair);
+  void operator()(const std::pair<item_id_t, relation_t *> &pair);
 };
 
 /* store all modfied relations */
-void diff_save_relations::operator()(const std::pair<item_id_t, relation_t *> pair)
+void diff_save_relations::operator()(const std::pair<item_id_t, relation_t *> &pair)
 {
   const relation_t * const relation = pair.second;
   if(!relation->flags)
