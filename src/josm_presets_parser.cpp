@@ -508,9 +508,9 @@ PresetSax::AttrMap PresetSax::findAttributes(const char **attrs, const char **na
   return ret;
 }
 
-#define NULL_OR_VAL(a) (a ? a : std::string())
-#define NULL_OR_MAP_STR(it) (it != aitEnd ? it->second : std::string())
-#define NULL_OR_MAP_VAL(it) (it != aitEnd ? it->second : nullptr)
+#define NULL_OR_VAL(a) ((a) ? (a) : std::string())
+#define NULL_OR_MAP_STR(it) ((it) != aitEnd ? (it)->second : std::string())
+#define NULL_OR_MAP_VAL(it) ((it) != aitEnd ? (it)->second : nullptr)
 
 void PresetSax::startElement(const char *name, const char **attrs)
 {

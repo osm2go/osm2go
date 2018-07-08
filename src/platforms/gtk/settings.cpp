@@ -38,7 +38,7 @@
 #include "osm2go_platform_gtk.h"
 #include "osm2go_stl.h"
 
-#define ST_ENTRY(a) std::pair<const char *, typeof(a) *>(#a, &a)
+#define ST_ENTRY(a) std::pair<const char *, typeof(a) *>(#a, &(a))
 
 #define KEYBASE "/apps/" PACKAGE "/"
 static const std::string keybase = KEYBASE;

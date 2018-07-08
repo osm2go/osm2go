@@ -227,7 +227,7 @@ static void gps_unpack(char *buf, gps_data_t *gpsdata) {
 			  alt, eph,
 			  mode);
 	  if (st >= 5) {
-#define DEFAULT(val) (val[0] == '?') ? NAN : g_ascii_strtod(val, nullptr)
+#define DEFAULT(val) ((val)[0] == '?') ? NAN : g_ascii_strtod((val), nullptr)
           gps_fix_t nf(pos_t(DEFAULT(lat), DEFAULT(lon)), DEFAULT(alt), DEFAULT(eph));
 #undef DEFAULT
 	    if (st >= 6)
