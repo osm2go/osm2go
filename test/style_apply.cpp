@@ -24,6 +24,7 @@
 appdata_t::appdata_t(map_state_t &mstate)
   : uicontrol(nullptr)
   , map_state(mstate)
+  , map(nullptr)
   , icons(icon_t::instance())
 {
 }

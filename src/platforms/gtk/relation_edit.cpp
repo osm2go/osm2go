@@ -80,7 +80,7 @@ struct entry_insert_text {
 
 struct relation_context_t {
   inline relation_context_t(map_t *m, osm_t::ref o, presets_items *p, GtkWidget *d)
-    : map(m), osm(o), presets(p), dialog(d) {}
+    : map(m), osm(o), presets(p), dialog(d), list(nullptr), show_btn(nullptr) {}
 
   map_t * const map;
   osm_t::ref osm;

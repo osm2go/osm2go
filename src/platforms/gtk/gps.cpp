@@ -330,6 +330,8 @@ gps_state_t *gps_state_t::create(GpsCallback cb, void *context) {
 
 gpsd_state_t::gpsd_state_t(GpsCallback cb, void *context)
   : gps_state_t(cb, context)
+  , iconn(nullptr)
+  , socket(nullptr)
   , enable(false)
 {
   g_debug("GPS init: Using gpsd\n");
