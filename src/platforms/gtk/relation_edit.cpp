@@ -475,7 +475,7 @@ void members_list_functor::operator()(const member_t &member)
   const std::string &id = member.object.id_string();
 
   /* try to find something descriptive */
-  const std::string &name = member.object.is_real() ? member.object.get_name(*osm.get()) : std::string();
+  const std::string &name = member.object.is_real() ? member.object.get_name(*osm) : std::string();
 
   /* Append a row and fill in some data */
   gtk_list_store_insert_with_values(store, &iter, -1,

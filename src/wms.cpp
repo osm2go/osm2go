@@ -528,7 +528,7 @@ void wms_remove(appdata_t &appdata) {
 
   appdata.map->remove_bg_image();
 
-  wms_remove_file(*appdata.project.get());
+  wms_remove_file(*appdata.project);
 }
 
 struct server_preset_s {

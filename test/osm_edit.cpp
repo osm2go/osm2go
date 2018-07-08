@@ -1440,75 +1440,75 @@ static void test_description()
   osm->node_attach(n);
 
   object_t o(n);
-  assert_cmpstr(o.get_name(*osm.get()), "unspecified node");
+  assert_cmpstr(o.get_name(*osm), "unspecified node");
 
   // test the other "unspecified" code path: tags, but no known ones
   osm_t::TagMap tags;
   tags.insert(osm_t::TagMap::value_type("source", "bong"));
   n->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm.get()), "unspecified node");
+  assert_cmpstr(o.get_name(*osm), "unspecified node");
 
   tags.insert(osm_t::TagMap::value_type("name", "foo"));
 
   n->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm.get()), "node: \"foo\"");
+  assert_cmpstr(o.get_name(*osm), "node: \"foo\"");
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("highway", "emergency_access_point"));
   tags.insert(osm_t::TagMap::value_type("ref", "H-112"));
   n->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm.get()), "emergency access point: \"H-112\"");
+  assert_cmpstr(o.get_name(*osm), "emergency access point: \"H-112\"");
 
   way_t *w = new way_t();
   osm->way_attach(w);
   o = w;
 
-  assert_cmpstr(o.get_name(*osm.get()), "unspecified way/area");
+  assert_cmpstr(o.get_name(*osm), "unspecified way/area");
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("highway", "pedestrian"));
   w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm.get()), _("pedestrian way"));
+  assert_cmpstr(o.get_name(*osm), _("pedestrian way"));
   tags.insert(osm_t::TagMap::value_type("area", "yes"));
   w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm.get()), _("pedestrian area"));
+  assert_cmpstr(o.get_name(*osm), _("pedestrian area"));
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("highway", "construction"));
   w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm.get()), _("road/street under construction"));
+  assert_cmpstr(o.get_name(*osm), _("road/street under construction"));
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("name", "foo"));
   tags.insert(osm_t::TagMap::value_type("highway", "residential"));
   w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm.get()), "residential road: \"foo\"");
+  assert_cmpstr(o.get_name(*osm), "residential road: \"foo\"");
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("ref", "B217"));
   tags.insert(osm_t::TagMap::value_type("highway", "primary"));
   w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm.get()), "primary road: \"B217\"");
+  assert_cmpstr(o.get_name(*osm), "primary road: \"B217\"");
 
   // building without address given
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("building", "residential"));
   w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm.get()), "building");
+  assert_cmpstr(o.get_name(*osm), "building");
 
   tags.insert(osm_t::TagMap::value_type("addr:housename", "Baskerville Hall"));
   w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm.get()), "building: \"Baskerville Hall\"");
+  assert_cmpstr(o.get_name(*osm), "building: \"Baskerville Hall\"");
   // name is favored over addr:housename
   tags.insert(osm_t::TagMap::value_type("name", "Brook Hall"));
   w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm.get()), "building: \"Brook Hall\"");
+  assert_cmpstr(o.get_name(*osm), "building: \"Brook Hall\"");
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("building", "residential"));
   tags.insert(osm_t::TagMap::value_type("addr:housenumber", "42"));
   w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm.get()), "building housenumber 42");
+  assert_cmpstr(o.get_name(*osm), "building housenumber 42");
 
   relation_t *r = new relation_t();
   osm->relation_attach(r);
@@ -1518,14 +1518,14 @@ static void test_description()
   r->tags.replace(rtags);
   r->members.push_back(member_t(object_t(w), nullptr));
   // description should not have changed by now
-  assert_cmpstr(o.get_name(*osm.get()), "building housenumber 42");
+  assert_cmpstr(o.get_name(*osm), "building housenumber 42");
   r->members.push_back(member_t(object_t(w), "house"));
-  assert_cmpstr(o.get_name(*osm.get()), "building 21 Jump Street 42");
+  assert_cmpstr(o.get_name(*osm), "building 21 Jump Street 42");
 
   // addr:street takes precedence
   tags.insert(osm_t::TagMap::value_type("addr:street", "Highway to hell"));
   w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm.get()), "building Highway to hell 42");
+  assert_cmpstr(o.get_name(*osm), "building Highway to hell 42");
 
   // check PTv2 relation naming
   r = new relation_t();
@@ -1540,20 +1540,20 @@ static void test_description()
   tags.insert(osm_t::TagMap::value_type("public_transport", "platform"));
   o = n;
   n->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm.get()), "platform");
+  assert_cmpstr(o.get_name(*osm), "platform");
 
   // wrong role
   r->members.push_back(member_t(o, nullptr));
-  assert_cmpstr(o.get_name(*osm.get()), "platform");
+  assert_cmpstr(o.get_name(*osm), "platform");
 
   // correct role
   r->members.push_back(member_t(o, "platform"));
-  assert_cmpstr(o.get_name(*osm.get()), "platform: \"Kröpcke\"");
+  assert_cmpstr(o.get_name(*osm), "platform: \"Kröpcke\"");
 
   // local name takes precedence
   tags.insert(osm_t::TagMap::value_type("name", "Kroepcke"));
   n->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm.get()), "platform: \"Kroepcke\"");
+  assert_cmpstr(o.get_name(*osm), "platform: \"Kroepcke\"");
 }
 
 static void test_relation_members()

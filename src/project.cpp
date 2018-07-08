@@ -450,7 +450,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
 
   appdata.track_clear();
   if(track_restore(appdata))
-    appdata.map->track_draw(settings_t::instance()->trackVisibility, *appdata.track.track.get());
+    appdata.map->track_draw(settings_t::instance()->trackVisibility, *appdata.track.track);
 
   /* finally load a background if present */
   osm2go_platform::process_events();

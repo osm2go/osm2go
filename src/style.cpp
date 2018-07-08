@@ -212,7 +212,7 @@ style_t *style_load_fname(const std::string &filename) {
   xmlChar *fname = nullptr;
   std::unique_ptr<style_t> style(new style_t());
 
-  if(likely(style_parse(filename, &fname, false, *style.get()))) {
+  if(likely(style_parse(filename, &fname, false, *style))) {
     printf("  elemstyle filename: %s\n", fname);
     style->elemstyles = josm_elemstyles_load(reinterpret_cast<char *>(fname));
     xmlFree(fname);

@@ -283,7 +283,7 @@ static bool track_visibility_select(GtkWidget *parent) {
 static void
 cb_menu_track_vis(appdata_t *appdata) {
   if(track_visibility_select(appdata_t::window) && appdata->track.track)
-    appdata->map->track_draw(settings_t::instance()->trackVisibility, *appdata->track.track.get());
+    appdata->map->track_draw(settings_t::instance()->trackVisibility, *appdata->track.track);
 }
 
 static void
@@ -410,7 +410,7 @@ cb_menu_track_import(appdata_t *appdata) {
     /* load a track */
     appdata->track.track.reset(track_import(filename.get()));
     if(appdata->track.track) {
-      appdata->map->track_draw(settings->trackVisibility, *appdata->track.track.get());
+      appdata->map->track_draw(settings->trackVisibility, *appdata->track.track);
 
       settings->track_path = filename.get();
     }

@@ -65,7 +65,7 @@ canvas_item_t *map_item_chain_t::firstCanvasItem() const {
 
 static void map_statusbar(const std::unique_ptr<MainUi> &uicontrol, const object_t &object,
                           osm_t::ref osm) {
-  const std::string &str = object.get_name(*osm.get());
+  const std::string &str = object.get_name(*osm);
   MainUi::NotificationFlags flags = object.obj->tags.hasTagCollisions() ?
                                     MainUi::Highlight : MainUi::NoFlags;
   uicontrol->showNotification(str.c_str(), flags);
