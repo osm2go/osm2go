@@ -94,8 +94,8 @@ bool presets_item_t::matches(const osm_t::TagMap &tags, bool interactive) const
   bool hasPositive = false;
   used_preset_functor fc(tags, is_interactive, hasPositive);
   if(isItem()) {
-    const presets_item * const item = static_cast<const presets_item *>(this);
-    if(std::find_if(item->widgets.begin(), item->widgets.end(), fc) != item->widgets.end())
+    const std::vector<presets_element_t *> &widgets = static_cast<const presets_item *>(this)->widgets;
+    if(std::find_if(widgets.begin(), widgets.end(), fc) != widgets.end())
       return false;
   }
 
@@ -120,9 +120,9 @@ struct relation_preset_functor {
 bool relation_preset_functor::operator()(const presets_item_t *item)
 {
   if(item->type & presets_item_t::TY_GROUP) {
-    const presets_item_group * const gr = static_cast<const presets_item_group *>(item);
-    const std::vector<presets_item_t *>::const_iterator itEnd = gr->items.end();
-    return std::find_if(gr->items.begin(), itEnd, *this) != itEnd;
+    const std::vector<presets_item_t *> &items = static_cast<const presets_item_group *>(item)->items;
+    const std::vector<presets_item_t *>::const_iterator itEnd = items.end();
+    return std::find_if(items.begin(), itEnd, *this) != itEnd;
   }
 
   if(!(item->type & typemask))
