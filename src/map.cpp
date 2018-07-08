@@ -100,7 +100,7 @@ static void map_node_select(map_t *map, node_t *node) {
   map_item->highlight = false;
 
   /* node may not have any visible representation at all */
-  if(node->map_item_chain)
+  if(node->map_item_chain != nullptr)
     map_item->item = node->map_item_chain->firstCanvasItem();
   else
     map_item->item = nullptr;
@@ -133,7 +133,7 @@ static void map_node_select(map_t *map, node_t *node) {
   map->highlight.circle_new(map, CANVAS_GROUP_NODES_HL, new_map_item, x, y,
                             radius, map->style->highlight.color);
 
-  if(!map_item->item) {
+  if(map_item->item == nullptr) {
     /* and draw a fake node */
     new_map_item = new map_item_t(*map_item);
     new_map_item->highlight = true;
@@ -192,7 +192,7 @@ void draw_selected_way_functor::operator()(node_t* node)
   item.object = node;
 
   /* draw an arrow between every two nodes */
-  if(last) {
+  if(last != nullptr) {
     struct { float x, y;} center, diff;
     center.x = (last->lpos.x + node->lpos.x)/2;
     center.y = (last->lpos.y + node->lpos.y)/2;
@@ -315,7 +315,7 @@ void relation_select_functor::operator()(member_t& member)
   }
 
   /* attach item to item chain */
-  if(item)
+  if(item != nullptr)
     map->highlight.items.push_back(item);
 }
 
@@ -396,7 +396,7 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
   map_item->item->set_zoom_max(node->zoom_max / (2 * map->state.detail));
 
   /* attach map_item to nodes map_item_chain */
-  if(!node->map_item_chain)
+  if(node->map_item_chain == nullptr)
     node->map_item_chain = new map_item_chain_t();
   node->map_item_chain->map_items.push_back(map_item);
 
@@ -450,7 +450,7 @@ void map_way_draw_functor::operator()(way_t *way)
     return;
 
   /* attach map_item to ways map_item_chain */
-  if(!way->map_item_chain)
+  if(way->map_item_chain == nullptr)
     way->map_item_chain = new map_item_chain_t();
   std::vector<map_item_t *> &chain = way->map_item_chain->map_items;
   map_item_t *map_item;
@@ -657,7 +657,7 @@ static void map_free_map_item_chains(appdata_t &appdata) {
 map_item_t *map_t::item_at(lpos_t pos) {
   canvas_item_t *item = canvas->get_item_at(pos);
 
-  if(!item) {
+  if(item == nullptr) {
     printf("  there's no item\n");
     return nullptr;
   }
@@ -666,7 +666,7 @@ map_item_t *map_t::item_at(lpos_t pos) {
 
   map_item_t *map_item = item->get_user_data();
 
-  if(!map_item) {
+  if(map_item == nullptr) {
     printf("  item has no user data!\n");
     return nullptr;
   }
@@ -686,7 +686,7 @@ void map_t::pen_down_item() {
   pen_down.on_item = item_at(canvas->window2world(pen_down.at.x, pen_down.at.y));
 
   /* no item or already a real one */
-  if(!pen_down.on_item || !pen_down.on_item->highlight)
+  if(pen_down.on_item == nullptr || !pen_down.on_item->highlight)
     return;
 
   /* get the item (parent) this item is the highlight of */
@@ -694,10 +694,10 @@ void map_t::pen_down_item() {
   case object_t::NODE:
   case object_t::WAY: {
     visible_item_t * const vis = static_cast<visible_item_t *>(pen_down.on_item->object.obj);
-    if(vis->map_item_chain && !vis->map_item_chain->map_items.empty()) {
+    if(vis->map_item_chain != nullptr && !vis->map_item_chain->map_items.empty()) {
       map_item_t *parent = vis->map_item_chain->map_items.front();
 
-      if(parent) {
+      if(parent != nullptr) {
         printf("  using parent item %s #" ITEM_ID_FORMAT "\n", vis->apiString(), vis->id);
         pen_down.on_item = parent;
         return;
@@ -761,7 +761,7 @@ void map_t::set_zoom(double zoom, bool update_scroll_offsets) {
       map_limit_scroll(this, state.scroll_offset.x, state.scroll_offset.y);
   }
 
-  if(gps_item) {
+  if(gps_item != nullptr) {
     float radius = style->track.width / 2.0;
     if(zoom < GPS_RADIUS_LIMIT) {
       radius *= GPS_RADIUS_LIMIT;
@@ -792,7 +792,7 @@ void map_t::scroll_step(int x, int y) {
 bool map_t::item_is_selected_node(const map_item_t *map_item) const {
   printf("check if item is a selected node\n");
 
-  if(!map_item) {
+  if(map_item == nullptr) {
     printf("  no item requested\n");
     return false;
   }
@@ -822,7 +822,7 @@ bool map_t::item_is_selected_node(const map_item_t *map_item) const {
 bool map_t::item_is_selected_way(const map_item_t *map_item) const {
   printf("check if item is the selected way\n");
 
-  if(!map_item) {
+  if(map_item == nullptr) {
     printf("  no item requested\n");
     return false;
   }
@@ -850,7 +850,7 @@ static void map_handle_click(map_t *map) {
 
   /* problem: on_item may be the highlight itself! So store it! */
   map_item_t map_item;
-  if(map->pen_down.on_item)
+  if(map->pen_down.on_item != nullptr)
     map_item = *map->pen_down.on_item;
 
   /* if we aready have something selected, then de-select it */
@@ -1048,7 +1048,7 @@ void map_t::button_release(int x, int y) {
 
     item_deselect();
 
-    if(node) {
+    if(node != nullptr) {
       map_node_select(this, node);
 
       /* let the user specify some tags for the new node */
@@ -1318,7 +1318,7 @@ void map_t::action_ok() {
 
     item_deselect();
 
-    if(node) {
+    if(node != nullptr) {
       map_node_select(this, node);
 
       /* let the user specify some tags for the new node */
@@ -1683,7 +1683,7 @@ void map_t::show_all() {
 }
 
 void map_t::detail_change(float detail, const char *banner_msg) {
-  if(banner_msg)
+  if(banner_msg != nullptr)
     appdata.uicontrol->showNotification(banner_msg, MainUi::Busy);
   /* deselecting anything allows us not to care about automatic deselection */
   /* as well as items becoming invisible by the detail change */
@@ -1694,7 +1694,7 @@ void map_t::detail_change(float detail, const char *banner_msg) {
 
   clear(MAP_LAYER_OBJECTS_ONLY);
   paint();
-  if(banner_msg)
+  if(banner_msg != nullptr)
     appdata.uicontrol->showNotification(nullptr, MainUi::Busy);
 }
 

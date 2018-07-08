@@ -149,7 +149,7 @@ void counter::operator()(const presets_element_t *w)
 static void checkItem(const presets_item_t *item)
 {
   const presets_item_named * const vis = dynamic_cast<const presets_item_named *>(item);
-  if(!vis)
+  if(vis == nullptr)
     return;
 
   if(!vis->icon.empty()) {
@@ -160,9 +160,8 @@ static void checkItem(const presets_item_t *item)
   }
 
   const presets_item_group * const group = dynamic_cast<const presets_item_group *>(vis);
-  if(group) {
+  if(group != nullptr)
     std::for_each(group->items.begin(), group->items.end(), checkItem);
-  }
 }
 
 static void test_roles(const presets_items *presets)

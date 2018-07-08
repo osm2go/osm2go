@@ -72,7 +72,8 @@ bool project_read(const std::string &project_file, project_t *project,
   }
 
   bool hasProj = false;
-  for (xmlNode *cur_node = xmlDocGetRootElement(doc.get()); cur_node; cur_node = cur_node->next) {
+  for (xmlNode *cur_node = xmlDocGetRootElement(doc.get()); cur_node != nullptr;
+       cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcmp(reinterpret_cast<const char *>(cur_node->name), "proj") == 0) {
         hasProj = true;

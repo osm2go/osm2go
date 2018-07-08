@@ -62,7 +62,7 @@ static void attach_both(preset_attach_context &attctx, GtkWidget *widget) {
 }
 
 static void attach_right(preset_attach_context &attctx, const char *text, GtkWidget *widget) {
-  if(text) {
+  if(text != nullptr) {
     gtk_table_attach(attctx.table, gtk_label_new(text), 0, 1, attctx.y, attctx.y + 1,
                      static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
                      static_cast<GtkAttachOptions>(0), 0, 0);
@@ -209,7 +209,7 @@ void add_widget_functor::operator()(const WidgetMap::key_type w)
 
   presets_element_t::attach_key *widget = w->attach(attctx, preset);
 
-  if(widget)
+  if(widget != nullptr)
     gtk_widgets[w] = widget;
 }
 
@@ -524,7 +524,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
 
   GtkWidget * const view = GTK_WIDGET(gtk_tree_selection_get_tree_view(selection));
 
-  if(item && !(item->type & presets_item_t::TY_GROUP)) {
+  if(item != nullptr && !(item->type & presets_item_t::TY_GROUP)) {
     /* save item pointer in dialog */
     context->selected_item = static_cast<presets_item *>(item);
     /* and request closing of menu */
@@ -541,13 +541,13 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
     GtkWidget *sub;
     presets_context_t::submenu_vector::iterator subitBegin = context->submenus.begin();
     presets_context_t::submenu_vector::iterator subitEnd = context->submenus.end();
-    if(sub_item) {
+    if(sub_item != nullptr) {
       /* normal submenu */
 
       // this item is not currently visible
       // this is connected to the "changed" signal, so clicking an already selected
       // submenu does not cause an event
-      if(sub_item->parent) {
+      if(sub_item->parent != nullptr) {
         // the parent item has to be visible, otherwise this could not have been clicked
         presets_context_t::submenu_vector::iterator it = std::find(subitBegin, subitEnd,
                                                                    sub_item->parent);
@@ -862,7 +862,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event) {
   // then delete the dialog, it would delete the submenus first otherwise
   dialog.reset();
 
-  if(presets_context_t::instance->selected_item) {
+  if(presets_context_t::instance->selected_item != nullptr) {
     presets_item_dialog(presets_context_t::instance->selected_item);
     presets_context_t::instance->selected_item = nullptr;
   }
@@ -1062,7 +1062,7 @@ presets_element_t::attach_key *presets_element_link::attach(preset_attach_contex
   g_string label(g_strdup_printf(_("[Preset] %s"), item->name.c_str()));
   GtkWidget *button = button_new_with_label(label.get());
   GtkWidget *img = icon_t::instance().widget_load(item->icon, 16);
-  if(img) {
+  if(img != nullptr) {
     gtk_button_set_image(GTK_BUTTON(button), img);
     // make sure the image is always shown, Hildon seems to hide it by default
     gtk_widget_show(img);

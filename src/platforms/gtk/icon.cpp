@@ -59,7 +59,7 @@ public:
 
 icon_buffer::icon_buffer_item::icon_buffer_item(Pixmap nbuf)
   : buf(nbuf)
-  , use(nbuf ? 1 : 0)
+  , use(nbuf != nullptr ? 1 : 0)
 {
 }
 
@@ -127,7 +127,7 @@ icon_t::icon_item *icon_t::load(const std::string &sname, int limit) {
 
 GtkWidget *icon_t::widget_load(const std::string &name, int limit) {
   icon_item *pix = load(name, limit);
-  if(!pix)
+  if(pix == nullptr)
     return nullptr;
 
   return gtk_image_new_from_pixbuf(pix->buffer());

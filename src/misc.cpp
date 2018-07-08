@@ -131,7 +131,7 @@ bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags, const c
 
   bool yes = (gtk_dialog_run(GTK_DIALOG(dialog.get())) == RESPONSE_YES);
 
-  if(cbut && gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cbut))) {
+  if(cbut != nullptr && gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cbut)) == TRUE) {
     /* the user doesn't want to see this dialog again */
 
     dialog_again.not_again |= again_bit;

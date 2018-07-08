@@ -103,7 +103,8 @@ static int josm_type_bit(const char *type, char sep) {
 /* parse a comma seperated list of types and set their bits */
 static unsigned int josm_type_parse(const char *type) {
   unsigned int type_mask = 0;
-  if(!type) return presets_item_t::TY_ALL;
+  if(type == nullptr)
+    return presets_item_t::TY_ALL;
 
   for(const char *ntype = strchr(type, ',');
       ntype != nullptr; ntype = strchr(type, ',')) {
@@ -336,7 +337,7 @@ const std::vector<std::string> &userLangs()
     const char *lcm = getenv("LC_MESSAGES");
     if(lcm == nullptr || *lcm == '\0')
       lcm = getenv("LANG");
-    if(lcm && *lcm) {
+    if(lcm != nullptr && *lcm != '\0') {
       std::string lc = lcm;
       std::string::size_type d = lc.find('.');
       if(d != std::string::npos)
@@ -446,7 +447,7 @@ const char *PresetSax::findAttribute(const char **attrs, const char *name, bool 
   // the defaut one.
   const char *c = nullptr;
 
-  for(unsigned int i = 0; attrs[i]; i += 2) {
+  for(unsigned int i = 0; attrs[i] != nullptr; i += 2) {
     // Check if the given attribute begins with one of the preferred language
     // codes. If yes, skip over the language code and check this one.
     const char *a = attrs[i];
@@ -476,7 +477,7 @@ PresetSax::AttrMap PresetSax::findAttributes(const char **attrs, const char **na
 {
   AttrMap ret;
 
-  for(unsigned int i = 0; attrs[i]; i += 2) {
+  for(unsigned int i = 0; attrs[i] != nullptr; i += 2) {
     // Check if the given attribute begins with one of the preferred language
     // codes. If yes, skip over the language code and check this one.
     const char *a = attrs[i];
@@ -683,7 +684,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     const char *key = nullptr;
     const char *value = nullptr;
     const char *match = nullptr;
-    for(unsigned int i = 0; attrs[i]; i += 2) {
+    for(unsigned int i = 0; attrs[i] != nullptr; i += 2) {
       if(strcmp(attrs[i], "key") == 0) {
         key = attrs[i + 1];
       } else if(strcmp(attrs[i], "value") == 0) {
@@ -743,7 +744,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     bool editable = ait == aitEnd || (strcmp(ait->second, "false") != 0);
 
     char delimiter = ',';
-    if(del) {
+    if(del != nullptr) {
       if(unlikely(strlen(del) != 1))
         dumpState("found", "combo with invalid delimiter ", del);
       else
@@ -844,7 +845,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
       const char *tp = NULL_OR_MAP_VAL(a.find("type"));
       const char *cnt = NULL_OR_MAP_VAL(a.find("count"));
       unsigned int count = 0;
-      if(cnt) {
+      if(cnt != nullptr) {
         char *endp;
         count = strtoul(cnt, &endp, 10);
         if(unlikely(*endp != '\0')) {
@@ -1212,11 +1213,11 @@ std::vector<std::string> presets_element_selectable::split_string(const char *st
 {
   std::vector<std::string> ret;
 
-  if(!str)
+  if(str == nullptr)
     return ret;
 
   const char *c, *p = str;
-  while((c = strchr(p, delimiter))) {
+  while((c = strchr(p, delimiter)) != nullptr) {
     ret.push_back(std::string(p, c - p));
     p = c + 1;
   }

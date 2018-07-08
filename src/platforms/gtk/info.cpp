@@ -72,7 +72,7 @@ static void changed(GtkTreeSelection *, gpointer user_data) {
     // WARNING: for whatever reason, key CAN be NULL on N900
 
     /* you just cannot delete or edit the "created_by" tag */
-    if(key && tag_t::is_creator_tag(key))
+    if(key != nullptr && tag_t::is_creator_tag(key))
       selected = false;
   }
 
@@ -248,7 +248,7 @@ static void on_tag_edit(info_tag_context_t *context) {
   GtkTreeIter iter;
 
   GtkTreeSelection *sel = list_get_selection(context->list);
-  if(!sel) {
+  if(sel == nullptr) {
     g_debug("got no selection object");
     return;
   }

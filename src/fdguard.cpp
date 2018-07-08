@@ -75,7 +75,7 @@ dirguard::dirguard(int fd)
   : d(fdopendir(dup(fd)))
 {
   // ignore the position of fd
-  if(d)
+  if(d != nullptr)
     rewinddir(d);
 }
 

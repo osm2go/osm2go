@@ -66,7 +66,7 @@ struct list_priv_t {
 static void list_set_user_buttons(list_priv_t *priv, const std::vector<list_button> &buttons) {
   for(unsigned int id = LIST_BUTTON_USER0; id < buttons.size(); id++) {
     const char *label = buttons[id].first;
-    if(!label)
+    if(label == nullptr)
       continue;
     GCallback cb = buttons[id].second;
 

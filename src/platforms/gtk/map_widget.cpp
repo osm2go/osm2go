@@ -80,7 +80,7 @@ static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event, map_t *map)
   if(unlikely(!map->appdata.project->osm))
     return FALSE;
 
-  if(event->type == GDK_SCROLL && map) {
+  if(event->type == GDK_SCROLL && map != nullptr) {
     double zoom = map->state.zoom;
     if(event->direction)
       zoom /= ZOOM_FACTOR_WHEEL;

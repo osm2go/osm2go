@@ -144,7 +144,7 @@ static void wms_server_selected(wms_server_context_t *context,
 
   /* user can click ok if a entry is selected or if both fields are */
   /* otherwise valid */
-  if(selected) {
+  if(selected != nullptr) {
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, TRUE);
 
     gtk_label_set_text(GTK_LABEL(context->server_label), selected->server.c_str());
@@ -389,7 +389,7 @@ static bool wms_server_dialog(appdata_t &appdata, wms_t *wms) {
 
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog))) {
     const wms_server_t *server = get_selection(list_get_selection(context.list));
-    if(server) {
+    if(server != nullptr) {
       /* fetch parameters from selected entry */
       g_debug("WMS: using %s", server->name.c_str());
       wms->server = server->server;

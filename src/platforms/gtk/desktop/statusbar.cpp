@@ -99,7 +99,7 @@ void statusbar_gtk::set(const char *msg, bool highlight) {
     mid = 0;
   }
 
-  if (msg)
+  if (msg != nullptr)
     mid = gtk_statusbar_push(widget, cid, msg);
 }
 

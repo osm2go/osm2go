@@ -375,12 +375,12 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t::ref osm) {
   /* scan for nodes */
   node_chain_t new_chain;
   xmlNode *nd_node = nullptr;
-  for(nd_node = node_way->children; nd_node; nd_node = nd_node->next) {
+  for(nd_node = node_way->children; nd_node != nullptr; nd_node = nd_node->next) {
     if(nd_node->type == XML_ELEMENT_NODE) {
       if(likely(strcmp(reinterpret_cast<const char *>(nd_node->name), "nd") == 0)) {
 	/* attach node to node_chain */
 	node_t *tmp = osm->parse_way_nd(nd_node);
-	if(tmp)
+        if(tmp != nullptr)
 	  new_chain.push_back(tmp);
       }
     }
@@ -478,8 +478,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t::ref osm) {
   /* scan for members */
   std::vector<member_t> members;
   xmlNode *member_node = nullptr;
-  for(member_node = node_rel->children; member_node;
-      member_node = member_node->next) {
+  for(member_node = node_rel->children; member_node != nullptr; member_node = member_node->next) {
     if(member_node->type == XML_ELEMENT_NODE) {
       if(likely(strcmp(reinterpret_cast<const char *>(member_node->name), "member") == 0)) {
 	/* attach member to member_chain */
@@ -538,7 +537,7 @@ unsigned int project_t::diff_restore() {
   root_element = xmlDocGetRootElement(doc.get());
 
   xmlNode *cur_node = nullptr;
-  for (cur_node = root_element; cur_node; cur_node = cur_node->next) {
+  for (cur_node = root_element; cur_node != nullptr; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcmp(reinterpret_cast<const char *>(cur_node->name), "diff") == 0) {
         xmlString str(xmlGetProp(cur_node, BAD_CAST "name"));

@@ -134,7 +134,7 @@ static bool parse_color(const char *col, color_t &color, ColorMap &colors) {
   /* if the color name contains a # it's a hex representation */
   const char * const hash = strchr(col, '#');
   std::string colname;
-  if(hash) {
+  if(hash != nullptr) {
     ret = osm2go_platform::parse_color_string(hash, color);
     if(ret && hash != col)
       colname.assign(col, hash - col);
@@ -154,7 +154,7 @@ static bool parse_color(const char *col, color_t &color, ColorMap &colors) {
       if(hash == col) {
         color = it->second;
         ret = true;
-      } else if(hash)
+      } else if(hash != nullptr)
         // check that the colors are the same if the key is specified multiple times
         assert_cmpnum(it->second, color);
     }
@@ -190,7 +190,7 @@ static const char *true_values[] = { "1", "yes", "true", nullptr };
 static const char *false_values[] = { "0", "no", "false", nullptr };
 
 static bool parse_boolean(const char *bool_str, const char **value_strings) {
-  for (int i = 0; value_strings[i]; ++i)
+  for (int i = 0; value_strings[i] != nullptr; ++i)
     if (strcasecmp(bool_str, value_strings[i]) == 0)
       return true;
   return false;
@@ -297,7 +297,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
     const char *k = nullptr, *v = nullptr;
     const char *b = nullptr;
 
-    for(unsigned int i = 0; attrs[i]; i += 2) {
+    for(unsigned int i = 0; attrs[i] != nullptr; i += 2) {
       if(strcmp(attrs[i], "k") == 0)
         k = attrs[i + 1];
       else if(strcmp(attrs[i], "v") == 0)
@@ -306,7 +306,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
         b = attrs[i + 1];
     }
     assert(k != nullptr);
-    elemstyle_condition_t cond = !b ? elemstyle_condition_t(k, v) :
+    elemstyle_condition_t cond = b == nullptr ? elemstyle_condition_t(k, v) :
                                  elemstyle_condition_t(k, parse_boolean(b, true_values));
     styles.back()->conditions.push_back(cond);
     break;
@@ -320,7 +320,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
     bool hasColor = false, hasWidth = false;
     elemstyle_line_t *line = elemstyle->line = new elemstyle_line_t();
 
-    for(unsigned int i = 0; attrs[i]; i += 2) {
+    for(unsigned int i = 0; attrs[i] != nullptr; i += 2) {
       if(strcmp(attrs[i], "colour") == 0) {
         hasColor = parse_color(attrs[i + 1], line->color, colors);
       } else if(strcmp(attrs[i], "width") == 0) {
@@ -376,7 +376,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
 
     elemstyle_line_mod_t &line_mod = elemstyle->line_mod;
 
-    for(unsigned int i = 0; attrs[i]; i += 2) {
+    for(unsigned int i = 0; attrs[i] != nullptr; i += 2) {
       if(strcmp(attrs[i], "colour") == 0) {
         color_t col;
         if(parse_color(attrs[i + 1], col, colors))
@@ -395,7 +395,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
     elemstyle->type |= ES_TYPE_AREA;
 
     bool hasColor = false;
-    for(unsigned int i = 0; attrs[i] && !hasColor; i += 2) {
+    for(unsigned int i = 0; attrs[i] != nullptr && !hasColor; i += 2) {
       if(strcmp(attrs[i], "colour") == 0)
         hasColor = parse_color(attrs[i + 1], elemstyle->area.color, colors);
       else if(strcmp(attrs[i], "priority") == 0)
@@ -407,7 +407,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
     break;
   }
   case TagIcon:
-    for(unsigned int i = 0; attrs[i]; i += 2) {
+    for(unsigned int i = 0; attrs[i] != nullptr; i += 2) {
       if(strcmp(attrs[i], "annotate") == 0)
         elemstyle->icon.annotate = strcmp(attrs[i + 1], "true");
       else if(strcmp(attrs[i], "src") == 0)
@@ -472,17 +472,17 @@ void josm_elemstyles_free(std::vector<elemstyle_t *> &elemstyles) {
 #define WIDTH_SCALE (1.0)
 
 bool elemstyle_condition_t::matches(const base_object_t &obj) const {
-  if(key) {
+  if(key != nullptr) {
     const char *v = obj.tags.get_value(key);
     if(isBool) {
-      if(v) {
+      if(v != nullptr) {
          const char **value_strings = boolValue ? true_values : false_values;
          return parse_boolean(v, value_strings);
       } else {
         return false;
       }
     } else {
-      if(!v || (value && strcasecmp(v, value) != 0))
+      if(v == nullptr || (value != nullptr && strcasecmp(v, value) != 0))
         return false;
     }
   }
@@ -549,7 +549,7 @@ void colorize_node::operator()(const elemstyle_t *elemstyle)
    * avoiding needless image processing. */
   node_icon_unref(style, node, icons);
 
-  if(buf)
+  if(buf != nullptr)
     style->node_icons[node->id] = buf;
 
   if (elemstyle->zoom_max > 0)
@@ -702,7 +702,7 @@ void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
   }
 
   /* apply the last line mod entry that has been found during search */
-  if(line_mod) {
+  if(line_mod != nullptr) {
     way->draw.width = line_mod_apply_width(way->draw.width, &line_mod->line);
 
     /* special case: the way does not have a background, but it is to */

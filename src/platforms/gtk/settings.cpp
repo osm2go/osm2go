@@ -203,7 +203,7 @@ settings_t::ref settings_t::instance() {
       p = getenv("HOME");
 
     /* if everthing fails use tmp dir */
-    if(!p)
+    if(p == nullptr)
       p = "/tmp";
 
     settings->base_path = p;
@@ -226,12 +226,12 @@ settings_t::ref settings_t::instance() {
   }
 
   if(settings->username.empty()) {
-    if((p = getenv("OSM_USER")))
+    if((p = getenv("OSM_USER")) != nullptr)
       settings->username = p;
   }
 
   if(settings->password.empty()) {
-    if((p = getenv("OSM_PASS")))
+    if((p = getenv("OSM_PASS")) != nullptr)
       settings->password = p;
   }
 

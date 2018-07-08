@@ -171,7 +171,7 @@ static CURL *curl_custom_setup(const std::string &credentials)
 {
   /* get a curl handle */
   CURL *curl = curl_easy_init();
-  if(!curl)
+  if(curl == nullptr)
     return curl;
 
   /* we want to use our own write function */
@@ -214,7 +214,7 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
   curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist.get());
 
   curl_data_t read_data_init(reinterpret_cast<char *>(xml_str));
-  read_data_init.len = read_data_init.ptr ? strlen(read_data_init.ptr) : 0;
+  read_data_init.len = read_data_init.ptr != nullptr ? strlen(read_data_init.ptr) : 0;
 
   curl_data_t read_data = read_data_init;
   std::string write_data;

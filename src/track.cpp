@@ -218,7 +218,7 @@ static void track_write(const char *name, const track_t *track, xmlDoc *d) {
       err = true;
     } else {
       cur_node = root_node->children;
-      while(cur_node && cur_node->type != XML_ELEMENT_NODE)
+      while(cur_node != nullptr && cur_node->type != XML_ELEMENT_NODE)
         cur_node = cur_node->next;
       if(unlikely(!cur_node || !cur_node->children ||
                     strcasecmp(reinterpret_cast<const char *>(cur_node->name), "trk") != 0)) {
@@ -226,7 +226,7 @@ static void track_write(const char *name, const track_t *track, xmlDoc *d) {
       } else {
         trk_node = cur_node;
         /* assume that at most the last segment in the file was modified */
-        for (cur_node = cur_node->children; cur_node->next; cur_node = cur_node->next) {
+        for (cur_node = cur_node->children; cur_node->next != nullptr; cur_node = cur_node->next) {
           // skip non-nodes, e.g. if the user inserted a comment
           if (cur_node->type != XML_ELEMENT_NODE)
             continue;
@@ -272,17 +272,18 @@ static void track_write(const char *name, const track_t *track, xmlDoc *d) {
 
 /* save track in project */
 void track_save(project_t *project, track_t *track) {
-  if(!project) return;
+  if(project == nullptr)
+    return;
 
   /* no need to save again if it has already been saved */
-  if(track && !track->dirty) {
+  if(track != nullptr && !track->dirty) {
     printf("track is not dirty, no need to save it (again)\n");
     return;
   }
 
   const std::string trkfname = project->name + ".trk";
 
-  if(!track) {
+  if(track == nullptr) {
     unlinkat(project->dirfd, trkfname.c_str(), 0);
     return;
   }
@@ -553,7 +554,7 @@ bool TrackSax::parse(const char *filename)
   if(unlikely(xmlSAXUserParseFile(&handler, this, filename) != 0))
     return false;
 
-  return track && !track->segments.empty();
+  return track != nullptr && !track->segments.empty();
 }
 
 void TrackSax::characters(const char *ch, int len)
@@ -612,7 +613,7 @@ void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
     track->segments.back().track_points.push_back(track_point_t());
     points++;
     curPoint = &track->segments.back().track_points.back();
-    for(unsigned int i = 0; attrs[i]; i += 2) {
+    for(unsigned int i = 0; attrs[i] != nullptr; i += 2) {
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "lat") == 0)
         curPoint->pos.lat = xml_parse_float(attrs[i + 1]);
       else if(likely(strcmp(reinterpret_cast<const char *>(attrs[i]), "lon") == 0))

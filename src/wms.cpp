@@ -91,7 +91,7 @@ static wms_layer_t wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
   wms_layer_t wms_layer;
   xmlNode *cur_node = nullptr;
 
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
+  for (cur_node = a_node->children; cur_node != nullptr; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Layer") == 0) {
         wms_layer.children.push_back(wms_cap_parse_layer(doc, cur_node));
@@ -135,7 +135,7 @@ static wms_getmap_t wms_cap_parse_getmap(xmlDocPtr doc, xmlNode *a_node) {
   wms_getmap_t wms_getmap;
   xmlNode *cur_node;
 
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
+  for (cur_node = a_node->children; cur_node != nullptr; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Format") == 0) {
         xmlString nstr(xmlNodeListGetString(doc, cur_node->children, 1));
@@ -162,7 +162,7 @@ static wms_request_t wms_cap_parse_request(xmlDocPtr doc, xmlNode *a_node) {
   wms_request_t wms_request;
   xmlNode *cur_node;
 
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
+  for (cur_node = a_node->children; cur_node != nullptr; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "GetMap") == 0)
         wms_request.getmap = wms_cap_parse_getmap(doc, cur_node);
@@ -178,7 +178,7 @@ static bool wms_cap_parse_cap(xmlDocPtr doc, xmlNode *a_node, wms_cap_t *wms_cap
   xmlNode *cur_node;
   bool has_request = false;
 
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
+  for (cur_node = a_node->children; cur_node != nullptr; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Request") == 0) {
         wms_cap->request = wms_cap_parse_request(doc, cur_node);
@@ -197,7 +197,7 @@ static bool wms_cap_parse(wms_t &wms, xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = nullptr;
   bool has_service = false, has_cap = false;
 
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
+  for (cur_node = a_node->children; cur_node != nullptr; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
 
       if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Service") == 0) {
@@ -285,7 +285,7 @@ void child_layer_functor::operator()(const wms_layer_t &layer)
   local_epsg4326 |= layer.epsg4326;
 
   /* only named layers with useful bounding box are added to the list */
-  if(local_llbbox && !layer.name.empty()) {
+  if(local_llbbox != nullptr && !layer.name.empty()) {
     wms_layer_t c_layer(layer.title, layer.name, local_epsg4326 ? std::string() : srs,
                         local_epsg4326, *local_llbbox);
     clayers.push_back(c_layer);

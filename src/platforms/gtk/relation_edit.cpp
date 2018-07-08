@@ -108,7 +108,7 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
 
   const char *type = relation->tags.get_value("type");
 
-  g_string info_str(type ?
+  g_string info_str(type != nullptr ?
                     g_strdup_printf(_("In relation of type: %s"), type) :
                     g_strdup_printf(_("In relation #" ITEM_ID_FORMAT), relation->id));
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
@@ -116,7 +116,7 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
   info_str.reset();
 
   const char *name = relation->tags.get_value("name");
-  if(name)
+  if(name != nullptr)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
                        gtk_label_new(name), TRUE, TRUE, 0);
 
@@ -157,7 +157,7 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
       role = rstr.c_str();
   } else {
     const gchar *ptr = gtk_entry_get_text(GTK_ENTRY(entry));
-    if(ptr && strlen(ptr))
+    if(ptr != nullptr && strlen(ptr))
       role = ptr;
   }
 
@@ -454,7 +454,7 @@ member_list_selection_func(GtkTreeSelection *, GtkTreeModel *model,
 
     const member_t *member = nullptr;
     gtk_tree_model_get(model, &iter, MEMBER_COL_DATA, &member, -1);
-    if(member && member->object.type < object_t::NODE_ID)
+    if(member != nullptr && member->object.type < object_t::NODE_ID)
       return TRUE;
   }
 
@@ -553,7 +553,7 @@ static GtkWidget *member_list_widget(member_context_t &context) {
 
 void relation_show_members(GtkWidget *parent, const relation_t *relation, osm_t::ref osm) {
   const char *str = relation->tags.get_value("name");
-  if(!str)
+  if(str == nullptr)
     str = relation->tags.get_value("ref");
 
   g_string nstr(str == nullptr ?
@@ -593,7 +593,7 @@ static void on_relation_select(relation_context_t *context, GtkWidget *but) {
   relation_t *sel = get_selected_relation(context);
   context->map->item_deselect();
 
-  if(sel) {
+  if(sel != nullptr) {
     context->map->select_relation(sel);
 
     /* tell dialog to close as we want to see the selected relation */
@@ -666,7 +666,8 @@ relation_edit_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpo
 /* user clicked "edit..." button in relation list */
 static void on_relation_edit(relation_context_t *context) {
   relation_t *sel = get_selected_relation(context);
-  if(!sel) return;
+  if(sel == nullptr)
+    return;
 
   g_debug("edit relation #" ITEM_ID_FORMAT, sel->id);
 
@@ -682,7 +683,8 @@ static void on_relation_edit(relation_context_t *context) {
 /* remove the selected relation */
 static void on_relation_remove(relation_context_t *context) {
   relation_t *sel = get_selected_relation(context);
-  if(!sel) return;
+  if(sel == nullptr)
+    return;
 
   g_debug("remove relation #" ITEM_ID_FORMAT, sel->id);
 

@@ -631,7 +631,7 @@ static void way_free(std::pair<item_id_t, way_t *> pair) {
 
 bool relation_t::is_multipolygon() const {
   const char *tp = tags.get_value("type");
-  return tp && (strcmp(tp, "multipolygon") == 0);
+  return tp != nullptr && (strcmp(tp, "multipolygon") == 0);
 }
 
 void relation_t::cleanup() {
@@ -683,7 +683,7 @@ void gen_xml_relation_functor::operator()(const member_t &member)
   xmlNewProp(m_node, BAD_CAST "type", BAD_CAST typestr);
   xmlNewProp(m_node, BAD_CAST "ref", BAD_CAST member.object.id_string().c_str());
 
-  if(member.role)
+  if(member.role != nullptr)
     xmlNewProp(m_node, BAD_CAST "role", BAD_CAST member.role);
 }
 
@@ -708,7 +708,7 @@ std::string relation_t::descriptive_name() const {
   std::array<const char *, 5> keys = { { "name", "ref", "description", "note", "fix" "me" } };
   for (unsigned int i = 0; i < keys.size(); i++) {
     const char *name = tags.get_value(keys[i]);
-    if(name)
+    if(name != nullptr)
       return name;
   }
 
@@ -1172,7 +1172,7 @@ void reverse_roles::operator()(const std::pair<item_id_t, relation_t *> &pair)
   const char *type = relation->tags.get_value("type");
 
   // Route relations; https://wiki.openstreetmap.org/wiki/Relation:route
-  if (!type || strcasecmp(type, "route") != 0)
+  if (type == nullptr || strcasecmp(type, "route") != 0)
     return;
 
   // First find the member corresponding to our way:
@@ -1439,7 +1439,7 @@ std::string object_t::get_name(const osm_t &osm) const {
   /* try to figure out _what_ this is */
   const std::array<const char *, 5> name_tags = { { "name", "ref", "note", "fix" "me", "sport" } };
   const char *name = nullptr;
-  for(unsigned int i = 0; !name && i < name_tags.size(); i++)
+  for(unsigned int i = 0; name == nullptr && i < name_tags.size(); i++)
     name = obj->tags.get_value(name_tags[i]);
 
   /* search for some kind of "type" */
@@ -1449,21 +1449,21 @@ std::string object_t::get_name(const osm_t &osm) const {
                               "natural", "man_made" } };
   const char *typestr = nullptr;
 
-  for(unsigned int i = 0; !typestr && i < type_tags.size(); i++)
+  for(unsigned int i = 0; typestr == nullptr && i < type_tags.size(); i++)
     typestr = obj->tags.get_value(type_tags[i]);
 
-  if(!typestr && obj->tags.get_value("building")) {
+  if(typestr == nullptr && obj->tags.get_value("building") != nullptr) {
     const char *street = obj->tags.get_value("addr:street");
     const char *hn = obj->tags.get_value("addr:housenumber");
 
-    if(hn) {
+    if(hn != nullptr) {
       if(street == nullptr) {
         // check if there is an "associatedStreet" relation where this is a "house" member
         const relation_t *astreet = osm.find_relation(relation_member_functor("associatedStreet", "house", *this));
         if(astreet != nullptr)
           street = astreet->tags.get_value("name");
       }
-      if(street) {
+      if(street != nullptr) {
         ret = _("building ");
         ret += street;
         ret +=' ';
@@ -1473,11 +1473,11 @@ std::string object_t::get_name(const osm_t &osm) const {
       ret += hn;
     } else {
       typestr = _("building");
-      if(!name)
+      if(name == nullptr)
         name = obj->tags.get_value("addr:housename");
     }
   }
-  if(!typestr && ret.empty())
+  if(typestr == nullptr && ret.empty())
     typestr = obj->tags.get_value("emergency");
 
   /* highways are a little bit difficult */
@@ -1527,12 +1527,12 @@ std::string object_t::get_name(const osm_t &osm) const {
     }
   }
 
-  if(typestr) {
+  if(typestr != nullptr) {
     assert(ret.empty());
     ret = typestr;
   }
 
-  if(name) {
+  if(name != nullptr) {
     if(ret.empty())
       ret = type_string();
     ret += ": \"";
@@ -1572,7 +1572,7 @@ tag_list_t::~tag_list_t()
 
 bool tag_list_t::empty() const noexcept
 {
-  return !contents || contents->empty();
+  return contents == nullptr || contents->empty();
 }
 
 bool tag_list_t::hasRealTags() const noexcept
@@ -1598,7 +1598,7 @@ struct key_match_functor {
 
 const char* tag_list_t::get_value(const char *key) const
 {
-  if(!contents)
+  if(contents == nullptr)
     return nullptr;
 
   const char *cacheKey = value_cache.getValue(key);
@@ -1701,7 +1701,7 @@ struct value_match_functor {
   const char * const value;
   explicit value_match_functor(const char *v) : value(v) {}
   bool operator()(const tag_t *tag) {
-    return tag->value && (strcasecmp(tag->value, value) == 0);
+    return tag->value != nullptr && (strcasecmp(tag->value, value) == 0);
   }
 };
 
@@ -1828,10 +1828,10 @@ bool member_t::operator==(const member_t &other) const noexcept
     return false;
 
   // check if any of them is 0, strcmp() does not like that
-  if(!!role ^ !!other.role)
+  if((role == nullptr) ^ (other.role == nullptr))
     return false;
 
-  return !role || strcmp(role, other.role) == 0;
+  return role == nullptr || strcmp(role, other.role) == 0;
 }
 
 relation_t::relation_t()

@@ -61,7 +61,7 @@ bool find_highlighted::operator()(canvas_item_t* c)
 {
   map_item_t *hl_item = c->get_user_data();
 
-  return hl_item && hl_item->object == item.object;
+  return hl_item != nullptr && hl_item->object == item.object;
 }
 
 bool map_highlight_t::isHighlighted(const map_item_t& item) const

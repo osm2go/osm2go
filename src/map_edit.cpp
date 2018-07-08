@@ -59,8 +59,8 @@ void map_t::way_add_segment(lpos_t pos) {
   /* the last node placed is less than 5 pixels from the current */
   /* position */
   const node_t *lnode = action.way->last_node();
-  if(lnode && (state.zoom * std::sqrt((lnode->lpos.x - pos.x) * (lnode->lpos.x - pos.x) +
-                                      (lnode->lpos.y - pos.y) * (lnode->lpos.y - pos.y))) < 5) {
+  if(lnode != nullptr && (state.zoom * std::sqrt((lnode->lpos.x - pos.x) * (lnode->lpos.x - pos.x) +
+                                                 (lnode->lpos.y - pos.y) * (lnode->lpos.y - pos.y))) < 5) {
 #if 0
     printf("detected double click -> simulate ok click\n");
     touchnode_clear();
@@ -90,7 +90,7 @@ void map_t::way_add_segment(lpos_t pos) {
       if(action.way->node_chain.empty()) {
         action.extending = touch_way;
 
-        if(action.extending) {
+        if(action.extending != nullptr) {
           if(!yes_no_f(nullptr, MISC_AGAIN_ID_EXTEND_WAY, _("Extend way?"),
              _("Do you want to extend the way present at this location?")))
             action.extending = nullptr;
@@ -111,7 +111,7 @@ void map_t::way_add_segment(lpos_t pos) {
         node = osm->node_new(pos);
     }
 
-    if(node) {
+    if(node != nullptr) {
       assert(action.way != nullptr);
       action.way->append_node(node);
 
@@ -215,7 +215,7 @@ void map_t::way_add_ok() {
   std::for_each(chain.begin(), chain.end(), map_draw_nodes(this));
 
   /* attach to existing way if the user requested so */
-  if(action.extending) {
+  if(action.extending != nullptr) {
     // this is triggered when the user started with extending an existing way
     // since the merged way is a temporary one there are no relation memberships
     action.extending->merge(action.way, osm);
@@ -228,14 +228,13 @@ void map_t::way_add_ok() {
 
   /* we might already be working on the "ends_on" way as we may */
   /* be extending it. Joining the same way doesn't make sense. */
-  if(action.ends_on && (action.ends_on == action.way)) {
+  if(action.ends_on == action.way) {
     printf("  the new way ends on itself -> don't join itself\n");
     action.ends_on = nullptr;
   }
 
-  if(action.ends_on &&
-     yes_no_f(nullptr, MISC_AGAIN_ID_EXTEND_WAY_END, _("Join way?"),
-              _("Do you want to join the way present at this location?"))) {
+  if(action.ends_on != nullptr && yes_no_f(nullptr, MISC_AGAIN_ID_EXTEND_WAY_END, _("Join way?"),
+                                           _("Do you want to join the way present at this location?"))) {
     printf("  this new way ends on another way\n");
     // this is triggered when the new way ends on an existing way, this can
     // happen even if an existing way was extended before
@@ -413,9 +412,9 @@ void map_t::way_cut(lpos_t pos) {
   set_action(MAP_ACTION_IDLE);
 
   /* and redo selection if way still exists */
-  if(item)
+  if(item != nullptr)
     select_way(way);
-  else if(neww)
+  else if(neww != nullptr)
     select_way(neww);
 }
 

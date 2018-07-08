@@ -1239,7 +1239,7 @@ static int application_run(const char *proj)
     return -1;
   }
 
-  if(proj) {
+  if(proj != nullptr) {
     if(strcmp(proj, "-p") == 0) {
       cb_menu_project_open(&appdata);
     } else if(!project_load(appdata, proj)) {

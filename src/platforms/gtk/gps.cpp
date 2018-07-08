@@ -118,7 +118,7 @@ pos_t gpsd_state_t::get_pos(float* alt)
       if(gpsdata.status != STATUS_NO_FIX) {
         if(gpsdata.set & LATLON_SET)
           pos = gpsdata.fix.pos;
-        if(alt && gpsdata.set & ALTITUDE_SET)
+        if(alt != nullptr && gpsdata.set & ALTITUDE_SET)
           *alt = gpsdata.fix.alt;
       }
     }
@@ -201,7 +201,7 @@ static void gps_clear_fix(gps_fix_t *fixp) {
 static void gps_unpack(char *buf, gps_data_t *gpsdata) {
   char *ns, *sp, *tp;
 
-  for(ns = strstr(buf,"GPSD"); ns; ns = strstr(ns+1, "GPSD")) {
+  for(ns = strstr(buf,"GPSD"); ns != nullptr; ns = strstr(ns+1, "GPSD")) {
     /* the following should execute each time we have a good next sp */
     for (sp = ns + 5; *sp != '\0'; sp = tp+1) {
       tp = sp + strcspn(sp, ",\r\n");
@@ -348,7 +348,7 @@ gpsd_state_t::~gpsd_state_t()
   gpsbt_stop(&context);
 #endif
 #if GLIB_CHECK_VERSION(2,32,0)
-  if(thread_p)
+  if(thread_p != nullptr)
     g_thread_unref(thread_p);
 #endif
 }
