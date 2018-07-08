@@ -172,13 +172,13 @@ public:
   void redraw_item(object_t object);
   void draw(way_t *way);
   void select_way(way_t *way);
-  void set_action(map_action_t action);
+  void set_action(map_action_t act);
   bool item_is_selected_way(const map_item_t *map_item) const;
   bool item_is_selected_node(const map_item_t *map_item) const;
   bool scroll_to_if_offscreen(lpos_t lpos);
 
   /* track stuff */
-  void track_draw(TrackVisibility visibiliy, track_t &track);
+  void track_draw(TrackVisibility visibility, track_t &track);
   void track_draw_seg(track_seg_t &seg);
   void track_update_seg(track_seg_t &seg);
   void track_pos(const lpos_t lpos);

@@ -181,7 +181,7 @@ struct osm_t {
 
   class TagMap : public std::multimap<std::string, std::string> {
   public:
-    iterator findTag(const std::string &k, const std::string &v);
+    iterator findTag(const std::string &key, const std::string &value);
     inline const_iterator findTag(const std::string &k, const std::string &v) const {
       return const_cast<TagMap *>(this)->findTag(k, v);
     }
@@ -202,7 +202,7 @@ struct osm_t {
   way_t *way_by_id(item_id_t id) const;
   relation_t *relation_by_id(item_id_t id) const;
 
-  node_t *node_new(const lpos_t pos);
+  node_t *node_new(const lpos_t lpos);
   node_t *node_new(const pos_t &pos);
   void node_attach(node_t *node);
   void way_delete(way_t *way);
@@ -259,7 +259,7 @@ struct osm_t {
    */
   static bool parse_tag(xmlNode* a_node, TagMap &tags);
 
-  bool parse_relation_member(const xmlString &tp, const xmlString &ref, const xmlString &role, std::vector<member_t> &members);
+  bool parse_relation_member(const xmlString &tp, const xmlString &refstr, const xmlString &role, std::vector<member_t> &members);
   void parse_relation_member(xmlNode *a_node, std::vector<member_t> &members);
 
   node_t *parse_way_nd(xmlNode *a_node) const;

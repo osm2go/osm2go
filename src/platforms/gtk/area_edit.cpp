@@ -162,7 +162,7 @@ static pos_float_t pos_dist_get(GtkWidget *widget, bool is_mil) {
 }
 
 struct area_context_t {
-  explicit area_context_t(area_edit_t &a, GtkWidget *dlb);
+  explicit area_context_t(area_edit_t &a, GtkWidget *dlg);
 
   osm2go_platform::WidgetGuard dialog;
   GtkWidget * const notebook;

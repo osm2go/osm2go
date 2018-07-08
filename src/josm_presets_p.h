@@ -64,7 +64,7 @@ public:
 
   struct attach_key; ///< return value from attach() that can be used by getValue()
 protected:
-  presets_element_t(presets_element_type_t t, Match m, const std::string &key = std::string(),
+  presets_element_t(presets_element_type_t t, Match m, const std::string &k = std::string(),
                    const std::string &txt = std::string());
 
   /**

@@ -149,7 +149,7 @@ struct presets_context_t {
   submenu_vector submenus;
   GtkWidget *subwidget; ///< dynamic submenu (if shown)
 
-  GtkWidget *presets_picker(const std::vector<presets_item_t *> &items, bool scan_for_recent);
+  GtkWidget *presets_picker(const std::vector<presets_item_t *> &items, bool top_level);
   GtkWidget *preset_picker_recent();
   GtkWidget *preset_picker_lru();
 
