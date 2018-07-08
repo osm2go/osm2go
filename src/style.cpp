@@ -242,10 +242,10 @@ style_t *style_load(const std::string &name) {
 }
 
 std::string style_basename(const std::string &name) {
-  std::string::size_type pos = name.rfind("/");
+  std::string::size_type pos = name.rfind('/');
 
   /* and cut off extension */
-  std::string::size_type extpos = name.rfind(".");
+  std::string::size_type extpos = name.rfind('.');
   if(pos == std::string::npos)
     pos = 0;
   else
