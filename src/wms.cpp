@@ -544,7 +544,8 @@ static const std::array<struct server_preset_s, 1> default_servers = { {
   /* add more servers here ... */
 } };
 
-std::vector<wms_server_t *> wms_server_get_default(void) {
+std::vector<wms_server_t *> wms_server_get_default()
+{
   std::vector<wms_server_t *> servers;
 
   for(unsigned int i = 0; i < default_servers.size(); i++) {

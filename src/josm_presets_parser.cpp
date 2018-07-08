@@ -1053,7 +1053,8 @@ bool presets_items_internal::addFile(const std::string &filename, const std::str
   return true;
 }
 
-presets_items *presets_items::load(void) {
+presets_items *presets_items::load()
+{
   printf("Loading JOSM presets ...\n");
 
   std::unique_ptr<presets_items_internal> presets(new presets_items_internal());

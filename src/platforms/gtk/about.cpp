@@ -85,7 +85,8 @@ static GtkWidget *label_wrap(const char *str) {
   return label;
 }
 
-static GtkWidget *license_page_new(void) {
+static GtkWidget *license_page_new()
+{
   GtkWidget *label = label_wrap(nullptr);
 
   const std::string &name = find_file("COPYING");
@@ -178,7 +179,8 @@ static void author_add(GtkWidget *box, const char *str) {
   gtk_box_pack_start(GTK_BOX(box), left_label(str), FALSE, FALSE, 0);
 }
 
-static GtkWidget *authors_page_new(void) {
+static GtkWidget *authors_page_new()
+{
   GtkWidget *ivbox, *vbox = gtk_vbox_new(FALSE, 16);
 
   /* -------------------------------------------- */

@@ -43,7 +43,8 @@ void osm2go_platform::open_url(const char* url)
   gtk_show_uri(nullptr, url, GDK_CURRENT_TIME, nullptr);
 }
 
-GtkWidget *osm2go_platform::notebook_new(void) {
+GtkWidget *osm2go_platform::notebook_new()
+{
   return gtk_notebook_new();
 }
 

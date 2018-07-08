@@ -30,7 +30,7 @@ static bool find_bb(const tag_t &t)
   return strcmp(t.value, "bb") == 0;
 }
 
-static std::vector<tag_t> ab_with_creator(void)
+static std::vector<tag_t> ab_with_creator()
 {
   std::vector<tag_t> ntags;
 
