@@ -1734,12 +1734,13 @@ void map_t::info_selected()
     redraw_item(selected.object);
 }
 
-map_state_t::map_state_t()
+map_state_t::map_state_t() noexcept
 {
   reset();
 }
 
-void map_state_t::reset() {
+void map_state_t::reset() noexcept
+{
   zoom = 0.25;
   detail = 1.0;
 

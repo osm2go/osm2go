@@ -88,9 +88,9 @@ struct map_item_t {
 struct map_item_chain_t;
 
 struct map_state_t {
-  map_state_t();
+  map_state_t() noexcept;
 
-  void reset();
+  void reset() noexcept;
 
   float zoom;                          // zoom level (1.0 = 1m/pixel
   float detail;                        // detail level (1.0 = normal)
