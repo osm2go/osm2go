@@ -273,7 +273,7 @@ void map_t::select_way(way_t *way) {
 
 struct relation_select_functor {
   map_t * const map;
-  relation_select_functor(map_t *m) : map(m) {}
+  explicit relation_select_functor(map_t *m) : map(m) {}
   void operator()(member_t &member);
 };
 
@@ -1352,7 +1352,7 @@ void node_deleted_from_ways::operator()(way_t *way) {
 
 struct short_way {
   const node_t * const node;
-  short_way(const node_t *n) : node(n) {}
+  explicit short_way(const node_t *n) : node(n) {}
   bool operator()(const std::pair<item_id_t, way_t *> &p) {
     const way_t *way = p.second;
     return way->node_chain.size() < 3 && way->contains_node(node);

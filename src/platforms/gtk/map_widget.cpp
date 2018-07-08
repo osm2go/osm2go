@@ -54,7 +54,7 @@
 class map_internal : public map_t {
   map_highlight_t m_hl;
 public:
-  map_internal(appdata_t &a);
+  explicit map_internal(appdata_t &a);
 
   osm2go_platform::Timer autosave;
 

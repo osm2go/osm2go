@@ -88,7 +88,7 @@ using namespace osm2go_platform;
 #endif
 
 struct appdata_internal : public appdata_t {
-  appdata_internal(map_state_t &mstate);
+  explicit appdata_internal(map_state_t &mstate);
   ~appdata_internal();
 
 #ifdef FREMANTLE

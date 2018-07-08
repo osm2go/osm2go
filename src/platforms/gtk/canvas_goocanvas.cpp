@@ -456,7 +456,7 @@ canvas_item_circle *canvas_t::circle_new(canvas_group_t group,
 struct points_fill {
   GooCanvasPoints * const gpoints;
   unsigned int offs;
-  points_fill(GooCanvasPoints *g) : gpoints(g), offs(0) {}
+  explicit points_fill(GooCanvasPoints *g) : gpoints(g), offs(0) {}
   inline void operator()(lpos_t p) {
     gpoints->coords[offs++] = p.x;
     gpoints->coords[offs++] = p.y;
