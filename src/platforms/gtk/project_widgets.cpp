@@ -30,8 +30,8 @@
 #include "notifications.h"
 #include "osm_api.h"
 #include "settings.h"
-#include "wms.h"
 #include "uicontrol.h"
+#include "wms.h"
 
 #include <algorithm>
 #include <cassert>
@@ -43,10 +43,10 @@
 #include <unistd.h>
 
 #include <osm2go_cpp.h>
-#include "osm2go_stl.h"
 #include <osm2go_i18n.h>
 #include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
+#include "osm2go_stl.h"
 
 using namespace osm2go_platform;
 

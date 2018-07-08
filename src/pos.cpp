@@ -24,10 +24,10 @@
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
 
+#include <cctype>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
-#include <ctype.h>
 #include <glib.h>
 
 #define LL_FORMAT   "%.07f"

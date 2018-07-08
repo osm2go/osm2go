@@ -28,8 +28,8 @@
 #include "osm2go_platform.h"
 #include "settings.h"
 #include "track.h"
-#include "wms.h"
 #include "uicontrol.h"
+#include "wms.h"
 #include "xml_helpers.h"
 
 #include <algorithm>
@@ -47,8 +47,8 @@
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
-#include "osm2go_stl.h"
 #include <osm2go_i18n.h>
+#include "osm2go_stl.h"
 
 #if !defined(LIBXML_TREE_ENABLED) || !defined(LIBXML_OUTPUT_ENABLED)
 #error "libxml doesn't support required tree or output"

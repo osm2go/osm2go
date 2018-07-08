@@ -18,17 +18,16 @@
  */
 
 #include <notifications.h>
-#include "misc.h"
 
 #include "appdata.h"
+#include "misc.h"
 
+#include <cstdio>
 #ifdef FREMANTLE
 #include <hildon/hildon-note.h>
 #else
 #include <gtk/gtk.h>
 #endif
-
-#include <cstdio>
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>

@@ -3,7 +3,6 @@
 #include <settings.h>
 #include <xml_helpers.h>
 
-#include <osm2go_annotations.h>
 #include <misc.h>
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
@@ -18,6 +17,8 @@
 #if __cplusplus >= 201103L
 #include <random>
 #endif
+
+#include <osm2go_annotations.h>
 
 static bool find_aa(const tag_t &t)
 {

@@ -4,8 +4,8 @@
 
 #include <cassert>
 #include <cerrno>
-#include <curl/curl.h>
 #include <cstdlib>
+#include <curl/curl.h>
 #include <string>
 #include <unistd.h>
 

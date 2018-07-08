@@ -5,8 +5,8 @@
 
 #include <cassert>
 #include <fcntl.h>
-#include <unistd.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 static void check_guard(int openfd, int &dirfd, const std::string &exepath)
 {

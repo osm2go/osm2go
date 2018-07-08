@@ -24,8 +24,8 @@
 #include "osm.h"
 #include "pos.h"
 
-#include <cstdio>
 #include <cstdarg>
+#include <cstdio>
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>

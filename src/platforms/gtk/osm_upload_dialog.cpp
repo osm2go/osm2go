@@ -24,9 +24,9 @@
 #include "diff.h"
 #include "map.h"
 #include "misc.h"
+#include "net_io.h"
 #include "osm.h"
 #include "osm2go_platform.h"
-#include "net_io.h"
 #include "project.h"
 #include "settings.h"
 
@@ -40,8 +40,8 @@
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
+#include "osm2go_platform_gtk.h"
 #include <osm2go_stl.h>
-#include <osm2go_platform_gtk.h>
 
 using namespace osm2go_platform;
 

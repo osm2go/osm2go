@@ -10,8 +10,8 @@
 #include <settings.h>
 
 #include <cassert>
-#include <curl/curl.h>
 #include <cstdlib>
+#include <curl/curl.h>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>

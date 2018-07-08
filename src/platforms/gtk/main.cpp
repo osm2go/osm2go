@@ -30,8 +30,6 @@
 #include <notifications.h>
 #include <osm.h>
 #include <osm_api.h>
-#include "osm2go_platform.h"
-#include "osm2go_platform_gtk.h"
 #include <project.h>
 #include <relation_edit.h>
 #include <settings.h>
@@ -75,6 +73,8 @@
 
 #include <osm2go_annotations.h>
 #include "osm2go_i18n.h"
+#include "osm2go_platform.h"
+#include "osm2go_platform_gtk.h"
 
 using namespace osm2go_platform;
 

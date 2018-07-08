@@ -23,9 +23,9 @@
 #include <appdata.h>
 #include <misc.h>
 
+#include <osm2go_cpp.h>
 #include <osm2go_platform.h>
 #include <osm2go_platform_gtk.h>
-#include <osm2go_cpp.h>
 
 class statusbar_gtk : public statusbar_t {
 public:
