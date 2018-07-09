@@ -498,7 +498,7 @@ PresetSax::AttrMap PresetSax::findAttributes(const char **attrs, const char **na
 
         if(*(attrs[i + 1]) != '\0') {
           // if this is localized: store, if not, store only if nothing in map right now
-          if(isLoc || !ret[names[j]])
+          if(isLoc || ret.find(names[j]) == ret.end())
             ret[names[j]] = attrs[i + 1];
         }
       }
