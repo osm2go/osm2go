@@ -367,7 +367,7 @@ static void upload_object(osm_upload_context_t &context, base_object_t *obj) {
 
     item_id_t tmp;
     if(osm_update_item(context, xml_str.get(), url.c_str(), obj->isNew() ? &obj->id : &tmp)) {
-      if(obj->isNew())
+      if(!obj->isNew())
         obj->version = tmp;
       obj->flags ^= OSM_FLAG_DIRTY;
       context.project->data_dirty = true;

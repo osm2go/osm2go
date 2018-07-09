@@ -1,3 +1,9 @@
+osm2go (1:0.9.14-maemo1) karmic; urgency=low
+
+  * fix random version number shown on modified objects after upload (broken in 0.9.11)
+
+ -- Rolf Eike Beer <eike@sf-mail.de>  Sun, 24 Jun 2018 12:05:21 +0200
+
 osm2go (1:0.9.13-maemo1) karmic; urgency=low
 
   * fix crash when editable preset combo box has custom value
