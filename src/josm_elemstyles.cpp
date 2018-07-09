@@ -32,6 +32,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cctype>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <limits>
