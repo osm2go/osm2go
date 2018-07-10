@@ -103,7 +103,7 @@ public:
 
   bool parse(const char *filename);
 
-  track_t *track;
+  std::unique_ptr<track_t> track;
   std::vector<track_point_t>::size_type points;  ///< total points
 
 private:
@@ -139,7 +139,6 @@ static track_t *track_read(const char *filename, bool dirty) {
 
   TrackSax sx;
   if(unlikely(!sx.parse(filename))) {
-    delete sx.track;
     printf("track was empty/invalid track\n");
     return nullptr;
   }
@@ -148,7 +147,7 @@ static track_t *track_read(const char *filename, bool dirty) {
   printf("Track is %sdirty.\n", dirty?"":"not ");
   printf("%zu points in %zu segments\n", sx.points, sx.track->segments.size());
 
-  return sx.track;
+  return sx.track.release();
 }
 
 /* ----------------------  saving track --------------------------- */
@@ -554,7 +553,7 @@ bool TrackSax::parse(const char *filename)
   if(unlikely(xmlSAXUserParseFile(&handler, this, filename) != 0))
     return false;
 
-  return track != nullptr && !track->segments.empty();
+  return track && !track->segments.empty();
 }
 
 void TrackSax::characters(const char *ch, int len)
@@ -604,7 +603,7 @@ void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
   switch(state){
   case TagTrk:
     if(!track)
-      track = new track_t();
+      track.reset(new track_t());
     break;
   case TagTrkSeg:
     track->segments.push_back(track_seg_t());
