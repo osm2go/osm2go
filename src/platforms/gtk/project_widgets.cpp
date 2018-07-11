@@ -220,7 +220,7 @@ static void callback_modified_name(GtkWidget *widget, name_callback_context_t *c
   gboolean ok = FALSE;
 
   /* check if there's a name */
-  if(name != nullptr && strlen(name) > 0) {
+  if(name != nullptr && *name != '\0') {
     /* check if it consists of valid characters */
     if(strpbrk(name, "\\*?()\n\t\r") == nullptr) {
       /* check if such a project already exists */
@@ -835,7 +835,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
 
   /* fetch values from dialog */
   const gchar *ndesc = gtk_entry_get_text(GTK_ENTRY(context.desc));
-  if(ndesc != nullptr && strlen(ndesc))
+  if(ndesc != nullptr && *ndesc != '\0')
     project->desc = ndesc;
   else
     project->desc.clear();

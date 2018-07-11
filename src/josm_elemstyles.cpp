@@ -246,7 +246,7 @@ void StyleSax::characters(const char *ch, int len)
 
 /* parse "+123", "-123" and "123%" */
 static void parse_width_mod(const char *mod_str, elemstyle_width_mod_t &value) {
-  if(strlen(mod_str) > 0) {
+  if(*mod_str != '\0') {
     if(mod_str[0] == '+') {
       value.mod = ES_MOD_ADD;
       value.width = strtoul(mod_str+1, nullptr, 10);

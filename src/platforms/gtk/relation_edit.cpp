@@ -157,7 +157,7 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
       role = rstr.c_str();
   } else {
     const gchar *ptr = gtk_entry_get_text(GTK_ENTRY(entry));
-    if(ptr != nullptr && strlen(ptr))
+    if(ptr != nullptr && *ptr != '\0')
       role = ptr;
   }
 
