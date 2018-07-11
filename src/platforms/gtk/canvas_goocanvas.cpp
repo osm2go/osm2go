@@ -332,9 +332,9 @@ static int canvas_item_info_get_segment(const canvas_item_info_poly *item,
 
       float n;
       if(abs(BX-AX) > abs(BY-AY))
-        n = fabs(sqrt(len) * (AY+m*(BY-AY)-CY)/(BX-AX));
+        n = fabs(sqrtf(len) * (AY+m*(BY-AY)-CY)/(BX-AX));
       else
-        n = fabs(sqrt(len) * -(AX+m*(BX-AX)-CX)/(BY-AY));
+        n = fabs(sqrtf(len) * -(AX+m*(BX-AX)-CX)/(BY-AY));
 
       /* check if this is actually on the line and closer than anything */
       /* we found so far */
