@@ -71,7 +71,11 @@ namespace std {
       }
 
       // Observers.
-      // this has no operator* as returning void& makes the N900 compiler fail
+      // be careful when creating instances where _TP is void, this breaks
+      // on gcc 4.2 (i.e. N900)
+      _Tp &operator*() const {
+        return *get();
+      }
 
       _Tp *operator->() const {
         return get();
