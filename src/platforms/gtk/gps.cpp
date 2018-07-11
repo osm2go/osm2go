@@ -274,7 +274,7 @@ gpointer gps_thread(gpointer data) {
 
   bool connected = false;
 
-  while(1) {
+  while(true) {
     if(gps_state->enable) {
       if(!connected) {
         g_debug("trying to connect\n");
