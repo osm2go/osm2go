@@ -49,7 +49,7 @@ public:
 
   std::string comment;
   const std::string src;
-  std::unique_ptr<CURL, curl_deleter> curl;
+  std::shared_ptr<CURL> curl;
 
   void append_str(const char *msg, const char *colorname = nullptr) __attribute__((nonnull(2)));
   void appendf(const char *colname, const char *fmt, ...) __attribute__((format (printf, 3, 4))) __attribute__((nonnull(3)));
