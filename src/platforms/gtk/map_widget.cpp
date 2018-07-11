@@ -290,10 +290,8 @@ void map_t::action_cancel() {
 
 void map_t::remove_bg_image() {
   map_internal *m = static_cast<map_internal *>(this);
-  if(m->background.item) {
-    delete m->background.item;
-    m->background.item = nullptr;
-  }
+  delete m->background.item;
+  m->background.item = nullptr;
 }
 
 static void map_bg_item_destroy_event(gpointer data) {
