@@ -80,7 +80,7 @@ public:
   gpsd_state_t(GpsCallback cb, void *context);
   ~gpsd_state_t() override;
 
-  virtual pos_t get_pos(float *alt = nullptr) override;
+  virtual pos_t get_pos(float *alt) override;
   virtual void setEnable(bool en) override;
 
   bool runCallback()
