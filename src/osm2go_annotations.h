@@ -59,7 +59,7 @@ assert_msg_fmt(const char *file, const int line, const char *func, const char *f
 void __attribute__((noreturn)) ATTRIBUTE_COLD
 assert_msg_unreachable(const char *file, const int line, const char *func);
 
-#define ASSERT_MSG_FMT(x, ...) assert_msg_fmt(__FILE__, __LINE__, __PRETTY_FUNCTION__, x, __VA_ARGS__)
+#define ASSERT_MSG_FMT(fmt, a, b) assert_msg_fmt(__FILE__, __LINE__, __PRETTY_FUNCTION__, fmt, a, b)
 
 #define assert_null(x) \
        do { \
