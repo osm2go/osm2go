@@ -168,7 +168,7 @@ void icon_t::icon_free(icon_item *buf) {
     g_warning("ERROR: icon to be freed not found");
   } else {
     it->second->use--;
-    if(!it->second->use) {
+    if(it->second->use == 0) {
       //  g_debug("freeing unused icon %s", it->first.c_str());
 
       delete it->second;

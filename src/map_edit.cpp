@@ -149,7 +149,7 @@ void map_unref_ways::operator()(node_t* node)
 
   assert_cmpnum_op(node->ways, >, 0);
   node->ways--;
-  if(!node->ways && (node->id == ID_ILLEGAL)) {
+  if(node->ways == 0 && node->id == ID_ILLEGAL) {
     printf("      -> freeing temp node\n");
     delete node;
   }
@@ -562,15 +562,13 @@ void map_t::way_reverse() {
 
   // Flash a message about any side-effects
   g_string msg;
-  if (n_tags_flipped && !n_roles_flipped) {
+  if (n_tags_flipped != 0 && n_roles_flipped == 0) {
     msg.reset(g_strdup_printf(ngettext("%u tag updated", "%u tags updated",
                                        n_tags_flipped), n_tags_flipped));
-  }
-  else if (!n_tags_flipped && n_roles_flipped) {
+  } else if (n_tags_flipped == 0 && n_roles_flipped != 0) {
     msg.reset(g_strdup_printf(ngettext("%u relation updated", "%u relations updated",
                                        n_roles_flipped), n_roles_flipped));
-  }
-  else if (n_tags_flipped && n_roles_flipped) {
+  } else if (n_tags_flipped != 0 && n_roles_flipped != 0) {
     g_string msg1(g_strdup_printf(ngettext("%u tag", "%u tags",
                                            n_tags_flipped), n_tags_flipped));
     g_string msg2(g_strdup_printf(ngettext("%u relation", "%u relations",

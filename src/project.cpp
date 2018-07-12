@@ -496,7 +496,7 @@ project_t::project_t(map_state_t &ms, const std::string &n, const std::string &b
 
 void project_t::adjustServer(const char *nserver, const std::string &def)
 {
-  if(nserver == nullptr || !*nserver || def == nserver)
+  if(nserver == nullptr || *nserver == '\0' || def == nserver)
     rserver.clear();
   else
     rserver = nserver;

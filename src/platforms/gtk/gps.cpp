@@ -148,7 +148,7 @@ static int gps_connect(gpsd_state_t *gps_state) {
   g_debug("GPSD: trying to connect to %s %d\n", GPSD_HOST, GPSD_PORT);
 
   int retries = 5;
-  while(retries &&
+  while(retries > 0 &&
 	(GNOME_VFS_OK != (vfs_result = gnome_vfs_inet_connection_create(
                           &gps_state->iconn, GPSD_HOST, GPSD_PORT, nullptr)))) {
     g_warning("Error creating connection to GPSD, retrying ...\n");
@@ -157,13 +157,13 @@ static int gps_connect(gpsd_state_t *gps_state) {
     sleep(1);
   }
 
-  if(!retries) {
+  if(retries == 0) {
     g_warning("GPS connection finally failed ...\n");
     return -1;
   }
 
   retries = 5;
-  while(retries && ((gps_state->socket =
+  while(retries > 0 && ((gps_state->socket =
      gnome_vfs_inet_connection_to_socket(gps_state->iconn)) == nullptr)) {
     g_warning("Error creating connecting GPSD socket, retrying ...\n");
 
@@ -171,7 +171,7 @@ static int gps_connect(gpsd_state_t *gps_state) {
     sleep(1);
   }
 
-  if(!retries) {
+  if(retries == 0) {
     g_debug("Creating GPS socket finally failed ...\n");
     gnome_vfs_inet_connection_destroy(gps_state->iconn, nullptr);
     return -1;

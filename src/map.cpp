@@ -124,7 +124,7 @@ static void map_node_select(map_t *map, node_t *node) {
     radius = 0.75 * map->style->icon.scale * it->second->maxDimension();
   } else {
     radius = map->style->highlight.width + map->style->node.radius;
-    if(!node->ways)
+    if(node->ways == 0)
       radius += map->style->node.border_radius;
   }
 
@@ -515,7 +515,7 @@ void map_node_draw_functor::operator()(node_t *node)
   if(node->flags & OSM_FLAG_DELETED)
     return;
 
-  if(!node->ways)
+  if(node->ways == 0)
     map_node_new(map, node,
 		 map->style->node.radius * map->state.detail,
 		 map->style->node.border_radius * map->state.detail,
@@ -876,7 +876,7 @@ void hl_nodes::operator()(const std::pair<item_id_t, node_t *> &p)
 {
   node_t * const node = p.second;
 
-  if((node != cur_node) && (!(node->flags & OSM_FLAG_DELETED)))
+  if(node != cur_node && !(node->flags & OSM_FLAG_DELETED))
     operator()(node);
 }
 

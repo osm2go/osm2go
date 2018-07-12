@@ -421,7 +421,7 @@ static bool track_append_position(appdata_t &appdata, const pos_t &pos, float al
 
   if(settings->follow_gps) {
     if(!appdata.map->scroll_to_if_offscreen(lpos)) {
-      if(!--appdata.track.warn_cnt) {
+      if(--appdata.track.warn_cnt == 0) {
         /* warn user once a minute that the current gps */
         /* position is outside the working area */
         appdata.uicontrol->showNotification(_("GPS position outside working area!"), MainUi::Brief);

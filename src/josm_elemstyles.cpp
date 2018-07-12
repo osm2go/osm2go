@@ -410,7 +410,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
   case TagIcon:
     for(unsigned int i = 0; attrs[i] != nullptr; i += 2) {
       if(strcmp(attrs[i], "annotate") == 0)
-        elemstyle->icon.annotate = strcmp(attrs[i + 1], "true");
+        elemstyle->icon.annotate = (strcmp(attrs[i + 1], "true") != 0);
       else if(strcmp(attrs[i], "src") == 0)
         elemstyle->icon.filename = josm_icon_name_adjust(attrs[i + 1]);
       else if(strcmp(attrs[i], "priority") == 0)
