@@ -61,6 +61,12 @@ struct list_priv_t {
   } button;
 };
 
+struct tree_path_deleter {
+  inline void operator()(GtkTreePath *path)
+  { gtk_tree_path_free(path); }
+};
+typedef std::unique_ptr<GtkTreePath, tree_path_deleter> tree_path_guard;
+
 /* a list supports up to three user defined buttons besides */
 /* add, edit and remove */
 static void list_set_user_buttons(list_priv_t *priv, const std::vector<list_button> &buttons) {
@@ -227,9 +233,8 @@ void list_focus_on(GtkWidget *list, GtkTreeIter *iter) {
   gtk_tree_selection_unselect_all(sel);
 
   // Scroll to it, since it might now be out of view.
-  GtkTreePath *path = gtk_tree_model_get_path(model, iter);
-  gtk_tree_view_scroll_to_cell(priv->view, path, nullptr, FALSE, 0, 0);
-  gtk_tree_path_free(path);
+  tree_path_guard path(gtk_tree_model_get_path(model, iter));
+  gtk_tree_view_scroll_to_cell(priv->view, path.get(), nullptr, FALSE, 0, 0);
 
   // reselect
   gtk_tree_selection_select_iter(sel, iter);
@@ -247,18 +252,15 @@ static void changed(GtkTreeSelection *treeselection, gpointer user_data) {
   if(selected) {
     /* check if the entry isn't already visible */
     GtkTreePath *start = nullptr, *end = nullptr;
-    GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
+    tree_path_guard path(gtk_tree_model_get_path(model, &iter));
 
     gtk_tree_view_get_visible_range(priv->view, &start, &end);
+    tree_path_guard sguard(start), eguard(end);
 
     /* check if path is before start of visible area or behin end of it */
-    if((start && (gtk_tree_path_compare(path, start)) < 0) ||
-       (end && (gtk_tree_path_compare(path, end) > 0)))
-      gtk_tree_view_scroll_to_cell(priv->view, path, nullptr, TRUE, 0.5, 0.5);
-
-    if(start) gtk_tree_path_free(start);
-    if(end)   gtk_tree_path_free(end);
-    gtk_tree_path_free(path);
+    if((sguard && (gtk_tree_path_compare(path.get(), sguard.get())) < 0) ||
+       (eguard && (gtk_tree_path_compare(path.get(), eguard.get()) > 0)))
+      gtk_tree_view_scroll_to_cell(priv->view, path.get(), nullptr, TRUE, 0.5, 0.5);
   }
 
   /* the change event handler is overridden */
@@ -354,7 +356,6 @@ void list_view_scroll(GtkTreeView *view, GtkTreeSelection *sel, GtkTreeIter* ite
 
   gtk_tree_selection_select_iter(sel, iter);
 
-  GtkTreePath *mpath = gtk_tree_model_get_path(model, iter);
-  gtk_tree_view_scroll_to_cell(view, mpath, nullptr, FALSE, 0.0f, 0.0f);
-  gtk_tree_path_free(mpath);
+  tree_path_guard mpath(gtk_tree_model_get_path(model, iter));
+  gtk_tree_view_scroll_to_cell(view, mpath.get(), nullptr, FALSE, 0.0f, 0.0f);
 }
