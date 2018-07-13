@@ -24,6 +24,8 @@
 #include <vector>
 
 struct wms_server_t {
+  explicit inline wms_server_t(const std::string &n = std::string(), const std::string &s = std::string())
+    : name(n), server(s) {}
   std::string name, server;
 };
 

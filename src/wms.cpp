@@ -548,12 +548,8 @@ std::vector<wms_server_t *> wms_server_get_default()
 {
   std::vector<wms_server_t *> servers;
 
-  for(unsigned int i = 0; i < default_servers.size(); i++) {
-    wms_server_t *cur = new wms_server_t();
-    cur->name = default_servers[i].name;
-    cur->server = default_servers[i].server;
-    servers.push_back(cur);
-  }
+  for(unsigned int i = 0; i < default_servers.size(); i++)
+    servers.push_back(new wms_server_t(default_servers[i].name, default_servers[i].server));
 
   return servers;
 }

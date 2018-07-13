@@ -158,9 +158,8 @@ settings_t::ref settings_t::instance() {
 
         /* apply valid entry to list */
         if(likely(name && server)) {
-          wms_server_t *cur = new wms_server_t();
-          cur->name = gconf_value_get_string(name.get());
-          cur->server = gconf_value_get_string(server.get());
+          wms_server_t *cur = new wms_server_t(gconf_value_get_string(name.get()),
+                                               gconf_value_get_string(server.get()));
           // upgrade old entries
           if(unlikely(path)) {
             cur->server += gconf_value_get_string(path.get());
