@@ -244,8 +244,8 @@ static void test_taglist() {
 }
 
 static void test_replace() {
-  node_t node;
-  node.flags = 0;
+  node_t node(1, pos_t(0, 0), 1);
+  assert_cmpnum(node.flags, 0);
 
   assert(node.tags.empty());
 
@@ -341,7 +341,7 @@ static void test_split()
   // create the way to split
   std::vector<node_t *> nodes;
   for(int i = 0; i < 6; i++) {
-    node_t *n = new node_t(3, lpos_t(), pos_t(52.25 + i * 0.001, 9.58 + i * 0.001), 1234500 + i);
+    node_t *n = new node_t(3, pos_t(52.25 + i * 0.001, 9.58 + i * 0.001), 1234500 + i);
     o->node_attach(n);
     v->node_chain.push_back(n);
     w->node_chain.push_back(n);
@@ -520,7 +520,7 @@ static void test_split_order()
 {
   std::unique_ptr<osm_t> o(new osm_t());
   for(unsigned int i = 1; i <= 10; i++) {
-    node_t *n = new node_t(3, lpos_t(), pos_t(52.25 + i * 0.001, 9.58 + i * 0.001), 1234500 + i);
+    node_t *n = new node_t(3, pos_t(52.25 + i * 0.001, 9.58 + i * 0.001), 1234500 + i);
     n->id = i;
     o->nodes[i] = n;
   }

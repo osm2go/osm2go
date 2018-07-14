@@ -508,8 +508,8 @@ public:
 
 class node_t : public visible_item_t {
 public:
-  explicit node_t() noexcept;
-  explicit node_t(unsigned int ver, const lpos_t lp, const pos_t &p, item_id_t i = ID_ILLEGAL) noexcept;
+  node_t(unsigned int ver, const lpos_t lp, const pos_t &p) noexcept;
+  node_t(unsigned int ver, const pos_t &p, item_id_t i) noexcept;
   virtual ~node_t() {}
 
   unsigned int ways;

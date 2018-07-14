@@ -273,7 +273,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t::ref osm) {
     if(id < 0) {
       printf("  Restoring NEW node\n");
 
-      node = new node_t(0, lpos_t(), pos, id);
+      node = new node_t(0, pos, id);
 
       osm->nodes[id] = node;
       break;

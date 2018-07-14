@@ -1879,19 +1879,19 @@ void relation_t::members_by_type(unsigned int &nodes, unsigned int &ways, unsign
                 member_counter(nodes, ways, relations));
 }
 
-node_t::node_t() noexcept
-  : visible_item_t()
-  , ways(0)
-  , pos(0, 0)
-  , lpos(0, 0)
-{
-}
-
-node_t::node_t(unsigned int ver, const lpos_t lp, const pos_t &p, item_id_t i) noexcept
-  : visible_item_t(ver, i)
+node_t::node_t(unsigned int ver, const lpos_t lp, const pos_t &p) noexcept
+  : visible_item_t(ver, ID_ILLEGAL)
   , ways(0)
   , pos(p)
   , lpos(lp)
+{
+}
+
+node_t::node_t(unsigned int ver, const pos_t &p, item_id_t i) noexcept
+  : visible_item_t(ver, i)
+  , ways(0)
+  , pos(p)
+  , lpos(0, 0)
 {
 }
 
