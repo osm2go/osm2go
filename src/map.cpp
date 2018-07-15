@@ -1366,11 +1366,13 @@ void map_t::delete_selected() {
 
   const char *objtype = item.object.type_string();
   g_string msgtitle(g_strdup_printf(_("Delete selected %s?"), objtype));
+  g_string msg(g_strdup_printf(_("Do you really want to delete the selected %s?"), objtype));
   if(!yes_no_f(nullptr, MISC_AGAIN_ID_DELETE | MISC_AGAIN_FLAG_DONT_SAVE_NO,
-               msgtitle.get(), _("Do you really want to delete the selected %s?"), objtype))
+               msgtitle.get(), msg.get()))
     return;
 
   msgtitle.reset();
+  msg.reset();
 
   /* deleting the selected item de-selects it ... */
   item_deselect();

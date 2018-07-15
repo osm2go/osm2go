@@ -80,7 +80,8 @@ static void on_toggled(GtkWidget *button, const int *flags)
 }
 
 bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags, const char *title,
-              const char *fmt, ...) {
+              const char *msg)
+{
   /* flags used to prevent re-appearence of dialogs */
   static struct {
     unsigned int not_again;     /* bit is set if dialog is not to be displayed again */
@@ -91,12 +92,7 @@ bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags, const c
   if(again_bit && (dialog_again.not_again & again_bit))
     return ((dialog_again.reply & again_bit) != 0);
 
-  va_list args;
-  va_start( args, fmt );
-  g_string buf(g_strdup_vprintf(fmt, args));
-  va_end( args );
-
-  printf("%s: \"%s\"\n", title, buf.get());
+  printf("%s: \"%s\"\n", title, msg);
 
   GtkWindow *p = GTK_WINDOW(parent ? parent : appdata_t::window);
 
@@ -104,11 +100,11 @@ bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags, const c
 #ifndef FREMANTLE
                   gtk_message_dialog_new(p, GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
-                                         "%s", buf.get()));
+                                         "%s", msg));
 
   gtk_window_set_title(GTK_WINDOW(dialog.get()), title);
 #else
-                  hildon_note_new_confirmation(p, buf.get()));
+                  hildon_note_new_confirmation(p, msg));
 #endif
 
   osm2go_platform::Widget *cbut = nullptr;

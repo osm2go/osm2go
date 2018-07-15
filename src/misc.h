@@ -71,6 +71,6 @@ std::string find_file(const std::string &n);
 /* some compat code */
 
 bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags,
-              const char *title, const char *fmt, ...) __attribute__((format (printf, 4, 5)));
+              const char *title, const char *msg);
 
 #endif // MISC_H

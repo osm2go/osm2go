@@ -688,12 +688,13 @@ static void on_relation_remove(relation_context_t *context) {
 
   g_debug("remove relation #" ITEM_ID_FORMAT, sel->id);
 
-  if(!sel->members.empty())
-    if(!yes_no_f(context->dialog.get(), 0, _("Delete non-empty relation?"),
-                 ngettext("This relation still has %zu member. Delete it anyway?",
-                          "This relation still has %zu members. Delete it anyway?",
-                          sel->members.size()), sel->members.size()))
+  if(!sel->members.empty()) {
+    g_string msg(g_strdup_printf(ngettext("This relation still has %zu member. Delete it anyway?",
+                                          "This relation still has %zu members. Delete it anyway?",
+                                          sel->members.size()), sel->members.size()));
+    if(!yes_no_f(context->dialog.get(), 0, _("Delete non-empty relation?"), msg.get()))
       return;
+  }
 
   /* first remove selected row from list */
   GtkTreeIter       iter;
