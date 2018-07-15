@@ -72,10 +72,10 @@ static void on_toggled(GtkWidget *button, const int *flags)
 
   GtkDialog *dialog = GTK_DIALOG(gtk_widget_get_toplevel(button));
 
-  if(*flags & MISC_AGAIN_FLAG_DONT_SAVE_NO)
+  if(GPOINTER_TO_UINT(flags) & MISC_AGAIN_FLAG_DONT_SAVE_NO)
     gtk_dialog_set_response_sensitive(dialog, RESPONSE_NO, not_active);
 
-  if(*flags & MISC_AGAIN_FLAG_DONT_SAVE_YES)
+  else if(GPOINTER_TO_UINT(flags) & MISC_AGAIN_FLAG_DONT_SAVE_YES)
     gtk_dialog_set_response_sensitive(dialog, RESPONSE_YES, not_active);
 }
 
@@ -89,7 +89,7 @@ bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags, const c
   } dialog_again;
   const unsigned int again_bit = again_flags & ~(MISC_AGAIN_FLAG_DONT_SAVE_NO | MISC_AGAIN_FLAG_DONT_SAVE_YES);
 
-  if(again_bit && (dialog_again.not_again & again_bit))
+  if(dialog_again.not_again & again_bit)
     return ((dialog_again.reply & again_bit) != 0);
 
   printf("%s: \"%s\"\n", title, msg);
@@ -118,7 +118,7 @@ bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags, const c
     GtkWidget *alignment = gtk_alignment_new(0.5, 0, 0, 0);
 
     cbut = osm2go_platform::check_button_new_with_label(_("Don't ask this question again"));
-    g_signal_connect(cbut, "toggled", G_CALLBACK(on_toggled), &again_flags);
+    g_signal_connect(cbut, "toggled", G_CALLBACK(on_toggled), GUINT_TO_POINTER(again_flags));
 
     gtk_container_add(GTK_CONTAINER(alignment), cbut);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), alignment, TRUE, TRUE, 0);
