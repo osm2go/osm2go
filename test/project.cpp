@@ -74,7 +74,7 @@ static void testSave(const std::string &tmpdir, const char *empty_proj)
 
   assert(project.save());
 
-  const std::string &pfile = project_filename(&project);
+  const std::string &pfile = project_filename(project);
 
   osm2go_platform::MappedFile empty(empty_proj);
   assert(empty);

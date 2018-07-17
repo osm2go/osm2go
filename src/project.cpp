@@ -56,8 +56,8 @@
 
 /* ------------ project file io ------------- */
 
-std::string project_filename(const project_t *project) {
-  return project->path + project->name + ".proj";
+std::string project_filename(const project_t &project) {
+  return project.path + project.name + ".proj";
 }
 
 bool project_read(const std::string &project_file, project_t *project,
@@ -167,7 +167,7 @@ bool project_read(const std::string &project_file, project_t *project,
 
 bool project_t::save(osm2go_platform::Widget *parent) {
   char str[32];
-  const std::string &project_file = project_filename(this);
+  const std::string &project_file = project_filename(*this);
 
   printf("saving project to %s\n", project_file.c_str());
 
@@ -370,7 +370,7 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
   } else {
     project.reset(new project_t(appdata.map_state, name, settings->base_path));
 
-    project_file = project_filename(project.get());
+    project_file = project_filename(*project);
   }
   project->map_state.reset();
 
