@@ -221,6 +221,13 @@ namespace std {
       unique_ptr(const unique_ptr&) O2G_DELETED_FUNCTION;
       unique_ptr& operator=(const unique_ptr&) O2G_DELETED_FUNCTION;
     };
+
+  template<typename _Tp, typename _Dp>
+    inline void
+    swap(unique_ptr<_Tp, _Dp>& __x,
+         unique_ptr<_Tp, _Dp>& __y) noexcept
+    { __x.swap(__y); }
+
 }
 #endif
 

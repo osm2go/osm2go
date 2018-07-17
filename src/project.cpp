@@ -385,7 +385,7 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
 
   printf("project_open: loading osm %s\n", project->osmFile.c_str());
   project->parse_osm();
-  appdata.project.reset(project.release());
+  std::swap(appdata.project, project);
 
   return static_cast<bool>(appdata.project->osm);
 }
