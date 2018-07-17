@@ -246,7 +246,8 @@ bool project_t::save(osm2go_platform::Widget *parent) {
  * @returns path of project file relative to base_path or empty
  */
 std::string project_exists(int base_path, const char *name) {
-  std::string ret = std::string(name) + '/' + name + ".proj";
+  const std::string sname(name);
+  std::string ret = sname + '/' + sname + ".proj";
   struct stat st;
 
   /* check for project file */
