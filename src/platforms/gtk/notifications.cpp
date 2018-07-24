@@ -68,13 +68,6 @@ vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType buttons,
   vmessage(parent, type, buttons, title, buf.get());
 }
 
-void messagef(osm2go_platform::Widget *parent, const char *title, const char *fmt, ...) {
-  va_list args;
-  va_start( args, fmt );
-  vmessagef(parent, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, title, fmt, args);
-  va_end( args );
-}
-
 void message_dlg(const char *title, const char *msg, GtkWidget *parent)
 {
   vmessage(parent, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, title, msg);

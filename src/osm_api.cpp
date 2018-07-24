@@ -44,6 +44,7 @@
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
+#include <osm2go_platform_gtk.h>
 #include <osm2go_stl.h>
 
 #define COLOR_ERR  "red"
@@ -56,11 +57,12 @@ bool osm_download(osm2go_platform::Widget *parent, project_t *project)
   const std::string &defaultServer = settings->server;
 
   if(unlikely(!project->rserver.empty())) {
-    if(api_adjust(project->rserver))
-      messagef(parent, _("Server changed"),
-               _("It seems your current project uses an outdated server/protocol. "
-               "It has thus been changed to:\n\n%s"),
-               project->rserver.c_str());
+    if(api_adjust(project->rserver)) {
+      g_string buf(g_strdup_printf(_("It seems your current project uses an outdated "
+                                     "server/protocol. It has thus been changed to:\n\n%s"),
+                                   project->rserver.c_str()));
+      message_dlg(_("Server changed"), buf.get(), parent);
+    }
 
     /* server url should not end with a slash */
     if(unlikely(project->rserver[project->rserver.size() - 1] == '/')) {
