@@ -25,7 +25,7 @@
 void error_dlg(const char *msg, osm2go_platform::Widget *parent = nullptr) __attribute__((nonnull(1)));
 void errorf(osm2go_platform::Widget *parent, const char *fmt, ...) __attribute__((format (printf, 2, 3))) __attribute__((nonnull(2)));
 void warning_dlg(const char *msg, osm2go_platform::Widget *parent = nullptr) __attribute__((nonnull(1)));
-void warningf(osm2go_platform::Widget *parent, const char *fmt, ...) __attribute__((format (printf, 2, 3))) __attribute__((nonnull(2)));
+void warningf(const char *fmt, ...) __attribute__((format (printf, 1, 2))) __attribute__((nonnull(1)));
 void message_dlg(const char *title, const char *msg, osm2go_platform::Widget *parent = nullptr) __attribute__((nonnull(1,2)));
 
 #endif // NOTIFICATIONS_H

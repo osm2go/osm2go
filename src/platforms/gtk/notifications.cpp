@@ -86,10 +86,11 @@ void error_dlg(const char *msg, GtkWidget *parent)
   vmessage(parent, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, _("Error"), msg);
 }
 
-void warningf(osm2go_platform::Widget *parent, const char *fmt, ...) {
+void warningf(const char *fmt, ...)
+{
   va_list args;
   va_start( args, fmt );
-  vmessagef(parent, GTK_MESSAGE_WARNING, GTK_BUTTONS_CLOSE, _("Warning"), fmt, args);
+  vmessagef(nullptr, GTK_MESSAGE_WARNING, GTK_BUTTONS_CLOSE, _("Warning"), fmt, args);
   va_end( args );
 }
 

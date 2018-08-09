@@ -545,8 +545,7 @@ unsigned int project_t::diff_restore() {
           const char *cstr = str;
           printf("diff for project %s\n", cstr);
           if(unlikely(name != cstr)) {
-            warningf(nullptr, _("Diff name (%s) does not match project name (%s)"),
-                     cstr, name.c_str());
+            warningf(_("Diff name (%s) does not match project name (%s)"), cstr, name.c_str());
             res |= DIFF_PROJECT_MISMATCH;
           }
         }
