@@ -245,18 +245,19 @@ static bool current_tab_is(area_context_t *context, const char *str) {
   return current_tab_is(nb, gtk_notebook_get_nth_page(nb, page_num), str);
 }
 
-static inline const char *warn_text() {
-  return _("The currently selected area is %.02f km² (%.02f mi²) in size. "
-           "This is more than the recommended %.02f km² (%.02f mi²).\n\n"
-           "Continuing may result in a big or failing download and low "
-           "mapping performance in a densly mapped area (e.g. cities)!");
+static inline gchar *warn_text(double area) {
+  return g_strdup_printf(_("The currently selected area is %.02f km² (%.02f mi²) in size. "
+                           "This is more than the recommended %.02f km² (%.02f mi²).\n\n"
+                           "Continuing may result in a big or failing download and low "
+                           "mapping performance in a densly mapped area (e.g. cities)!"),
+                         area, area / (KMPMIL * KMPMIL), WARN_OVER, WARN_OVER / (KMPMIL * KMPMIL));
 }
 
 static void on_area_warning_clicked(area_context_t *context) {
   double area = selected_area(context);
 
-  warningf(context->dialog.get(), warn_text(), area, area/(KMPMIL*KMPMIL),
-           WARN_OVER, WARN_OVER/(KMPMIL*KMPMIL));
+  g_string msg(warn_text(area));
+  warning_dlg(msg.get(), context->dialog.get());
 }
 
 static bool area_warning(area_context_t *context) {
@@ -266,8 +267,7 @@ static bool area_warning(area_context_t *context) {
   double area = selected_area(context);
 
   if(area > WARN_OVER) {
-    g_string text(g_strdup_printf(warn_text(), area, area / (KMPMIL * KMPMIL),
-                                  WARN_OVER, WARN_OVER/(KMPMIL*KMPMIL)));
+    g_string text(warn_text(area));
     g_string msg(g_strdup_printf(_("%s\n\nDo you really want to continue?"), text.get()));
     text.reset();
     ret = yes_no_f(context->dialog.get(),
