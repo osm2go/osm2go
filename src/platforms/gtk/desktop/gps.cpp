@@ -17,7 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "gps.h"
+#include <gps.h>
 
 #include <osm2go_platform.h>
 
@@ -29,11 +29,6 @@
 #include <libgpsmm.h>
 #include <mutex>
 #include <unistd.h>
-#ifdef ENABLE_GPSBT
-#include <gpsbt.h>
-#include <gpsmgr.h>
-#include <cerrno>
-#endif
 
 #include <osm2go_cpp.h>
 
@@ -54,10 +49,6 @@ public:
   }
 
   osm2go_platform::Timer timer;
-
-#ifdef ENABLE_GPSBT
-  gpsbt_t context;
-#endif
 
   GThread * const thread_p;
   std::mutex mutex;
@@ -89,20 +80,8 @@ pos_t gpsd_state_t::get_pos(float* alt)
   return pos;
 }
 
-static gpsmm *gps_connect(gpsd_state_t *gps_state) {
-#ifdef ENABLE_GPSBT
-  char errstr[256] = "";
-
-  /* We need to start gpsd (via gpsbt) first. */
-  memset(&gps_state->context, 0, sizeof(gps_state->context));
-  errno = 0;
-
-  if(gpsbt_start(nullptr, 0, 0, 0, errstr, sizeof(errstr), 0, &gps_state->context) < 0)
-    g_debug("Error connecting to GPS receiver: (%d) %s (%s)\n", errno, strerror(errno), errstr);
-#else
-  (void) gps_state;
-#endif
-
+static gpsmm *gps_connect()
+{
   std::unique_ptr<gpsmm> ret(new gpsmm("localhost", DEFAULT_GPSD_PORT));
   if(!ret->is_open())
     return nullptr;
@@ -138,7 +117,7 @@ gpointer gps_thread(gpointer data) {
       if(gps == nullptr) {
         g_debug("trying to connect\n");
 
-        gps = gps_connect(gps_state);
+        gps = gps_connect();
         if(gps == nullptr)
           sleep(10);
       } else {
@@ -162,10 +141,6 @@ gpointer gps_thread(gpointer data) {
         gps->stream(WATCH_DISABLE);
         delete gps;
         gps = nullptr;
-
-#ifdef ENABLE_GPSBT
-	gpsbt_stop(&gps_state->context);
-#endif
       } else
 	sleep(1);
     }
@@ -193,9 +168,6 @@ gpsd_state_t::gpsd_state_t(GpsCallback cb, void *context)
 gpsd_state_t::~gpsd_state_t()
 {
   terminate = true;
-#ifdef ENABLE_GPSBT
-  gpsbt_stop(&context);
-#endif
   if(thread_p != nullptr)
     g_thread_join(thread_p);
 }

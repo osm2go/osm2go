@@ -52,25 +52,13 @@ target_link_libraries(osm2go_platform_lib_private INTERFACE PkgConfig::GConf2)
 if (MAEMO_FOUND)
 	pkg_check_modules(Hildon REQUIRED IMPORTED_TARGET hildon-1)
 	pkg_check_modules(Osso REQUIRED IMPORTED_TARGET libosso)
+	pkg_check_modules(libLocation REQUIRED IMPORTED_TARGET liblocation)
 
 	target_link_libraries(osm2go_platform_lib INTERFACE
 			PkgConfig::Hildon
+			PkgConfig::libLocation
 			PkgConfig::Osso
 	)
-
-	# prefer gpsbt over liblocation as we got complaints regarding liblocation stability
-	pkg_check_modules(GPSBT IMPORTED_TARGET gpsbt)
-	if (GPSBT_FOUND)
-		target_link_libraries(osm2go_platform_lib_private INTERFACE PkgConfig::GPSBT)
-		target_compile_definitions(osm2go_lib PRIVATE ENABLE_GPSBT)
-	else ()
-		pkg_check_modules(libLocation IMPORTED_TARGET liblocation)
-		if (libLocation_FOUND)
-			target_link_libraries(osm2go_platform_lib_private INTERFACE PkgConfig::libLocation)
-		else ()
-			message(WARNING "No liblocation nor gpsbt found, disabling gps auto start!")
-		endif ()
-	endif ()
 
 	pkg_check_modules(TabletBrowserInterface REQUIRED tablet-browser-interface)
 	add_subdirectory(fremantle)
@@ -84,6 +72,9 @@ if (MAEMO_FOUND)
 else ()
 	find_package(GTK2 2.24 REQUIRED)
 
+	pkg_check_modules(LibGPS REQUIRED IMPORTED_TARGET libgps)
+	target_link_libraries(osm2go_platform_lib_private INTERFACE PkgConfig::LibGPS)
+
 	target_link_libraries(osm2go_platform_lib INTERFACE
 			${GTK2_TARGETS}
 	)
@@ -93,12 +84,6 @@ else ()
 	set(USE_SVG_ICONS_DEFAULT On PARENT_SCOPE)
 endif ()
 target_compile_definitions(osm2go_platform_lib INTERFACE GTK_DISABLE_DEPRECATED)
-
-if (NOT libLocation_FOUND)
-	pkg_check_modules(LibGPS REQUIRED IMPORTED_TARGET libgps)
-	target_sources(osm2go_lib PRIVATE src/platforms/gtk/gps.cpp)
-	target_link_libraries(osm2go_platform_lib_private INTERFACE PkgConfig::LibGPS)
-endif ()
 
 add_subdirectory(osm-gps-map)
 target_link_libraries(osm2go_platform_lib_private INTERFACE osm-gps-map)
