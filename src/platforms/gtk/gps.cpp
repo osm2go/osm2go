@@ -94,7 +94,7 @@ public:
   gpsbt_t context;
 #endif
 
-  GThread* thread_p;
+  GThread * const thread_p;
   std::mutex mutex;
   GnomeVFSInetConnection *iconn;
   GnomeVFSSocket *socket;
@@ -330,6 +330,7 @@ gps_state_t *gps_state_t::create(GpsCallback cb, void *context) {
 
 gpsd_state_t::gpsd_state_t(GpsCallback cb, void *context)
   : gps_state_t(cb, context)
+  , thread_p(g_thread_try_new("gps", gps_thread, this, nullptr))
   , iconn(nullptr)
   , socket(nullptr)
   , enable(false)
@@ -337,11 +338,6 @@ gpsd_state_t::gpsd_state_t(GpsCallback cb, void *context)
   g_debug("GPS init: Using gpsd\n");
 
   /* start a new thread to listen to gpsd */
-#if GLIB_CHECK_VERSION(2,32,0)
-  thread_p = g_thread_try_new("gps", gps_thread, this, nullptr);
-#else
-  thread_p = g_thread_create(gps_thread, this, FALSE, nullptr);
-#endif
 }
 
 gpsd_state_t::~gpsd_state_t()
@@ -349,8 +345,6 @@ gpsd_state_t::~gpsd_state_t()
 #ifdef ENABLE_GPSBT
   gpsbt_stop(&context);
 #endif
-#if GLIB_CHECK_VERSION(2,32,0)
   if(thread_p != nullptr)
     g_thread_unref(thread_p);
-#endif
 }
