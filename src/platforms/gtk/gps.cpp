@@ -26,7 +26,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <gtk/gtk.h>
-#include <libgnomevfs/gnome-vfs-inet-connection.h>
+#include <libgpsmm.h>
 #include <mutex>
 #include <unistd.h>
 #ifdef ENABLE_GPSBT
@@ -38,41 +38,6 @@
 #include <osm2go_cpp.h>
 
 #define MAXTAGLEN    8       /* maximum length of sentence tag name */
-
-struct gps_fix_t {
-  inline gps_fix_t(pos_t p, double a, double e)
-    : mode(0), pos(p), alt(a), eph(e) {}
-    int    mode;	/* Mode of fix */
-#define MODE_NOT_SEEN	0	/* mode update not seen yet */
-#define MODE_NO_FIX	1	/* none */
-#define MODE_2D  	2	/* good for latitude/longitude */
-#define MODE_3D  	3	/* good for altitude/climb too */
-    pos_t pos;          /* Latitude/Longitude in degrees (valid if mode >= 2) */
-    double alt;
-    double eph;  	/* Horizontal position uncertainty, meters */
-};
-
-typedef unsigned int gps_mask_t;
-
-struct gps_data_t {
-  inline gps_data_t()
-    : set(0), fix(pos_t(0, 0), 0, 0), status(0) {}
-    gps_mask_t set;	/* has field been set since this was last cleared? */
-#define LATLON_SET	0x00000008u
-#define ALTITUDE_SET	0x00000010u
-#define STATUS_SET	0x00000100u
-#define MODE_SET	0x00000200u
-#define SATELLITE_SET	0x00040000u
-
-    gps_fix_t fix;		/* accumulated PVT data */
-
-    /* GPS status -- always valid */
-    int    status;		/* Do we have a fix? */
-#define STATUS_NO_FIX	0	/* no */
-#define STATUS_FIX	1	/* yes, without DGPS */
-#define STATUS_DGPS_FIX	2	/* yes, with DGPS */
-
-};
 
 /* setup for direct gpsd based communication */
 class gpsd_state_t : public gps_state_t {
@@ -96,17 +61,12 @@ public:
 
   GThread * const thread_p;
   std::mutex mutex;
-  GnomeVFSInetConnection *iconn;
-  GnomeVFSSocket *socket;
 
   bool enable;
+  bool terminate;
 
   gps_data_t gpsdata;
 };
-
-/* maybe user configurable later on ... */
-#define GPSD_HOST "127.0.0.1"
-#define GPSD_PORT 2947
 
 pos_t gpsd_state_t::get_pos(float* alt)
 {
@@ -116,10 +76,12 @@ pos_t gpsd_state_t::get_pos(float* alt)
     std::lock_guard<std::mutex> lock(mutex);
     if(gpsdata.set & STATUS_SET) {
       if(gpsdata.status != STATUS_NO_FIX) {
-        if(gpsdata.set & LATLON_SET)
-          pos = gpsdata.fix.pos;
+        if(gpsdata.set & LATLON_SET) {
+          pos.lat = gpsdata.fix.latitude;
+          pos.lon = gpsdata.fix.longitude;
+        }
         if(alt != nullptr && gpsdata.set & ALTITUDE_SET)
-          *alt = gpsdata.fix.alt;
+          *alt = gpsdata.fix.altitude;
       }
     }
   }
@@ -127,8 +89,7 @@ pos_t gpsd_state_t::get_pos(float* alt)
   return pos;
 }
 
-static int gps_connect(gpsd_state_t *gps_state) {
-  GnomeVFSResult vfs_result;
+static gpsmm *gps_connect(gpsd_state_t *gps_state) {
 #ifdef ENABLE_GPSBT
   char errstr[256] = "";
 
@@ -137,115 +98,18 @@ static int gps_connect(gpsd_state_t *gps_state) {
   errno = 0;
 
   if(gpsbt_start(nullptr, 0, 0, 0, errstr, sizeof(errstr), 0, &gps_state->context) < 0)
-    g_warning("Error connecting to GPS receiver: (%d) %s (%s)\n", errno, strerror(errno), errstr);
+    g_debug("Error connecting to GPS receiver: (%d) %s (%s)\n", errno, strerror(errno), errstr);
+#else
+  (void) gps_state;
 #endif
 
-  /************** from here down pure gnome/gtk/gpsd ********************/
+  std::unique_ptr<gpsmm> ret(new gpsmm("localhost", DEFAULT_GPSD_PORT));
+  if(!ret->is_open())
+    return nullptr;
 
-  /* try to connect to gpsd */
-  /* Create a socket to interact with GPSD. */
+  ret->stream(WATCH_ENABLE | WATCH_JSON);
 
-  g_debug("GPSD: trying to connect to %s %d\n", GPSD_HOST, GPSD_PORT);
-
-  int retries = 5;
-  while(retries > 0 &&
-	(GNOME_VFS_OK != (vfs_result = gnome_vfs_inet_connection_create(
-                          &gps_state->iconn, GPSD_HOST, GPSD_PORT, nullptr)))) {
-    g_warning("Error creating connection to GPSD, retrying ...\n");
-
-    retries--;
-    sleep(1);
-  }
-
-  if(retries == 0) {
-    g_warning("GPS connection finally failed ...\n");
-    return -1;
-  }
-
-  retries = 5;
-  while(retries > 0 && ((gps_state->socket =
-     gnome_vfs_inet_connection_to_socket(gps_state->iconn)) == nullptr)) {
-    g_warning("Error creating connecting GPSD socket, retrying ...\n");
-
-    retries--;
-    sleep(1);
-  }
-
-  if(retries == 0) {
-    g_debug("Creating GPS socket finally failed ...\n");
-    gnome_vfs_inet_connection_destroy(gps_state->iconn, nullptr);
-    return -1;
-  }
-
-  GTimeVal timeout = { 10, 0 };
-  if(GNOME_VFS_OK != (vfs_result = gnome_vfs_socket_set_timeout(
-                      gps_state->socket, &timeout, nullptr))) {
-    g_warning("Error setting GPSD timeout\n");
-    gnome_vfs_inet_connection_destroy(gps_state->iconn, nullptr);
-    return -1;
-  }
-
-  g_info("GPSD connected ...\n");
-
-  return 0;
-}
-
-static void gps_clear_fix(gps_fix_t *fixp) {
-  fixp->mode = MODE_NOT_SEEN;
-  fixp->pos.lat = fixp->pos.lon = NAN;
-  fixp->alt = NAN;
-  fixp->eph = NAN;
-}
-
-/* unpack a daemon response into a status structure */
-static void gps_unpack(char *buf, gps_data_t *gpsdata) {
-  char *ns, *sp, *tp;
-
-  for(ns = strstr(buf,"GPSD"); ns != nullptr; ns = strstr(ns+1, "GPSD")) {
-    /* the following should execute each time we have a good next sp */
-    for (sp = ns + 5; *sp != '\0'; sp = tp+1) {
-      tp = sp + strcspn(sp, ",\r\n");
-      if (*tp == '\0')
-        tp--;
-      else
-        *tp = '\0';
-
-      if (*sp == '0') {
-	if (sp[2] == '?') {
-	  gpsdata->set =
-	    (gpsdata->set & SATELLITE_SET) | // fix for below
-	    MODE_SET | STATUS_SET;  // this clears sat info??
-	  gpsdata->status = STATUS_NO_FIX;
-	  gps_clear_fix(&gpsdata->fix);
-	} else {
-	  char tag[MAXTAGLEN+1], alt[20], eph[20], lat[20], lon[20], mode[2];
-	  int st = sscanf(sp+2,
-			  "%8s %*s %*s %19s %19s "
-			  "%19s %19s %*s %*s %*s %*s "
-			  "%*s %*s %*s %1s",
-			  tag, lat, lon,
-			  alt, eph,
-			  mode);
-	  if (st >= 5) {
-#define DEFAULT(val) ((val)[0] == '?') ? NAN : g_ascii_strtod((val), nullptr)
-          gps_fix_t nf(pos_t(DEFAULT(lat), DEFAULT(lon)), DEFAULT(alt), DEFAULT(eph));
-#undef DEFAULT
-	    if (st >= 6)
-	      nf.mode = (mode[0] == '?') ? MODE_NOT_SEEN : atoi(mode);
-	    else
-	      nf.mode = (alt[0] == '?') ? MODE_2D : MODE_3D;
-	    gpsdata->fix = nf;
-	    gpsdata->set |= LATLON_SET|MODE_SET;
-	    gpsdata->status = STATUS_FIX;
-	    gpsdata->set |= STATUS_SET;
-
-	    if(alt[0] != '?')
-	      gpsdata->set |= ALTITUDE_SET;
-	  }
-	}
-      }
-    }
-  }
+  return ret.release();
 }
 
 
@@ -264,63 +128,50 @@ void gpsd_state_t::setEnable(bool en)
 }
 
 gpointer gps_thread(gpointer data) {
-  GnomeVFSFileSize bytes_read;
-  char str[512];
-
-  const char *msg = "o\r\n";   /* pos request */
-
   gpsd_state_t * const gps_state = static_cast<gpsd_state_t *>(data);
   gps_state->gpsdata.set = 0;
 
-  bool connected = false;
+  gpsmm *gps = nullptr;
 
-  while(true) {
+  while(!gps_state->terminate) {
     if(gps_state->enable) {
-      if(!connected) {
+      if(gps == nullptr) {
         g_debug("trying to connect\n");
 
-	if(gps_connect(gps_state) < 0)
-	  sleep(10);
-	else
-	  connected = true;
-      } else if(gnome_vfs_socket_write(gps_state->socket, msg,
-                  strlen(msg) + 1, &bytes_read, nullptr) == GNOME_VFS_OK) {
+        gps = gps_connect(gps_state);
+        if(gps == nullptr)
+          sleep(10);
+      } else {
 
 	/* update every second, wait here to make sure a complete */
 	/* reply is received */
-	sleep(1);
-
-	if(bytes_read == (strlen(msg)+1)) {
-          if(gnome_vfs_socket_read(gps_state->socket, str, sizeof(str) - 1,
-                                   &bytes_read, nullptr) == GNOME_VFS_OK) {
-	    str[bytes_read] = 0;
-
-          g_debug("msg: %s (%zu)\n", str, strlen(str));
+        if(gps->waiting(1000000)) {
+          const gps_data_t *gdata = gps->read();
 
           std::lock_guard<std::mutex> lock(gps_state->mutex);
 
-	    gps_state->gpsdata.set &=
-	      ~(LATLON_SET|MODE_SET|STATUS_SET);
-
-	    gps_unpack(str, &gps_state->gpsdata);
+          if(G_LIKELY(gdata != nullptr))
+            gps_state->gpsdata = *gdata;
+          else
+            gps_clear_fix(&gps_state->gpsdata.fix);
 	  }
-	}
       }
     } else {
-      if(connected) {
+      if(gps) {
         g_debug("stopping GPS connection due to user request\n");
-        gnome_vfs_inet_connection_destroy(gps_state->iconn, nullptr);
+        gps->stream(WATCH_DISABLE);
+        delete gps;
+        gps = nullptr;
 
 #ifdef ENABLE_GPSBT
 	gpsbt_stop(&gps_state->context);
 #endif
-	connected = false;
       } else
 	sleep(1);
     }
   }
 
-  g_debug("GPS thread ended???\n");
+  g_debug("GPS thread ended\n");
   return nullptr;
 }
 
@@ -331,9 +182,8 @@ gps_state_t *gps_state_t::create(GpsCallback cb, void *context) {
 gpsd_state_t::gpsd_state_t(GpsCallback cb, void *context)
   : gps_state_t(cb, context)
   , thread_p(g_thread_try_new("gps", gps_thread, this, nullptr))
-  , iconn(nullptr)
-  , socket(nullptr)
   , enable(false)
+  , terminate(false)
 {
   g_debug("GPS init: Using gpsd\n");
 
@@ -342,9 +192,10 @@ gpsd_state_t::gpsd_state_t(GpsCallback cb, void *context)
 
 gpsd_state_t::~gpsd_state_t()
 {
+  terminate = true;
 #ifdef ENABLE_GPSBT
   gpsbt_stop(&context);
 #endif
   if(thread_p != nullptr)
-    g_thread_unref(thread_p);
+    g_thread_join(thread_p);
 }

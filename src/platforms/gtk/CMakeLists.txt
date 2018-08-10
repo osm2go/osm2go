@@ -95,9 +95,9 @@ endif ()
 target_compile_definitions(osm2go_platform_lib INTERFACE GTK_DISABLE_DEPRECATED)
 
 if (NOT libLocation_FOUND)
-	pkg_check_modules(GVFS REQUIRED IMPORTED_TARGET gnome-vfs-module-2.0)
+	pkg_check_modules(LibGPS REQUIRED IMPORTED_TARGET libgps)
 	target_sources(osm2go_lib PRIVATE src/platforms/gtk/gps.cpp)
-	target_link_libraries(osm2go_platform_lib_private INTERFACE PkgConfig::GVFS)
+	target_link_libraries(osm2go_platform_lib_private INTERFACE PkgConfig::LibGPS)
 endif ()
 
 add_subdirectory(osm-gps-map)
