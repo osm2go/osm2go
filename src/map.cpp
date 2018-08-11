@@ -23,7 +23,7 @@
 #include "appdata.h"
 #include "canvas.h"
 #include "diff.h"
-#include "gps.h"
+#include "gps_state.h"
 #include "iconbar.h"
 #include "info.h"
 #include "map_hl.h"

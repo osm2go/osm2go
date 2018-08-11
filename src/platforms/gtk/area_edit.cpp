@@ -19,9 +19,9 @@
 
 #include "area_edit.h"
 
-#include "gps.h"
-#include "misc.h"
-#include "notifications.h"
+#include <gps_state.h>
+#include <misc.h>
+#include <notifications.h>
 
 #include "osm-gps-map.h"
 #include "osm-gps-map-osd-select.h"

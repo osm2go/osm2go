@@ -63,7 +63,7 @@ add_library(osm2go_lib STATIC
 	src/diff.h
 	src/fdguard.cpp
 	src/fdguard.h
-	src/gps.h
+	src/gps_state.h
 	src/icon.h
 	src/iconbar.h
 	src/info.h

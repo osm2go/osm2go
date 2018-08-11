@@ -17,7 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <gps.h>
+#include <gps_state.h>
 
 #include <osm2go_platform.h>
 
@@ -26,8 +26,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <gtk/gtk.h>
-// use this include to drag in the correct gps.h
-#include <libgpsmm.h>
+#include <gps.h>
 #include <mutex>
 #include <unistd.h>
 

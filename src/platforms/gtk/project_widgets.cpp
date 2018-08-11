@@ -23,7 +23,7 @@
 #include "appdata.h"
 #include "area_edit.h"
 #include "diff.h"
-#include "gps.h"
+#include "gps_state.h"
 #include "list.h"
 #include "map.h"
 #include "misc.h"

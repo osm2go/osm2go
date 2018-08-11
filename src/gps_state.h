@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef GPS_H
-#define GPS_H
+#ifndef GPS_STATE_H
+#define GPS_STATE_H
 
 #include "pos.h"
 

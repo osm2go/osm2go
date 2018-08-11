@@ -20,7 +20,7 @@
 #include <appdata.h>
 #include <canvas.h>
 #include <diff.h>
-#include <gps.h>
+#include <gps_state.h>
 #include <icon.h>
 #include <iconbar.h>
 #include <josm_presets.h>

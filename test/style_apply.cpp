@@ -2,7 +2,7 @@
 #include <josm_elemstyles_p.h>
 
 #include <appdata.h>
-#include <gps.h>
+#include <gps_state.h>
 #include <icon.h>
 #include <iconbar.h>
 #include <josm_presets.h>

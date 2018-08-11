@@ -3,7 +3,7 @@
 
 #include <appdata.h>
 #include <fdguard.h>
-#include <gps.h>
+#include <gps_state.h>
 #include <icon.h>
 #include <iconbar.h>
 #include <josm_presets.h>

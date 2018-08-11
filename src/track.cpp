@@ -26,7 +26,7 @@
 
 #include "appdata.h"
 #include "fdguard.h"
-#include "gps.h"
+#include "gps_state.h"
 #include "map.h"
 #include "project.h"
 #include "settings.h"

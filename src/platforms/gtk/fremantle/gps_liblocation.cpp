@@ -17,9 +17,9 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "gps.h"
+#include <gps_state.h>
 
-#include "settings.h"
+#include <settings.h>
 
 #include <cmath>
 #include <cstdio>
