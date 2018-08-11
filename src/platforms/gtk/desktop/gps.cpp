@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <gtk/gtk.h>
+// use this include to drag in the correct gps.h
 #include <libgpsmm.h>
 #include <mutex>
 #include <unistd.h>
@@ -80,13 +81,15 @@ pos_t gpsd_state_t::get_pos(float* alt)
   return pos;
 }
 
-static gpsmm *gps_connect()
+static gps_data_t *gps_connect()
 {
-  std::unique_ptr<gpsmm> ret(new gpsmm("localhost", DEFAULT_GPSD_PORT));
-  if(!ret->is_open())
+  std::unique_ptr<gps_data_t> ret(new gps_data_t);
+  memset(ret.get(), 0, sizeof(*ret.get()));
+  if(gps_open("localhost", DEFAULT_GPSD_PORT, ret.get()) != 0)
     return nullptr;
 
-  ret->stream(WATCH_ENABLE | WATCH_JSON);
+  if(gps_stream(ret.get(), WATCH_ENABLE | WATCH_JSON, NULL) < 0)
+    return nullptr;
 
   return ret.release();
 }
@@ -110,39 +113,37 @@ gpointer gps_thread(gpointer data) {
   gpsd_state_t * const gps_state = static_cast<gpsd_state_t *>(data);
   gps_state->gpsdata.set = 0;
 
-  gpsmm *gps = nullptr;
+  std::unique_ptr<gps_data_t> gps;
 
   while(!gps_state->terminate) {
     if(gps_state->enable) {
-      if(gps == nullptr) {
+      if(!gps) {
         g_debug("trying to connect\n");
 
-        gps = gps_connect();
-        if(gps == nullptr)
+        gps.reset(gps_connect());
+        if(!gps)
           sleep(10);
       } else {
-
-	/* update every second, wait here to make sure a complete */
-	/* reply is received */
-        if(gps->waiting(1000000)) {
-          const gps_data_t *gdata = gps->read();
+        /* update every second, wait here to make sure a complete */
+        /* reply is received */
+        if(gps_waiting(gps.get(), 1000000)) {
+          int r = gps_read(gps.get());
 
           std::lock_guard<std::mutex> lock(gps_state->mutex);
 
-          if(G_LIKELY(gdata != nullptr))
-            gps_state->gpsdata = *gdata;
+          if(G_LIKELY(r > 0))
+            gps_state->gpsdata = *gps;
           else
             gps_clear_fix(&gps_state->gpsdata.fix);
-	  }
+        }
       }
     } else {
       if(gps) {
         g_debug("stopping GPS connection due to user request\n");
-        gps->stream(WATCH_DISABLE);
-        delete gps;
-        gps = nullptr;
+        gps_stream(gps.get(), WATCH_DISABLE, nullptr);
+        gps.reset();
       } else
-	sleep(1);
+        sleep(1);
     }
   }
 
