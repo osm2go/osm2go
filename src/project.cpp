@@ -318,8 +318,9 @@ void project_delete(project_t *project) {
     int dfd = dir.dirfd();
     dirent *d;
     while ((d = dir.next()) != nullptr) {
-      if(unlikely(d->d_type == DT_DIR ||
-                    (unlinkat(dfd, d->d_name, 0) == -1 && errno == EISDIR)))
+      if(unlikely((d->d_type == DT_DIR ||
+                    (unlinkat(dfd, d->d_name, 0) == -1 && errno == EISDIR)) &&
+                    strcmp(d->d_name, ".") != 0 && strcmp(d->d_name, "..") != 0))
         unlinkat(dfd, d->d_name, AT_REMOVEDIR);
     }
 
