@@ -25,8 +25,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <gtk/gtk.h>
 #include <gps.h>
+#include <gtk/gtk.h>
 #include <mutex>
 #include <unistd.h>
 
