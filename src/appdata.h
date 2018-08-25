@@ -64,6 +64,13 @@ struct appdata_t {
 
   void track_clear();
   void main_ui_enable();
+
+  /**
+   * @brief update the title of the application window
+   *
+   * The project name of the currently active project will be used.
+   */
+  void set_title();
 };
 
 #endif // APPDATA_H

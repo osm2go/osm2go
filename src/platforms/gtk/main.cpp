@@ -114,25 +114,7 @@ void appdata_t::main_ui_enable() {
     map->action_cancel();
 
   /* ---- set project name as window title ----- */
-  g_string str;
-  const char *cstr = "OSM2go";
-
-  if(project) {
-#ifdef FREMANTLE
-    str.reset(g_markup_printf_escaped(_("<b>%s</b> - OSM2Go"),
-                                      project->name.c_str()));
-    cstr = str.get();
-  }
-
-  hildon_window_set_markup(HILDON_WINDOW(window), cstr);
-#else
-    str.reset(g_strdup_printf(_("%s - OSM2Go"), project->name.c_str()));
-    cstr = str.get();
-  }
-
-  gtk_window_set_title(GTK_WINDOW(window), cstr);
-#endif
-  str.reset();
+  set_title();
 
   iconbar->setToolbarEnable(osm_valid == TRUE);
   /* disable all menu entries related to map */
@@ -160,6 +142,28 @@ void appdata_t::main_ui_enable() {
 
   if(!project)
     uicontrol->showNotification(_("Please load or create a project"));
+}
+
+void appdata_t::set_title()
+{
+  g_string str;
+  const char *cstr = _("OSM2go");
+
+  if(project) {
+#ifdef FREMANTLE
+    str.reset(g_markup_printf_escaped(_("<b>%s</b> - OSM2Go"),
+                                      project->name.c_str()));
+    cstr = str.get();
+  }
+
+  hildon_window_set_markup(HILDON_WINDOW(window), cstr);
+#else
+    str.reset(g_strdup_printf(_("%s - OSM2Go"), project->name.c_str()));
+    cstr = str.get();
+  }
+
+  gtk_window_set_title(GTK_WINDOW(window), cstr);
+#endif
 }
 
 /******************** begin of menu *********************/
@@ -1149,7 +1153,7 @@ static int application_run(const char *proj)
 #else
   /* Create a Window. */
   appdata_t::window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title(GTK_WINDOW(appdata_t::window), "OSM2Go");
+  appdata.set_title();
   /* Set a decent default size for the window. */
   gtk_window_set_default_size(GTK_WINDOW(appdata_t::window), DEFAULT_WIDTH, DEFAULT_HEIGHT);
   gtk_window_set_icon(GTK_WINDOW(appdata_t::window), appdata.icons.load(PACKAGE)->buffer());
