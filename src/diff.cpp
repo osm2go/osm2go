@@ -117,19 +117,21 @@ void diff_save_nodes::operator()(const std::pair<item_id_t, node_t *> &pair)
 }
 
 struct diff_save_ways : diff_save_objects {
-  explicit diff_save_ways(xmlNodePtr r) : diff_save_objects(r) { }
+  osm_t::ref osm;
+  explicit diff_save_ways(xmlNodePtr r, osm_t::ref o) : diff_save_objects(r), osm(o) { }
   void operator()(const std::pair<item_id_t, way_t *> &pair);
 };
 
 void diff_save_ways::operator()(const std::pair<item_id_t, way_t *> &pair)
 {
   const way_t * const way = pair.second;
-  if(!way->flags)
+  bool hidden = osm->wayIsHidden(way);
+  if(!way->flags && !hidden)
     return;
 
   xmlNodePtr node_way = diff_save_state_n_id(way, way_t::api_string());
 
-  if(way->flags & OSM_FLAG_HIDDEN)
+  if(hidden)
     xmlNewProp(node_way, BAD_CAST "hidden", BAD_CAST "true");
 
   /* additional info is only required if the way hasn't been deleted */
@@ -189,7 +191,7 @@ void project_t::diff_save() const {
   xmlDocSetRootElement(doc.get(), root_node);
 
   std::for_each(osm->nodes.begin(), osm->nodes.end(), diff_save_nodes(root_node));
-  std::for_each(osm->ways.begin(), osm->ways.end(), diff_save_ways(root_node));
+  std::for_each(osm->ways.begin(), osm->ways.end(), diff_save_ways(root_node, osm));
   std::for_each(osm->relations.begin(), osm->relations.end(), diff_save_relations(root_node));
 
   xmlSaveFormatFileEnc(ndiff.c_str(), doc.get(), "UTF-8", 1);
@@ -369,7 +371,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t::ref osm) {
 
   /* handle hidden flag */
   if(xml_get_prop_bool(node_way, "hidden"))
-    way->flags |= OSM_FLAG_HIDDEN;
+    osm->waySetHidden(way);
 
   /* update node_chain */
   /* scan for nodes */
@@ -573,8 +575,7 @@ unsigned int project_t::diff_restore() {
   }
 
   /* check for hidden ways and update menu accordingly */
-  if(osm->ways.end() != std::find_if(osm->ways.begin(), osm->ways.end(),
-                                     osm_t::find_object_by_flags(OSM_FLAG_HIDDEN)))
+  if(osm->hasHiddenWays())
     res |= DIFF_HAS_HIDDEN;
 
   return res;

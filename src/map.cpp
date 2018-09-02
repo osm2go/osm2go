@@ -446,7 +446,10 @@ struct map_way_draw_functor {
 void map_way_draw_functor::operator()(way_t *way)
 {
   /* don't draw a way that's not there anymore */
-  if(way->flags & (OSM_FLAG_DELETED | OSM_FLAG_HIDDEN))
+  if(way->flags & OSM_FLAG_DELETED)
+    return;
+
+  if(map->appdata.project->osm->wayIsHidden(way))
     return;
 
   /* attach map_item to ways map_item_chain */
@@ -1656,7 +1659,7 @@ void map_t::hide_selected() {
   printf("hiding way #" ITEM_ID_FORMAT "\n", way->id);
 
   item_deselect();
-  way->flags |= OSM_FLAG_HIDDEN;
+  appdata.project->osm->waySetHidden(way);
   way->item_chain_destroy();
 
   appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_MAP_SHOW_ALL, true);

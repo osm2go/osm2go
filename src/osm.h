@@ -333,6 +333,10 @@ struct osm_t {
   dirty_t modified() const {
     return dirty_t(*this);
   }
+
+  static inline bool wayIsHidden(const way_t *w);
+  static inline void waySetHidden(way_t *w);
+  inline bool hasHiddenWays() const;
 };
 
 xmlChar *osm_generate_xml_changeset(const std::string &comment, const std::string &src);
@@ -655,6 +659,22 @@ void osm_node_chain_free(node_chain_t &node_chain);
 
 bool osm_t::find_object_by_flags::operator()(std::pair<item_id_t, base_object_t *> pair) {
   return pair.second->flags & flagmask;
+}
+
+bool osm_t::wayIsHidden(const way_t *w)
+{
+  return w->flags & OSM_FLAG_HIDDEN;
+}
+
+void osm_t::waySetHidden(way_t *w)
+{
+  w->flags |= OSM_FLAG_HIDDEN;
+}
+
+bool osm_t::hasHiddenWays() const
+{
+  return ways.end() !=
+          std::find_if(ways.begin(), ways.end(), osm_t::find_object_by_flags(OSM_FLAG_HIDDEN));
 }
 
 #endif /* OSM_H */
