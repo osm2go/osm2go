@@ -30,6 +30,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include <osm2go_cpp.h>
@@ -40,7 +41,6 @@
 
 #define OSM_FLAG_DIRTY    (1<<0)
 #define OSM_FLAG_DELETED  (1<<1)
-#define OSM_FLAG_HIDDEN   (1<<3)
 
 /* item_id_t needs to be signed as osm2go uses negative ids for items */
 /* not yet registered with the main osm database */
@@ -318,12 +318,6 @@ struct osm_t {
    */
   way_t *mergeWays(way_t *first, way_t *second, bool &conflict);
 
-  struct find_object_by_flags {
-    int flagmask;
-    explicit inline find_object_by_flags(int f) : flagmask(f) {}
-    inline bool operator()(std::pair<item_id_t, base_object_t *> pair);
-  };
-
   /**
    * @brief check if there are any modifications
    * @param honor_hidden_flags if setting HIDDEN on ways should be considered a modifications
@@ -334,8 +328,9 @@ struct osm_t {
     return dirty_t(*this);
   }
 
-  static inline bool wayIsHidden(const way_t *w);
-  static inline void waySetHidden(way_t *w);
+  std::unordered_set<way_t *> hiddenWays;
+  inline bool wayIsHidden(const way_t *w) const;
+  inline void waySetHidden(way_t *w);
   inline bool hasHiddenWays() const;
 };
 
@@ -479,6 +474,9 @@ public:
 
   inline bool isNew() const noexcept
   { return id < 0; }
+
+  inline bool isDirty() const noexcept
+  { return flags != 0; }
 
   /**
    * @brief generate the xml elements for an osmChange delete section
@@ -657,24 +655,19 @@ protected:
 
 void osm_node_chain_free(node_chain_t &node_chain);
 
-bool osm_t::find_object_by_flags::operator()(std::pair<item_id_t, base_object_t *> pair) {
-  return pair.second->flags & flagmask;
-}
-
-bool osm_t::wayIsHidden(const way_t *w)
+bool osm_t::wayIsHidden(const way_t *w) const
 {
-  return w->flags & OSM_FLAG_HIDDEN;
+  return hiddenWays.find(const_cast<way_t *>(w)) != hiddenWays.end();
 }
 
 void osm_t::waySetHidden(way_t *w)
 {
-  w->flags |= OSM_FLAG_HIDDEN;
+  hiddenWays.insert(w);
 }
 
 bool osm_t::hasHiddenWays() const
 {
-  return ways.end() !=
-          std::find_if(ways.begin(), ways.end(), osm_t::find_object_by_flags(OSM_FLAG_HIDDEN));
+  return !hiddenWays.empty();
 }
 
 #endif /* OSM_H */

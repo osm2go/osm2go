@@ -102,7 +102,7 @@ struct diff_save_nodes : diff_save_objects {
 void diff_save_nodes::operator()(const std::pair<item_id_t, node_t *> &pair)
 {
   const node_t * const node = pair.second;
-  if(!node->flags)
+  if(!node->isDirty())
     return;
 
   xmlNodePtr node_node = diff_save_state_n_id(node, node_t::api_string());
@@ -126,7 +126,7 @@ void diff_save_ways::operator()(const std::pair<item_id_t, way_t *> &pair)
 {
   const way_t * const way = pair.second;
   bool hidden = osm->wayIsHidden(way);
-  if(!way->flags && !hidden)
+  if(!way->isDirty() && !hidden)
     return;
 
   xmlNodePtr node_way = diff_save_state_n_id(way, way_t::api_string());
@@ -152,7 +152,7 @@ struct diff_save_relations : diff_save_objects {
 void diff_save_relations::operator()(const std::pair<item_id_t, relation_t *> &pair)
 {
   const relation_t * const relation = pair.second;
-  if(!relation->flags)
+  if(!relation->isDirty())
     return;
 
   xmlNodePtr node_rel = diff_save_state_n_id(relation, relation_t::api_string());

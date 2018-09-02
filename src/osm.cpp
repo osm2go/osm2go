@@ -385,9 +385,15 @@ way_t *osm_t::mergeWays(way_t *first, way_t *second, bool &conflict)
   return first;
 }
 
-template<typename T> bool map_is_clean(const T &map, int flagmask = ~0) {
-  const typename T::const_iterator itEnd = map.end();
-  return itEnd == std::find_if(map.begin(), itEnd, osm_t::find_object_by_flags(flagmask));
+template<typename T> bool isDirty(const std::pair<item_id_t, T> &p)
+{
+  return p.second->isDirty();
+}
+
+template<typename T> bool map_is_clean(const std::map<item_id_t, T> &map)
+{
+  const typename std::map<item_id_t, T>::const_iterator itEnd = map.end();
+  return itEnd == std::find_if(map.begin(), itEnd, isDirty<T>);
 }
 
 /* return true if no diff needs to be saved */
@@ -402,11 +408,13 @@ bool osm_t::is_clean(bool honor_hidden_flags) const
   if(!relations.empty() && relations.begin()->first < 0)
     return false;
 
+  if(honor_hidden_flags && !hiddenWays.empty())
+    return false;
+
   // now check all objects for modifications
   if(!map_is_clean(nodes))
     return false;
-  int flagmask = honor_hidden_flags ? ~0 : ~OSM_FLAG_HIDDEN;
-  if(!map_is_clean(ways, flagmask))
+  if(!map_is_clean(ways))
     return false;
   return map_is_clean(relations);
 }

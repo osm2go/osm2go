@@ -1668,20 +1668,16 @@ void map_t::hide_selected() {
 struct map_show_all_functor {
   map_t * const map;
   explicit map_show_all_functor(map_t *m) : map(m) {}
-  void operator()(std::pair<item_id_t, way_t *> pair);
-};
-
-void map_show_all_functor::operator()(std::pair<item_id_t, way_t *> pair)
-{
-  way_t * const way = pair.second;
-  if(way->flags & OSM_FLAG_HIDDEN) {
-    way->flags &= ~OSM_FLAG_HIDDEN;
+  inline void operator()(way_t *way) const {
     map->draw(way);
   }
-}
+};
 
 void map_t::show_all() {
-  std::map<item_id_t, way_t *> &ways = appdata.project->osm->ways;
+  std::unordered_set<way_t *> ways;
+  // the global table must be cleared, otherwise the call to map->draw()
+  // inside the functor will do nothing as it sees the way as still hidden
+  ways.swap(appdata.project->osm->hiddenWays);
   std::for_each(ways.begin(), ways.end(), map_show_all_functor(this));
 
   appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_MAP_SHOW_ALL, false);
