@@ -67,35 +67,35 @@ struct cmp_user {
  *
  * In case no userid is given a temporary one will be created.
  */
-static int osm_user_insert(osm_t::ref osm, const char *name, int uid) {
+static int osm_user_insert(std::map<int, std::string> &users, const char *name, int uid) {
   if(unlikely(!name)) {
-    osm->users[0] = std::string();
+    users[0] = std::string();
     return 0;
   }
 
-  const std::map<int, std::string>::const_iterator itEnd = osm->users.end();
+  const std::map<int, std::string>::const_iterator itEnd = users.end();
   /* search through user list */
   if(likely(uid > 0)) {
-    const std::map<int, std::string>::const_iterator it = osm->users.find(uid);
+    const std::map<int, std::string>::const_iterator it = users.find(uid);
     if(unlikely(it == itEnd))
-      osm->users[uid] = name;
+      users[uid] = name;
 
     return uid;
   } else {
     // no virtual user found
-    if(osm->users.empty() || osm->users.begin()->first > 0) {
-      osm->users[-1] = name;
+    if(users.empty() || users.begin()->first > 0) {
+      users[-1] = name;
       return -1;
     }
     /* check if ay of the temporary ids already matches the name */
-    std::map<int, std::string>::const_iterator it = osm->users.begin();
+    std::map<int, std::string>::const_iterator it = users.begin();
     for(; it != itEnd && it->first < 0; it++)
       if(it->second == name)
         return it->first;
     // generate a new temporary id
     // it is already one in there, so use one less as the lowest existing id
-    int id = osm->users.begin()->first - 1;
-    osm->users[id] = name;
+    int id = users.begin()->first - 1;
+    users[id] = name;
     return id;
   }
 }
@@ -316,7 +316,7 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
         uid = -1;
       }
     }
-    obj->user = osm_user_insert(osm, prop, uid);
+    obj->user = osm_user_insert(osm->users, prop, uid);
   }
 
   prop.reset(xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"));
