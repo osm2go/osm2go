@@ -522,7 +522,7 @@ static void test_split_order()
   for(unsigned int i = 1; i <= 10; i++) {
     node_t *n = new node_t(3, pos_t(52.25 + i * 0.001, 9.58 + i * 0.001), 1234500 + i);
     n->id = i;
-    o->nodes[i] = n;
+    o->node_insert(n);
   }
   // the ways that start and end each relation, opposing directions
   way_t *wstart = new way_t();
@@ -550,7 +550,7 @@ static void test_split_order()
   for(unsigned int i = 1; i <= splitw.size(); i++) {
     relation_t * const r = new relation_t();
     r->id = i;
-    o->relations[i] = r;
+    o->relation_insert(r);
     // create relations where either the first way is a different way (in order), or is a node
     if(i % 4 == 1)
       r->members.push_back(member_t(object_t(wstart)));
@@ -864,7 +864,7 @@ static void test_member_delete()
   n2->flags = 0;
   n2->version = 1;
   n2->id = 42;
-  o->nodes[n2->id] = n2;
+  o->node_insert(n2);
   w->append_node(n2);
 
   // a relation containing both the way as well as the node
@@ -970,7 +970,7 @@ static void test_merge_nodes()
   n2 = o->node_new(oldpos);
   n2->id = 1234;
   n2->flags = 0;
-  o->nodes[n2->id] = n2;
+  o->node_insert(n2);
 
   conflict = true;
   n = o->mergeNodes(n2, n1, conflict, ways2join);

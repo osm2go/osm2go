@@ -277,7 +277,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t::ref osm) {
 
       node = new node_t(0, pos, id);
 
-      osm->nodes[id] = node;
+      osm->node_insert(node);
       break;
     } else {
       printf("  Valid id/position (DIRTY)\n");
@@ -349,7 +349,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t::ref osm) {
 
       way = new way_t(0, id);
 
-      osm->ways[id] = way;
+      osm->way_insert(way);
       break;
     } else {
       printf("  Valid id (DIRTY)\n");
@@ -448,7 +448,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t::ref osm) {
 
       relation = new relation_t(0, id);
 
-      osm->relations[id] = relation;
+      osm->relation_insert(relation);
       break;
     } else {
       printf("  Valid id (DIRTY)\n");

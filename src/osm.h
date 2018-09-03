@@ -33,6 +33,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
 #include "osm2go_stl.h"
 
@@ -204,9 +205,23 @@ struct osm_t {
 
   node_t *node_new(const lpos_t lpos);
   node_t *node_new(const pos_t &pos);
+  /**
+   * @brief insert a node and create a new temporary id
+   */
   void node_attach(node_t *node);
+  /**
+   * @brief insert a node using the id already set
+   */
+  inline void node_insert(node_t *node);
   void way_delete(way_t *way);
+  /**
+   * @brief insert a way and create a new temporary id
+   */
   void way_attach(way_t *way);
+  /**
+   * @brief insert a node using the id already set
+   */
+  inline void way_insert(way_t *way);
   void remove_from_relations(object_t obj);
   void way_free(way_t *way);
   void node_free(node_t *node);
@@ -239,7 +254,14 @@ struct osm_t {
    */
   way_chain_t node_delete(node_t *node, bool remove_refs = true);
   void relation_free(relation_t *relation);
+  /**
+   * @brief insert a relation and create a new temporary id
+   */
   void relation_attach(relation_t *relation);
+  /**
+   * @brief insert a relation using the id already set
+   */
+  inline void relation_insert(relation_t *relation);
   void relation_delete(relation_t *relation);
 
   /**
@@ -668,6 +690,27 @@ void osm_t::waySetHidden(way_t *w)
 bool osm_t::hasHiddenWays() const
 {
   return !hiddenWays.empty();
+}
+
+void osm_t::node_insert(node_t *node)
+{
+  size_t cnt = nodes.size();
+  nodes[node->id] = node;
+  assert_cmpnum(nodes.size(), cnt + 1);
+}
+
+void osm_t::way_insert(way_t *way)
+{
+  size_t cnt = ways.size();
+  ways[way->id] = way;
+  assert_cmpnum(ways.size(), cnt + 1);
+}
+
+void osm_t::relation_insert(relation_t *relation)
+{
+  size_t cnt = relations.size();
+  relations[relation->id] = relation;
+  assert_cmpnum(relations.size(), cnt + 1);
 }
 
 #endif /* OSM_H */

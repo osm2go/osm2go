@@ -334,9 +334,7 @@ static void process_node(xmlTextReaderPtr reader, osm_t::ref osm) {
 
   process_base_attributes(node, reader, osm);
 
-  size_t cnt = osm->nodes.size();
-  osm->nodes[node->id] = node;
-  assert_cmpnum(osm->nodes.size(), cnt + 1);
+  osm->node_insert(node);
 
   /* just an empty element? then return the node as it is */
   if(xmlTextReaderIsEmptyElement(reader))
@@ -376,9 +374,7 @@ static void process_way(xmlTextReaderPtr reader, osm_t::ref osm) {
 
   process_base_attributes(way, reader, osm);
 
-  size_t cnt = osm->ways.size();
-  osm->ways[way->id] = way;
-  assert_cmpnum(osm->ways.size(), cnt + 1);
+  osm->way_insert(way);
 
   /* just an empty element? then return the way as it is */
   /* (this should in fact never happen as this would be a way without nodes) */
@@ -425,9 +421,7 @@ static void process_relation(xmlTextReaderPtr reader, osm_t::ref osm) {
 
   process_base_attributes(relation, reader, osm);
 
-  size_t cnt = osm->relations.size();
-  osm->relations[relation->id] = relation;
-  assert_cmpnum(osm->relations.size(), cnt + 1);
+  osm->relation_insert(relation);
 
   /* just an empty element? then return the relation as it is */
   /* (this should in fact never happen as this would be a relation */
