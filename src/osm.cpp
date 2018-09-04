@@ -1010,9 +1010,7 @@ void osm_unref_way_free::operator()(node_t* node)
     /* delete this node, but don't let this actually affect the */
     /* associated ways as the only such way is the one we are currently */
     /* deleting */
-    const std::map<item_id_t, relation_t *>::const_iterator itEnd = osm->relations.end();
-    // do not delete if it is still referenced by a relation
-    if(std::find_if(std::cbegin(osm->relations), itEnd, find_relation_members(object_t(node))) == itEnd) {
+    if(osm->find_relation(find_relation_members(object_t(node))) == nullptr) {
       const way_chain_t &way_chain = osm->node_delete(node, false);
       assert_cmpnum(way_chain.size(), 1);
       assert(way_chain.front() == way);
