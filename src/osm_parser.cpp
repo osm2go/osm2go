@@ -547,12 +547,10 @@ struct relation_ref_functor {
   void operator()(member_t &m) {
     if(m.object.type != object_t::RELATION_ID)
       return;
-    std::map<item_id_t, relation_t *>::const_iterator itEnd = osm->relations.end();
-    std::map<item_id_t, relation_t *>::const_iterator it = osm->relations.find(m.object.id);
-    if(it == itEnd)
+    relation_t *r = osm->relation_by_id(m.object.id);
+    if(r == nullptr)
       return;
-    m.object.relation = it->second;
-    m.object.type = object_t::RELATION;
+    m.object = r;
   }
 };
 
