@@ -87,7 +87,7 @@ static int osm_user_insert(std::map<int, std::string> &users, const char *name, 
       users[-1] = name;
       return -1;
     }
-    /* check if ay of the temporary ids already matches the name */
+    /* check if any of the temporary ids already matches the name */
     std::map<int, std::string>::const_iterator it = users.begin();
     for(; it != itEnd && it->first < 0; it++)
       if(it->second == name)
