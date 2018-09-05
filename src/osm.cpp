@@ -948,7 +948,7 @@ way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
 struct remove_member_functor {
   const object_t obj;
   // the second argument is to distinguish the constructor from operator()
-  remove_member_functor(object_t o, bool) : obj(o) {}
+  explicit inline remove_member_functor(object_t o) : obj(o) {}
   void operator()(std::pair<item_id_t, relation_t *> pair);
 };
 
@@ -975,7 +975,7 @@ void osm_t::remove_from_relations(object_t obj) {
   printf("removing %s #" ITEM_ID_FORMAT " from all relations:\n", obj.obj->apiString(), obj.get_id());
 
   std::for_each(relations.begin(), relations.end(),
-                remove_member_functor(obj, false));
+                remove_member_functor(obj));
 }
 
 void osm_t::relation_attach(relation_t *relation) {
