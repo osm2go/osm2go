@@ -519,10 +519,12 @@ struct findWay {
 static void test_split_order()
 {
   std::unique_ptr<osm_t> o(new osm_t());
+  std::vector<node_t *> nodes;
   for(unsigned int i = 1; i <= 10; i++) {
     node_t *n = new node_t(3, pos_t(52.25 + i * 0.001, 9.58 + i * 0.001), 1234500 + i);
     n->id = i;
     o->node_insert(n);
+    nodes.push_back(n);
   }
   // the ways that start and end each relation, opposing directions
   way_t *wstart = new way_t();
@@ -540,11 +542,11 @@ static void test_split_order()
     way_t *w = new way_t();
     o->way_attach(w);
     splitw.push_back(w);
-    const std::map<item_id_t, node_t *>::const_iterator itEnd = --o->nodes.end();
-    std::map<item_id_t, node_t *>::const_iterator it = ++o->nodes.begin();
+    const std::vector<node_t *>::const_iterator itEnd = --nodes.end();
+    std::vector<node_t *>::const_iterator it = ++nodes.begin();
 
     for(; it != itEnd; it++)
-      w->append_node(it->second);
+      w->append_node(*it);
   }
 
   for(unsigned int i = 1; i <= splitw.size(); i++) {
@@ -1059,11 +1061,13 @@ static void test_merge_nodes()
   assert_cmpnum(o->nodes.size(), 1);
   assert_cmpnum(o->ways.size(), 0);
   assert_cmpnum(o->relations.size(), 0);
-  o->node_delete(o->nodes.begin()->second);
+  o->node_delete(n2);
   assert_cmpnum(o->nodes.size(), 0);
 
   /// ==================
   // now put both into a way, the way of the second node should be updated
+  std::vector<way_t *> ways;
+  std::vector<relation_t *> relations;
   for(int i = 0; i < 3; i++) {
     w = new way_t(0);
     o->way_attach(w);
@@ -1073,6 +1077,8 @@ static void test_merge_nodes()
     w->append_node(n1);
     r = new relation_t(0);
     o->relation_attach(r);
+    ways.push_back(w);
+    relations.push_back(r);
   }
 
   n1 = o->node_new(oldpos);
@@ -1081,37 +1087,39 @@ static void test_merge_nodes()
   o->node_attach(n2);
 
   // one way with only n1
-  o->ways.begin()->second->append_node(n1);
+  w = ways.back();
+  w->append_node(n1);
   unsigned int rc, rrc;
-  o->ways.begin()->second->reverse(o, rc, rrc);
+  w->reverse(o, rc, rrc);
   assert_cmpnum(rc, 0);
   assert_cmpnum(rrc, 0);
 
   // one way with only n2
-  w = o->ways.rbegin()->second;
+  w = ways.front();
   // put both nodes here, only one instance should remain
   w->append_node(n2);
   w->flags = 0;
 
-  w = (++o->ways.begin())->second;
+  std::vector<way_t *>::iterator wit = ++ways.begin();
+  w = *wit;
   // put both nodes here, only one instance should remain
   w->append_node(n1);
   w->append_node(n2);
   w->flags = 0;
 
-  o->relations.begin()->second->members.push_back(member_t(object_t(n1)));
-  r = o->relations.rbegin()->second;
+  relations.back()->members.push_back(member_t(object_t(n1)));
+  r = relations.front();
   r->members.push_back(member_t(object_t(n2)));
   r->flags = 0;
-  assert_cmpnum(o->ways.begin()->second->node_chain.size(), 2);
+  assert_cmpnum(ways.back()->node_chain.size(), 2);
   assert_cmpnum(w->node_chain.size(), 3);
-  assert(o->ways.begin()->second->node_chain.front() == n1);
-  assert(o->ways.begin()->second->ends_with_node(n1));
+  assert(ways.back()->node_chain.front() == n1);
+  assert(ways.back()->ends_with_node(n1));
   assert(w->node_chain.back() == n2);
   assert(w->ends_with_node(n2));
   assert_cmpnum(n1->ways, 2);
   assert_cmpnum(n2->ways, 2);
-  assert(o->relations.begin()->second->members.front().object == n1);
+  assert(relations.back()->members.front().object == n1);
   assert(r->members.front().object == n2);
   assert_cmpnum(o->nodes.size(), 5);
 
@@ -1123,16 +1131,16 @@ static void test_merge_nodes()
   assert_cmpnum(o->nodes.size(), 4);
   assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
   assert_cmpnum(r->members.size(), 1);
-  assert(o->ways.begin()->second->first_node() == n1);
-  assert(o->ways.begin()->second->ends_with_node(n1));
+  assert(ways.back()->first_node() == n1);
+  assert(ways.back()->ends_with_node(n1));
   assert(w->last_node() == n1);
   assert(w->ends_with_node(n1));
   assert_cmpnum(w->node_chain.size(), 2);
   assert_cmpnum(w->flags, OSM_FLAG_DIRTY);
   assert_cmpnum(n1->ways, 3);
-  assert(o->relations.begin()->second->members.front().object == n1);
+  assert(relations.back()->members.front().object == n1);
   // test member_t::operator==(object_t)
-  assert(o->relations.begin()->second->members.front() == object_t(n1));
+  assert(relations.back()->members.front() == object_t(n1));
   assert(r->members.front().object == n1);
   assert_cmpnum(r->flags, OSM_FLAG_DIRTY);
   assert_null(ways2join[0]);
@@ -1142,14 +1150,15 @@ static void test_merge_nodes()
   way_chain_t wchain;
   assert(o->find_way(node_collector(wchain, n1)) == nullptr);
   assert_cmpnum(wchain.size(), 3);
-  assert(std::find(wchain.begin(), wchain.end(), o->ways.begin()->second) != wchain.end());
+  assert(std::find(wchain.begin(), wchain.end(), ways.back()) != wchain.end());
   assert(std::find(wchain.begin(), wchain.end(), w) != wchain.end());
 
   /// ==================
   // now join 2 nodes which both terminate one way
   assert_cmpnum(o->ways.size(), 3);
   o->way_delete(w);
-  w = o->ways.begin()->second;
+  ways.erase(wit);
+  w = ways.back();
   assert_cmpnum(w->node_chain.size(), 2);
   assert(w->node_chain.front() == n1);
 
