@@ -220,7 +220,9 @@ static int xml_get_prop_state(xmlNode *node) {
   else if(likely(strcmp(str, "deleted") == 0))
     return OSM_FLAG_DELETED;
 
-  assert_unreachable();
+  printf("  Illegal state entry '%s'\n", static_cast<const char *>(str));
+
+  return -1;
 }
 
 static osm_t::TagMap xml_scan_tags(xmlNodePtr node) {
@@ -297,7 +299,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t::ref osm) {
     }
 
   default:
-    printf("  Illegal state entry %u\n", state);
+    // xml_get_prop_state() already warned about this
     return;
   }
 
@@ -365,7 +367,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t::ref osm) {
     }
 
   default:
-    printf("  Illegal state entry %u\n", state);
+    // xml_get_prop_state() already warned about this
     return;
   }
 
@@ -464,7 +466,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t::ref osm) {
     }
 
   default:
-    printf("  Illegal state entry %u\n", state);
+    // xml_get_prop_state() already warned about this
     return;
   }
 
