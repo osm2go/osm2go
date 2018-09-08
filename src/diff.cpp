@@ -252,11 +252,6 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t::ref osm) {
   pos_t pos = pos_t::fromXmlProperties(node_node);
   bool pos_diff = pos.valid();
 
-  if(unlikely(!(state & OSM_FLAG_DELETED) && !pos_diff)) {
-    printf("  Node not deleted, but no valid position\n");
-    return;
-  }
-
   /* evaluate properties */
   node_t *node;
 
@@ -272,6 +267,11 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t::ref osm) {
     return;
 
   case OSM_FLAG_DIRTY:
+    if(unlikely(!pos_diff)) {
+      printf("  Node not deleted, but no valid position\n");
+      return;
+    }
+
     if(id < 0) {
       printf("  Restoring NEW node\n");
 
