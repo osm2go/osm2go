@@ -31,7 +31,7 @@ class iconbar_t;
 class MainUi;
 struct map_state_t;
 class map_t;
-struct osm_t;
+class osm_t;
 class presets_items;
 struct project_t;
 class statusbar_t;

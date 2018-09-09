@@ -146,6 +146,19 @@ item_id_t object_t::get_id() const noexcept {
   return id;
 }
 
+template<> std::map<item_id_t, node_t *> &osm_t::objects()
+{ return nodes; }
+template<> std::map<item_id_t, way_t *> &osm_t::objects()
+{ return ways; }
+template<> std::map<item_id_t, relation_t *> &osm_t::objects()
+{ return relations; }
+template<> const std::map<item_id_t, node_t *> &osm_t::objects() const
+{ return nodes; }
+template<> const std::map<item_id_t, way_t *> &osm_t::objects() const
+{ return ways; }
+template<> const std::map<item_id_t, relation_t *> &osm_t::objects() const
+{ return relations; }
+
 /* -------------------- tag handling ----------------------- */
 
 struct map_value_match_functor {
@@ -840,21 +853,20 @@ xmlChar *osm_generate_xml_changeset(const std::string &comment,
 
 /* ---------- edit functions ------------- */
 
-template<typename T> item_id_t osm_new_id(const std::map<item_id_t, T *> &map) {
-  if(map.empty())
-    return -1;
-
-  // map is sorted, so use one less the first id in the container if it is negative,
-  // or -1 if it is positive
-  const typename std::map<item_id_t, T *>::const_iterator it = map.begin();
-  if(it->first >= 0)
-    return -1;
-  else
-    return it->first - 1;
-}
-
-template<typename T> void osm_attach(std::map<item_id_t, T *> &map, T *obj) {
-  obj->id = osm_new_id(map);
+template<typename T> void osm_t::attach(T *obj)
+{
+  std::map<item_id_t, T *> &map = objects<T>();
+  if(map.empty()) {
+    obj->id = -1;
+  } else {
+    // map is sorted, so use one less the first id in the container if it is negative,
+    // or -1 if it is positive
+    const typename std::map<item_id_t, T *>::const_iterator it = map.begin();
+    if(it->first >= 0)
+      obj->id = -1;
+    else
+      obj->id = it->first - 1;
+  }
   printf("Attaching %s " ITEM_ID_FORMAT "\n", obj->apiString(), obj->id);
   map[obj->id] = obj;
 }
@@ -870,11 +882,11 @@ node_t *osm_t::node_new(const pos_t &pos) {
 }
 
 void osm_t::node_attach(node_t *node) {
-  osm_attach(nodes, node);
+  attach(node);
 }
 
 void osm_t::way_attach(way_t *way) {
-  osm_attach(ways, way);
+  attach(way);
 }
 
 struct node_chain_delete_functor {
@@ -976,7 +988,7 @@ void osm_t::remove_from_relations(object_t obj) {
 }
 
 void osm_t::relation_attach(relation_t *relation) {
-  osm_attach(relations, relation);
+  attach(relation);
 }
 
 struct find_relation_members {
@@ -1895,7 +1907,9 @@ node_t::node_t(unsigned int ver, const pos_t &p, item_id_t i) noexcept
 {
 }
 
-template<typename T> T *osm_find_by_id(const std::map<item_id_t, T *> &map, item_id_t id) {
+template<typename T> T *osm_t::find_by_id(item_id_t id) const
+{
+  const std::map<item_id_t, T *> &map = objects<T>();
   const typename std::map<item_id_t, T *>::const_iterator it = map.find(id);
   if(it != map.end())
     return it->second;
@@ -1918,15 +1932,15 @@ osm_t::~osm_t()
 }
 
 node_t *osm_t::node_by_id(item_id_t id) const {
-  return osm_find_by_id<node_t>(nodes, id);
+  return find_by_id<node_t>(id);
 }
 
 way_t *osm_t::way_by_id(item_id_t id) const {
-  return osm_find_by_id<way_t>(ways, id);
+  return find_by_id<way_t>(id);
 }
 
 relation_t *osm_t::relation_by_id(item_id_t id) const {
-  return osm_find_by_id<relation_t>(relations, id);
+  return find_by_id<relation_t>(id);
 }
 
 osm_t::dirty_t::dirty_t(const osm_t &osm)

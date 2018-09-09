@@ -51,7 +51,7 @@ typedef int64_t item_id_t;
 #define ID_ILLEGAL  (static_cast<item_id_t>(0))
 
 class base_object_t;
-struct osm_t;
+class osm_t;
 class node_t;
 class relation_t;
 class way_t;
@@ -148,7 +148,12 @@ struct member_t {
   }
 };
 
-struct osm_t {
+class osm_t {
+  template<typename T> inline std::map<item_id_t, T *> &objects();
+  template<typename T> inline const std::map<item_id_t, T *> &objects() const;
+  template<typename T> void attach(T *obj);
+  template<typename T> inline T *find_by_id(item_id_t id) const;
+public:
   typedef const std::unique_ptr<osm_t> &ref;
 
   enum UploadPolicy {
@@ -209,6 +214,7 @@ struct osm_t {
    * @brief insert a node and create a new temporary id
    */
   void node_attach(node_t *node);
+
   /**
    * @brief insert a node using the id already set
    */
@@ -218,6 +224,7 @@ struct osm_t {
    * @brief insert a way and create a new temporary id
    */
   void way_attach(way_t *way);
+
   /**
    * @brief insert a node using the id already set
    */
@@ -226,24 +233,25 @@ struct osm_t {
   void way_free(way_t *way);
   void node_free(node_t *node);
 
-  template<typename _Predicate>
-  way_t *find_way(_Predicate pred) const {
-    const std::map<item_id_t, way_t *>::const_iterator itEnd = ways.end();
-    const std::map<item_id_t, way_t *>::const_iterator it =
-        std::find_if(ways.begin(), itEnd, pred);
+private:
+  template<typename T, typename _Predicate> inline
+  T *find_object(const std::map<item_id_t, T *> &map, _Predicate pred) const {
+    const typename std::map<item_id_t, T *>::const_iterator itEnd = map.end();
+    const typename std::map<item_id_t, T *>::const_iterator it = std::find_if(map.begin(), itEnd, pred);
     if(it != itEnd)
       return it->second;
     return nullptr;
   }
 
+public:
+  template<typename _Predicate>
+  way_t *find_way(_Predicate pred) const {
+    return find_object(ways, pred);
+  }
+
   template<typename _Predicate>
   relation_t *find_relation(_Predicate pred) const {
-    const std::map<item_id_t, relation_t *>::const_iterator itEnd = relations.end();
-    const std::map<item_id_t, relation_t *>::const_iterator it =
-        std::find_if(relations.begin(), itEnd, pred);
-    if(it != itEnd)
-      return it->second;
-    return nullptr;
+    return find_object(relations, pred);
   }
 
   /**
@@ -258,6 +266,7 @@ struct osm_t {
    * @brief insert a relation and create a new temporary id
    */
   void relation_attach(relation_t *relation);
+
   /**
    * @brief insert a relation using the id already set
    */
@@ -556,7 +565,7 @@ typedef std::vector<node_t *> node_chain_t;
 #define OSM_DRAW_FLAG_BG    (1<<1)
 
 class way_t: public visible_item_t {
-  friend struct osm_t;
+  friend class osm_t;
 public:
   explicit way_t();
   explicit way_t(unsigned int ver, item_id_t i = ID_ILLEGAL);

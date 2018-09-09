@@ -32,7 +32,7 @@
 
 struct appdata_t;
 struct map_state_t;
-struct osm_t;
+class osm_t;
 
 struct project_t {
   typedef const std::unique_ptr<project_t> &ref;

@@ -23,7 +23,7 @@
 #include <osm2go_platform.h>
 
 struct appdata_t;
-struct osm_t;
+class osm_t;
 struct project_t;
 class settings_t;
 
