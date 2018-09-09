@@ -382,8 +382,8 @@ wms_layer_t::list wms_get_layers(project_t::ref project, wms_t& wms)
   bool parse_success = false;
   if(unlikely(!doc)) {
     xmlErrorPtr errP = xmlGetLastError();
-    errorf(nullptr, _("WMS download failed:\n\n"
-            "XML error while parsing capabilities:\n%s"), errP->message);
+    error_dlg(trstring("WMS download failed:\n\n"
+              "XML error while parsing capabilities:\n%1").arg(errP->message));
   } else {
     printf("ok, parse doc tree\n");
 

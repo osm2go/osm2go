@@ -104,7 +104,7 @@ static void style_change(appdata_t &appdata, const std::string &style_path) {
 
   style_t *nstyle = style_load_fname(style_path);
   if (nstyle == nullptr) {
-    errorf(nullptr, _("Error loading style %s"), style_path.c_str());
+    error_dlg(trstring("Error loading style %1").arg(style_path));
     return;
   }
 

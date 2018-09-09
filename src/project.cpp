@@ -175,12 +175,12 @@ bool project_t::save(osm2go_platform::Widget *parent) {
   if(unlikely(!dirfd.valid())) {
     /* make sure project base path exists */
     if(unlikely(g_mkdir_with_parents(path.c_str(), S_IRWXU) != 0)) {
-      errorf(parent, _("Unable to create project path %s"), path.c_str());
+      error_dlg(trstring("Unable to create project path %1").arg(path), parent);
       return false;
     }
     fdguard nfd(path.c_str());
     if(unlikely(!nfd.valid())) {
-      errorf(parent, _("Unable to open project path %s"), path.c_str());
+      error_dlg(trstring("Unable to open project path %1").arg(path), parent);
       return false;
     }
     dirfd.swap(nfd);

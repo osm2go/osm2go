@@ -96,7 +96,7 @@ bool osm_download(osm2go_platform::Widget *parent, project_t *project)
   // check the contents of the new file
   osm2go_platform::MappedFile osmData(update.c_str());
   if(unlikely(!osmData)) {
-    errorf(parent, _("Error accessing the downloaded file:\n\n%s"), update.c_str());
+    error_dlg(trstring("Error accessing the downloaded file:\n\n%1").arg(update), parent);
     unlink(update.c_str());
     return false;
   }

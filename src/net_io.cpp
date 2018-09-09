@@ -338,14 +338,14 @@ static bool net_io_do(osm2go_platform::Widget *parent, net_io_request_t *rq,
 
   /* the http connection itself may have failed */
   if(request->res != 0) {
-    errorf(parent, _("Download failed with message:\n\n%s"), request->buffer);
+    error_dlg(trstring("Download failed with message:\n\n%1").arg(request->buffer), parent);
     return false;
   }
 
   /* a valid http connection may have returned an error */
   if(request->response != 200) {
-    errorf(parent, _("Download failed with code %ld:\n\n%s\n"),
-	   request->response, http_message(request->response));
+    error_dlg(trstring("Download failed with code %1:\n\n%2\n").arg(request->response)
+                       .arg(http_message(request->response)), parent);
     return false;
   }
 

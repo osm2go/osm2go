@@ -22,7 +22,29 @@
 
 #include <locale.h>
 #include <libintl.h>
+#include <string>
+
+#include <osm2go_stl.h>
 
 #define _(String) gettext(String)
+
+class trstring : public std::string {
+  explicit inline trstring(const std::string &s) : std::string(s) {}
+public:
+  explicit inline trstring() : std::string() {}
+  explicit inline trstring(const char *s) : std::string(gettext(s)) {}
+#if __cplusplus >= 201103L
+  // catch if one passes a constant nullptr as argument
+  trstring(std::nullptr_t) = delete;
+#endif
+
+  trstring arg(const std::string &a) const;
+  inline trstring arg(const char *a) const
+  { return arg(std::string(a)); }
+  inline trstring arg(char *a) const
+  { return arg(std::string(a)); }
+  template<typename T> inline trstring arg(T l) const
+  { return arg(std::to_string(l)); }
+};
 
 #endif // OSM2GO_I18N_H

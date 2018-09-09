@@ -17,6 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "osm2go_i18n.h"
 #include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
 
@@ -130,4 +131,27 @@ double osm2go_platform::string_to_double(const char *str)
     return g_ascii_strtod(str, nullptr);
   else
     return NAN;
+}
+
+trstring trstring::arg(const std::string &a) const
+{
+  std::string smsg = *this;
+
+  // increase as needed
+  std::string spattern = "%1";
+  std::string::size_type pos = find(spattern);
+  for (int i = 1; i < 3 && pos == std::string::npos; i++) {
+    spattern = '%' + std::to_string(i);
+    pos = find(spattern);
+  }
+
+  if(unlikely(pos == std::string::npos))
+    g_debug("no placeholder found in string: '%s'", c_str());
+
+  while (pos != std::string::npos) {
+    smsg.replace(pos, 2, a);
+    pos = smsg.find("%1", pos + a.size());
+  }
+
+  return trstring(smsg);
 }

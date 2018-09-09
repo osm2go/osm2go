@@ -141,6 +141,16 @@ bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags, const c
   return yes;
 }
 
+bool yes_no(const char *title, const trstring &msg, unsigned int again_flags, osm2go_platform::Widget *parent)
+{
+  return yes_no_f(parent, again_flags, title, msg.c_str());
+}
+
+bool yes_no(const trstring &title, const trstring &msg, unsigned int again_flags, osm2go_platform::Widget *parent)
+{
+  return yes_no_f(parent, again_flags, title.c_str(), msg.c_str());
+}
+
 const std::vector<datapath> &base_paths()
 {
 /* all entries must contain a trailing '/' ! */

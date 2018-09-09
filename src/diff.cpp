@@ -531,7 +531,7 @@ unsigned int project_t::diff_restore() {
   /* parse the file and get the DOM */
   xmlDocGuard doc(xmlReadFd(difffd, nullptr, nullptr, XML_PARSE_NONET));
   if(unlikely(!doc)) {
-    errorf(nullptr, _("Error: could not parse file %s\n"), diff_name.c_str());
+    error_dlg(trstring("Error: could not parse file %1\n").arg(diff_name));
     return DIFF_INVALID;
   }
 
@@ -549,7 +549,7 @@ unsigned int project_t::diff_restore() {
           const char *cstr = str;
           printf("diff for project %s\n", cstr);
           if(unlikely(name != cstr)) {
-            warningf(_("Diff name (%s) does not match project name (%s)"), cstr, name.c_str());
+            warning_dlg(trstring("Diff name (%1) does not match project name (%2)").arg(cstr).arg(name));
             res |= DIFF_PROJECT_MISMATCH;
           }
         }

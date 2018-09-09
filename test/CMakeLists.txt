@@ -61,6 +61,7 @@ add_executable(suppression-dummy suppression-dummy.cpp)
 target_link_libraries(suppression-dummy PRIVATE ${LIBXML2_LIBRARIES} ${CURL_LIBRARIES} OpenSSL::SSL osm2go_platform_lib)
 target_include_directories(suppression-dummy PRIVATE ${LIBXML2_INCLUDE_DIR} ${CURL_INCLUDE_DIRS})
 
+osm_test(i18n)
 osm_test(project "${CMAKE_CURRENT_SOURCE_DIR}/empty_proj.proj")
 
 if (NETWORK_TESTS)

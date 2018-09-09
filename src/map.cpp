@@ -46,7 +46,6 @@
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
-#include "osm2go_platform_gtk.h"
 #include <osm2go_stl.h>
 
 /* this is a chain of map_items which is attached to all entries */
@@ -1368,14 +1367,10 @@ void map_t::delete_selected() {
   map_item_t item = selected;
 
   const char *objtype = item.object.type_string();
-  g_string msgtitle(g_strdup_printf(_("Delete selected %s?"), objtype));
-  g_string msg(g_strdup_printf(_("Do you really want to delete the selected %s?"), objtype));
-  if(!yes_no_f(nullptr, MISC_AGAIN_ID_DELETE | MISC_AGAIN_FLAG_DONT_SAVE_NO,
-               msgtitle.get(), msg.get()))
+  if(!yes_no(trstring("Delete selected %1?").arg(objtype),
+             trstring("Do you really want to delete the selected %1?").arg(objtype),
+             MISC_AGAIN_ID_DELETE | MISC_AGAIN_FLAG_DONT_SAVE_NO))
     return;
-
-  msgtitle.reset();
-  msg.reset();
 
   /* deleting the selected item de-selects it ... */
   item_deselect();

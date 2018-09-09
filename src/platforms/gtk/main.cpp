@@ -1129,7 +1129,7 @@ static int application_run(const char *proj)
   appdata_internal appdata(map_state);
 
   if(unlikely(!appdata.style)) {
-    errorf(nullptr, _("Unable to load valid style %s, terminating."), settings->style.c_str());
+    error_dlg(trstring("Unable to load valid style %1, terminating.").arg(settings->style));
     return -1;
   }
 
@@ -1247,8 +1247,8 @@ static int application_run(const char *proj)
     if(strcmp(proj, "-p") == 0) {
       cb_menu_project_open(&appdata);
     } else if(!project_load(appdata, proj)) {
-      warningf(_("You passed '%s' on the command line, but it was neither"
-                 "recognized as option nor could it be loaded as project."), proj);
+      warning_dlg(trstring("You passed '%1' on the command line, but it was neither"
+                           "recognized as option nor could it be loaded as project.").arg(proj));
     }
   }
   /* load project if one is specified in the settings */

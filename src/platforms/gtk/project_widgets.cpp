@@ -375,12 +375,10 @@ static void on_project_new(select_context_t *context) {
 static void on_project_delete(select_context_t *context) {
   project_t *project = project_get_selected(context->list);
 
-  g_string msg(g_strdup_printf(_("Do you really want to delete the project \"%s\"?"),
-               project->name.c_str()));
-  if(!yes_no_f(context->dialog, 0, _("Delete project?"), msg.get()))
+  if(!yes_no(_("Delete project?"),
+             trstring("Do you really want to delete the project \"%1\"?").arg(project->name),
+             0, context->dialog))
     return;
-
-  msg.reset();
 
   project_delete_gui(context, project);
 }

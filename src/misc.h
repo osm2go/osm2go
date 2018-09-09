@@ -70,7 +70,13 @@ std::string find_file(const std::string &n);
 
 /* some compat code */
 
+class trstring;
+
 bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags,
               const char *title, const char *msg);
+bool yes_no(const char *title, const trstring &msg,
+            unsigned int again_flags = 0, osm2go_platform::Widget *parent = nullptr);
+bool yes_no(const trstring &title, const trstring &msg,
+            unsigned int again_flags = 0, osm2go_platform::Widget *parent = nullptr);
 
 #endif // MISC_H
