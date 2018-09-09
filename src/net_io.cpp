@@ -96,7 +96,7 @@ const char *http_message(int id) {
   if(likely(it != http_messages.end()))
     return it->second;
 
-  return nullptr;
+  return "(unknown HTTP response code)";
 }
 
 static gint dialog_destroy_event(bool *data) {
