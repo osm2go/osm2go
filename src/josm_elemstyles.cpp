@@ -442,7 +442,7 @@ void StyleSax::endElement(const xmlChar *name)
 }
 
 std::vector<elemstyle_t *> josm_elemstyles_load(const char *name) {
-  printf("Loading JOSM elemstyles ...\n");
+  printf("Loading JOSM elemstyles %s ...\n", name);
 
   const std::string &filename = find_file(name);
   if(unlikely(filename.empty())) {

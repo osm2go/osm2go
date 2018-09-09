@@ -814,7 +814,8 @@ bool map_t::item_is_selected_node(const map_item_t *map_item) const {
 
     return selected.object.way->contains_node(map_item->object.node);
   } else {
-    printf("  selected item is unknown\n");
+    printf("  selected item is unknown (%s [%i])\n",
+           selected.object.type_string(), selected.object.type);
     return false;
   }
 }
@@ -1563,7 +1564,7 @@ void map_t::track_update_seg(track_seg_t &seg) {
     assert(begin + 1 == last);
     assert(last_is_visible);
 
-    printf("second last is invisible -> start new screen segment with %zu points\n", npoints);
+    printf("second last is invisible -> start new screen segment\n");
 
     canvas_item_t *item = canvas->polyline_new(CANVAS_GROUP_TRACK, points,
                                                style->track.width, style->track.color);
