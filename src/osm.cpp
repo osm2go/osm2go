@@ -840,13 +840,13 @@ xmlChar *osm_generate_xml_changeset(const std::string &comment,
 
 /* ---------- edit functions ------------- */
 
-template<typename T, typename U> U osm_new_id(const std::map<U, T *> &map) {
+template<typename T> item_id_t osm_new_id(const std::map<item_id_t, T *> &map) {
   if(map.empty())
     return -1;
 
   // map is sorted, so use one less the first id in the container if it is negative,
   // or -1 if it is positive
-  const typename std::map<U, T *>::const_iterator it = map.begin();
+  const typename std::map<item_id_t, T *>::const_iterator it = map.begin();
   if(it->first >= 0)
     return -1;
   else
