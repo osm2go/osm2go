@@ -90,8 +90,9 @@ void map_t::way_add_segment(lpos_t pos) {
         action.extending = touch_way;
 
         if(action.extending != nullptr) {
-          if(!yes_no_f(nullptr, MISC_AGAIN_ID_EXTEND_WAY, _("Extend way?"),
-             _("Do you want to extend the way present at this location?")))
+          if(!osm2go_platform::yes_no(_("Extend way?"),
+                                      _("Do you want to extend the way present at this location?"),
+                                      MISC_AGAIN_ID_EXTEND_WAY))
             action.extending = nullptr;
           else
             /* there are immediately enough nodes for a valid way */
@@ -232,8 +233,9 @@ void map_t::way_add_ok() {
     action.ends_on = nullptr;
   }
 
-  if(action.ends_on != nullptr && yes_no_f(nullptr, MISC_AGAIN_ID_EXTEND_WAY_END, _("Join way?"),
-                                           _("Do you want to join the way present at this location?"))) {
+  if(action.ends_on != nullptr && osm2go_platform::yes_no(_("Join way?"),
+                                           _("Do you want to join the way present at this location?"),
+                                                          MISC_AGAIN_ID_EXTEND_WAY_END)) {
     printf("  this new way ends on another way\n");
     // this is triggered when the new way ends on an existing way, this can
     // happen even if an existing way was extended before
@@ -459,8 +461,9 @@ void map_t::node_move(map_item_t *map_item, int ex, int ey) {
 
     printf("  dropped onto node #" ITEM_ID_FORMAT "\n", tn->id);
 
-    if(yes_no_f(nullptr, MISC_AGAIN_ID_JOIN_NODES, _("Join nodes?"),
-                _("Do you want to join the dragged node with the one you dropped it on?"))) {
+    if(osm2go_platform::yes_no(_("Join nodes?"),
+                               _("Do you want to join the dragged node with the one you dropped it on?"),
+                               MISC_AGAIN_ID_JOIN_NODES)) {
       /* the touchnode vanishes and is replaced by the node the */
       /* user dropped onto it */
       joined_with_touchnode = true;
@@ -490,8 +493,9 @@ void map_t::node_move(map_item_t *map_item, int ex, int ey) {
                     _("More than two ways that contain this node. Joining more "
                       "than two ways is not yet implemented, sorry"));
       } else if(ways2join_cnt == 2 && ways2join[0] != nullptr &&
-                yes_no_f(nullptr, MISC_AGAIN_ID_JOIN_WAYS, _("Join ways?"),
-                         _("Do you want to join the dragged way with the one you dropped it on?"))) {
+                osm2go_platform::yes_no(_("Join ways?"),
+                         _("Do you want to join the dragged way with the one you dropped it on?"),
+                                        MISC_AGAIN_ID_JOIN_WAYS)) {
         printf("  about to join ways #" ITEM_ID_FORMAT " and #" ITEM_ID_FORMAT "\n",
                ways2join[0]->id, ways2join[1]->id);
 

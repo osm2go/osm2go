@@ -21,6 +21,7 @@
 #include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
 
+#include <appdata.h>
 #include <color.h>
 #include <pos.h>
 
@@ -30,6 +31,9 @@
 #include <cstring>
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
+#ifdef FREMANTLE
+#include <hildon/hildon-note.h>
+#endif
 
 #include <osm2go_annotations.h>
 
@@ -159,4 +163,100 @@ trstring trstring::arg(const std::string &a) const
     g_debug("no placeholder found in string: '%s'", c_str());
 
   return trstring(argn(spattern, a, pos));
+}
+
+#ifndef FREMANTLE
+#define RESPONSE_YES  GTK_RESPONSE_YES
+#define RESPONSE_NO   GTK_RESPONSE_NO
+#else
+/* hildon names the yes/no buttons ok/cancel ??? */
+#define RESPONSE_YES  GTK_RESPONSE_OK
+#define RESPONSE_NO   GTK_RESPONSE_CANCEL
+#endif
+
+static void on_toggled(GtkWidget *button, const int *flags)
+{
+  gboolean not_active = osm2go_platform::check_button_get_active(button) ? FALSE : TRUE;
+
+  GtkDialog *dialog = GTK_DIALOG(gtk_widget_get_toplevel(button));
+
+  if(GPOINTER_TO_UINT(flags) & MISC_AGAIN_FLAG_DONT_SAVE_NO)
+    gtk_dialog_set_response_sensitive(dialog, RESPONSE_NO, not_active);
+
+  else if(GPOINTER_TO_UINT(flags) & MISC_AGAIN_FLAG_DONT_SAVE_YES)
+    gtk_dialog_set_response_sensitive(dialog, RESPONSE_YES, not_active);
+}
+
+bool osm2go_platform::yes_no(const char *title, const char *msg, unsigned int again_flags,
+                             osm2go_platform::Widget *parent)
+{
+  /* flags used to prevent re-appearence of dialogs */
+  static struct {
+    unsigned int not_again;     /* bit is set if dialog is not to be displayed again */
+    unsigned int reply;         /* reply to be assumed if "not_again" bit is set */
+  } dialog_again;
+  const unsigned int again_bit = again_flags & ~(MISC_AGAIN_FLAG_DONT_SAVE_NO | MISC_AGAIN_FLAG_DONT_SAVE_YES);
+
+  if(dialog_again.not_again & again_bit)
+    return ((dialog_again.reply & again_bit) != 0);
+
+  printf("%s: \"%s\"\n", title, msg);
+
+  GtkWindow *p = GTK_WINDOW(parent ? parent : appdata_t::window);
+
+  osm2go_platform::WidgetGuard dialog(
+#ifndef FREMANTLE
+                  gtk_message_dialog_new(p, GTK_DIALOG_DESTROY_WITH_PARENT,
+                                         GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
+                                         "%s", msg));
+
+  gtk_window_set_title(GTK_WINDOW(dialog.get()), title);
+#else
+                  hildon_note_new_confirmation(p, msg));
+#endif
+
+  osm2go_platform::Widget *cbut = nullptr;
+  if(again_bit) {
+#ifdef FREMANTLE
+    /* make sure there's some space before the checkbox */
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
+                       gtk_label_new(" "), TRUE, TRUE, 0);
+#endif
+
+    GtkWidget *alignment = gtk_alignment_new(0.5, 0, 0, 0);
+
+    cbut = osm2go_platform::check_button_new_with_label(_("Don't ask this question again"));
+    g_signal_connect(cbut, "toggled", G_CALLBACK(on_toggled), GUINT_TO_POINTER(again_flags));
+
+    gtk_container_add(GTK_CONTAINER(alignment), cbut);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), alignment, TRUE, TRUE, 0);
+
+    gtk_widget_show_all(dialog.get());
+  }
+
+  bool yes = (gtk_dialog_run(GTK_DIALOG(dialog.get())) == RESPONSE_YES);
+
+  if(cbut != nullptr && gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cbut)) == TRUE) {
+    /* the user doesn't want to see this dialog again */
+
+    dialog_again.not_again |= again_bit;
+    if(yes)
+      dialog_again.reply |=  again_bit;
+    else
+      dialog_again.reply &= ~again_bit;
+  }
+
+  return yes;
+}
+
+bool osm2go_platform::yes_no(const char *title, const trstring &msg, unsigned int again_flags,
+                             osm2go_platform::Widget *parent)
+{
+  return yes_no(title, msg.c_str(), again_flags, parent);
+}
+
+bool osm2go_platform::yes_no(const trstring &title, const trstring &msg, unsigned int again_flags,
+                             osm2go_platform::Widget *parent)
+{
+  return yes_no(title.c_str(), msg.c_str(), again_flags, parent);
 }

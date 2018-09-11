@@ -252,10 +252,10 @@ static bool project_delete_gui(select_context_t *context, project_t *project) {
   if(context->appdata.project &&
      context->appdata.project->name == project->name) {
 
-    if(!yes_no_f(context->dialog, 0, _("Delete current project?"),
-		 _("The project you are about to delete is the one "
-		   "you are currently working on!\n\n"
-		   "Do you want to delete it anyway?")))
+    if(!yes_no(_("Delete current project?"), _("The project you are about to delete is the one "
+                                               "you are currently working on!\n\n"
+                                               "Do you want to delete it anyway?"),
+               0, context->dialog))
       return false;
 
     project_close(context->appdata);
@@ -699,10 +699,9 @@ static void on_diff_remove_clicked(project_context_t *context) {
 
   g_debug("clicked diff remove");
 
-  if(yes_no_f(context->dialog, 0, _("Discard changes?"),
-	      _("Do you really want to discard your changes? This will "
-		"permanently undo all changes you have made so far and which "
-		"you did not upload yet."))) {
+  if(yes_no(_("Discard changes?"), _("Do you really want to discard your changes? This will "
+                                     "permanently undo all changes you have made so far and which "
+                                     "you did not upload yet."), 0, context->dialog)) {
     project->diff_remove_file();
 
     /* if this is the currently open project, we need to undo */

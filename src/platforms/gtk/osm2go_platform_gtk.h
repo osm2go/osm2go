@@ -21,6 +21,7 @@
 #define OSM2GO_PLATFORM_GTK_H
 
 #include <gtk/gtk.h>
+#include <memory>
 #include <string>
 #include <vector>
 

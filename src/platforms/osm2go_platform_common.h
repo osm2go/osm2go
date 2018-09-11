@@ -21,6 +21,28 @@
 #define OSM2GO_PLATFORM_COMMON_H
 
 class color_t;
+class trstring;
+
+// not in the namespace to keep the idenfiers short
+enum {
+  MISC_AGAIN_ID_DELETE           = (1<<0),
+  MISC_AGAIN_ID_JOIN_NODES       = (1<<1),
+  MISC_AGAIN_ID_JOIN_WAYS        = (1<<2),
+  MISC_AGAIN_ID_OVERWRITE_TAGS   = (1<<3),
+  MISC_AGAIN_ID_EXTEND_WAY       = (1<<4),
+  MISC_AGAIN_ID_EXTEND_WAY_END   = (1<<5),
+  MISC_AGAIN_ID_EXPORT_OVERWRITE = (1<<6),
+  MISC_AGAIN_ID_AREA_TOO_BIG     = (1<<7),
+
+  /* these flags prevent you from leaving the dialog with no (or yes) */
+  /* if the "dont show me this dialog again" checkbox is selected. This */
+  /* makes sure, that you can't permanently switch certain things in, but */
+  /* only on. e.g. it doesn't make sense to answer a "do you really want to */
+  /* delete this" dialog with "no and don't ask me again". You'd never be */
+  /* able to delete anything again */
+  MISC_AGAIN_FLAG_DONT_SAVE_NO   = (1<<30),
+  MISC_AGAIN_FLAG_DONT_SAVE_YES  = (1<<31)
+};
 
 namespace osm2go_platform {
   /**
@@ -49,6 +71,17 @@ namespace osm2go_platform {
    * @returns the parsed value or NAN if str == nullptr
    */
   double string_to_double(const char *str);
+
+  /**
+   * @brief a dialog asking for yes or no
+   * @retval true the user clicked yes
+   */
+  bool yes_no(const char *title, const char *msg,
+              unsigned int again_flags = 0,Widget *parent = nullptr);
+  bool yes_no(const char *title, const trstring &msg,
+              unsigned int again_flags = 0, Widget *parent = nullptr);
+  bool yes_no(const trstring &title, const trstring &msg,
+              unsigned int again_flags = 0, Widget *parent = nullptr);
 };
 
 #endif // OSM2GO_PLATFORM_COMMON_H

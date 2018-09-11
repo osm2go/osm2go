@@ -1368,7 +1368,7 @@ void map_t::delete_selected() {
   map_item_t item = selected;
 
   const char *objtype = item.object.type_string();
-  if(!yes_no(trstring("Delete selected %1?").arg(objtype),
+  if(!osm2go_platform::yes_no(trstring("Delete selected %1?").arg(objtype),
              trstring("Do you really want to delete the selected %1?").arg(objtype),
              MISC_AGAIN_ID_DELETE | MISC_AGAIN_FLAG_DONT_SAVE_NO))
     return;
@@ -1385,10 +1385,10 @@ void map_t::delete_selected() {
     /* check if this node is part of a way with two nodes only. */
     /* we cannot delete this as this would also delete the way */
     if(osm->find_way(short_way(item.object.node)) != nullptr &&
-       !yes_no_f(nullptr, 0, _("Delete node in short way(s)?"),
-                 _("Deleting this node will also delete one or more ways "
-                   "since they'll contain only one node afterwards. "
-                   "Do you really want this?")))
+       !osm2go_platform::yes_no(_("Delete node in short way(s)?"),
+                                _("Deleting this node will also delete one or more ways "
+                                "since they'll contain only one node afterwards. "
+                                "Do you really want this?")))
       return;
 
     /* and mark it "deleted" in the database */

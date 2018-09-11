@@ -692,7 +692,7 @@ static void on_relation_remove(relation_context_t *context) {
     g_string msg(g_strdup_printf(ngettext("This relation still has %zu member. Delete it anyway?",
                                           "This relation still has %zu members. Delete it anyway?",
                                           sel->members.size()), sel->members.size()));
-    if(!yes_no_f(context->dialog.get(), 0, _("Delete non-empty relation?"), msg.get()))
+    if(!yes_no(_("Delete non-empty relation?"), msg.get(), 0, context->dialog.get()))
       return;
   }
 

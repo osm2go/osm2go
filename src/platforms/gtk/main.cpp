@@ -305,8 +305,8 @@ cb_menu_undo_changes(appdata_t *appdata) {
   if (!project->diff_file_present() && project->osm->is_clean(true))
     return;
 
-  if(!yes_no_f(nullptr, 0, _("Undo all changes?"),
-               _("Throw away all the changes you've not uploaded yet? This cannot be undone.")))
+  if(!yes_no(_("Undo all changes?"),
+             _("Throw away all the changes you've not uploaded yet? This cannot be undone.")))
     return;
 
   appdata->map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
@@ -479,10 +479,9 @@ cb_menu_track_export(appdata_t *appdata) {
       g_debug("export to %s\n", filename.get());
 
       if(g_file_test(filename.get(), G_FILE_TEST_EXISTS) != TRUE ||
-         yes_no_f(dialog.get(), MISC_AGAIN_ID_EXPORT_OVERWRITE | MISC_AGAIN_FLAG_DONT_SAVE_NO,
-                  _("Overwrite existing file"),
-                  _("The file already exists. "
-                    "Do you really want to replace it?"))) {
+         yes_no(_("Overwrite existing file"),
+                _("The file already exists. Do you really want to replace it?"),
+                MISC_AGAIN_ID_EXPORT_OVERWRITE | MISC_AGAIN_FLAG_DONT_SAVE_NO, dialog.get())) {
         settings->track_path = filename.get();
 
         assert(appdata->track.track);
