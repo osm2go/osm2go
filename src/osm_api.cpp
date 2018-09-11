@@ -58,10 +58,10 @@ bool osm_download(osm2go_platform::Widget *parent, project_t *project)
 
   if(unlikely(!project->rserver.empty())) {
     if(api_adjust(project->rserver)) {
-      g_string buf(g_strdup_printf(_("It seems your current project uses an outdated "
-                                     "server/protocol. It has thus been changed to:\n\n%s"),
-                                   project->rserver.c_str()));
-      message_dlg(_("Server changed"), buf.get(), parent);
+      message_dlg(_("Server changed"),
+                  trstring("It seems your current project uses an outdated "
+                           "server/protocol. It has thus been changed to:\n\n%1").arg(project->rserver),
+                  parent);
     }
 
     /* server url should not end with a slash */

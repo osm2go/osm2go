@@ -29,5 +29,6 @@ void error_dlg(const trstring &msg, osm2go_platform::Widget *parent = nullptr);
 void warning_dlg(const char *msg, osm2go_platform::Widget *parent = nullptr) __attribute__((nonnull(1)));
 void warning_dlg(const trstring &msg, osm2go_platform::Widget *parent = nullptr);
 void message_dlg(const char *title, const char *msg, osm2go_platform::Widget *parent = nullptr) __attribute__((nonnull(1,2)));
+void message_dlg(const char *title, const trstring &msg, GtkWidget *parent) __attribute__((nonnull(1)));
 
 #endif // NOTIFICATIONS_H

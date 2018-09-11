@@ -65,6 +65,11 @@ void message_dlg(const char *title, const char *msg, GtkWidget *parent)
   vmessage(parent, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, title, msg);
 }
 
+void message_dlg(const char *title, const trstring &msg, GtkWidget *parent)
+{
+  vmessage(parent, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, title, msg.c_str());
+}
+
 void error_dlg(const char *msg, GtkWidget *parent)
 {
   vmessage(parent, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, _("Error"), msg);
