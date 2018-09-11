@@ -32,7 +32,6 @@
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
-#include <osm2go_platform_gtk.h>
 
 #include <algorithm>
 #include <cassert>
@@ -560,24 +559,24 @@ void map_t::way_reverse() {
 
   select_way(item.object.way);
 
-  // Flash a message about any side-effects
-  g_string msg;
-  if (n_tags_flipped != 0 && n_roles_flipped == 0) {
-    msg.reset(g_strdup_printf(ngettext("%u tag updated", "%u tags updated",
-                                       n_tags_flipped), n_tags_flipped));
-  } else if (n_tags_flipped == 0 && n_roles_flipped != 0) {
-    msg.reset(g_strdup_printf(ngettext("%u relation updated", "%u relations updated",
-                                       n_roles_flipped), n_roles_flipped));
-  } else if (n_tags_flipped != 0 && n_roles_flipped != 0) {
-    g_string msg1(g_strdup_printf(ngettext("%u tag", "%u tags",
-                                           n_tags_flipped), n_tags_flipped));
-    g_string msg2(g_strdup_printf(ngettext("%u relation", "%u relations",
-                                          n_roles_flipped), n_roles_flipped));
-    msg.reset(g_strdup_printf(_("%s & %s updated"), msg1.get(), msg2.get()));
-  } else
+  if (n_tags_flipped == 0 && n_roles_flipped == 0)
     return;
 
-  appdata.uicontrol->showNotification(msg.get(), MainUi::Brief);
+  // Flash a message about any side-effects
+  trstring tags, rels;
+  if (n_tags_flipped != 0)
+    tags = trstring(ngettext("%n tag", "%n tags", n_tags_flipped), nullptr, n_tags_flipped);
+  if (n_roles_flipped != 0)
+    rels = trstring(ngettext("%n relation", "%n relations", n_roles_flipped), nullptr, n_roles_flipped);
+
+  trstring msg;
+  if (n_tags_flipped != 0 && n_roles_flipped != 0) {
+    msg = trstring("%1 & %2 updated").arg(tags).arg(rels);
+  } else {
+    msg = trstring("%1 updated").arg(tags.empty() ? rels : tags);
+  }
+
+  appdata.uicontrol->showNotification(msg.c_str(), MainUi::Brief);
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai

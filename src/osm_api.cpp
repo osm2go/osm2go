@@ -44,7 +44,6 @@
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
-#include <osm2go_platform_gtk.h>
 #include <osm2go_stl.h>
 
 #define COLOR_ERR  "red"

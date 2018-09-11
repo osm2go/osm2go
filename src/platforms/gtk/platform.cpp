@@ -133,10 +133,20 @@ double osm2go_platform::string_to_double(const char *str)
     return NAN;
 }
 
-trstring trstring::arg(const std::string &a) const
+std::string trstring::argn(const std::string &spattern, const std::string &a, std::string::size_type pos) const
 {
   std::string smsg = *this;
 
+  while (pos != std::string::npos) {
+    smsg.replace(pos, spattern.size(), a);
+    pos = smsg.find(spattern, pos + a.size());
+  }
+
+  return trstring(smsg);
+}
+
+trstring trstring::arg(const std::string &a) const
+{
   // increase as needed
   std::string spattern = "%1";
   std::string::size_type pos = find(spattern);
@@ -148,10 +158,5 @@ trstring trstring::arg(const std::string &a) const
   if(unlikely(pos == std::string::npos))
     g_debug("no placeholder found in string: '%s'", c_str());
 
-  while (pos != std::string::npos) {
-    smsg.replace(pos, 2, a);
-    pos = smsg.find("%1", pos + a.size());
-  }
-
-  return trstring(smsg);
+  return trstring(argn(spattern, a, pos));
 }

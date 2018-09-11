@@ -19,5 +19,8 @@ int main()
   foo = trstring("abc %1 def %2 ghi %3").arg(3).arg("nkw");
   assert_cmpstr(foo, "abc 3 def nkw ghi %3");
 
+  foo = trstring("%1%n%2", nullptr, 2).arg("a").arg("b");
+  assert_cmpstr(foo, "a2b");
+
   return 0;
 }
