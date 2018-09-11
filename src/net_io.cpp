@@ -119,9 +119,7 @@ static GtkWidget *busy_dialog(osm2go_platform::Widget *parent, GtkProgressBar *&
   GtkWidget *dialog = gtk_dialog_new();
 #endif
 
-  g_string str(g_strdup_printf(_("Downloading %s"), title));
-  gtk_window_set_title(GTK_WINDOW(dialog), str.get());
-  str.reset();
+  gtk_window_set_title(GTK_WINDOW(dialog), trstring("Downloading %1").arg(title).c_str());
 
   gtk_window_set_default_size(GTK_WINDOW(dialog), 300, 10);
 
