@@ -168,8 +168,10 @@ std::string pos_area::print() const
 }
 
 void remove_trailing_zeroes(char *str) {
-  char *delim = strpbrk(str, ".,");
-  if(delim == nullptr)
+  char *delim = str;
+  while(*delim >= '0' && *delim <= '9')
+    delim++;
+  if(*delim == '\0')
     return;
   char *p = delim + strlen(delim) - 1;
   while(*p == '0')

@@ -153,6 +153,14 @@ static inline void pos_lon_str(char *str, size_t len, pos_float_t longitude)
 bool pos_lat_valid(pos_float_t lat);
 bool pos_lon_valid(pos_float_t lon);
 
+/**
+ * @brief remove trailing zeroes from a number string
+ * @param str the buffer to modify
+ *
+ * This will remove all trailing zeroes if the buffer contains a delimiter
+ * (i.e. any character outside [0..9]. If the last character would be that
+ * delimiter it will also be removed.
+ */
 void remove_trailing_zeroes(char *str);
 
 #endif
