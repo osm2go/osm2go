@@ -74,7 +74,7 @@ bool osm_download(osm2go_platform::Widget *parent, project_t *project)
   }
 
   const std::string url = project->server(defaultServer) + "/map?bbox=" +
-                          project->bounds.print(',');
+                          project->bounds.print();
 
   /* Download the new file to a new name. If something goes wrong then the
    * old file will still be in place to be opened. */

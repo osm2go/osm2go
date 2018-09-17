@@ -440,7 +440,7 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
   url += "&STYLES=";
 
   /* build strings of min and max lat and lon to be used in url */
-  const std::string coords = appdata.project->bounds.print(',');
+  const std::string coords = appdata.project->bounds.print();
 
   /* find preferred supported video format */
   const FormatMap::const_iterator itEnd = ImageFormats.end();

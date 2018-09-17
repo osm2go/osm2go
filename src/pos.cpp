@@ -24,13 +24,12 @@
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
 
+#include <array>
 #include <cctype>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <glib.h>
-
-#define LL_FORMAT   "%.07f"
 
 bool pos_t::valid() const
 {
@@ -65,12 +64,16 @@ lpos_t pos_t::toLpos(const bounds_t &bounds) const {
   return lpos;
 }
 
+static void print_coord(pos_float_t val, char *buf)
+{
+  g_ascii_formatd(buf, G_ASCII_DTOSTR_BUF_SIZE, "%.07f", val);
+  remove_trailing_zeroes(buf);
+}
+
 static void xml_add_prop_coord(xmlNodePtr node, const char *key, pos_float_t val)
 {
   char str[G_ASCII_DTOSTR_BUF_SIZE];
-
-  g_ascii_formatd(str, sizeof(str), LL_FORMAT, val);
-  remove_trailing_zeroes(str);
+  print_coord(val, str);
   xmlNewProp(node, BAD_CAST key, BAD_CAST str);
 }
 
@@ -94,20 +97,6 @@ pos_t pos_t::fromXmlProperties(xmlTextReaderPtr reader, const char *latName, con
 {
   return pos_t(xml_reader_attr_float(reader, latName),
                xml_reader_attr_float(reader, lonName));
-}
-
-std::string pos_t::print(char delim)
-{
-  char latstr[G_ASCII_DTOSTR_BUF_SIZE], lonstr[G_ASCII_DTOSTR_BUF_SIZE];
-
-  g_ascii_formatd(latstr, sizeof(latstr), LL_FORMAT, lat);
-  g_ascii_formatd(lonstr, sizeof(lonstr), LL_FORMAT, lon);
-
-  std::string ret(strlen(latstr) + 1 + strlen(lonstr), 0);
-  ret = lonstr;
-  ret += delim;
-  ret += latstr;
-  return ret;
 }
 
 lpos_t pos_t::toLpos() const {
@@ -163,9 +152,19 @@ bool pos_area::contains(pos_t pos) const noexcept
   return true;
 }
 
-std::string pos_area::print(char delim1, char delim2)
+std::string pos_area::print() const
 {
-  return min.print(delim1) + delim2 + max.print(delim1);
+  std::array<pos_float_t, 4> pos = { { min.lon, min.lat, max.lon, max.lat } };
+  char buf[G_ASCII_DTOSTR_BUF_SIZE * pos.size() + pos.size()];
+
+  size_t p = 0;
+  for(unsigned int i = 0; i < pos.size(); i++) {
+    print_coord(pos.at(i), buf + p);
+    p += strlen(buf + p);
+    buf[p++] = ',';
+  }
+
+  return std::string(buf, p - 1);
 }
 
 void remove_trailing_zeroes(char *str) {

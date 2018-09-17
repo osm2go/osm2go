@@ -80,11 +80,6 @@ typedef struct pos_t {
 
   static pos_t fromXmlProperties(xmlTextReaderPtr reader,
                                  const char *latName = "lat", const char *lonName = "lon");
-
-  /**
-   * @brief returns a string representation of lon + delim + lat
-   */
-  std::string print(char delim = ',');
 #endif
 } pos_t;
 
@@ -120,14 +115,9 @@ struct pos_area {
   { return !operator==(other); }
 
   /**
-   * @brief returns a string representation of minlon + delim1 + minlat + delim2 + maxlon + delim1 + maxlat
+   * @brief returns a string representation of min.lon + ',' + min.lat + ',' + max.lon + ',' + max.lat
    */
-  std::string print(char delim1, char delim2);
-  /**
-   * @overload
-   */
-  inline std::string print(char delim = ',')
-  { return print(delim, delim); }
+  std::string print() const;
 };
 
 /* local position */
