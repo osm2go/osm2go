@@ -343,5 +343,3 @@ void map_t::set_autosave(bool enable) {
   else
     m->autosave.stop();
 }
-
-// vim:et:ts=8:sw=2:sts=2:ai

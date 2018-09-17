@@ -655,5 +655,3 @@ track_t::track_t()
   , active(false)
 {
 }
-
-// vim:et:ts=8:sw=2:sts=2:ai

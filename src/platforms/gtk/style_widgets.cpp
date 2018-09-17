@@ -169,5 +169,3 @@ void style_change(appdata_t &appdata, GtkWidget *widget) {
 
   style_change(appdata, style);
 }
-
-//vim:et:ts=8:sw=2:sts=2:ai

@@ -1305,5 +1305,3 @@ presets_items_internal::~presets_items_internal()
   std::for_each(items.begin(), items.end(), std::default_delete<presets_item_t>());
   std::for_each(chunks.begin(), chunks.end(), std::default_delete<presets_item_t>());
 }
-
-// vim:et:ts=8:sw=2:sts=2:ai

@@ -745,5 +745,3 @@ elemstyle_t::~elemstyle_t()
   if(type & ES_TYPE_LINE)
     delete line;
 }
-
-// vim:et:ts=8:sw=2:sts=2:ai

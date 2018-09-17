@@ -792,5 +792,3 @@ void relation_list(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items 
   gtk_widget_show_all(context.dialog.get());
   gtk_dialog_run(GTK_DIALOG(context.dialog.get()));
 }
-
-// vim:et:ts=8:sw=2:sts=2:ai

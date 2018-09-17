@@ -1744,5 +1744,3 @@ void map_state_t::reset() noexcept
   scroll_offset.x = 0;
   scroll_offset.y = 0;
 }
-
-// vim:et:ts=8:sw=2:sts=2:ai

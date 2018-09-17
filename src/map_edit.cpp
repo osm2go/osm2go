@@ -582,5 +582,3 @@ void map_t::way_reverse() {
 
   appdata.uicontrol->showNotification(msg.c_str(), MainUi::Brief);
 }
-
-// vim:et:ts=8:sw=2:sts=2:ai

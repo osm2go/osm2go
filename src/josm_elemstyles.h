@@ -52,5 +52,3 @@ void josm_elemstyles_colorize_way(const style_t *style, way_t *way);
 void josm_elemstyles_colorize_world(style_t *styles, osm_t::ref osm);
 
 #endif // JOSM_ELEMSTYLES_H
-
-// vim:et:ts=8:sw=2:sts=2:ai

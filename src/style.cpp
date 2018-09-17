@@ -345,5 +345,3 @@ void style_t::colorize_world(osm_t::ref osm)
 {
   josm_elemstyles_colorize_world(this, osm);
 }
-
-//vim:et:ts=8:sw=2:sts=2:ai

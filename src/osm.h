@@ -723,5 +723,3 @@ void osm_t::relation_insert(relation_t *relation)
 }
 
 #endif /* OSM_H */
-
-// vim:et:ts=8:sw=2:sts=2:ai
