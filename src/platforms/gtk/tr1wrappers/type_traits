@@ -1,0 +1,6 @@
+#pragma once
+
+#include <tr1/type_traits>
+namespace std {
+  using tr1::remove_const;
+};

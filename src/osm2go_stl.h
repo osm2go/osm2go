@@ -253,14 +253,6 @@ template<typename T> void shrink_to_fit(T &v) {
 
 #if __cplusplus < 201103L
 namespace std {
-  template<typename _Tp>
-    struct remove_const
-    { typedef _Tp     type; };
-
-  template<typename _Tp>
-    struct remove_const<_Tp const>
-    { typedef _Tp     type; };
-
   template<typename T>
   std::string to_string_tpl(T n, const char *fmt)
   {

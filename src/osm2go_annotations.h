@@ -26,9 +26,7 @@
 #include <cassert>
 #include <cstring>
 #include <string>
-#if __cplusplus >= 201103L
 #include <type_traits>
-#endif
 
 // this omits magic to support every thinkable compiler until anyone really needs them
 
