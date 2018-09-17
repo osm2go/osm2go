@@ -155,7 +155,10 @@ struct bounds_t {
 };
 
 void pos_lat_str(char *str, size_t len, pos_float_t latitude);
-void pos_lon_str(char *str, size_t len, pos_float_t longitude);
+static inline void pos_lon_str(char *str, size_t len, pos_float_t longitude)
+{
+  pos_lat_str(str, len, longitude);
+}
 
 bool pos_lat_valid(pos_float_t lat);
 bool pos_lon_valid(pos_float_t lon);
