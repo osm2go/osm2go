@@ -21,6 +21,7 @@
 #define COLOR_H
 
 #include <cstdint>
+#include <osm2go_cpp.h>
 
 class color_t {
   uint32_t value;
@@ -54,5 +55,7 @@ public:
     return color_t(0);
   }
 } __attribute__ ((packed));
+
+static_assert(sizeof(color_t) == sizeof(unsigned int), "wrong size for color_t");
 
 #endif /* COLOR_H */

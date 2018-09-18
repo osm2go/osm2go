@@ -47,10 +47,6 @@
 #error "Tree not enabled in libxml"
 #endif
 
-// this assertion is here and not in the header to avoid needless
-// additional includes on non-C++11 compilers (i.e. Fremantle)
-static_assert(sizeof(color_t) == sizeof(unsigned int), "wrong size for color_t");
-
 typedef std::unordered_map<std::string, color_t> ColorMap;
 
 class StyleSax {
