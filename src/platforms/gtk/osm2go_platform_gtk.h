@@ -155,6 +155,21 @@ namespace osm2go_platform {
    * This widget will be added to the main window.
    */
   GtkWidget *statusBarWidget(statusbar_t *statusbar);
+
+  class Timer {
+    guint id;
+  public:
+    explicit inline Timer()
+      : id(0) {}
+    inline ~Timer()
+    { stop(); }
+
+    void restart(unsigned int seconds, GSourceFunc callback, void *data);
+    void stop();
+
+    inline bool isActive() const
+    { return id != 0; }
+  };
 };
 
 // simplified form of unique_ptr

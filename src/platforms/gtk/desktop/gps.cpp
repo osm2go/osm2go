@@ -19,8 +19,6 @@
 
 #include <gps_state.h>
 
-#include <osm2go_platform.h>
-
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -31,6 +29,8 @@
 #include <unistd.h>
 
 #include <osm2go_cpp.h>
+#include <osm2go_platform.h>
+#include <osm2go_platform_gtk.h>
 
 #define MAXTAGLEN    8       /* maximum length of sentence tag name */
 

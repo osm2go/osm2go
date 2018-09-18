@@ -36,21 +36,6 @@ namespace osm2go_platform {
   };
   typedef std::unique_ptr<GtkWidget, gtk_widget_deleter> WidgetGuard;
 
-  class Timer {
-    guint id;
-  public:
-    explicit inline Timer()
-      : id(0) {}
-    inline ~Timer()
-    { stop(); }
-
-    void restart(unsigned int seconds, GSourceFunc callback, void *data);
-    void stop();
-
-    inline bool isActive() const
-    { return id != 0; }
-  };
-
   class MappedFile {
     GMappedFile *map;
   public:
