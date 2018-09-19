@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
+#include <glib.h>
 #include <iostream>
 #include <map>
 #include <vector>

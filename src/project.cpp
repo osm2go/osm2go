@@ -38,6 +38,7 @@
 #include <cstring>
 #include <dirent.h>
 #include <fcntl.h>
+#include <glib.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <memory>

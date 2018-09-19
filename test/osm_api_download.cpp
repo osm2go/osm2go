@@ -12,6 +12,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <curl/curl.h>
+#include <glib.h>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>

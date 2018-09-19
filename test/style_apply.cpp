@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
+#include <glib.h>
 #include <iostream>
 
 appdata_t::appdata_t(map_state_t &mstate)

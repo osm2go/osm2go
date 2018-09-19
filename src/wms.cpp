@@ -35,6 +35,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstring>
+#include <glib.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <map>
