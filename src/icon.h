@@ -24,19 +24,15 @@
 
 #include <osm2go_platform.h>
 
-typedef struct _GdkPixbuf GdkPixbuf;
-
 class icon_t {
 protected:
   inline icon_t() {}
 public:
-  typedef ::GdkPixbuf *Pixmap;
-
   class icon_item {
   protected:
     inline icon_item() {}
   public:
-    Pixmap buffer();
+    osm2go_platform::Pixmap buffer();
 
     int maxDimension() const;
   };

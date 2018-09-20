@@ -511,7 +511,7 @@ canvas_item_t *canvas_t::polygon_new(canvas_group_t group, const std::vector<lpo
 }
 
 /* place the image in pix centered on x/y on the canvas */
-canvas_item_pixmap *canvas_t::image_new(canvas_group_t group, icon_t::Pixmap pix, int x,
+canvas_item_pixmap *canvas_t::image_new(canvas_group_t group, osm2go_platform::Pixmap pix, int x,
                                    int y, float hscale, float vscale) {
   int width = gdk_pixbuf_get_width(pix);
   int height = gdk_pixbuf_get_height(pix);

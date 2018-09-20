@@ -41,12 +41,12 @@ class icon_buffer : public icon_t {
 public:
   class icon_buffer_item : public icon_item {
   public:
-    explicit icon_buffer_item(Pixmap nbuf);
+    explicit icon_buffer_item(osm2go_platform::Pixmap nbuf);
 
     std::unique_ptr<GdkPixbuf, g_object_deleter> buf;
     int use;
 
-    inline Pixmap buffer() {
+    inline osm2go_platform::Pixmap buffer() {
       return buf.get();
     }
   };
@@ -57,7 +57,7 @@ public:
   BufferMap entries;
 };
 
-icon_buffer::icon_buffer_item::icon_buffer_item(Pixmap nbuf)
+icon_buffer::icon_buffer_item::icon_buffer_item(osm2go_platform::Pixmap nbuf)
   : buf(nbuf)
   , use(nbuf != nullptr ? 1 : 0)
 {
@@ -111,7 +111,7 @@ icon_t::icon_item *icon_t::load(const std::string &sname, int limit) {
 
   const std::string &fullname = icon_file_exists(sname);
   if(!fullname.empty()) {
-    Pixmap pix = gdk_pixbuf_new_from_file_at_size(fullname.c_str(), limit, limit, nullptr);
+    osm2go_platform::Pixmap pix = gdk_pixbuf_new_from_file_at_size(fullname.c_str(), limit, limit, nullptr);
 
     if(likely(pix)) {
       //    g_debug("Successfully loaded icon %s to %p", name, pix);
@@ -133,14 +133,14 @@ GtkWidget *icon_t::widget_load(const std::string &name, int limit) {
   return gtk_image_new_from_pixbuf(pix->buffer());
 }
 
-icon_t::Pixmap icon_t::icon_item::buffer()
+osm2go_platform::Pixmap icon_t::icon_item::buffer()
 {
   return static_cast<icon_buffer::icon_buffer_item *>(this)->buffer();
 }
 
 int icon_t::icon_item::maxDimension() const
 {
-  const Pixmap buf = const_cast<icon_t::icon_item *>(this)->buffer();
+  const osm2go_platform::Pixmap buf = const_cast<icon_t::icon_item *>(this)->buffer();
   return std::max(gdk_pixbuf_get_height(buf), gdk_pixbuf_get_width(buf));
 }
 

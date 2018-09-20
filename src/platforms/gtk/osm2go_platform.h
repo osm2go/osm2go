@@ -27,9 +27,11 @@
 #include <osm2go_stl.h>
 
 typedef struct _GtkWidget GtkWidget;
+typedef struct _GdkPixbuf GdkPixbuf;
 
 namespace osm2go_platform {
   typedef GtkWidget Widget;
+  typedef ::GdkPixbuf *Pixmap;
 
   struct gtk_widget_deleter {
     void operator()(GtkWidget *mem);

@@ -647,7 +647,7 @@ static GtkTreeIter preset_insert_item(const presets_item_named *item, icon_t &ic
   /* Append a row and fill in some data */
   GtkTreeIter iter;
 
-  icon_t::Pixmap pixmap = icon == nullptr ? nullptr : icon->buffer();
+  osm2go_platform::Pixmap pixmap = icon == nullptr ? nullptr : icon->buffer();
 
   gtk_list_store_insert_with_values(store, &iter, -1,
                                     PRESETS_PICKER_COL_ICON, pixmap,
