@@ -33,7 +33,6 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
-#include <glib.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <limits>
@@ -173,14 +172,21 @@ bool parse_color(xmlNode *a_node, const char *name, color_t &color)
   return ret;
 }
 
+static float parse_scale_buf(const char *buf)
+{
+  return scaledn_to_zoom(osm2go_platform::string_to_double(buf));
+}
+
 static float parse_scale(const char *val_str, int len) {
-  char buf[G_ASCII_DTOSTR_BUF_SIZE];
+  char buf[32];
   if(unlikely(static_cast<unsigned int>(len) >= sizeof(buf))) {
-    return 0.0;
+    // just for the case someone is really excessive with trailing or leading zeroes
+    const std::string sbuf(val_str, len);
+    return parse_scale_buf(sbuf.c_str());
   } else {
     memcpy(buf, val_str, len);
     buf[len] = '\0';
-    return scaledn_to_zoom(osm2go_platform::string_to_double(buf));
+    return parse_scale_buf(buf);
   }
 }
 
