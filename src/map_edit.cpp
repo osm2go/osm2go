@@ -580,5 +580,5 @@ void map_t::way_reverse() {
     msg = trstring("%1 updated").arg(tags.empty() ? rels : tags);
   }
 
-  appdata.uicontrol->showNotification(msg.c_str(), MainUi::Brief);
+  appdata.uicontrol->showNotification(msg, MainUi::Brief);
 }

@@ -21,6 +21,7 @@
 #define UICONTROL_H
 
 class statusbar_t;
+class trstring;
 
 class MainUi {
 protected:
@@ -70,6 +71,11 @@ public:
    * message may be nullptr to clear the current message.
    */
   void showNotification(const char *message, unsigned int flags = NoFlags);
+
+  /**
+   * @overload
+   */
+  void showNotification(const trstring &message, unsigned int flags = NoFlags);
 
   /**
    * @brief show a modal about box
