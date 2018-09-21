@@ -20,14 +20,14 @@
 #ifndef OSM2GO_PLATFORM_H
 #define OSM2GO_PLATFORM_H
 
-#include <glib.h>
 #include <memory>
 
 #include <osm2go_cpp.h>
 #include <osm2go_stl.h>
 
-typedef struct _GtkWidget GtkWidget;
+typedef struct _GMappedFile GMappedFile;
 typedef struct _GdkPixbuf GdkPixbuf;
+typedef struct _GtkWidget GtkWidget;
 
 namespace osm2go_platform {
   typedef GtkWidget Widget;
@@ -41,19 +41,16 @@ namespace osm2go_platform {
   class MappedFile {
     GMappedFile *map;
   public:
-    explicit inline MappedFile(const char *fname)
-      : map(g_mapped_file_new(fname, FALSE, nullptr)) {}
+    explicit MappedFile(const char *fname);
     inline ~MappedFile()
     { reset(); }
 
     inline operator bool() const
     { return map != nullptr; }
 
-    inline const char *data()
-    { return g_mapped_file_get_contents(map); }
+    const char *data();
 
-    inline size_t length()
-    { return g_mapped_file_get_length(map); }
+    size_t length();
 
     void reset();
   };

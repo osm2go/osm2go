@@ -30,6 +30,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <gdk/gdk.h>
+#include <glib.h>
 #include <gtk/gtk.h>
 #ifdef FREMANTLE
 #include <hildon/hildon-note.h>
@@ -81,6 +82,21 @@ void osm2go_platform::dialog_size_hint(GtkWindow *window, osm2go_platform::Dialo
   };
 
   gtk_window_set_default_size(window, dialog_sizes[hint][0], dialog_sizes[hint][1]);
+}
+
+osm2go_platform::MappedFile::MappedFile(const char *fname)
+  : map(g_mapped_file_new(fname, FALSE, nullptr))
+{
+}
+
+const char *osm2go_platform::MappedFile::data()
+{
+  return g_mapped_file_get_contents(map);
+}
+
+size_t osm2go_platform::MappedFile::length()
+{
+  return g_mapped_file_get_length(map);
 }
 
 void osm2go_platform::MappedFile::reset()
