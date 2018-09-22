@@ -35,7 +35,6 @@
 #include <cassert>
 #include <cmath>
 #include <cstring>
-#include <glib.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <map>
@@ -53,7 +52,11 @@
 
 struct charcmp {
   inline bool operator()(const char *a, const char *b) const {
-    return g_strcmp0(a, b) < 0;
+    if(unlikely(a == nullptr))
+      return b != nullptr;
+    if(unlikely(b == nullptr))
+      return false;
+    return strcmp(a, b) < 0;
   }
 };
 
