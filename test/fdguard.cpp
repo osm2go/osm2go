@@ -32,8 +32,17 @@ static void check_guard(int openfd, int &dirfd, const std::string &exepath)
   assert_cmpnum(static_cast<int>(rootfd), openfd);
   assert_cmpnum(static_cast<int>(ofd), dirfd);
 
-  dirguard dg(exepath);
+  std::string::size_type sl = exepath.rfind('/');
+  dirguard dg(exepath.substr(0, sl));
   assert(dg.valid());
+
+  dirguard dg2(dg, exepath.substr(sl + 1).c_str());
+  assert(dg2.valid());
+
+  dirguard dgchar(exepath.substr(0, sl + 1));
+  assert(dg.valid());
+  dirguard dgchar2(dgchar, exepath.substr(sl + 1).c_str());
+  assert(dgchar2.valid());
 }
 
 static void check_notdir(const char *exe, const std::string &exepath)

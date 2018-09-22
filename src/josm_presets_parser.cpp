@@ -1065,9 +1065,7 @@ presets_items *presets_items::load()
     presets->addFile(filename, std::string(), -1);
 
   // check for user presets
-  std::string dirname = getenv("HOME");
-  dirname += "/.local/share/osm2go/presets/";
-  dirguard dir(dirname);
+  dirguard dir(std::string(getenv("HOME")) + "/.local/share/osm2go/presets/");
 
   if(dir.valid()) {
     dirent *d;
@@ -1078,8 +1076,7 @@ presets_items *presets_items::load()
       if(strcmp(d->d_name, ".") == 0 || strcmp(d->d_name, "..") == 0)
         continue;
 
-      const std::string dn = dirname + d->d_name + '/';
-      dirguard pdir(dn);
+      dirguard pdir(dir, d->d_name);
       if(likely(pdir.valid())) {
         // find first XML file inside those directories
         dirent *pd;
@@ -1088,7 +1085,7 @@ presets_items *presets_items::load()
             continue;
           const size_t nlen = strlen(pd->d_name);
           if(nlen > 4 && strcasecmp(pd->d_name + nlen - 4, ".xml") == 0) {
-            presets->addFile(dn + pd->d_name, dn, pdir.dirfd());
+            presets->addFile(pdir.path() + pd->d_name, pdir.path(), pdir.dirfd());
             break;
           }
         }

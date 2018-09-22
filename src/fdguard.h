@@ -74,21 +74,35 @@ struct fdguard {
 };
 
 class dirguard {
+  const std::string p;
   DIR * const d;
 public:
   /**
    * @brief opens the given directory
    */
   explicit inline dirguard(const char *name) __attribute__((nonnull(2)))
-    : d(opendir(name)) {}
+    : p(name), d(opendir(name)) {}
   explicit inline dirguard(const std::string &name)
-    : d(opendir(name.c_str())) {}
+    : p(name.at(name.size() - 1) == '/' ? name : name + '/'), d(opendir(name.c_str())) {}
   explicit dirguard(int fd);
+  /**
+   * @brief opens the given subdirectory of a parent directory
+   */
+  explicit dirguard(const dirguard &parent, const char *subdir)
+    : p(parent.path() + subdir + '/'), d(opendir(p.c_str())) {}
   ~dirguard();
 
   inline bool valid() const { return d != nullptr; }
   inline dirent *next() { return readdir(d); }
   inline int dirfd() { return ::dirfd(d); }
+
+  /**
+   * @brief the path name of the directory
+   *
+   * This may be empty if the object was initialized from a filedescriptor.
+   */
+  inline const std::string &path() const
+  { return p; }
 };
 
 #endif /* FDGUARD_H */
