@@ -90,6 +90,11 @@ namespace osm2go_platform {
 
   const std::vector<dirguard> &base_paths();
 
+  /**
+   * @brief return the path where the user may store custom presets
+   */
+  dirguard userdatapath();
+
   bool create_directories(const std::string &path);
 };
 

@@ -321,6 +321,11 @@ const std::vector<dirguard> &osm2go_platform::base_paths()
   return ret;
 }
 
+dirguard osm2go_platform::userdatapath()
+{
+  return dirguard(std::string(g_get_user_data_dir()) + "/osm2go/presets/");
+}
+
 bool osm2go_platform::create_directories(const std::string &path)
 {
   return g_mkdir_with_parents(path.c_str(), S_IRWXU) == 0;

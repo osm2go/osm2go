@@ -1065,7 +1065,7 @@ presets_items *presets_items::load()
     presets->addFile(filename, std::string(), -1);
 
   // check for user presets
-  dirguard dir(std::string(getenv("HOME")) + "/.local/share/osm2go/presets/");
+  dirguard dir(osm2go_platform::userdatapath());
 
   if(dir.valid()) {
     dirent *d;
