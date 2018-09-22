@@ -99,6 +99,8 @@ namespace osm2go_platform {
   };
 
   const std::vector<datapath> &base_paths();
+
+  bool create_directories(const std::string &path);
 };
 
 #endif // OSM2GO_PLATFORM_COMMON_H

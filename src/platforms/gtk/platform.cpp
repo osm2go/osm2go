@@ -322,3 +322,8 @@ const std::vector<osm2go_platform::datapath> &osm2go_platform::base_paths()
 
   return ret;
 }
+
+bool osm2go_platform::create_directories(const std::string &path)
+{
+  return g_mkdir_with_parents(path.c_str(), S_IRWXU) == 0;
+}

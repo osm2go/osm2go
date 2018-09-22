@@ -175,7 +175,7 @@ bool project_t::save(osm2go_platform::Widget *parent) {
   /* check if project path exists */
   if(unlikely(!dirfd.valid())) {
     /* make sure project base path exists */
-    if(unlikely(g_mkdir_with_parents(path.c_str(), S_IRWXU) != 0)) {
+    if(unlikely(!osm2go_platform::create_directories(path))) {
       error_dlg(trstring("Unable to create project path %1").arg(path), parent);
       return false;
     }
