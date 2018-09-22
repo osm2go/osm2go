@@ -263,15 +263,13 @@ std::map<std::string, std::string> style_scan() {
   std::string fullname;
 
   const size_t elen = strlen(extension);
-  const std::vector<osm2go_platform::datapath> &paths = osm2go_platform::base_paths();
+  const std::vector<dirguard> &paths = osm2go_platform::base_paths();
+  const std::vector<dirguard>::const_iterator itEnd = paths.end();
 
-  for(unsigned int i = 0; i < paths.size(); i++) {
+  for(std::vector<dirguard>::const_iterator it = paths.begin(); it != itEnd; it++) {
     /* scan for projects */
-
-    dirguard dir(paths[i].fd);
-
-    if(unlikely(!dir.valid()))
-      continue;
+    // only copy the fd, no need for the pathname as that is not used anyway
+    dirguard dir(it->dirfd());
 
     int dfd = dir.dirfd();
     for(dirent *d = dir.next(); d != nullptr; d = dir.next()) {
@@ -289,7 +287,7 @@ std::map<std::string, std::string> style_scan() {
       if(unlikely(!S_ISREG(st.st_mode)))
         continue;
 
-      fullname = paths[i].pathname + d->d_name;
+      fullname = it->path() + d->d_name;
 
       style_t style;
       if(likely(style_parse(fullname, nullptr, true, style)))

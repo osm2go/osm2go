@@ -8,6 +8,12 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+// wrapper function to trigger the copy constructor
+static dirguard dguard(const std::string &basepath, const std::string &dirname)
+{
+  return dirguard(basepath + dirname);
+}
+
 static void check_guard(int openfd, int &dirfd, const std::string &exepath)
 {
   fdguard infd(0);
@@ -43,6 +49,11 @@ static void check_guard(int openfd, int &dirfd, const std::string &exepath)
   assert(dg.valid());
   dirguard dgchar2(dgchar, exepath.substr(sl + 1).c_str());
   assert(dgchar2.valid());
+
+  dirguard dgcopy(dguard(exepath.substr(0, sl + 1), exepath.substr(sl + 1)));
+  assert(dgcopy.valid());
+  dirent *n = dgcopy.next();
+  assert(n != nullptr);
 }
 
 static void check_notdir(const char *exe, const std::string &exepath)

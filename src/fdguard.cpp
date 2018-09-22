@@ -79,6 +79,23 @@ dirguard::dirguard(int fd)
     rewinddir(d);
 }
 
+#if __cplusplus < 201103L
+dirguard::dirguard(const dirguard &other)
+  : p(other.p), d(fdopendir(dup(other.dirfd())))
+{
+}
+
+dirguard& dirguard::operator=(const dirguard &other)
+{
+  assert(d == nullptr);
+  assert(p.empty());
+  const_cast<DIR*&>(d) = fdopendir(dup(other.dirfd()));
+  const_cast<std::string&>(p) = other.p;
+
+  return *this;
+}
+#endif
+
 dirguard::~dirguard()
 {
   if(likely(valid()))

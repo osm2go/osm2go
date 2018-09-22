@@ -88,17 +88,7 @@ namespace osm2go_platform {
   bool yes_no(const trstring &title, const trstring &msg,
               unsigned int again_flags = 0, Widget *parent = nullptr);
 
-  struct datapath {
-#if __cplusplus >= 201103L
-    explicit inline datapath(fdguard &&f)  : fd(std::move(f)) {}
-#else
-    explicit inline datapath(fdguard &f)  : fd(f) {}
-#endif
-    fdguard fd;
-    std::string pathname;
-  };
-
-  const std::vector<datapath> &base_paths();
+  const std::vector<dirguard> &base_paths();
 
   bool create_directories(const std::string &path);
 };

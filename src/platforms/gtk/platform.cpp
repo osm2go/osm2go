@@ -278,10 +278,10 @@ bool osm2go_platform::yes_no(const trstring &title, const trstring &msg, unsigne
   return yes_no(title.c_str(), msg.c_str(), again_flags, parent);
 }
 
-const std::vector<osm2go_platform::datapath> &osm2go_platform::base_paths()
+const std::vector<dirguard> &osm2go_platform::base_paths()
 {
 /* all entries must contain a trailing '/' ! */
-  static std::vector<osm2go_platform::datapath> ret;
+  static std::vector<dirguard> ret;
 
   if(unlikely(ret.empty())) {
     std::vector<std::string> pathnames;
@@ -305,15 +305,13 @@ const std::vector<osm2go_platform::datapath> &osm2go_platform::base_paths()
 
     for (unsigned int i = 0; i < pathnames.size(); i++) {
       assert(pathnames[i][pathnames[i].size() - 1] == '/');
-      fdguard dfd(pathnames[i].c_str(), O_DIRECTORY);
+      dirguard dfd(pathnames[i].c_str());
       if(dfd.valid()) {
 #if __cplusplus >= 201103L
-        ret.emplace_back(datapath(std::move(dfd)));
+        ret.emplace_back(std::move(dfd));
 #else
-        ret.push_back(datapath(dfd));
+        ret.push_back(dfd);
 #endif
-
-        ret.back().pathname.swap(pathnames[i]);
       }
     }
 

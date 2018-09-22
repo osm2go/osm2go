@@ -77,6 +77,20 @@ class dirguard {
   const std::string p;
   DIR * const d;
 public:
+#if __cplusplus >= 201103L
+  dirguard(const dirguard &other) = delete;
+  dirguard() = delete;
+  inline dirguard(dirguard &&f)
+    : p(std::move(f.p)), d(f.d)
+  {
+    const_cast<DIR*&>(f.d) = nullptr;
+  }
+#else
+  dirguard(const dirguard &other);
+  explicit inline dirguard() : d(nullptr) {}
+  dirguard &operator=(const dirguard &other);
+#endif
+
   /**
    * @brief opens the given directory
    */
@@ -94,7 +108,7 @@ public:
 
   inline bool valid() const { return d != nullptr; }
   inline dirent *next() { return readdir(d); }
-  inline int dirfd() { return ::dirfd(d); }
+  inline int dirfd() const { return ::dirfd(d); }
 
   /**
    * @brief the path name of the directory

@@ -52,11 +52,12 @@ std::string find_file(const std::string &n) {
     return std::string();
   }
 
-  const std::vector<osm2go_platform::datapath> &paths = osm2go_platform::base_paths();
+  const std::vector<dirguard> &paths = osm2go_platform::base_paths();
+  const std::vector<dirguard>::const_iterator itEnd = paths.end();
 
-  for(unsigned int i = 0; i < paths.size(); i++) {
-    if(fstatat(paths[i].fd, n.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode))
-      return paths[i].pathname + n;
+  for(std::vector<dirguard>::const_iterator it = paths.begin(); it != itEnd; it++) {
+    if(fstatat(it->dirfd(), n.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode))
+      return it->path() + n;
   }
 
   return std::string();
