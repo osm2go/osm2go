@@ -263,7 +263,7 @@ std::map<std::string, std::string> style_scan() {
   std::string fullname;
 
   const size_t elen = strlen(extension);
-  const std::vector<datapath> &paths = base_paths();
+  const std::vector<osm2go_platform::datapath> &paths = osm2go_platform::base_paths();
 
   for(unsigned int i = 0; i < paths.size(); i++) {
     /* scan for projects */

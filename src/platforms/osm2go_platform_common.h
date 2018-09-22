@@ -44,6 +44,11 @@ enum {
   MISC_AGAIN_FLAG_DONT_SAVE_YES  = (1<<31)
 };
 
+#include <fdguard.h>
+
+#include <string>
+#include <vector>
+
 namespace osm2go_platform {
   /**
    * @brief process all pending GUI events
@@ -82,6 +87,18 @@ namespace osm2go_platform {
               unsigned int again_flags = 0, Widget *parent = nullptr);
   bool yes_no(const trstring &title, const trstring &msg,
               unsigned int again_flags = 0, Widget *parent = nullptr);
+
+  struct datapath {
+#if __cplusplus >= 201103L
+    explicit inline datapath(fdguard &&f)  : fd(std::move(f)) {}
+#else
+    explicit inline datapath(fdguard &f)  : fd(f) {}
+#endif
+    fdguard fd;
+    std::string pathname;
+  };
+
+  const std::vector<datapath> &base_paths();
 };
 
 #endif // OSM2GO_PLATFORM_COMMON_H

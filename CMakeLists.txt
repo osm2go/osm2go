@@ -138,8 +138,8 @@ target_compile_definitions(osm2go_lib
 		PUBLIC VERSION="${PROJECT_VERSION}"
 )
 
-set_property(SOURCE src/misc.cpp APPEND PROPERTY COMPILE_DEFINITIONS "DATADIR=\"${DATA_DIR}\"")
 set_property(SOURCE src/net_io.cpp src/osm_api.cpp APPEND PROPERTY COMPILE_DEFINITIONS "CURL_NO_OLDIES")
+set_property(SOURCE src/platforms/gtk//platform.cpp APPEND PROPERTY COMPILE_DEFINITIONS "DATADIR=\"${DATA_DIR}\"")
 
 # there shouldn't be a reason to change the server url
 option(SERVER_EDITABLE "add widget to make API URL editable" OFF)

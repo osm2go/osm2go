@@ -22,7 +22,6 @@
 
 #include <cassert>
 #include <cstring>
-#include <fcntl.h>
 #include <strings.h>
 #include <sys/stat.h>
 
@@ -42,51 +41,6 @@ bool xml_get_prop_bool(xmlNode *node, const char *prop) {
   return (strcasecmp(prop_str, "true") == 0);
 }
 
-const std::vector<datapath> &base_paths()
-{
-/* all entries must contain a trailing '/' ! */
-  static std::vector<datapath> ret;
-
-  if(unlikely(ret.empty())) {
-    std::vector<std::string> pathnames;
-
-    const char *home = getenv("HOME");
-    assert(home != nullptr);
-
-    // in home directory
-    pathnames.push_back(home + std::string("/." PACKAGE "/"));
-    // final installation path
-    pathnames.push_back(DATADIR "/");
-#ifdef FREMANTLE
-    // path to external memory card
-    pathnames.push_back("/media/mmc1/" PACKAGE "/");
-    // path to internal memory card
-    pathnames.push_back("/media/mmc2/" PACKAGE "/");
-#endif
-    // local paths for testing
-    pathnames.push_back("./data/");
-    pathnames.push_back("../data/");
-
-    for (unsigned int i = 0; i < pathnames.size(); i++) {
-      assert(pathnames[i][pathnames[i].size() - 1] == '/');
-      fdguard dfd(pathnames[i].c_str(), O_DIRECTORY);
-      if(dfd.valid()) {
-#if __cplusplus >= 201103L
-        ret.emplace_back(datapath(std::move(dfd)));
-#else
-        ret.push_back(datapath(dfd));
-#endif
-
-        ret.back().pathname.swap(pathnames[i]);
-      }
-    }
-
-    assert(!ret.empty());
-  }
-
-  return ret;
-}
-
 std::string find_file(const std::string &n) {
   assert(!n.empty());
 
@@ -98,7 +52,7 @@ std::string find_file(const std::string &n) {
     return std::string();
   }
 
-  const std::vector<datapath> &paths = base_paths();
+  const std::vector<osm2go_platform::datapath> &paths = osm2go_platform::base_paths();
 
   for(unsigned int i = 0; i < paths.size(); i++) {
     if(fstatat(paths[i].fd, n.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode))

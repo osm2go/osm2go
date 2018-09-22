@@ -28,18 +28,6 @@
 #include <osm2go_cpp.h>
 #include <osm2go_stl.h>
 
-struct datapath {
-#if __cplusplus >= 201103L
-  explicit inline datapath(fdguard &&f)  : fd(std::move(f)) {}
-#else
-  explicit inline datapath(fdguard &f)  : fd(f) {}
-#endif
-  fdguard fd;
-  std::string pathname;
-};
-
-const std::vector<datapath> &base_paths();
-
 std::string find_file(const std::string &n);
 
 #endif // MISC_H
