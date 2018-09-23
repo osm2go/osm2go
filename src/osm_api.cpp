@@ -197,7 +197,7 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
                             const char *url, item_id_t *id) {
   char buffer[CURL_ERROR_SIZE];
 
-  const std::shared_ptr<CURL> &curl = context.curl;
+  std::unique_ptr<CURL, curl_deleter> &curl = context.curl;
   CURLcode res;
 
   /* specify target URL, and note that this URL should include a file
@@ -276,7 +276,7 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
                             int len, const char *url) {
   char buffer[CURL_ERROR_SIZE];
 
-  const std::shared_ptr<CURL> &curl = context.curl;
+  std::unique_ptr<CURL, curl_deleter> &curl = context.curl;
   CURLcode res;
 
   // drop now unneeded values from the previous transfers
@@ -503,7 +503,7 @@ void osm_upload_context_t::upload(const osm_t::dirty_t &dirty)
   appendf(nullptr, _("Uploading to %s\n"), project->server(settings->server).c_str());
 
   /* get a curl handle */
-  curl.reset(curl_custom_setup(settings->username + ":" + settings->password), curl_deleter());
+  curl.reset(curl_custom_setup(settings->username + ":" + settings->password));
 
   if(unlikely(!curl)) {
     append_str(_("CURL init error\n"));

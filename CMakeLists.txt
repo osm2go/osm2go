@@ -138,7 +138,10 @@ target_compile_definitions(osm2go_lib
 		PUBLIC VERSION="${PROJECT_VERSION}"
 )
 
-set_property(SOURCE src/platforms/gtk/net_io_curl.cpp src/osm_api.cpp APPEND PROPERTY COMPILE_DEFINITIONS "CURL_NO_OLDIES")
+set_property(SOURCE src/platforms/gtk/net_io_curl.cpp
+		src/platforms/gtk/osm_upload_dialog.cpp
+		src/osm_api.cpp
+		APPEND PROPERTY COMPILE_DEFINITIONS "CURL_NO_OLDIES")
 set_property(SOURCE src/platforms/gtk/platform.cpp APPEND PROPERTY COMPILE_DEFINITIONS "DATADIR=\"${DATA_DIR}\"")
 
 # there shouldn't be a reason to change the server url
