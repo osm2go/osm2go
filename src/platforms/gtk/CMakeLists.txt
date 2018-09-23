@@ -16,6 +16,7 @@ target_sources(osm2go_lib PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/list.h
 	${CMAKE_CURRENT_SOURCE_DIR}/MainUiGtk.h
 	${CMAKE_CURRENT_SOURCE_DIR}/map_widget.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/net_io_curl.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/notifications.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/osm2go_i18n.h
 	${CMAKE_CURRENT_SOURCE_DIR}/osm2go_platform.h
