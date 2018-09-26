@@ -363,10 +363,10 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
     // load with absolute or relative path, usually only done for demo
     project_file = name;
     std::string pname = name.substr(sl + 1);
-    if(likely(pname.substr(pname.size() - 5) == ".proj"))
+    if(likely(pname.compare(pname.size() - 5, 5, ".proj") == 0))
       pname.erase(pname.size() - 5);
     // usually that ends in /foo/foo.proj
-    if(name.substr(sl - pname.size() - 1, pname.size() + 1) == '/' + pname)
+    if(name.compare(sl - pname.size() - 1, pname.size() + 1, '/' + pname) == 0)
       sl -= pname.size();
     project.reset(new project_t(appdata.map_state, pname, name.substr(0, sl)));
   } else {

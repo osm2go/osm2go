@@ -116,7 +116,7 @@ bool osm_download(osm2go_platform::Widget *parent, project_t *project)
       newfname += ".gz";
     rename(update.c_str(), newfname.c_str());
     // save the project before deleting the old file so that a valid file is always found
-    if(newfname.substr(0, project->path.size()) == project->path)
+    if(newfname.compare(0, project->path.size(), project->path) == 0)
       newfname.erase(0, project->path.size());
     project->osmFile = newfname;
     project->save(parent);
