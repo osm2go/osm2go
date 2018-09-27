@@ -64,7 +64,7 @@ fdguard &fdguard::operator=(const fdguard& other)
 }
 #endif
 
-void fdguard::swap(fdguard &other)
+void fdguard::swap(fdguard &other) noexcept
 {
   int f = fd;
   const_cast<int &>(fd) = other.fd;

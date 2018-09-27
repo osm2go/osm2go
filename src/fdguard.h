@@ -67,10 +67,10 @@ struct fdguard {
   ~fdguard();
 
   const int fd;
-  inline operator int() const { return fd; }
-  inline operator bool() const { return valid(); }
-  inline bool valid() const { return fd >= 0; }
-  void swap(fdguard &other);
+  inline operator int() const noexcept { return fd; }
+  inline operator bool() const noexcept { return valid(); }
+  inline bool valid() const noexcept { return fd >= 0; }
+  void swap(fdguard &other) noexcept;
 };
 
 class dirguard {
@@ -106,7 +106,7 @@ public:
     : p(parent.path() + subdir + '/'), d(opendir(p.c_str())) {}
   ~dirguard();
 
-  inline bool valid() const { return d != nullptr; }
+  inline bool valid() const noexcept { return d != nullptr; }
   inline dirent *next() { return readdir(d); }
   inline int dirfd() const { return ::dirfd(d); }
 
@@ -115,7 +115,7 @@ public:
    *
    * This may be empty if the object was initialized from a filedescriptor.
    */
-  inline const std::string &path() const
+  inline const std::string &path() const noexcept
   { return p; }
 };
 
