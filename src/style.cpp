@@ -176,8 +176,8 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
  *
  * fname may be nullptr when name_only is true
  */
-static bool style_parse(const std::string &fullname, xmlChar **fname,
-                        bool name_only, style_t &style) {
+static bool style_parse(const std::string &fullname, xmlChar **fname, style_t &style)
+{
   xmlDocGuard doc(xmlReadFile(fullname.c_str(), nullptr, XML_PARSE_NONET));
   bool ret = false;
 
@@ -196,7 +196,7 @@ static bool style_parse(const std::string &fullname, xmlChar **fname,
           if(likely(!ret)) {
             style.name = reinterpret_cast<char *>(xmlGetProp(cur_node, BAD_CAST "name"));
             ret = true;
-            if(name_only)
+            if(fname == nullptr)
               break;
             parse_style_node(cur_node, fname, style);
           }
@@ -212,7 +212,7 @@ style_t *style_load_fname(const std::string &filename) {
   xmlChar *fname = nullptr;
   std::unique_ptr<style_t> style(new style_t());
 
-  if(likely(style_parse(filename, &fname, false, *style))) {
+  if(likely(style_parse(filename, &fname, *style))) {
     printf("  elemstyle filename: %s\n", fname);
     style->elemstyles = josm_elemstyles_load(reinterpret_cast<char *>(fname));
     xmlFree(fname);
@@ -290,7 +290,7 @@ std::map<std::string, std::string> style_scan() {
       fullname = it->path() + d->d_name;
 
       style_t style;
-      if(likely(style_parse(fullname, nullptr, true, style)))
+      if(likely(style_parse(fullname, nullptr, style)))
         ret[style.name].swap(fullname);
     }
   }
