@@ -53,7 +53,7 @@ struct fdguard {
    */
   explicit fdguard(int basefd, const char *pathname, int flags);
 #if __cplusplus >= 201103L
-  inline fdguard(fdguard &&other)
+  inline fdguard(fdguard &&other) noexcept
     : fd(other.fd)
   {
     const_cast<int &>(other.fd) = -1;
@@ -80,7 +80,7 @@ public:
 #if __cplusplus >= 201103L
   dirguard(const dirguard &other) = delete;
   dirguard() = delete;
-  inline dirguard(dirguard &&f)
+  inline dirguard(dirguard &&f) noexcept
     : p(std::move(f.p)), d(f.d)
   {
     const_cast<DIR*&>(f.d) = nullptr;
