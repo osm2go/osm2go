@@ -39,15 +39,10 @@
 #include <osm2go_platform.h>
 #include <osm2go_platform_gtk.h>
 
-struct curl_mem_t {
-  explicit curl_mem_t(std::string &d) : data(d) {}
-  std::string &data;
-};
-
 /* structure shared between worker and master thread */
 struct net_io_request_t {
   net_io_request_t(const std::string &u, const std::string &f, bool c);
-  net_io_request_t(const std::string &u, curl_mem_t *cmem) __attribute__((nonnull(3)));
+  net_io_request_t(const std::string &u, std::string *smem) __attribute__((nonnull(3)));
 
   const std::string url;
   bool cancel;
@@ -61,7 +56,7 @@ struct net_io_request_t {
 
   /* request specific fields */
   const std::string filename;   /* used for NET_IO_DL_FILE */
-  curl_mem_t * const mem;   /* used for NET_IO_DL_MEM */
+  std::string * const mem;   /* used for NET_IO_DL_MEM */
   const bool use_compression;
 };
 
@@ -123,14 +118,14 @@ net_io_request_t::net_io_request_t(const std::string &u, const std::string &f, b
   memset(buffer, 0, sizeof(buffer));
 }
 
-net_io_request_t::net_io_request_t(const std::string &u, curl_mem_t *cmem)
+net_io_request_t::net_io_request_t(const std::string &u, std::string *smem)
   : url(u)
   , cancel(false)
   , download_cur(0)
   , download_end(0)
   , res(CURLE_OK)
   , response(0)
-  , mem(cmem)
+  , mem(smem)
   , use_compression(false)
 {
   memset(buffer, 0, sizeof(buffer));
@@ -145,9 +140,7 @@ static int curl_progress_func(void *req, curl_off_t dltotal, curl_off_t dlnow,
 }
 
 static size_t mem_write(void *ptr, size_t size, size_t nmemb, void *stream) {
-  curl_mem_t *p = static_cast<curl_mem_t *>(stream);
-
-  p->data.append(static_cast<char *>(ptr), size * nmemb);
+  static_cast<std::string *>(stream)->append(static_cast<char *>(ptr), size * nmemb);
   return nmemb;
 }
 
@@ -172,7 +165,7 @@ static void *worker_thread(void *ptr) {
       ok = static_cast<bool>(outfile);
       curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, outfile.get());
     } else {
-      request->mem->data.clear();
+      request->mem->clear();
       curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, request->mem);
       curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, mem_write);
       ok = true;
@@ -344,8 +337,7 @@ bool net_io_download_file(osm2go_platform::Widget *parent,
 
 bool net_io_download_mem(osm2go_platform::Widget *parent, const std::string &url,
                          std::string &data, const char *title) {
-  curl_mem_t cmem(data);
-  net_io_request_t *request = new net_io_request_t(url, &cmem);
+  net_io_request_t *request = new net_io_request_t(url, &data);
 
   printf("net_io: download %s to memory\n", url.c_str());
 
