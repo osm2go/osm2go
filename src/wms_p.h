@@ -59,7 +59,7 @@ struct wms_layer_t {
 
   list children;
 
-  bool is_usable() const {
+  bool is_usable() const noexcept {
     return !name.empty() && epsg4326 && llbbox.valid;
   }
   static const char *EPSG4326() {

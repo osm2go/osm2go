@@ -32,7 +32,7 @@ class map_t;
 struct map_highlight_t {
   std::vector<canvas_item_t *> items;
 
-  inline bool isEmpty() const
+  inline bool isEmpty() const noexcept
   { return items.empty(); }
 
   bool isHighlighted(const map_item_t &item) const;

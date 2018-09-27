@@ -362,7 +362,7 @@ public:
   std::unordered_set<way_t *> hiddenWays;
   inline bool wayIsHidden(const way_t *w) const;
   inline void waySetHidden(way_t *w);
-  inline bool hasHiddenWays() const;
+  inline bool hasHiddenWays() const noexcept;
 };
 
 xmlChar *osm_generate_xml_changeset(const std::string &comment, const std::string &src);
@@ -696,7 +696,7 @@ void osm_t::waySetHidden(way_t *w)
   hiddenWays.insert(w);
 }
 
-bool osm_t::hasHiddenWays() const
+bool osm_t::hasHiddenWays() const noexcept
 {
   return !hiddenWays.empty();
 }

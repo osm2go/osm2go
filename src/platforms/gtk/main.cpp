@@ -513,7 +513,7 @@ struct KeySequence {
     : key(k), mods(static_cast<GdkModifierType>(m1 | m2)) {}
   explicit inline KeySequence(GtkStockItem &s)
     : key(s.keyval), mods(s.modifier) {}
-  inline bool isEmpty()
+  inline bool isEmpty() noexcept
   { return key == 0; }
   const guint key;
   const GdkModifierType mods;

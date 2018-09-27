@@ -159,7 +159,7 @@ namespace osm2go_platform {
   class Timer {
     guint id;
   public:
-    explicit inline Timer()
+    explicit inline Timer() noexcept
       : id(0) {}
     inline ~Timer()
     { stop(); }
@@ -167,7 +167,7 @@ namespace osm2go_platform {
     void restart(unsigned int seconds, GSourceFunc callback, void *data);
     void stop();
 
-    inline bool isActive() const
+    inline bool isActive() const noexcept
     { return id != 0; }
   };
 };

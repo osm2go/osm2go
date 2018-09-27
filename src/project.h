@@ -39,7 +39,7 @@ struct project_t {
 
   project_t(map_state_t &ms, const std::string &n, const std::string &base_path);
 
-  inline const std::string &server(const std::string &def) const
+  inline const std::string &server(const std::string &def) const noexcept
   { return rserver.empty() ? def : rserver; }
 
   /**

@@ -45,7 +45,7 @@ namespace osm2go_platform {
     inline ~MappedFile()
     { reset(); }
 
-    inline operator bool() const
+    inline operator bool() const noexcept
     { return map != nullptr; }
 
     const char *data();
