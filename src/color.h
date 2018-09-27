@@ -26,16 +26,16 @@
 class color_t {
   uint32_t value;
 public:
-  inline color_t(uint8_t cr, uint8_t cg, uint8_t cb, uint8_t ca = 0xff)
+  inline color_t(uint8_t cr, uint8_t cg, uint8_t cb, uint8_t ca = 0xff) noexcept
   { value = ((static_cast<uint32_t>(cr) << 24) |
             (static_cast<uint32_t>(cg) << 16) |
             (static_cast<uint32_t>(cb) <<  8) | ca); }
-  inline color_t(uint16_t cr, uint16_t cg, uint16_t cb, uint8_t ca = 0xff)
+  inline color_t(uint16_t cr, uint16_t cg, uint16_t cb, uint8_t ca = 0xff) noexcept
   { value = ((static_cast<uint32_t>(cr & 0xff00) << 16) |
             (static_cast<uint32_t>(cg & 0xff00) << 8)  |
             (static_cast<uint32_t>(cb & 0xff00)        | ca)); }
-  inline color_t(unsigned int c) : value(c) {}
-  inline color_t &operator=(unsigned int c) { value = c; return *this; }
+  inline color_t(unsigned int c) noexcept : value(c) {}
+  inline color_t &operator=(unsigned int c) noexcept { value = c; return *this; }
 #if __cplusplus >= 201103L
   inline color_t() = default;
   inline color_t(const color_t &other) = default;
@@ -45,12 +45,12 @@ public:
   inline color_t(const color_t &other) : value(other.value) {}
   inline color_t &operator=(const color_t other) { value = other.value; return *this; }
 #endif
-  inline operator unsigned int() const { return value; }
+  inline operator unsigned int() const noexcept { return value; }
 
-  inline uint32_t rgba() const { return value; }
-  inline unsigned int rgb() const { return value >> 8; }
+  inline uint32_t rgba() const noexcept { return value; }
+  inline unsigned int rgb() const noexcept { return value >> 8; }
 
-  static inline color_t transparent()
+  static inline color_t transparent() noexcept
   {
     return color_t(0);
   }
