@@ -184,10 +184,7 @@ static bool style_parse(const std::string &fullname, xmlChar **fname, style_t &s
     xmlErrorPtr errP = xmlGetLastError();
     printf("parsing %s failed: %s\n", fullname.c_str(), errP->message);
   } else {
-    /* Get the root element node */
-    xmlNode *cur_node = nullptr;
-
-    for(cur_node = xmlDocGetRootElement(doc.get()); cur_node != nullptr;
+    for(xmlNode *cur_node = xmlDocGetRootElement(doc.get()); cur_node != nullptr;
         cur_node = cur_node->next) {
       if (cur_node->type == XML_ELEMENT_NODE) {
         if(likely(strcmp(reinterpret_cast<const char *>(cur_node->name), "style") == 0)) {
