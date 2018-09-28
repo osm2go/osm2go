@@ -35,12 +35,12 @@ struct style_t {
   explicit style_t();
   ~style_t();
 
-  char *name;
+  std::string name;
 
   struct {
     bool enable;
     float scale;  // how big the icon is drawn
-    char *path_prefix;
+    std::string path_prefix;
   } icon;
 
   struct {

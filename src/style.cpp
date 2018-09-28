@@ -108,11 +108,9 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
 
       } else if(strcmp(nodename, "icon") == 0) {
         style.icon.scale = xml_get_prop_float(cur_node, "scale");
-        xmlChar *prefix(xmlGetProp(cur_node, BAD_CAST "path-prefix"));
-        if(prefix != nullptr) {
-          xmlFree(BAD_CAST style.icon.path_prefix);
-          style.icon.path_prefix = reinterpret_cast<char *>(prefix);
-        }
+        const xmlString prefix(xmlGetProp(cur_node, BAD_CAST "path-prefix"));
+        if(prefix)
+          style.icon.path_prefix = static_cast<const char *>(prefix);
         style.icon.enable = xml_get_prop_bool(cur_node, "enable");
 
       } else if(strcmp(nodename, "way") == 0) {
@@ -163,7 +161,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
     }
   }
 
-  assert(style.icon.path_prefix || !style.icon.enable);
+  assert(!style.icon.path_prefix.empty() || !style.icon.enable);
 }
 
 /**
@@ -194,7 +192,9 @@ static bool style_parse(const std::string &fullname, xmlChar **fname, style_t &s
       if (cur_node->type == XML_ELEMENT_NODE) {
         if(likely(strcmp(reinterpret_cast<const char *>(cur_node->name), "style") == 0)) {
           if(likely(!ret)) {
-            style.name = reinterpret_cast<char *>(xmlGetProp(cur_node, BAD_CAST "name"));
+            const xmlString name(xmlGetProp(cur_node, BAD_CAST "name"));
+            if(likely(name))
+              style.name = static_cast<const char *>(name);
             ret = true;
             if(fname == nullptr)
               break;
@@ -299,9 +299,9 @@ std::map<std::string, std::string> style_scan() {
 }
 
 style_t::style_t()
-  : name(nullptr)
 {
-  memset(&icon, 0, sizeof(icon));
+  icon.enable = false;
+  icon.scale = 0.0;
   memset(&track, 0, sizeof(track));
   memset(&way, 0, sizeof(way));
   memset(&area, 0, sizeof(area));
@@ -324,9 +324,6 @@ style_t::~style_t()
   josm_elemstyles_free(elemstyles);
 
   std::for_each(node_icons.begin(), node_icons.end(), unref_icon);
-
-  xmlFree(BAD_CAST name);
-  xmlFree(BAD_CAST icon.path_prefix);
 }
 
 void style_t::colorize_node(node_t *n)

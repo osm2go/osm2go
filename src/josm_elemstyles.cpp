@@ -537,7 +537,7 @@ void colorize_node::operator()(const elemstyle_t *elemstyle)
 
   somematch = true;
 
-  assert(style->icon.path_prefix != nullptr);
+  assert(!style->icon.path_prefix.empty());
   std::string name = "styles/";
   name += style->icon.path_prefix;
   // the final size is now known, avoid too big allocations
