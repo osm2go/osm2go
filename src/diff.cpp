@@ -32,6 +32,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cerrno>
 #include <cstring>
 #include <fcntl.h>
 #include <libxml/parser.h>
@@ -198,7 +199,8 @@ void project_t::diff_save() const {
 
   /* if we reach this point writing the new file worked and we */
   /* can move it over the real file */
-  renameat(-1, ndiff.c_str(), dirfd, diff_name.c_str());
+  if(renameat(-1, ndiff.c_str(), dirfd, diff_name.c_str()) != 0)
+    fprintf(stderr, "error %i when moving '%s' to '%s'\n", errno, ndiff.c_str(), diff_name.c_str());
 }
 
 static item_id_t xml_get_prop_int(xmlNode *node, const char *prop, item_id_t def) {
