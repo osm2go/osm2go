@@ -61,7 +61,7 @@ std::string project_filename(const project_t &project) {
   return project.path + project.name + ".proj";
 }
 
-bool project_read(const std::string &project_file, project_t *project,
+bool project_read(const std::string &project_file, project_t::ref project,
                   const std::string &defaultserver, int basefd) {
   fdguard projectfd(basefd, project_file.c_str(), O_RDONLY);
   xmlDocGuard doc(xmlReadFd(projectfd, project_file.c_str(), nullptr, XML_PARSE_NONET));
@@ -280,7 +280,7 @@ std::vector<project_t *> project_scan(map_state_t &ms, const std::string &base_p
       /* try to read project and append it to chain */
       std::unique_ptr<project_t> n(new project_t(ms, d->d_name, base_path));
 
-      if(likely(project_read(fullname, n.get(), server, base_path_fd)))
+      if(likely(project_read(fullname, n, server, base_path_fd)))
         projects.push_back(n.release());
     }
   }
@@ -377,8 +377,7 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
   project->map_state.reset();
 
   printf("project file = %s\n", project_file.c_str());
-  if(unlikely(!project_read(project_file, project.get(), settings->server,
-                            settings->base_path_fd))) {
+  if(unlikely(!project_read(project_file, project, settings->server, settings->base_path_fd))) {
     printf("error reading project file\n");
     return false;
   }

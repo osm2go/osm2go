@@ -52,7 +52,7 @@ static void testNoFiles(const std::string &tmpdir)
   assert(!appdata.track.track);
 
   const std::string pfile = tmpdir + '/' + std::string(proj_name) + ".proj";
-  assert(!project_read(pfile, appdata.project.get(), std::string(), -1));
+  assert(!project_read(pfile, appdata.project, std::string(), -1));
 
   int fd = open(pfile.c_str(), O_WRONLY | O_CREAT, 0644);
   assert(fd >= 0);
@@ -62,7 +62,7 @@ static void testNoFiles(const std::string &tmpdir)
   fdguard empty(pfile.c_str(), O_RDONLY);
   assert(empty.valid());
 
-  assert(!project_read(pfile, appdata.project.get(), std::string(), -1));
+  assert(!project_read(pfile, appdata.project, std::string(), -1));
 
   unlink(pfile.c_str());
 }

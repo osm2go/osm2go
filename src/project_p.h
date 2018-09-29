@@ -20,15 +20,16 @@
 #ifndef PROJECT_P_H
 #define PROJECT_P_H
 
+#include "project.h"
+
 #include <string>
 #include <vector>
 
 struct map_state_t;
-struct project_t;
 
 std::string project_filename(const project_t &project);
-bool project_read(const std::string &project_file, project_t *project,
-                  const std::string &defaultserver, int basefd) __attribute__((nonnull(2)));
+bool project_read(const std::string &project_file, project_t::ref project,
+                  const std::string &defaultserver, int basefd);
 void project_close(appdata_t &appdata);
 std::vector<project_t *> project_scan(map_state_t &ms, const std::string &base_path,
                                       int base_path_fd, const std::string &server);
