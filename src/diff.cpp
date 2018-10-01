@@ -68,20 +68,16 @@ static void diff_save_tags(const base_object_t *obj, xmlNodePtr node) {
   obj->tags.for_each(fc);
 }
 
-struct diff_save_objects {
-  xmlNodePtr const root_node;
-  explicit diff_save_objects(xmlNodePtr r) : root_node(r) {}
-  /**
-   * @brief save the common OSM object information
-   * @param obj the object to save
-   * @param tname the name of the XML node
-   * @return XML node object
-   */
-  xmlNodePtr diff_save_state_n_id(const base_object_t *obj, const char *tname);
-};
-
-xmlNodePtr diff_save_objects::diff_save_state_n_id(const base_object_t *obj,
-                                                   const char *tname) {
+/**
+  * @brief save the common OSM object information
+  * @param root_node the XML node to append to
+  * @param obj the object to save
+  * @param tname the name of the XML node
+  * @return XML node object
+  */
+static xmlNodePtr diff_save_state_n_id(xmlNodePtr root_node, const base_object_t *obj,
+                                       const char *tname)
+{
   xmlNodePtr node = xmlNewChild(root_node, nullptr, BAD_CAST tname, nullptr);
 
   if(obj->isDeleted())
@@ -95,31 +91,38 @@ xmlNodePtr diff_save_objects::diff_save_state_n_id(const base_object_t *obj,
   return node;
 }
 
-struct diff_save_nodes : diff_save_objects {
-  explicit diff_save_nodes(xmlNodePtr r) : diff_save_objects(r) { }
-  void operator()(const std::pair<item_id_t, node_t *> &pair);
+template<typename T>
+class diff_save_objects {
+  xmlNodePtr const root_node;
+  inline void save_additional_info(const T *m, xmlNodePtr xmlnode) const;
+public:
+  explicit inline diff_save_objects(xmlNodePtr r) : root_node(r) {}
+  void operator()(const std::pair<item_id_t, T *> &pair) {
+    if(!pair.second->isDirty())
+      return;
+
+    xmlNodePtr xmlnode = diff_save_state_n_id(root_node, pair.second, T::api_string());
+
+    if(pair.second->isDeleted())
+      return;
+
+    /* additional info is only required if the object hasn't been deleted */
+    save_additional_info(pair.second, xmlnode);
+
+    diff_save_tags(pair.second, xmlnode);
+  }
 };
 
-void diff_save_nodes::operator()(const std::pair<item_id_t, node_t *> &pair)
+template<>
+void diff_save_objects<node_t>::save_additional_info(const node_t *m, xmlNodePtr xmlnode) const
 {
-  const node_t * const node = pair.second;
-  if(!node->isDirty())
-    return;
-
-  xmlNodePtr node_node = diff_save_state_n_id(node, node_t::api_string());
-
-  if(node->isDeleted())
-    return;
-
-  /* additional info is only required if the node hasn't been deleted */
-  node->pos.toXmlProperties(node_node);
-
-  diff_save_tags(node, node_node);
+  m->pos.toXmlProperties(xmlnode);
 }
 
-struct diff_save_ways : diff_save_objects {
+struct diff_save_ways {
+  xmlNodePtr const root_node;
   osm_t::ref osm;
-  explicit diff_save_ways(xmlNodePtr r, osm_t::ref o) : diff_save_objects(r), osm(o) { }
+  explicit inline diff_save_ways(xmlNodePtr r, osm_t::ref o) : root_node(r), osm(o) { }
   void operator()(const std::pair<item_id_t, way_t *> &pair);
 };
 
@@ -130,7 +133,7 @@ void diff_save_ways::operator()(const std::pair<item_id_t, way_t *> &pair)
   if(!way->isDirty() && !hidden)
     return;
 
-  xmlNodePtr node_way = diff_save_state_n_id(way, way_t::api_string());
+  xmlNodePtr node_way = diff_save_state_n_id(root_node, way, way_t::api_string());
 
   if(hidden)
     xmlNewProp(node_way, BAD_CAST "hidden", BAD_CAST "true");
@@ -144,28 +147,10 @@ void diff_save_ways::operator()(const std::pair<item_id_t, way_t *> &pair)
   }
 }
 
-struct diff_save_relations : diff_save_objects {
-  explicit diff_save_relations(xmlNodePtr r) : diff_save_objects(r) { }
-  void operator()(const std::pair<item_id_t, relation_t *> &pair);
-};
-
-/* store all modfied relations */
-void diff_save_relations::operator()(const std::pair<item_id_t, relation_t *> &pair)
+template<>
+void diff_save_objects<relation_t>::save_additional_info(const relation_t *m, xmlNodePtr xmlnode) const
 {
-  const relation_t * const relation = pair.second;
-  if(!relation->isDirty())
-    return;
-
-  xmlNodePtr node_rel = diff_save_state_n_id(relation, relation_t::api_string());
-
-  if(relation->isDeleted())
-    return;
-
-  /* additional info is only required if the relation */
-  /* hasn't been deleted */
-  relation->generate_member_xml(node_rel);
-
-  diff_save_tags(relation, node_rel);
+  m->generate_member_xml(xmlnode);
 }
 
 void project_t::diff_save() const {
@@ -191,9 +176,9 @@ void project_t::diff_save() const {
   xmlNewProp(root_node, BAD_CAST "name", BAD_CAST name.c_str());
   xmlDocSetRootElement(doc.get(), root_node);
 
-  std::for_each(osm->nodes.begin(), osm->nodes.end(), diff_save_nodes(root_node));
+  std::for_each(osm->nodes.begin(), osm->nodes.end(), diff_save_objects<node_t>(root_node));
   std::for_each(osm->ways.begin(), osm->ways.end(), diff_save_ways(root_node, osm));
-  std::for_each(osm->relations.begin(), osm->relations.end(), diff_save_relations(root_node));
+  std::for_each(osm->relations.begin(), osm->relations.end(), diff_save_objects<relation_t>(root_node));
 
   xmlSaveFormatFileEnc(ndiff.c_str(), doc.get(), "UTF-8", 1);
 
