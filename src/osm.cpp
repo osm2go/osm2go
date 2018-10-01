@@ -924,7 +924,6 @@ void node_chain_delete_functor::operator()(std::pair<item_id_t, way_t *> p)
 
 way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
   way_chain_t way_chain;
-  bool permanently = node->isNew();
 
   /* first remove node from all ways using it */
   std::for_each(ways.begin(), ways.end(),
@@ -936,7 +935,7 @@ way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
   /* remove that nodes map representations */
   node->item_chain_destroy();
 
-  if(!permanently) {
+  if(!node->isNew()) {
     printf("mark node #" ITEM_ID_FORMAT " as deleted\n", node->id);
     node->flags |= OSM_FLAG_DELETED;
   } else {
@@ -1022,8 +1021,6 @@ void osm_unref_way_free::operator()(node_t* node)
 }
 
 void osm_t::way_delete(way_t *way) {
-  bool permanently = way->isNew();
-
   remove_from_relations(object_t(way));
 
   /* remove it visually from the screen */
@@ -1034,7 +1031,7 @@ void osm_t::way_delete(way_t *way) {
                 osm_unref_way_free(this, way));
   way->node_chain.clear();
 
-  if(!permanently) {
+  if(!way->isNew()) {
     printf("mark way #" ITEM_ID_FORMAT " as deleted\n", way->id);
     way->flags |= OSM_FLAG_DELETED;
   } else {
@@ -1045,14 +1042,12 @@ void osm_t::way_delete(way_t *way) {
 }
 
 void osm_t::relation_delete(relation_t *relation) {
-  bool permanently = relation->isNew();
-
   remove_from_relations(object_t(relation));
 
   /* the deletion of a relation doesn't affect the members as they */
   /* don't have any reference to the relation they are part of */
 
-  if(!permanently) {
+  if(!relation->isNew()) {
     printf("mark relation #" ITEM_ID_FORMAT " as deleted\n", relation->id);
     relation->flags |= OSM_FLAG_DELETED;
   } else {
