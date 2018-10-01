@@ -926,12 +926,6 @@ way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
   way_chain_t way_chain;
   bool permanently = node->isNew();
 
-  /* new nodes aren't stored on the server and are just deleted permanently */
-  if(permanently) {
-    printf("About to delete NEW node #" ITEM_ID_FORMAT
-	   " -> force permanent delete\n", node->id);
-  }
-
   /* first remove node from all ways using it */
   std::for_each(ways.begin(), ways.end(),
                 node_chain_delete_functor(node, way_chain, remove_refs));
@@ -1030,12 +1024,6 @@ void osm_unref_way_free::operator()(node_t* node)
 void osm_t::way_delete(way_t *way) {
   bool permanently = way->isNew();
 
-  /* new ways aren't stored on the server and are just deleted permanently */
-  if(permanently) {
-    printf("About to delete NEW way #" ITEM_ID_FORMAT
-	   " -> force permanent delete\n", way->id);
-  }
-
   remove_from_relations(object_t(way));
 
   /* remove it visually from the screen */
@@ -1058,13 +1046,6 @@ void osm_t::way_delete(way_t *way) {
 
 void osm_t::relation_delete(relation_t *relation) {
   bool permanently = relation->isNew();
-
-  /* new relations aren't stored on the server and are just */
-  /* deleted permanently */
-  if(permanently) {
-    printf("About to delete NEW relation #" ITEM_ID_FORMAT
-	   " -> force permanent delete\n", relation->id);
-  }
 
   remove_from_relations(object_t(relation));
 
