@@ -259,7 +259,7 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
 {
   const relation_t * const relation = pair.second;
 
-  if(relation->flags & OSM_FLAG_DELETED)
+  if(relation->isDeleted())
     return;
 
   GtkTreeIter iter;
@@ -719,7 +719,7 @@ struct relation_list_widget_functor {
 
 void relation_list_widget_functor::operator()(const relation_t *rel)
 {
-  if(rel->flags & OSM_FLAG_DELETED)
+  if(rel->isDeleted())
     return;
 
   const std::string &name = rel->descriptive_name();

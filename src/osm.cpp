@@ -1696,7 +1696,7 @@ std::string base_object_t::id_string() const {
 
 void base_object_t::osmchange_delete(xmlNodePtr parent_node, const char *changeset) const
 {
-  assert(flags & OSM_FLAG_DELETED);
+  assert(isDeleted());
 
   xmlNodePtr obj_node = xmlNewChild(parent_node, nullptr, BAD_CAST apiString(), nullptr);
 
@@ -1744,7 +1744,7 @@ bool way_t::ends_with_node(const node_t *node) const noexcept
 {
   /* and deleted way may even not contain any nodes at all */
   /* so ignore it */
-  if(flags & OSM_FLAG_DELETED)
+  if(isDeleted())
     return false;
 
   /* any valid way must have at least two nodes */
@@ -1961,13 +1961,12 @@ template<typename T>
 void osm_t::dirty_t::counter<T>::object_counter::operator()(std::pair<item_id_t, T *> pair)
 {
   T * const obj = pair.second;
-  int flags = obj->flags;
-  if(flags & OSM_FLAG_DELETED) {
+  if(obj->isDeleted()) {
     dirty.deleted.push_back(obj);
   } else if(obj->isNew()) {
     dirty.added++;
     dirty.modified.push_back(obj);
-  } else if(flags & OSM_FLAG_DIRTY) {
+  } else if(obj->flags & OSM_FLAG_DIRTY) {
     dirty.dirty++;
     dirty.modified.push_back(obj);
   }

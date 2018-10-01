@@ -396,7 +396,7 @@ void upload_objects<T>::operator()(T *obj)
 }
 
 static void log_deletion(osm_upload_context_t &context, const base_object_t *obj) {
-  assert(obj->flags & OSM_FLAG_DELETED);
+  assert(obj->isDeleted());
 
   context.appendf(nullptr, _("Deleted %s #" ITEM_ID_FORMAT " (version %u)\n"),
           obj->apiString(), obj->id, obj->version);

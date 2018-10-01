@@ -904,6 +904,7 @@ static void test_member_delete()
   assert_cmpnum(o->ways.size(), 1);
   assert_cmpnum(o->relations.size(), 1);
   assert(n2->tags.empty());
+  assert(n2->isDeleted());
   assert_cmpnum(n2->flags, OSM_FLAG_DELETED);
 
   osm_t::dirty_t dirty1 = o->modified();

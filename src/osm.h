@@ -509,6 +509,9 @@ public:
   inline bool isDirty() const noexcept
   { return flags != 0; }
 
+  inline bool isDeleted() const noexcept
+  { return flags & OSM_FLAG_DELETED; }
+
   /**
    * @brief generate the xml elements for an osmChange delete section
    * @param parent_node the "delete" node of the osmChange document

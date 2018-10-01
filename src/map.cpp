@@ -445,7 +445,7 @@ struct map_way_draw_functor {
 void map_way_draw_functor::operator()(way_t *way)
 {
   /* don't draw a way that's not there anymore */
-  if(way->flags & OSM_FLAG_DELETED)
+  if(way->isDeleted())
     return;
 
   if(map->appdata.project->osm->wayIsHidden(way))
@@ -514,7 +514,7 @@ struct map_node_draw_functor {
 void map_node_draw_functor::operator()(node_t *node)
 {
   /* don't draw a node that's not there anymore */
-  if(node->flags & OSM_FLAG_DELETED)
+  if(node->isDeleted())
     return;
 
   if(node->ways == 0)
@@ -879,7 +879,7 @@ void hl_nodes::operator()(const std::pair<item_id_t, node_t *> &p)
 {
   node_t * const node = p.second;
 
-  if(node != cur_node && !(node->flags & OSM_FLAG_DELETED))
+  if(node != cur_node && !node->isDeleted())
     operator()(node);
 }
 

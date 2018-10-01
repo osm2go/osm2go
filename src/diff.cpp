@@ -84,7 +84,7 @@ xmlNodePtr diff_save_objects::diff_save_state_n_id(const base_object_t *obj,
                                                    const char *tname) {
   xmlNodePtr node = xmlNewChild(root_node, nullptr, BAD_CAST tname, nullptr);
 
-  if(obj->flags & OSM_FLAG_DELETED)
+  if(obj->isDeleted())
     xmlNewProp(node, BAD_CAST "state", BAD_CAST "deleted");
   else if(obj->isNew())
     xmlNewProp(node, BAD_CAST "state", BAD_CAST "new");
@@ -108,7 +108,7 @@ void diff_save_nodes::operator()(const std::pair<item_id_t, node_t *> &pair)
 
   xmlNodePtr node_node = diff_save_state_n_id(node, node_t::api_string());
 
-  if(node->flags & OSM_FLAG_DELETED)
+  if(node->isDeleted())
     return;
 
   /* additional info is only required if the node hasn't been deleted */
@@ -136,9 +136,9 @@ void diff_save_ways::operator()(const std::pair<item_id_t, way_t *> &pair)
     xmlNewProp(node_way, BAD_CAST "hidden", BAD_CAST "true");
 
   /* additional info is only required if the way hasn't been deleted */
-  /* and of the dirty or new flags are set. (otherwise e.g. only */
-  /* the hidden flag may be set) */
-  if(!(way->flags & OSM_FLAG_DELETED) && (way->flags & OSM_FLAG_DIRTY)) {
+  /* and if the dirty flags is set. (otherwise e.g. only the hidden
+   * flag may be set) */
+  if(!way->isDeleted() && (way->flags & OSM_FLAG_DIRTY)) {
     way->write_node_chain(node_way);
     diff_save_tags(way, node_way);
   }
@@ -158,7 +158,7 @@ void diff_save_relations::operator()(const std::pair<item_id_t, relation_t *> &p
 
   xmlNodePtr node_rel = diff_save_state_n_id(relation, relation_t::api_string());
 
-  if(relation->flags & OSM_FLAG_DELETED)
+  if(relation->isDeleted())
     return;
 
   /* additional info is only required if the relation */

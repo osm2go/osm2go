@@ -44,10 +44,11 @@ static void verify_diff(osm_t::ref osm)
   // deleted in diff
   const node_t * const n26 = osm->node_by_id(3577031226LL);
   assert(n26 != nullptr);
+  assert(n26->isDeleted());
   assert_cmpnum(n26->flags, OSM_FLAG_DELETED);
   const way_t * const w = osm->way_by_id(351899455);
   assert(w != nullptr);
-  assert((w->flags & OSM_FLAG_DELETED) != 0);
+  assert(w->isDeleted());
   assert_cmpnum(w->user, 53064);
   assert(osm->users.find(53064) != osm->users.end());
   assert(osm->users[53064] == "Dakon");
@@ -81,6 +82,7 @@ static void verify_diff(osm_t::ref osm)
   assert_cmpnum(w453->flags, 0);
   const relation_t * const r66316 = osm->relation_by_id(66316);
   assert(r66316 != nullptr);
+  assert(r66316->isDeleted());
   assert_cmpnum(r66316->flags, OSM_FLAG_DELETED);
   const relation_t * const r255 = osm->relation_by_id(296255);
   assert(r255 != nullptr);
