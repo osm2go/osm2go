@@ -937,7 +937,7 @@ way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
 
   if(!node->isNew()) {
     printf("mark node #" ITEM_ID_FORMAT " as deleted\n", node->id);
-    node->flags |= OSM_FLAG_DELETED;
+    node->markDeleted();
   } else {
     printf("permanently delete node #" ITEM_ID_FORMAT "\n", node->id);
 
@@ -1033,7 +1033,8 @@ void osm_t::way_delete(way_t *way) {
 
   if(!way->isNew()) {
     printf("mark way #" ITEM_ID_FORMAT " as deleted\n", way->id);
-    way->flags |= OSM_FLAG_DELETED;
+    way->markDeleted();
+    way->cleanup();
   } else {
     printf("permanently delete way #" ITEM_ID_FORMAT "\n", way->id);
 
@@ -1049,7 +1050,8 @@ void osm_t::relation_delete(relation_t *relation) {
 
   if(!relation->isNew()) {
     printf("mark relation #" ITEM_ID_FORMAT " as deleted\n", relation->id);
-    relation->flags |= OSM_FLAG_DELETED;
+    relation->markDeleted();
+    relation->cleanup();
   } else {
     printf("permanently delete relation #" ITEM_ID_FORMAT "\n",
 	   relation->id);
@@ -1683,6 +1685,13 @@ void base_object_t::osmchange_delete(xmlNodePtr parent_node, const char *changes
 
   xmlNewProp(obj_node, BAD_CAST "version", BAD_CAST buf);
   xmlNewProp(obj_node, BAD_CAST "changeset", BAD_CAST changeset);
+}
+
+void base_object_t::markDeleted()
+{
+  printf("mark %s #" ITEM_ID_FORMAT " as deleted\n", apiString(), id);
+  flags = OSM_FLAG_DELETED;
+  tags.clear();
 }
 
 struct value_match_functor {

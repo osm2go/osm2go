@@ -520,6 +520,8 @@ public:
    * May only be called if this element is marked as deleted
    */
   void osmchange_delete(xmlNodePtr parent_node, const char *changeset) const;
+
+  void markDeleted();
 protected:
   virtual void generate_xml_custom(xmlNodePtr xml_node) const = 0;
 };
