@@ -135,13 +135,16 @@ void diff_save_ways::operator()(const std::pair<item_id_t, way_t *> &pair)
 
   xmlNodePtr node_way = diff_save_state_n_id(root_node, way, way_t::api_string());
 
+  if(way->isDeleted())
+    return;
+
   if(hidden)
     xmlNewProp(node_way, BAD_CAST "hidden", BAD_CAST "true");
 
   /* additional info is only required if the way hasn't been deleted */
   /* and if the dirty flags is set. (otherwise e.g. only the hidden
    * flag may be set) */
-  if(!way->isDeleted() && (way->flags & OSM_FLAG_DIRTY)) {
+  if(way->flags & OSM_FLAG_DIRTY) {
     way->write_node_chain(node_way);
     diff_save_tags(way, node_way);
   }
