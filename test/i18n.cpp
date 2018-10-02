@@ -7,7 +7,7 @@
 
 int main()
 {
-  std::string foo = trstring("abc %1 def %2 ghi").arg("nkw").arg(1);
+  trstring foo = trstring("abc %1 def %2 ghi").arg("nkw").arg(1);
   assert_cmpstr(foo, "abc nkw def 1 ghi");
 
   foo = trstring("abc %1 def %1 ghi").arg("nkw").arg(1);
