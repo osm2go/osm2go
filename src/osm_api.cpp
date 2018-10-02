@@ -272,8 +272,9 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
   return false;
 }
 
-static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
-                            int len, const char *url) {
+static bool osm_post_xml(osm_upload_context_t &context, const xmlString &xml_str,
+                         int len, const char *url, std::string &write_data)
+{
   char buffer[CURL_ERROR_SIZE];
 
   std::unique_ptr<CURL, curl_deleter> &curl = context.curl;
@@ -292,15 +293,13 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
   /* no read function required */
   curl_easy_setopt(curl.get(), CURLOPT_POST, 1);
 
-  curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDS, xml_str);
+  curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDS, xml_str.get());
   curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDSIZE, len);
 
   std::unique_ptr<curl_slist, curl_slist_deleter> slist(curl_slist_append(nullptr, "Expect:"));
   curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist.get());
 
   curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, buffer);
-
-  std::string write_data;
 
   /* we pass our 'chunk' struct to the callback function */
   curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &write_data);
@@ -324,14 +323,6 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
 	      response, http_message(response));
     else
       context.append_str(_("ok\n"), COLOR_OK);
-
-    /* if it's neither "ok" (200), nor "internal server error" (500) */
-    /* then write the message to the log */
-    if((response != 200) && (response != 500) && !write_data.empty()) {
-      context.append_str(_("Server reply: "));
-      context.append_str(write_data.c_str(), COLOR_ERR);
-      context.append_str("\n");
-    }
 
     /* don't retry unless we had an "internal server error" */
     if(response != 500)
@@ -437,11 +428,17 @@ static bool osmchange_upload(osm_upload_context_t &context, xmlDocGuard &doc)
   int len = 0;
 
   xmlDocDumpFormatMemoryEnc(doc.get(), &xml_str, &len, "UTF-8", 1);
+  xmlString xml(xml_str);
 
-  bool ret = osm_delete_item(context, xml_str, len, url.c_str());
-  if(ret)
+  std::string server_reply;
+  bool ret = osm_post_xml(context, xml, len, url.c_str(), server_reply);
+  if(ret) {
     context.project->data_dirty = true;
-  xmlFree(xml_str);
+  } else {
+    context.append_str(_("Server reply: "));
+    context.append_str(server_reply.c_str(), COLOR_ERR);
+    context.append_str("\n");
+  }
 
   return ret;
 }
