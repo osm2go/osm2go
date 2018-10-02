@@ -362,7 +362,7 @@ static void upload_object(osm_upload_context_t &context, base_object_t *obj) {
 
   /* upload this object */
   xmlString xml_str(obj->generate_xml(context.changeset));
-  if(xml_str) {
+  if(likely(xml_str)) {
     printf("uploading %s " ITEM_ID_FORMAT " to %s\n", obj->apiString(), obj->id, url.c_str());
 
     item_id_t tmp;
