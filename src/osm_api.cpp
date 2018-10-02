@@ -431,10 +431,6 @@ static bool osmchange_upload(osm_upload_context_t &context, xmlDocGuard &doc)
   /* make sure gui gets updated */
   osm2go_platform::process_events();
 
-  printf("deleting objects on server\n");
-
-  context.append_str(_("Uploading object deletions "));
-
   const std::string url = context.urlbasestr + "changeset/" + context.changeset + "/upload";
 
   xmlChar *xml_str = nullptr;
@@ -528,6 +524,9 @@ void osm_upload_context_t::upload(const osm_t::dirty_t &dirty)
       append_str(_("Deleting objects:\n"));
       xmlDocGuard doc(osmchange_init());
       osmchange_delete(dirty, xmlDocGetRootElement(doc.get()), changeset.c_str());
+
+      printf("deleting objects on server\n");
+      append_str(_("Uploading object deletions "));
 
       // deletion was successful, remove the objects
       if(osmchange_upload(*this, doc)) {
