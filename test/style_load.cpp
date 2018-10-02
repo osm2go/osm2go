@@ -6,11 +6,11 @@
 
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
+#include <osm2go_test.h>
 
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
-#include <glib.h>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -76,6 +76,8 @@ static void icon_check(const elemstyle_t *item)
 
 int main(int argc, char **argv)
 {
+  OSM2GO_TEST_INIT(argc, argv);
+
   if (argc < 4 || argc > 5) {
     usage(argv[0]);
     return 1;
@@ -95,10 +97,6 @@ int main(int argc, char **argv)
 
   if(argc == 5)
     path_prefix = argv[4];
-
-#if !GLIB_CHECK_VERSION(2,36,0)
-  g_type_init();
-#endif
 
   xmlInitParser();
 

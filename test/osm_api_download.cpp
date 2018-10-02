@@ -3,16 +3,17 @@
 #include <appdata.h>
 #include <map.h>
 #include <misc.h>
-#include <osm2go_annotations.h>
-#include <osm2go_cpp.h>
 #include <pos.h>
 #include <project.h>
 #include <settings.h>
 
+#include <osm2go_annotations.h>
+#include <osm2go_cpp.h>
+#include <osm2go_test.h>
+
 #include <cassert>
 #include <cstdlib>
 #include <curl/curl.h>
-#include <glib.h>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -133,16 +134,15 @@ static void download_bad_coords()
   assert_cmpnum(rmdir(project_dir.c_str()), 0);
 }
 
-int main()
+int main(int argc, char **argv)
 {
+  OSM2GO_TEST_INIT(argc, argv);
+
   assert(mkdtemp(tmpdir) != nullptr);
   strcat(tmpdir, "/");
 
   curl_global_init(CURL_GLOBAL_ALL);
   xmlInitParser();
-#if !GLIB_CHECK_VERSION(2,36,0)
-  g_type_init();
-#endif
 
   download_fine();
   download_fine_was_gz();

@@ -15,11 +15,11 @@
 
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
+#include <osm2go_test.h>
 
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
-#include <glib.h>
 #include <iostream>
 
 appdata_t::appdata_t(map_state_t &mstate)
@@ -41,14 +41,12 @@ void appdata_t::track_clear()
 
 int main(int argc, char **argv)
 {
+  OSM2GO_TEST_INIT(argc, argv);
+
   if (argc != 2) {
     std::cerr << "Usage: " << argv[0] << " style.xml" << std::endl;
     return 1;
   }
-
-#if !GLIB_CHECK_VERSION(2,36,0)
-  g_type_init();
-#endif
 
   xmlInitParser();
 
