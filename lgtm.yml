@@ -1,0 +1,10 @@
+extraction:
+  cpp:
+     prepare:
+        packages:
+          - libgoocanvas-dev
+          - libcurl4-openssl-dev
+          - libsoup2.4-dev
+          - libgps-dev
+          - libgtk2.0-dev
+          - libgnomevfs2-dev
