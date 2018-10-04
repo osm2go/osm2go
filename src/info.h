@@ -32,14 +32,14 @@ class presets_items;
 
 class tag_context_t {
 protected:
-  explicit tag_context_t(const object_t &o);
+  explicit tag_context_t(const object_t &o, const osm_t::TagMap &t);
 public:
 
   osm2go_platform::WidgetGuard dialog;
   object_t object;
-  osm_t::TagMap tags;
+  const osm_t::TagMap &tags;
 
-  void info_tags_replace();
+  void info_tags_replace(const osm_t::TagMap &ntags);
 };
 
 bool info_dialog(osm2go_platform::Widget *parent, map_t *map, osm_t::ref osm, presets_items *presets, object_t &object);

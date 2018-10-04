@@ -344,11 +344,12 @@ static void presets_item_dialog(const presets_item *item) {
     /* handle all children of the table */
     bool changed = false;
 
-    get_widget_functor fc(changed, tag_context->tags, gtk_widgets);
+    osm_t::TagMap ntags = tag_context->tags;
+    get_widget_functor fc(changed, ntags, gtk_widgets);
     std::for_each(item->widgets.begin(), itEnd, fc);
 
     if(changed)
-      tag_context->info_tags_replace();
+      tag_context->info_tags_replace(ntags);
 
     std::vector<presets_item_t *> &lru = static_cast<presets_items_internal *>(presets_context_t::instance->presets)->lru;
     const std::vector<presets_item_t *>::iterator litBegin = lru.begin();

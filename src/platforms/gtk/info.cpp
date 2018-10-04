@@ -54,6 +54,7 @@ public:
   presets_items * const presets;
   GtkWidget *list;
   std::unique_ptr<GtkListStore, g_object_deleter> store;
+  osm_t::TagMap m_tags;
 
   void update_collisions(const std::string &k);
 };
@@ -134,10 +135,10 @@ static void on_tag_remove(info_tag_context_t *context) {
     /* de-chain */
     g_debug("de-chaining tag %s/%s", kc, vc);
     const std::string k = kc;
-    osm_t::TagMap::iterator it = context->tags.findTag(k, vc);
+    osm_t::TagMap::iterator it = context->m_tags.findTag(k, vc);
     assert(it != context->tags.end());
 
-    context->tags.erase(it);
+    context->m_tags.erase(it);
 
     GtkTreeIter n = iter;
     // select the next entry if it exists
@@ -274,7 +275,7 @@ static void on_tag_edit(info_tag_context_t *context) {
 
     g_debug("setting %s/%s", k.c_str(), v.c_str());
 
-    const std::pair<osm_t::TagMap::iterator, osm_t::TagMap::iterator> matches = context->tags.equal_range(oldk);
+    const std::pair<osm_t::TagMap::iterator, osm_t::TagMap::iterator> matches = context->m_tags.equal_range(oldk);
     assert(matches.first != matches.second);
     osm_t::TagMap::iterator it = std::find_if(matches.first, matches.second, value_match_functor(oldv));
     assert(it != matches.second);
@@ -290,7 +291,7 @@ static void on_tag_edit(info_tag_context_t *context) {
         if(i != matches.second) {
           // the item is now a duplicate, so it can be removed
           gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
-          context->tags.erase(it);
+          context->m_tags.erase(it);
 
           select_item(k, v, context);
           context->update_collisions(k);
@@ -300,8 +301,8 @@ static void on_tag_edit(info_tag_context_t *context) {
       }
       it->second = v;
     } else {
-      context->tags.erase(it);
-      it = context->tags.findTag(k, v);
+      context->m_tags.erase(it);
+      it = context->m_tags.findTag(k, v);
       if(unlikely(it != context->tags.end())) {
         // this tag is now duplicate, drop it and select the other one
         gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
@@ -311,7 +312,7 @@ static void on_tag_edit(info_tag_context_t *context) {
         context->update_collisions(oldk);
         return;
       } else {
-        context->tags.insert(osm_t::TagMap::value_type(k, v));
+        context->m_tags.insert(osm_t::TagMap::value_type(k, v));
 
         /* update collisions for all entries */
         context->update_collisions(std::string());
@@ -349,9 +350,7 @@ static void on_tag_last(info_tag_context_t *context) {
   if(!replace_with_last(context, ntags))
     return;
 
-  context->tags = ntags;
-
-  context->info_tags_replace();
+  context->info_tags_replace(ntags);
 
   // Adding those tags above will usually make the first of the newly
   // added tags selected. Enable edit/remove buttons now.
@@ -378,7 +377,7 @@ static void on_tag_add(info_tag_context_t *context) {
     return;
   }
 
-  osm_t::TagMap::iterator it = context->tags.findTag(k, v);
+  osm_t::TagMap::iterator it = context->m_tags.findTag(k, v);
   if(unlikely(it != context->tags.end())) {
     select_item(k, v, context);
     return;
@@ -386,7 +385,7 @@ static void on_tag_add(info_tag_context_t *context) {
 
   // check if the new key introduced a collision
   bool collision = context->tags.count(k) > 0;
-  context->tags.insert(osm_t::TagMap::value_type(k, v));
+  context->m_tags.insert(osm_t::TagMap::value_type(k, v));
   /* append a row for the new data */
   GtkTreeIter iter = store_append(context->store.get(), k, v, collision);
 
@@ -396,6 +395,7 @@ static void on_tag_add(info_tag_context_t *context) {
     context->update_collisions(k);
 }
 
+// bad name, but avoids name collisions
 struct tag_replace_functor {
   GtkListStore * const store;
   const osm_t::TagMap &tags;
@@ -405,11 +405,20 @@ struct tag_replace_functor {
   }
 };
 
-void tag_context_t::info_tags_replace() {
-  GtkListStore *store = static_cast<info_tag_context_t *>(this)->store.get();
+static void store_fill(GtkListStore *store, const osm_t::TagMap &tags)
+{
+  std::for_each(tags.begin(), tags.end(), tag_replace_functor(store, tags));
+}
+
+void tag_context_t::info_tags_replace(const osm_t::TagMap &ntags)
+{
+  info_tag_context_t *ictx = static_cast<info_tag_context_t *>(this);
+  GtkListStore *store = ictx->store.get();
   gtk_list_store_clear(store);
 
-  std::for_each(tags.begin(), tags.end(), tag_replace_functor(store, tags));
+  ictx->m_tags = ntags;
+
+  store_fill(store, tags);
 }
 
 static void on_relations(info_tag_context_t *context) {
@@ -451,7 +460,7 @@ static GtkWidget *tag_widget(info_tag_context_t &context) {
     list_button_enable(context.list, LIST_BUTTON_USER0, FALSE);
 
   /* --------- build and fill the store ------------ */
-  context.info_tags_replace();
+  store_fill(context.store.get(), context.tags);
 
   return context.list;
 }
@@ -658,18 +667,19 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *p
   return ok;
 }
 
-tag_context_t::tag_context_t(const object_t &o)
+tag_context_t::tag_context_t(const object_t &o, const osm_t::TagMap &t)
   : dialog(nullptr)
   , object(o)
-  , tags(object.obj->tags.asMap())
+  , tags(t)
 {
 }
 
 info_tag_context_t::info_tag_context_t(map_t *m, osm_t::ref os, presets_items *p, const object_t &o)
-  : tag_context_t(o)
+  : tag_context_t(o, m_tags)
   , map(m)
   , osm(os)
   , presets(p)
   , list(nullptr)
+  , m_tags(object.obj->tags.asMap())
 {
 }
