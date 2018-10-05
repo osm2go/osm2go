@@ -290,11 +290,11 @@ static GtkWidget *bugs_page_new() {
 
 void MainUi::about_box()
 {
-  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("About OSM2Go"),
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("About OSM2Go"),
                                               GTK_WINDOW(appdata_t::window), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, nullptr));
 
-  gtk_window_set_default_size(GTK_WINDOW(dialog.get()),
+  gtk_window_set_default_size(dialog,
 #ifdef FREMANTLE
                               640, 480);
 #else
@@ -310,9 +310,9 @@ void MainUi::about_box()
   osm2go_platform::notebook_append_page(notebook, donate_page_new(icons),    _("Donate"));
   osm2go_platform::notebook_append_page(notebook, bugs_page_new(),           _("Bugs"));
 
-  gtk_box_pack_start(GTK_BOX((GTK_DIALOG(dialog.get()))->vbox), notebook, TRUE, TRUE, 0);
+  gtk_box_pack_start(dialog.vbox(), notebook, TRUE, TRUE, 0);
 
   gtk_widget_show_all(dialog.get());
 
-  gtk_dialog_run(GTK_DIALOG(dialog.get()));
+  gtk_dialog_run(dialog);
 }

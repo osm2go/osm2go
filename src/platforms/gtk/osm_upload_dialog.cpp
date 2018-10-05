@@ -158,7 +158,8 @@ void table_insert_count(GtkWidget *table, const osm_t::dirty_t::counter<T> &coun
   table_attach_int(table, counter.deleted.size(), 4, 5, row, row + 1);
 }
 
-static void details_table(GtkWidget *dialog, const osm_t::dirty_t &dirty) {
+static void details_table(osm2go_platform::DialogGuard &dialog, const osm_t::dirty_t &dirty)
+{
   GtkWidget *table = gtk_table_new(4, 5, TRUE);
 
   table_attach_label_c(table, _("Total"),          1, 2, 0, 1);
@@ -176,25 +177,23 @@ static void details_table(GtkWidget *dialog, const osm_t::dirty_t &dirty) {
   table_attach_label_l(table, _("Relations:"),     0, 1, row, row + 1);
   table_insert_count(table, dirty.relations, row++);
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-                     table, FALSE, FALSE, 0);
+  gtk_box_pack_start(dialog.vbox(), table, FALSE, FALSE, 0);
 }
 
 #ifdef FREMANTLE
 /* put additional infos into a seperate dialog for fremantle as */
 /* screen space is sparse there */
 static void info_more(const osm_t::dirty_t &context, GtkWidget *parent) {
-  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Changeset details"),
-                                              GTK_WINDOW(parent), GTK_DIALOG_MODAL,
-                                              GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                              nullptr));
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Changeset details"),
+                                      GTK_WINDOW(parent), GTK_DIALOG_MODAL,
+                                      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, nullptr));
 
-  dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_SMALL);
-  gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_CANCEL);
+  dialog_size_hint(dialog, MISC_DIALOG_SMALL);
+  gtk_dialog_set_default_response(dialog, GTK_RESPONSE_CANCEL);
 
-  details_table(dialog.get(), context);
+  details_table(dialog, context);
   gtk_widget_show_all(dialog.get());
-  gtk_dialog_run(GTK_DIALOG(dialog.get()));
+  gtk_dialog_run(dialog);
 }
 #endif
 
@@ -219,7 +218,7 @@ void osm_upload(appdata_t &appdata) {
   g_debug("relations: new %2u, dirty %2u, deleted %2zu",
           dirty.relations.added, dirty.relations.dirty, dirty.relations.deleted.size());
 
-  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Upload to OSM"),
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Upload to OSM"),
                                               GTK_WINDOW(appdata_t::window),
                                               GTK_DIALOG_MODAL,
 #ifdef FREMANTLE
@@ -229,15 +228,14 @@ void osm_upload(appdata_t &appdata) {
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                               nullptr));
 
-  dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_MEDIUM);
+  dialog_size_hint(dialog, MISC_DIALOG_MEDIUM);
 
 #ifndef FREMANTLE
-  details_table(dialog.get(), dirty);
+  details_table(dialog, dirty);
 
   /* ------------------------------------------------------ */
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
-                     gtk_hseparator_new(), FALSE, FALSE, 0);
+  gtk_box_pack_start(dialog.vbox(), gtk_hseparator_new(), FALSE, FALSE, 0);
 #endif
 
   /* ------- add username and password entries ------------ */
@@ -257,18 +255,18 @@ void osm_upload(appdata_t &appdata) {
     gtk_entry_set_text(GTK_ENTRY(pentry), settings->password.c_str());
   gtk_entry_set_visibility(GTK_ENTRY(pentry), FALSE);
   gtk_table_attach_defaults(GTK_TABLE(table),  pentry, 1, 2, 1, 2);
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table, FALSE, FALSE, 0);
+  gtk_box_pack_start(dialog.vbox(), table, FALSE, FALSE, 0);
 
   table_attach_label_l(table, _("Source:"), 0, 1, 2, 3);
   GtkWidget *sentry = entry_new(EntryFlagsNoAutoCap);
   gtk_table_attach_defaults(GTK_TABLE(table),  sentry, 1, 2, 2, 3);
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table, FALSE, FALSE, 0);
+  gtk_box_pack_start(dialog.vbox(), table, FALSE, FALSE, 0);
 
   GtkTextBuffer *buffer = gtk_text_buffer_new(nullptr);
   const char *placeholder_comment = _("Please add a comment");
 
   /* disable ok button until user edited the comment */
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT, FALSE);
+  gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_ACCEPT, FALSE);
 
   g_signal_connect(buffer, "changed", G_CALLBACK(callback_buffer_modified), dialog.get());
 
@@ -290,13 +288,12 @@ void osm_upload(appdata_t &appdata) {
   g_object_set_data(G_OBJECT(view), "first_click", GINT_TO_POINTER(TRUE));
   g_signal_connect(view, "focus-in-event", G_CALLBACK(cb_focus_in), buffer);
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
-                     scrollable_container(GTK_WIDGET(view)), TRUE, TRUE, 0);
+  gtk_box_pack_start(dialog.vbox(), scrollable_container(GTK_WIDGET(view)), TRUE, TRUE, 0);
   gtk_widget_show_all(dialog.get());
 
   bool done = false;
   while(!done) {
-    switch(gtk_dialog_run(GTK_DIALOG(dialog.get()))) {
+    switch(gtk_dialog_run(dialog)) {
 #ifdef FREMANTLE
     case GTK_RESPONSE_HELP:
       info_more(dirty, dialog.get());
@@ -340,9 +337,8 @@ void osm_upload(appdata_t &appdata) {
                                            GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                            nullptr));
 
-  dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_LARGE);
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()),
-				    GTK_RESPONSE_CLOSE, FALSE);
+  dialog_size_hint(dialog, MISC_DIALOG_LARGE);
+  gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_CLOSE, FALSE);
 
   /* ------- main ui element is this text view --------------- */
 
@@ -359,8 +355,7 @@ void osm_upload(appdata_t &appdata) {
 
   gtk_container_add(GTK_CONTAINER(scrolled_window), GTK_WIDGET(context.logview));
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), GTK_WIDGET(scrolled_window),
-                     TRUE, TRUE, 0);
+  gtk_box_pack_start(dialog.vbox(), GTK_WIDGET(scrolled_window), TRUE, TRUE, 0);
   gtk_widget_show_all(dialog.get());
 
   context.upload(dirty);
@@ -407,7 +402,7 @@ void osm_upload(appdata_t &appdata) {
   /* tell the user that he can stop waiting ... */
   context.append_str(_("Process finished.\n"));
 
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()), GTK_RESPONSE_CLOSE, TRUE);
+  gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_CLOSE, TRUE);
 
-  gtk_dialog_run(GTK_DIALOG(dialog.get()));
+  gtk_dialog_run(dialog);
 }

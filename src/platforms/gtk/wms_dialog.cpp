@@ -218,15 +218,13 @@ static void callback_modified_name(GtkWidget *widget) {
 
 /* edit url and path of a given wms server entry */
 bool wms_server_edit(wms_server_context_t *context, bool edit_name, wms_server_t *wms_server) {
-  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Edit WMS Server"),
-                                              GTK_WINDOW(context->dialog),
-                                              GTK_DIALOG_MODAL,
-                                              GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-                                              GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                              nullptr));
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Edit WMS Server"),
+                                      GTK_WINDOW(context->dialog), GTK_DIALOG_MODAL,
+                                      GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                      GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, nullptr));
 
-  dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_WIDE);
-  gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
+  dialog_size_hint(dialog, MISC_DIALOG_WIDE);
+  gtk_dialog_set_default_response(dialog, GTK_RESPONSE_ACCEPT);
 
   GtkWidget *label = gtk_label_new(_("Name:"));
   GtkWidget *name = entry_new(EntryFlagsNoAutoCap);
@@ -251,11 +249,11 @@ bool wms_server_edit(wms_server_context_t *context, bool edit_name, wms_server_t
   osm2go_platform::setEntryText(GTK_ENTRY(name), wms_server->name.c_str(), _("<service name>"));
   osm2go_platform::setEntryText(GTK_ENTRY(server), wms_server->server.c_str(), _("<server url>"));
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table, TRUE, TRUE, 0);
+  gtk_box_pack_start(dialog.vbox(), table, TRUE, TRUE, 0);
 
   gtk_widget_show_all(dialog.get());
 
-  const bool ret = (GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog.get())));
+  const bool ret = (GTK_RESPONSE_ACCEPT == gtk_dialog_run(dialog));
   if(ret) {
     if(edit_name)
       wms_server->name = gtk_entry_get_text(GTK_ENTRY(name));
@@ -468,29 +466,29 @@ static GtkWidget *wms_layer_widget(project_t::ref project, const wms_layer_t::li
 static std::string wms_layer_dialog(project_t::ref project, const wms_layer_t::list &layers)
 {
   GtkWidget *sel_widget = wms_layer_widget(project, layers);
+  osm2go_platform::DialogGuard dialog(
 #ifdef FREMANTLE
-  osm2go_platform::WidgetGuard dialog(hildon_picker_dialog_new(GTK_WINDOW(appdata_t::window)));
+                                      hildon_picker_dialog_new(GTK_WINDOW(appdata_t::window)));
   hildon_picker_dialog_set_selector(HILDON_PICKER_DIALOG(dialog.get()),
                                     HILDON_TOUCH_SELECTOR(sel_widget));
 #else
-  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("WMS layer selection"),
+                                      gtk_dialog_new_with_buttons(_("WMS layer selection"),
                                               GTK_WINDOW(appdata_t::window),
                                               GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                               nullptr));
 
-  dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_LARGE);
+  dialog_size_hint(dialog, MISC_DIALOG_LARGE);
 
   /* layer list */
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
-                    sel_widget, TRUE, TRUE, 0);
+  gtk_box_pack_start(dialog.vbox(), sel_widget, TRUE, TRUE, 0);
 #endif
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()), DIALOG_RESULT_OK, FALSE);
+  gtk_dialog_set_response_sensitive(dialog, DIALOG_RESULT_OK, FALSE);
 
   gtk_widget_show_all(dialog.get());
 
-  if(DIALOG_RESULT_OK != gtk_dialog_run(GTK_DIALOG(dialog.get())))
+  if(DIALOG_RESULT_OK != gtk_dialog_run(dialog))
     return std::string();
 
   return osm2go_platform::select_widget_value(sel_widget);

@@ -252,7 +252,7 @@ void get_widget_functor::operator()(const presets_element_t* w)
 }
 
 static void presets_item_dialog(const presets_item *item) {
-  osm2go_platform::WidgetGuard dialog;
+  osm2go_platform::DialogGuard dialog;
   bool ok;
 
   g_debug("dialog for item %s", item->name.c_str());
@@ -268,8 +268,7 @@ static void presets_item_dialog(const presets_item *item) {
   tag_context_t * const tag_context = presets_context_t::instance->tag_context;
 
   if(it != itEnd)  {
-    dialog.reset(gtk_dialog_new_with_buttons(item->name.c_str(),
-                                             GTK_WINDOW(tag_context->dialog.get()),
+    dialog.reset(gtk_dialog_new_with_buttons(item->name.c_str(), tag_context->dialog,
                                              GTK_DIALOG_MODAL,
                                              GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                              GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
@@ -278,8 +277,7 @@ static void presets_item_dialog(const presets_item *item) {
     /* if a web link has been provided for this item install */
     /* a button for this */
     if(!item->link.empty()) {
-      GtkWidget *button = gtk_dialog_add_button(GTK_DIALOG(dialog.get()),
-                                                _("Info"), GTK_RESPONSE_HELP);
+      GtkWidget *button = gtk_dialog_add_button(dialog, _("Info"), GTK_RESPONSE_HELP);
       g_signal_connect_swapped(button, "clicked", G_CALLBACK(open_url),
                                const_cast<char *>(item->link.c_str()));
     }
@@ -287,12 +285,12 @@ static void presets_item_dialog(const presets_item *item) {
     /* special handling for the first label/separators */
     if(item->addEditName) {
       g_string title(g_strdup_printf(_("Edit %s"), item->name.c_str()));
-      gtk_window_set_title(GTK_WINDOW(dialog.get()), title.get());
+      gtk_window_set_title(dialog, title.get());
     } else {
       // use the first label as title
       const presets_element_t * const w = item->widgets.front();
       if(w->type == WIDGET_TYPE_LABEL)
-        gtk_window_set_title(GTK_WINDOW(dialog.get()), w->text.c_str());
+        gtk_window_set_title(dialog, w->text.c_str());
     }
 
     /* skip all following non-interactive widgets: use the first one that
@@ -323,15 +321,15 @@ static void presets_item_dialog(const presets_item *item) {
     gboolean first = TRUE;
     g_signal_connect(table, "expose_event", G_CALLBACK(table_expose_event), &first);
 #endif
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), mwidget, TRUE, TRUE, 0);
-    gtk_window_set_default_size(GTK_WINDOW(dialog.get()), dlgwidth, dlgheight);
+    gtk_box_pack_start(dialog.vbox(), mwidget, TRUE, TRUE, 0);
+    gtk_window_set_default_size(dialog, dlgwidth, dlgheight);
 
     gtk_widget_show_all(dialog.get());
 
     /* run gtk_dialog_run, but continue if e.g. the help button was pressed */
     gint result;
     do {
-      result = gtk_dialog_run(GTK_DIALOG(dialog.get()));
+      result = gtk_dialog_run(dialog);
     } while(result != GTK_RESPONSE_DELETE_EVENT &&
             result != GTK_RESPONSE_ACCEPT &&
             result != GTK_RESPONSE_REJECT);
@@ -838,23 +836,23 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event) {
 #else
   assert(presets_context_t::instance->submenus.empty());
   /* popup our special picker like menu */
-  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Presets"),
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Presets"),
                                               GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(widget))),
                                               GTK_DIALOG_MODAL, GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               nullptr));
 
-  gtk_window_set_default_size(GTK_WINDOW(dialog.get()), 400, 480);
+  gtk_window_set_default_size(dialog, 400, 480);
 
   /* create root picker */
   GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
 
   GtkWidget *root = presets_context_t::instance->presets_picker(pinternal->items, true);
   gtk_box_pack_start(GTK_BOX(hbox), root, TRUE, TRUE, 0);
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox, TRUE, TRUE, 0);
+  gtk_box_pack_start(dialog.vbox(), hbox, TRUE, TRUE, 0);
 
   assert_null(presets_context_t::instance->selected_item);
   gtk_widget_show_all(dialog.get());
-  gtk_dialog_run(GTK_DIALOG(dialog.get()));
+  gtk_dialog_run(dialog);
 
   // remove all references to the widgets, they will be destroyed together with the dialog
   presets_context_t::instance->submenus.clear();

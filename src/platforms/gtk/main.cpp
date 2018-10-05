@@ -250,13 +250,13 @@ GtkWidget *track_vis_select_widget(TrackVisibility current) {
 /* in fremantle this happens inside the submenu handling since this button */
 /* is actually placed inside the submenu there */
 static bool track_visibility_select(GtkWidget *parent) {
-  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Select track visibility"),
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Select track visibility"),
                                               GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                               nullptr));
 
-  gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
+  gtk_dialog_set_default_response(dialog, GTK_RESPONSE_ACCEPT);
 
   settings_t::ref settings = settings_t::instance();
   GtkWidget *cbox = track_vis_select_widget(settings->trackVisibility);
@@ -265,12 +265,12 @@ static bool track_visibility_select(GtkWidget *parent) {
   gtk_box_pack_start(GTK_BOX(hbox), gtk_label_new(_("Track visibility:")), TRUE, TRUE, 0);
 
   gtk_box_pack_start(GTK_BOX(hbox), cbox, TRUE, TRUE, 0);
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox, TRUE, TRUE, 0);
+  gtk_box_pack_start(dialog.vbox(), hbox, TRUE, TRUE, 0);
 
   gtk_widget_show_all(dialog.get());
 
   bool ret = false;
-  if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog.get()))) {
+  if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(dialog)) {
     g_debug("user clicked cancel\n");
   } else {
     int index = combo_box_get_active(cbox);
@@ -369,7 +369,7 @@ cb_menu_view_detail_dec(map_t *map) {
 static void
 cb_menu_track_import(appdata_t *appdata) {
   /* open a file selector */
-  osm2go_platform::WidgetGuard dialog(
+  osm2go_platform::DialogGuard dialog(
 #ifdef FREMANTLE
                   hildon_file_chooser_dialog_new(GTK_WINDOW(appdata_t::window),
                                                  GTK_FILE_CHOOSER_ACTION_OPEN)
@@ -404,8 +404,8 @@ cb_menu_track_import(appdata_t *appdata) {
                                     settings->track_path.c_str());
   }
 
-  gtk_widget_show_all(GTK_WIDGET(dialog.get()));
-  if (gtk_dialog_run(GTK_DIALOG(dialog.get())) == GTK_FM_OK) {
+  gtk_widget_show_all(dialog.get());
+  if (gtk_dialog_run(dialog) == GTK_FM_OK) {
     g_string filename(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog.get())));
 
     /* remove any existing track */
@@ -437,7 +437,7 @@ cb_menu_track_follow_gps(appdata_t *, MENU_CHECK_ITEM *item) {
 static void
 cb_menu_track_export(appdata_t *appdata) {
   /* open a file selector */
-  osm2go_platform::WidgetGuard dialog(
+  osm2go_platform::DialogGuard dialog(
 #ifdef FREMANTLE
                   hildon_file_chooser_dialog_new(GTK_WINDOW(appdata_t::window),
                                                  GTK_FILE_CHOOSER_ACTION_SAVE)
@@ -473,7 +473,7 @@ cb_menu_track_export(appdata_t *appdata) {
                                     settings->track_path.c_str());
   }
 
-  if(gtk_dialog_run(GTK_DIALOG(dialog.get())) == GTK_FM_OK) {
+  if(gtk_dialog_run(dialog) == GTK_FM_OK) {
     g_string filename(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog.get())));
     if(filename) {
       g_debug("export to %s\n", filename.get());

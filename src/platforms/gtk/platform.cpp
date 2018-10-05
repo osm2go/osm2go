@@ -43,6 +43,25 @@ void osm2go_platform::gtk_widget_deleter::operator()(GtkWidget *mem) {
   gtk_widget_destroy(mem);
 }
 
+osm2go_platform::DialogGuard::DialogGuard(GtkWidget *dlg)
+  : WidgetGuard(dlg)
+{
+  assert(GTK_WINDOW(dlg) != nullptr);
+  assert(GTK_DIALOG(dlg) != nullptr);
+}
+
+void osm2go_platform::DialogGuard::reset(GtkWidget *dlg)
+{
+  assert(GTK_WINDOW(dlg) != nullptr);
+  assert(GTK_DIALOG(dlg) != nullptr);
+  WidgetGuard::reset(dlg);
+}
+
+GtkBox *osm2go_platform::DialogGuard::vbox()
+{
+  return GTK_BOX(reinterpret_cast<GtkDialog *>(get())->vbox);
+}
+
 void osm2go_platform::process_events()
 {
   while(gtk_events_pending() == TRUE)
@@ -221,13 +240,13 @@ bool osm2go_platform::yes_no(const char *title, const char *msg, unsigned int ag
 
   GtkWindow *p = GTK_WINDOW(parent ? parent : appdata_t::window);
 
-  osm2go_platform::WidgetGuard dialog(
+  osm2go_platform::DialogGuard dialog(
 #ifndef FREMANTLE
                   gtk_message_dialog_new(p, GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
                                          "%s", msg));
 
-  gtk_window_set_title(GTK_WINDOW(dialog.get()), title);
+  gtk_window_set_title(dialog, title);
 #else
                   hildon_note_new_confirmation(p, msg));
 #endif
@@ -236,8 +255,7 @@ bool osm2go_platform::yes_no(const char *title, const char *msg, unsigned int ag
   if(again_bit) {
 #ifdef FREMANTLE
     /* make sure there's some space before the checkbox */
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
-                       gtk_label_new(" "), TRUE, TRUE, 0);
+    gtk_box_pack_start(dialog.vbox(), gtk_label_new(" "), TRUE, TRUE, 0);
 #endif
 
     GtkWidget *alignment = gtk_alignment_new(0.5, 0, 0, 0);
@@ -246,12 +264,12 @@ bool osm2go_platform::yes_no(const char *title, const char *msg, unsigned int ag
     g_signal_connect(cbut, "toggled", G_CALLBACK(on_toggled), GUINT_TO_POINTER(again_flags));
 
     gtk_container_add(GTK_CONTAINER(alignment), cbut);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), alignment, TRUE, TRUE, 0);
+    gtk_box_pack_start(dialog.vbox(), alignment, TRUE, TRUE, 0);
 
     gtk_widget_show_all(dialog.get());
   }
 
-  bool yes = (gtk_dialog_run(GTK_DIALOG(dialog.get())) == RESPONSE_YES);
+  bool yes = (gtk_dialog_run(dialog) == RESPONSE_YES);
 
   if(cbut != nullptr && gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cbut)) == TRUE) {
     /* the user doesn't want to see this dialog again */

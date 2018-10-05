@@ -164,7 +164,7 @@ static pos_float_t pos_dist_get(GtkWidget *widget, bool is_mil) {
 struct area_context_t {
   explicit area_context_t(area_edit_t &a, GtkWidget *dlg);
 
-  osm2go_platform::WidgetGuard dialog;
+  osm2go_platform::DialogGuard dialog;
   GtkWidget * const notebook;
   area_edit_t &area;
   pos_area bounds;      ///< local copy to work on
@@ -280,27 +280,22 @@ static bool area_warning(area_context_t *context) {
 static void area_main_update(area_context_t *context) {
   /* also setup the local error messages here, so they are */
   /* updated for all entries at once */
+  gboolean sensitive;
   if(!context->bounds.valid()) {
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog.get()),
-				      GTK_RESPONSE_ACCEPT, FALSE);
+    sensitive = FALSE;
+  } else if(!context->bounds.normalized()) {
+    gtk_label_set_text(GTK_LABEL(context->direct.error),
+                       _("\"From\" must be smaller than \"to\" value!"));
+    gtk_label_set_text(GTK_LABEL(context->extent.error),
+                       _("Extents must be positive!"));
+    sensitive = FALSE;
   } else {
-    if(!context->bounds.normalized()) {
-      gtk_label_set_text(GTK_LABEL(context->direct.error),
-		  _("\"From\" must be smaller than \"to\" value!"));
-      gtk_label_set_text(GTK_LABEL(context->extent.error),
-		  _("Extents must be positive!"));
-      gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog.get()),
-				      GTK_RESPONSE_ACCEPT, FALSE);
-    }
-    else
-    {
-      gtk_label_set_text(GTK_LABEL(context->direct.error), "");
-      gtk_label_set_text(GTK_LABEL(context->extent.error), "");
+    gtk_label_set_text(GTK_LABEL(context->direct.error), "");
+    gtk_label_set_text(GTK_LABEL(context->extent.error), "");
 
-      gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog.get()),
-                                        GTK_RESPONSE_ACCEPT, TRUE);
-    }
+    sensitive = TRUE;
   }
+  gtk_dialog_set_response_sensitive(context->dialog, GTK_RESPONSE_ACCEPT, sensitive);
 
   /* check if area size exceeds recommended values */
   if(selected_area(context) > WARN_OVER)
@@ -683,9 +678,8 @@ bool area_edit_t::run() {
                                                GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                                nullptr));
 
-  dialog_size_hint(GTK_WINDOW(context.dialog.get()), MISC_DIALOG_HIGH);
-  context.warning = gtk_dialog_add_button(GTK_DIALOG(context.dialog.get()), _("Warning"),
-                                          GTK_RESPONSE_HELP);
+  dialog_size_hint(context.dialog, MISC_DIALOG_HIGH);
+  context.warning = gtk_dialog_add_button(context.dialog, _("Warning"), GTK_RESPONSE_HELP);
 
   gtk_button_set_image(GTK_BUTTON(context.warning),
                        gtk_image_new_from_icon_name("dialog-warning", GTK_ICON_SIZE_BUTTON));
@@ -851,8 +845,7 @@ bool area_edit_t::run() {
 
   /* ------------------------------------------------------ */
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog.get())->vbox),
-                     context.notebook, TRUE, TRUE, 0);
+  gtk_box_pack_start(context.dialog.vbox(), context.notebook, TRUE, TRUE, 0);
 
   g_signal_connect(notebook_get_gtk_notebook(context.notebook),
                    "switch-page", G_CALLBACK(on_page_switch), &context);
@@ -864,7 +857,7 @@ bool area_edit_t::run() {
   bool ok = false;
   int response;
   do {
-    response = gtk_dialog_run(GTK_DIALOG(context.dialog.get()));
+    response = gtk_dialog_run(context.dialog);
 
     if(GTK_RESPONSE_ACCEPT == response) {
       if(area_warning(&context)) {

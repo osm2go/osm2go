@@ -130,13 +130,13 @@ void style_select(appdata_t *appdata) {
   g_debug("select style");
 
   /* ------------------ style dialog ---------------- */
-  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Select style"),
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Select style"),
                                               GTK_WINDOW(appdata_t::window), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                               nullptr));
 
-  gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
+  gtk_dialog_set_default_response(dialog, GTK_RESPONSE_ACCEPT);
 
   GtkWidget *cbox = style_select_widget(settings_t::instance()->style, style_scan());
 
@@ -144,11 +144,11 @@ void style_select(appdata_t *appdata) {
   gtk_box_pack_start(GTK_BOX(hbox), gtk_label_new(_("Style:")), TRUE, TRUE, 0);
 
   gtk_box_pack_start(GTK_BOX(hbox), cbox, TRUE, TRUE, 0);
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox, TRUE, TRUE, 0);
+  gtk_box_pack_start(dialog.vbox(), hbox, TRUE, TRUE, 0);
 
   gtk_widget_show_all(dialog.get());
 
-  if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog.get()))) {
+  if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(dialog)) {
     g_debug("user clicked cancel");
     return;
   }

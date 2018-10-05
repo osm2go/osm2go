@@ -48,7 +48,7 @@ struct relitem_context_t {
   object_t &item;
   const presets_items * const presets;
   osm_t::ref osm;
-  osm2go_platform::WidgetGuard dialog;
+  osm2go_platform::DialogGuard dialog;
   std::unique_ptr<GtkListStore, g_object_deleter> store;
   GtkTreeSelection * selection;
 };
@@ -85,7 +85,7 @@ struct relation_context_t {
   map_t * const map;
   osm_t::ref osm;
   presets_items * const presets;
-  osm2go_platform::WidgetGuard dialog;
+  osm2go_platform::DialogGuard dialog;
   GtkWidget *list, *show_btn;
   std::unique_ptr<GtkListStore, g_object_deleter> store;
 };
@@ -98,27 +98,25 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
 
   /* ask the user for the role of the new object in this relation */
   /* ------------------ role dialog ---------------- */
-  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Select role"), GTK_WINDOW(parent),
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Select role"), GTK_WINDOW(parent),
                                               GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                               nullptr));
 
-  gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
+  gtk_dialog_set_default_response(dialog, GTK_RESPONSE_ACCEPT);
 
   const char *type = relation->tags.get_value("type");
 
   g_string info_str(type != nullptr ?
                     g_strdup_printf(_("In relation of type: %s"), type) :
                     g_strdup_printf(_("In relation #" ITEM_ID_FORMAT), relation->id));
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
-                     gtk_label_new(info_str.get()), TRUE, TRUE, 0);
+  gtk_box_pack_start(dialog.vbox(), gtk_label_new(info_str.get()), TRUE, TRUE, 0);
   info_str.reset();
 
   const char *name = relation->tags.get_value("name");
   if(name != nullptr)
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
-                       gtk_label_new(name), TRUE, TRUE, 0);
+    gtk_box_pack_start(dialog.vbox(), gtk_label_new(name), TRUE, TRUE, 0);
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
 
@@ -137,10 +135,10 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
     entry = entry_new();
 
   gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox, TRUE, TRUE, 0);
+  gtk_box_pack_start(dialog.vbox(), hbox, TRUE, TRUE, 0);
 
   gtk_widget_show_all(dialog.get());
-  if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog.get()))) {
+  if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(dialog)) {
     g_debug("user clicked cancel");
     return false;
   }
@@ -365,16 +363,15 @@ void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
                                                nullptr));
   str.reset();
 
-  dialog_size_hint(GTK_WINDOW(context.dialog.get()), MISC_DIALOG_LARGE);
-  gtk_dialog_set_default_response(GTK_DIALOG(context.dialog.get()), GTK_RESPONSE_CLOSE);
+  dialog_size_hint(context.dialog, MISC_DIALOG_LARGE);
+  gtk_dialog_set_default_response(context.dialog, GTK_RESPONSE_CLOSE);
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog.get())->vbox),
-                     relation_item_list_widget(context), TRUE, TRUE, 0);
+  gtk_box_pack_start(context.dialog.vbox(), relation_item_list_widget(context), TRUE, TRUE, 0);
 
   /* ----------------------------------- */
 
   gtk_widget_show_all(context.dialog.get());
-  gtk_dialog_run(GTK_DIALOG(context.dialog.get()));
+  gtk_dialog_run(context.dialog);
 }
 
 /* -------------------- global relation list ----------------- */
@@ -779,16 +776,14 @@ void relation_list(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items 
                                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                                          nullptr));
 
-  dialog_size_hint(GTK_WINDOW(context.dialog.get()), MISC_DIALOG_LARGE);
-  gtk_dialog_set_default_response(GTK_DIALOG(context.dialog.get()),
-				  GTK_RESPONSE_CLOSE);
+  dialog_size_hint(context.dialog, MISC_DIALOG_LARGE);
+  gtk_dialog_set_default_response(context.dialog, GTK_RESPONSE_CLOSE);
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog.get())->vbox),
-                     relation_list_widget(context), TRUE, TRUE, 0);
+  gtk_box_pack_start(context.dialog.vbox(), relation_list_widget(context), TRUE, TRUE, 0);
 
   /* ----------------------------------- */
 
 
   gtk_widget_show_all(context.dialog.get());
-  gtk_dialog_run(GTK_DIALOG(context.dialog.get()));
+  gtk_dialog_run(context.dialog);
 }

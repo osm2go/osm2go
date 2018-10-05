@@ -162,14 +162,13 @@ static void on_tag_remove(info_tag_context_t *context) {
  * @retval false the tag is the same as before
  */
 static bool tag_edit(GtkWindow *window, std::string &k, std::string &v) {
-  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Edit Tag"), window, GTK_DIALOG_MODAL,
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Edit Tag"), window, GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                               nullptr));
 
-  dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_SMALL);
-  gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()),
-				  GTK_RESPONSE_ACCEPT);
+  dialog_size_hint(dialog, MISC_DIALOG_SMALL);
+  gtk_dialog_set_default_response(dialog, GTK_RESPONSE_ACCEPT);
 
   GtkWidget *label = gtk_label_new(_("Key:"));
   GtkWidget *key = entry_new(EntryFlagsNoAutoCap);
@@ -194,11 +193,11 @@ static bool tag_edit(GtkWindow *window, std::string &k, std::string &v) {
   gtk_entry_set_text(GTK_ENTRY(key), k.c_str());
   gtk_entry_set_text(GTK_ENTRY(value), v.c_str());
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table, TRUE, TRUE, 0);
+  gtk_box_pack_start(dialog.vbox(), table, TRUE, TRUE, 0);
 
   gtk_widget_show_all(dialog.get());
 
-  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog.get()))) {
+  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(dialog)) {
     const gchar *nk = gtk_entry_get_text(GTK_ENTRY(key));
     const gchar *nv = gtk_entry_get_text(GTK_ENTRY(value));
     if(k != nk || v != nv) {
@@ -269,7 +268,7 @@ static void on_tag_edit(info_tag_context_t *context) {
 
   std::string k = oldk, v = oldv;
 
-  if(tag_edit(GTK_WINDOW(context->dialog.get()), k, v)) {
+  if(tag_edit(context->dialog, k, v)) {
     if(k == kc && v == oldv)
       return;
 
@@ -372,7 +371,7 @@ static GtkTreeIter store_append(GtkListStore *store, const std::string &key,
 static void on_tag_add(info_tag_context_t *context) {
   std::string k, v;
 
-  if(!tag_edit(GTK_WINDOW(context->dialog.get()), k, v)) {
+  if(!tag_edit(context->dialog, k, v)) {
     g_debug("cancelled");
     return;
   }
@@ -569,18 +568,16 @@ static GtkWidget *details_widget(const info_tag_context_t &context, bool big) {
 /* put additional infos into a seperate dialog for fremantle as */
 /* screen space is sparse there */
 static void info_more(const info_tag_context_t &context) {
-  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Object details"),
-                                              GTK_WINDOW(context.dialog.get()), GTK_DIALOG_MODAL,
-                                              GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                              nullptr));
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Object details"),
+                                      context.dialog, GTK_DIALOG_MODAL,
+                                      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, nullptr));
 
-  dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_SMALL);
-  gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_CANCEL);
+  dialog_size_hint(dialog, MISC_DIALOG_SMALL);
+  gtk_dialog_set_default_response(dialog, GTK_RESPONSE_CANCEL);
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
-                     details_widget(context, true), FALSE, FALSE, 0);
+  gtk_box_pack_start(dialog.vbox(), details_widget(context, true), FALSE, FALSE, 0);
   gtk_widget_show_all(dialog.get());
-  gtk_dialog_run(GTK_DIALOG(dialog.get()));
+  gtk_dialog_run(dialog);
 }
 #endif
 
@@ -623,20 +620,17 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *p
                                                nullptr));
   str.reset();
 
-  dialog_size_hint(GTK_WINDOW(context.dialog.get()), MISC_DIALOG_LARGE);
-  gtk_dialog_set_default_response(GTK_DIALOG(context.dialog.get()), GTK_RESPONSE_ACCEPT);
+  dialog_size_hint(context.dialog, MISC_DIALOG_LARGE);
+  gtk_dialog_set_default_response(context.dialog, GTK_RESPONSE_ACCEPT);
 
 #ifndef FREMANTLE
   /* -------- details box --------- */
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog.get())->vbox),
-		     details_widget(context, false),
-		     FALSE, FALSE, 0);
+  gtk_box_pack_start(context.dialog.vbox(), details_widget(context, false), FALSE, FALSE, 0);
 #endif
 
   /* ------------ tags ----------------- */
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog.get())->vbox),
-                     tag_widget(context), TRUE, TRUE, 0);
+  gtk_box_pack_start(context.dialog.vbox(), tag_widget(context), TRUE, TRUE, 0);
 
   /* ----------------------------------- */
 
@@ -644,7 +638,7 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *p
   bool ok = false, quit = false;
 
   do {
-    switch(gtk_dialog_run(GTK_DIALOG(context.dialog.get()))) {
+    switch(gtk_dialog_run(context.dialog)) {
     case GTK_RESPONSE_ACCEPT:
       quit = true;
       ok = true;
@@ -669,8 +663,7 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *p
 }
 
 tag_context_t::tag_context_t(const object_t &o, const osm_t::TagMap &t)
-  : dialog(nullptr)
-  , object(o)
+  : object(o)
   , tags(t)
 {
 }

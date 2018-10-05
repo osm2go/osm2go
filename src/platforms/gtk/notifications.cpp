@@ -44,12 +44,12 @@ vmessage(osm2go_platform::Widget *parent, GtkMessageType type, GtkButtonsType bu
     return;
   }
 
-  osm2go_platform::WidgetGuard dialog(
+  osm2go_platform::DialogGuard dialog(
 #ifndef FREMANTLE
                   gtk_message_dialog_new(wnd, GTK_DIALOG_DESTROY_WITH_PARENT,
                                          type, buttons, "%s", msg));
 
-  gtk_window_set_title(GTK_WINDOW(dialog.get()), title);
+  gtk_window_set_title(dialog, title);
 #else
                   hildon_note_new_information(wnd, msg));
   (void)type;
@@ -57,7 +57,7 @@ vmessage(osm2go_platform::Widget *parent, GtkMessageType type, GtkButtonsType bu
   (void)title;
 #endif // FREMANTLE
 
-  gtk_dialog_run(GTK_DIALOG(dialog.get()));
+  gtk_dialog_run(dialog);
 }
 
 void message_dlg(const char *title, const char *msg, GtkWidget *parent)

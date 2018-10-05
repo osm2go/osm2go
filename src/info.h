@@ -35,7 +35,7 @@ protected:
   explicit tag_context_t(const object_t &o, const osm_t::TagMap &t);
 public:
 
-  osm2go_platform::WidgetGuard dialog;
+  osm2go_platform::DialogGuard dialog;
   object_t object;
   const osm_t::TagMap &tags;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Rolf Eike Beer <eike@sf-mail.de>.
+ * Copyright (C) 2017-2018 Rolf Eike Beer <eike@sf-mail.de>.
  *
  * This file is part of OSM2Go.
  *
@@ -27,7 +27,10 @@
 
 typedef struct _GMappedFile GMappedFile;
 typedef struct _GdkPixbuf GdkPixbuf;
+typedef struct _GtkBox GtkBox;
+typedef struct _GtkDialog GtkDialog;
 typedef struct _GtkWidget GtkWidget;
+typedef struct _GtkWindow GtkWindow;
 
 namespace osm2go_platform {
   typedef GtkWidget Widget;
@@ -37,6 +40,23 @@ namespace osm2go_platform {
     void operator()(GtkWidget *mem);
   };
   typedef std::unique_ptr<GtkWidget, gtk_widget_deleter> WidgetGuard;
+  class DialogGuard : public WidgetGuard {
+  public:
+    explicit inline DialogGuard() : WidgetGuard() {};
+    explicit DialogGuard(GtkWidget *dlg);
+#if __cplusplus >= 201103L
+    DialogGuard(std::nullptr_t) = delete;
+    void reset(std::nullptr_t) = delete;
+#endif
+    void reset(GtkWidget *dlg);
+    inline void reset() { WidgetGuard::reset(); }
+
+    inline operator GtkWindow *() const
+    { return reinterpret_cast<GtkWindow *>(get()); }
+    inline operator GtkDialog *() const
+    { return reinterpret_cast<GtkDialog *>(get()); }
+    GtkBox *vbox();
+  };
 
   class MappedFile {
     GMappedFile *map;
