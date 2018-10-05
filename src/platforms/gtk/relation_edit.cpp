@@ -80,13 +80,13 @@ struct entry_insert_text {
 
 struct relation_context_t {
   inline relation_context_t(map_t *m, osm_t::ref o, presets_items *p, GtkWidget *d)
-    : map(m), osm(o), presets(p), dialog(d), list(nullptr), show_btn(nullptr) {}
+    : map(m), osm(o), presets(p), dialog(d), list(nullptr) {}
 
   map_t * const map;
   osm_t::ref osm;
   presets_items * const presets;
   osm2go_platform::DialogGuard dialog;
-  GtkWidget *list, *show_btn;
+  GtkWidget *list;
   std::unique_ptr<GtkListStore, g_object_deleter> store;
 };
 
