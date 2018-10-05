@@ -384,14 +384,15 @@ static void on_tag_add(info_tag_context_t *context) {
   }
 
   // check if the new key introduced a collision
-  bool collision = context->tags.count(k) > 0;
+  unsigned int tcount = context->tags.count(k);
   context->m_tags.insert(osm_t::TagMap::value_type(k, v));
   /* append a row for the new data */
-  GtkTreeIter iter = store_append(context->store.get(), k, v, collision);
+  GtkTreeIter iter = store_append(context->store.get(), k, v, tcount > 0);
 
   gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
 
-  if(collision)
+  // the collision flag only needs to be updated if there was no collision before
+  if(unlikely(tcount == 1))
     context->update_collisions(k);
 }
 
