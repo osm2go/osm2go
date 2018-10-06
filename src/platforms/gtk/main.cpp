@@ -366,10 +366,21 @@ cb_menu_view_detail_dec(map_t *map) {
   map->detail_decrease();
 }
 
+class FileDialogGuard : public osm2go_platform::DialogGuard {
+public:
+  explicit inline FileDialogGuard(GtkWidget *dlg) : osm2go_platform::DialogGuard(dlg)
+  {
+    assert(GTK_FILE_CHOOSER(dlg) != nullptr);
+  }
+
+  inline operator GtkFileChooser *() const
+  { return reinterpret_cast<GtkFileChooser *>(get()); }
+};
+
 static void
 cb_menu_track_import(appdata_t *appdata) {
   /* open a file selector */
-  osm2go_platform::DialogGuard dialog(
+  FileDialogGuard dialog(
 #ifdef FREMANTLE
                   hildon_file_chooser_dialog_new(GTK_WINDOW(appdata_t::window),
                                                  GTK_FILE_CHOOSER_ACTION_OPEN)
@@ -391,22 +402,19 @@ cb_menu_track_import(appdata_t *appdata) {
         settings->track_path[slashpos] = '\0';  // seperate path from file
 
         /* the user just created a new document */
-        gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog.get()),
-                                            settings->track_path.c_str());
-        gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog.get()),
-                                          settings->track_path.c_str() + slashpos + 1);
+        gtk_file_chooser_set_current_folder(dialog, settings->track_path.c_str());
+        gtk_file_chooser_set_current_name(dialog, settings->track_path.c_str() + slashpos + 1);
 
         /* restore full filename */
         settings->track_path[slashpos] = '/';
       }
     } else
-      gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog.get()),
-                                    settings->track_path.c_str());
+      gtk_file_chooser_set_filename(dialog, settings->track_path.c_str());
   }
 
   gtk_widget_show_all(dialog.get());
   if (gtk_dialog_run(dialog) == GTK_FM_OK) {
-    g_string filename(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog.get())));
+    g_string filename(gtk_file_chooser_get_filename(dialog));
 
     /* remove any existing track */
     appdata->track_clear();
@@ -437,7 +445,7 @@ cb_menu_track_follow_gps(appdata_t *, MENU_CHECK_ITEM *item) {
 static void
 cb_menu_track_export(appdata_t *appdata) {
   /* open a file selector */
-  osm2go_platform::DialogGuard dialog(
+  FileDialogGuard dialog(
 #ifdef FREMANTLE
                   hildon_file_chooser_dialog_new(GTK_WINDOW(appdata_t::window),
                                                  GTK_FILE_CHOOSER_ACTION_SAVE)
@@ -460,21 +468,18 @@ cb_menu_track_export(appdata_t *appdata) {
       if(slashpos != std::string::npos) {
         settings->track_path[slashpos] = '\0';  // seperate path from file
 
-        gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog.get()),
-                                            settings->track_path.c_str());
-        gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog.get()),
-                                          settings->track_path.c_str() + slashpos + 1);
+        gtk_file_chooser_set_current_folder(dialog, settings->track_path.c_str());
+        gtk_file_chooser_set_current_name(dialog, settings->track_path.c_str() + slashpos + 1);
 
         /* restore full filename */
         settings->track_path[slashpos] = '/';
       }
     } else
-      gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog.get()),
-                                    settings->track_path.c_str());
+      gtk_file_chooser_set_filename(dialog, settings->track_path.c_str());
   }
 
   if(gtk_dialog_run(dialog) == GTK_FM_OK) {
-    g_string filename(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog.get())));
+    g_string filename(gtk_file_chooser_get_filename(dialog));
     if(filename) {
       g_debug("export to %s\n", filename.get());
 
