@@ -17,18 +17,19 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "osm_api.h"
-#include "osm_api_p.h"
+#include <osm_api.h>
+#include <osm_api_p.h>
 
-#include "appdata.h"
-#include "diff.h"
-#include "map.h"
-#include "misc.h"
-#include "net_io.h"
-#include "osm.h"
+#include <appdata.h>
+#include <diff.h>
+#include <map.h>
+#include <misc.h>
+#include <net_io.h>
+#include <osm.h>
 #include "osm2go_platform.h"
-#include "project.h"
-#include "settings.h"
+#include <project.h>
+#include <settings.h>
+#include <uicontrol.h>
 
 #include <cstring>
 #include <gtk/gtk.h>
@@ -217,6 +218,11 @@ void osm_upload(appdata_t &appdata) {
           dirty.ways.added, dirty.ways.dirty, dirty.ways.deleted.size());
   g_debug("relations: new %2u, dirty %2u, deleted %2zu",
           dirty.relations.added, dirty.relations.dirty, dirty.relations.deleted.size());
+
+  if(dirty.empty()) {
+    appdata.uicontrol->showNotification(_("No changes present"), MainUi::Brief);
+    return;
+  }
 
   osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Upload to OSM"),
                                               GTK_WINDOW(appdata_t::window),

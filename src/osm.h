@@ -178,11 +178,16 @@ public:
       unsigned int added, dirty;
       std::vector<T *> modified;
       std::vector<T *> deleted;
+
+      inline bool empty() const
+      { return modified.empty() && deleted.empty(); }
     };
 
     counter<node_t> nodes;
     counter<way_t> ways;
     counter<relation_t> relations;
+    inline bool empty() const
+    { return nodes.empty() && ways.empty() && relations.empty(); }
   };
 
   class TagMap : public std::multimap<std::string, std::string> {
