@@ -57,4 +57,6 @@ public:
   void upload(const osm_t::dirty_t &dirty);
 };
 
+void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty);
+
 #endif /* OSM_API_P_H */

@@ -29,6 +29,7 @@
 #include "osm2go_platform.h"
 #include "project.h"
 #include "settings.h"
+#include "uicontrol.h"
 #include "xml_helpers.h"
 
 #include <algorithm>
@@ -540,4 +541,32 @@ void osm_upload_context_t::upload(const osm_t::dirty_t &dirty)
 
     append_str(_("Upload done.\n"));
   }
+}
+
+void osm_upload(appdata_t &appdata)
+{
+  project_t::ref project = appdata.project;
+  if(unlikely(project->osm->uploadPolicy == osm_t::Upload_Blocked)) {
+    printf("Upload prohibited");
+    return;
+  }
+
+  /* upload config and confirmation dialog */
+
+  /* count objects */
+  const osm_t::dirty_t &dirty = project->osm->modified();
+
+  printf("nodes:     new %2u, dirty %2u, deleted %2zu",
+         dirty.nodes.added, dirty.nodes.dirty, dirty.nodes.deleted.size());
+  printf("ways:      new %2u, dirty %2u, deleted %2zu",
+         dirty.ways.added, dirty.ways.dirty, dirty.ways.deleted.size());
+  printf("relations: new %2u, dirty %2u, deleted %2zu",
+         dirty.relations.added, dirty.relations.dirty, dirty.relations.deleted.size());
+
+  if(dirty.empty()) {
+    appdata.uicontrol->showNotification(_("No changes present"), MainUi::Brief);
+    return;
+  }
+
+  osm_upload_dialog(appdata, dirty);
 }

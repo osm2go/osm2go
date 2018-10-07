@@ -198,32 +198,8 @@ static void info_more(const osm_t::dirty_t &context, GtkWidget *parent) {
 }
 #endif
 
-void osm_upload(appdata_t &appdata) {
-  project_t::ref project = appdata.project;
-  if(unlikely(project->osm->uploadPolicy == osm_t::Upload_Blocked)) {
-    g_debug("Upload prohibited");
-    return;
-  }
-
-  g_debug("starting upload");
-
-  /* upload config and confirmation dialog */
-
-  /* count objects */
-  osm_t::dirty_t dirty = project->osm->modified();
-
-  g_debug("nodes:     new %2u, dirty %2u, deleted %2zu",
-          dirty.nodes.added, dirty.nodes.dirty, dirty.nodes.deleted.size());
-  g_debug("ways:      new %2u, dirty %2u, deleted %2zu",
-          dirty.ways.added, dirty.ways.dirty, dirty.ways.deleted.size());
-  g_debug("relations: new %2u, dirty %2u, deleted %2zu",
-          dirty.relations.added, dirty.relations.dirty, dirty.relations.deleted.size());
-
-  if(dirty.empty()) {
-    appdata.uicontrol->showNotification(_("No changes present"), MainUi::Brief);
-    return;
-  }
-
+void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
+{
   osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Upload to OSM"),
                                               GTK_WINDOW(appdata_t::window),
                                               GTK_DIALOG_MODAL,
@@ -326,6 +302,7 @@ void osm_upload(appdata_t &appdata) {
   gtk_text_buffer_get_end_iter(buffer, &end);
   char *text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
 
+  project_t::ref project = appdata.project;
   /* server url should not end with a slash */
   if(!project->rserver.empty() && project->rserver[project->rserver.size() - 1] == '/') {
     g_debug("removing trailing slash");
