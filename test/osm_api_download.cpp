@@ -1,11 +1,18 @@
 #include <osm_api.h>
 
 #include <appdata.h>
+#include <gps_state.h>
+#include <icon.h>
+#include <iconbar.h>
+#include <josm_presets.h>
 #include <map.h>
 #include <misc.h>
 #include <pos.h>
 #include <project.h>
 #include <settings.h>
+#include <statusbar.h>
+#include <style.h>
+#include <uicontrol.h>
 
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
@@ -18,6 +25,46 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+class StatusBarDummy : public statusbar_t {
+public:
+  static const char *msg;
+
+  virtual void set(const char *, bool) override
+  { abort(); }
+
+  // Shows a brief info splash in a suitable way for the app environment being used
+  virtual void banner_show_info(const char *text) override
+  { msg = text; }
+
+  // Start, stop, and say "I'm still alive" to a busy message targetted at the
+  // app environment in use. This can be an animation for some builds, might be
+  // a static statusbar for others, a modal dialog for others.
+  virtual void banner_busy_start(const char *) override
+  { abort(); }
+  virtual void banner_busy_stop() override
+  { abort(); }
+};
+const char *StatusBarDummy::msg;
+
+class MainUiDummy : public MainUi {
+public:
+  MainUiDummy() : MainUi(new StatusBarDummy()) {}
+  virtual void setActionEnable(menu_items, bool) override
+  { abort(); }
+};
+
+appdata_t::appdata_t(map_state_t &mstate)
+  : uicontrol(new MainUiDummy())
+  , map_state(mstate)
+  , map(nullptr)
+  , icons(icon_t::instance())
+{
+}
+
+appdata_t::~appdata_t()
+{
+}
 
 static char tmpdir[32] = "/tmp/osm2go_api_dl_XXXXXX";
 static const char *dev_url  = "https://master.apis.dev.openstreetmap.org/api/0.6";
@@ -134,6 +181,26 @@ static void download_bad_coords()
   assert_cmpnum(rmdir(project_dir.c_str()), 0);
 }
 
+static void upload_none()
+{
+  map_state_t dummystate;
+  appdata_t appdata(dummystate);
+
+  appdata.project.reset(new project_t(dummystate, std::string(), std::string()));
+  appdata.project->osm.reset(new osm_t());
+  appdata.project->osm->uploadPolicy = osm_t::Upload_Blocked;
+
+  // upload is blocked by policy
+  osm_upload(appdata);
+
+  appdata.project->osm->uploadPolicy = osm_t::Upload_Normal;
+
+  // nothing to upload
+  assert(StatusBarDummy::msg == nullptr);
+  osm_upload(appdata);
+  assert(StatusBarDummy::msg != nullptr);
+}
+
 int main(int argc, char **argv)
 {
   OSM2GO_TEST_INIT(argc, argv);
@@ -149,6 +216,7 @@ int main(int argc, char **argv)
   download_fine_absolute();
   download_bad_server();
   download_bad_coords();
+  upload_none();
 
   xmlCleanupParser();
   curl_global_cleanup();
