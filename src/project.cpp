@@ -491,7 +491,6 @@ project_t::project_t(map_state_t &ms, const std::string &n, const std::string &b
   , data_dirty(false)
   , isDemo(false)
   , dirfd(path.c_str())
-  , osm(nullptr)
 {
   memset(&wms_offset, 0, sizeof(wms_offset));
 }
