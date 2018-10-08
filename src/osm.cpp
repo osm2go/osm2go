@@ -662,11 +662,11 @@ void relation_t::cleanup() {
 
 void relation_t::remove_member(std::vector<member_t>::iterator it)
 {
-  printf("remove object " ITEM_ID_FORMAT " type %s from relation #" ITEM_ID_FORMAT "\n",
-         it->object.get_id(), it->object.type_string(), id);
-
   assert(it->object.is_real());
   assert(it != members.end());
+
+  printf("remove %s #" ITEM_ID_FORMAT " from relation #" ITEM_ID_FORMAT "\n",
+         it->object.type_string(), it->object.get_id(), id);
 
   members.erase(it);
 
@@ -1424,7 +1424,7 @@ std::string object_t::get_name(const osm_t &osm) const {
 
   /* worst case: we have no tags at all. return techincal info then */
   if(!obj->tags.hasRealTags())
-    return std::string(_("unspecified ")) + type_string();
+    return trstring("unspecified %1").arg(type_string()).toStdString();
 
   /* try to figure out _what_ this is */
   const std::array<const char *, 5> name_tags = { { "name", "ref", "note", "fix" "me", "sport" } };
@@ -1529,8 +1529,7 @@ std::string object_t::get_name(const osm_t &osm) const {
     ret += name;
     ret += '"';
   } else if(ret.empty()) {
-    ret = _("unspecified ");
-    ret += type_string();
+    ret = trstring("unspecified %1").arg(type_string()).toStdString();
   }
 
   /* remove underscores from string and replace them by spaces as this is */
