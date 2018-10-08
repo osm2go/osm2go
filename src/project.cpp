@@ -423,10 +423,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
   const char *errmsg = appdata.project->osm->sanity_check();
   if(unlikely(errmsg != nullptr)) {
     error_dlg(errmsg);
-    printf("project/osm sanity checks failed, unloading project\n");
-
-    snprintf(banner_txt, sizeof(banner_txt), _("Error opening %s"), name.c_str());
-    appdata.uicontrol->showNotification(banner_txt, MainUi::Brief);
+    printf("project/osm sanity checks failed (%s), unloading project\n", errmsg);
 
     return false;
   }
