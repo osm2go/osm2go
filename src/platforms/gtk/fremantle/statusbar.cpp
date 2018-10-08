@@ -70,6 +70,7 @@ void statusbar_fremantle::banner_busy_stop() {
 void statusbar_fremantle::banner_show_info(const char *text) {
   if(G_UNLIKELY(appdata_t::window == nullptr))
     return;
+  g_debug("%s: %s", __PRETTY_FUNCTION__, text);
   setBanner(hildon_banner_show_information(appdata_t::window, nullptr, text));
 }
 

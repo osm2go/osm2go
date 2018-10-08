@@ -392,9 +392,7 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
 }
 
 static bool project_load_inner(appdata_t &appdata, const std::string &name) {
-  char banner_txt[64];
-  snprintf(banner_txt, sizeof(banner_txt), _("Loading %s"), name.c_str());
-  appdata.uicontrol->showNotification(banner_txt, MainUi::Busy);
+  appdata.uicontrol->showNotification(trstring("Loading %1").arg(name), MainUi::Busy);
 
   /* close current project */
   osm2go_platform::process_events();
@@ -406,11 +404,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
   osm2go_platform::process_events();
 
   if(unlikely(!project_open(appdata, name))) {
-    printf("error opening requested project\n");
-
-    snprintf(banner_txt, sizeof(banner_txt),
-	     _("Error opening %s"), name.c_str());
-    appdata.uicontrol->showNotification(banner_txt, MainUi::Brief);
+    appdata.uicontrol->showNotification(trstring("Error opening %1").arg(name), MainUi::Brief);
 
     return false;
   }
