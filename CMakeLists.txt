@@ -111,7 +111,6 @@ add_library(osm2go_lib STATIC
 	src/project_p.h
 	src/relation_edit.h
 	src/settings.h
-	src/statusbar.h
 	src/style.cpp
 	src/style.h
 	src/style_p.h
