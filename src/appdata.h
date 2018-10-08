@@ -34,7 +34,6 @@ class map_t;
 class osm_t;
 class presets_items;
 struct project_t;
-class statusbar_t;
 struct style_t;
 struct track_t;
 
@@ -44,7 +43,6 @@ struct appdata_t {
 
   static osm2go_platform::Widget *window;
 
-  const std::unique_ptr<statusbar_t> statusbar;
   const std::unique_ptr<MainUi> uicontrol;
 
   std::unique_ptr<project_t> project;

@@ -96,8 +96,9 @@ create_checkbox_item(const char *label)
 #endif
 }
 
-MainUiGtk::MainUiGtk(statusbar_t *s)
-  : MainUi(s)
+MainUiGtk::MainUiGtk()
+  : MainUi()
+  , statusbar(statusbar_t::create())
 #ifdef FREMANTLE
   , menubar(HILDON_APP_MENU(hildon_app_menu_new()))
 #else
@@ -136,6 +137,7 @@ void MainUiGtk::setActionEnable(menu_items item, bool en)
 
 void MainUi::showNotification(const char *message, unsigned int flags)
 {
+  statusbar_t *statusbar = static_cast<MainUiGtk *>(this)->statusBar();
   if (flags & Brief) {
     statusbar->banner_show_info(message);
   } else if (flags & Busy) {

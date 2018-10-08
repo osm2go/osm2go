@@ -9,7 +9,6 @@
 #include <josm_presets.h>
 #include <map.h>
 #include <project.h>
-#include <statusbar.h>
 #include <style.h>
 #include <uicontrol.h>
 

@@ -9,7 +9,6 @@
 #include <map.h>
 #include <misc.h>
 #include <project.h>
-#include <statusbar.h>
 #include <style.h>
 #include <uicontrol.h>
 

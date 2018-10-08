@@ -23,6 +23,7 @@
 #include <uicontrol.h>
 
 #include <array>
+#include <memory>
 #ifdef FREMANTLE
 #include <hildon/hildon-app-menu.h>
 typedef HildonAppMenu MenuBar;
@@ -32,17 +33,19 @@ typedef GtkMenuShell MenuBar;
 #endif
 
 #include <osm2go_cpp.h>
+#include <osm2go_stl.h>
 
 typedef struct _GtkWidget GtkWidget;
 
 class MainUiGtk : public MainUi {
   std::array<GtkWidget *, MainUi::MENU_ITEMS_COUNT> menuitems;
 
+  const std::unique_ptr<statusbar_t> statusbar;
   MenuBar * const menubar;
 
   GtkWidget *addMenu(GtkWidget *item);
 public:
-  MainUiGtk(statusbar_t *s);
+  MainUiGtk();
   virtual ~MainUiGtk() {}
 
   inline GtkWidget *menu_item(menu_items item)
@@ -64,6 +67,9 @@ public:
   GtkWidget *addMenu(menu_items item);
 
   static GtkWidget *createMenuItem(const char *label, const char *icon_name = nullptr) __attribute__((nonnull(1)));
+
+  inline statusbar_t *statusBar() const
+  { return statusbar.get(); }
 };
 
 #endif /* MAINUIGTK_H */

@@ -992,8 +992,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
 /********************* end of menu **********************/
 
 appdata_t::appdata_t(map_state_t &mstate)
-  : statusbar(statusbar_t::create())
-  , uicontrol(new MainUiGtk(statusbar.get()))
+  : uicontrol(new MainUiGtk())
   , project(nullptr)
   , iconbar(nullptr)
   , presets(nullptr)
@@ -1194,7 +1193,7 @@ static int application_run(const char *proj)
   gtk_box_pack_start(GTK_BOX(hbox), iconbar_t::create(appdata), FALSE, FALSE, 0);
   gtk_box_pack_start(GTK_BOX(vbox), appdata.map->canvas->widget, TRUE, TRUE, 0);
 
-  GtkWidget *sbar = osm2go_platform::statusBarWidget(appdata.statusbar.get());
+  GtkWidget *sbar = osm2go_platform::statusBarWidget(static_cast<MainUiGtk *>(appdata.uicontrol.get())->statusBar());
   /* fremantle has seperate zoom/details buttons on the right screen side */
 #ifndef FREMANTLE
   icon_button(appdata.map, "detailup_thumb",   G_CALLBACK(cb_menu_view_detail_inc), sbar);

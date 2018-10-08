@@ -10,7 +10,6 @@
 #include <pos.h>
 #include <project.h>
 #include <settings.h>
-#include <statusbar.h>
 #include <style.h>
 #include <uicontrol.h>
 
@@ -26,32 +25,13 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-class StatusBarDummy : public statusbar_t {
-public:
-  static const char *msg;
-
-  virtual void set(const char *, bool) override
-  { abort(); }
-
-  // Shows a brief info splash in a suitable way for the app environment being used
-  virtual void banner_show_info(const char *text) override
-  { msg = text; }
-
-  // Start, stop, and say "I'm still alive" to a busy message targetted at the
-  // app environment in use. This can be an animation for some builds, might be
-  // a static statusbar for others, a modal dialog for others.
-  virtual void banner_busy_start(const char *) override
-  { abort(); }
-  virtual void banner_busy_stop() override
-  { abort(); }
-};
-const char *StatusBarDummy::msg;
-
 class MainUiDummy : public MainUi {
 public:
-  MainUiDummy() : MainUi(new StatusBarDummy()) {}
+  MainUiDummy() : MainUi(), msg(nullptr) {}
   virtual void setActionEnable(menu_items, bool) override
   { abort(); }
+  virtual void showNotification(const char *message, unsigned int flags = NoFlags) override;
+  const char *msg;
 };
 
 appdata_t::appdata_t(map_state_t &mstate)
@@ -60,6 +40,13 @@ appdata_t::appdata_t(map_state_t &mstate)
   , map(nullptr)
   , icons(icon_t::instance())
 {
+}
+
+void MainUiDummy::showNotification(const char *message, unsigned int)
+{
+  assert(msg == nullptr);
+  printf("%s: %s", __PRETTY_FUNCTION__, message);
+  msg = message;
 }
 
 appdata_t::~appdata_t()
@@ -196,9 +183,9 @@ static void upload_none()
   appdata.project->osm->uploadPolicy = osm_t::Upload_Normal;
 
   // nothing to upload
-  assert(StatusBarDummy::msg == nullptr);
+  assert(static_cast<MainUiDummy *>(appdata.uicontrol.get())->msg == nullptr);
   osm_upload(appdata);
-  assert(StatusBarDummy::msg != nullptr);
+  assert(static_cast<MainUiDummy *>(appdata.uicontrol.get())->msg != nullptr);
 }
 
 int main(int argc, char **argv)

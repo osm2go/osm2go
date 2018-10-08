@@ -25,9 +25,8 @@ class trstring;
 
 class MainUi {
 protected:
-  MainUi(statusbar_t *s) : statusbar(s) {}
+  explicit inline MainUi() {}
 
-  statusbar_t * const statusbar;
 public:
   virtual ~MainUi() {}
 
@@ -70,7 +69,7 @@ public:
    *
    * message may be nullptr to clear the current message.
    */
-  void showNotification(const char *message, unsigned int flags = NoFlags);
+  virtual void showNotification(const char *message, unsigned int flags = NoFlags);
 
   /**
    * @overload
