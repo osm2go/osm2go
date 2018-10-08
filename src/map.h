@@ -196,7 +196,7 @@ public:
 
   void set_zoom(double zoom, bool update_scroll_offsets);
 
-  void detail_change(float detail, const char *banner_msg = nullptr);
+  void detail_change(float detail, const char *banner_msg);
   void detail_increase();
   void detail_decrease();
   void detail_normal();
