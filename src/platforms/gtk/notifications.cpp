@@ -67,7 +67,7 @@ void message_dlg(const char *title, const char *msg, GtkWidget *parent)
 
 void message_dlg(const char *title, const trstring &msg, GtkWidget *parent)
 {
-  vmessage(parent, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, title, msg.c_str());
+  vmessage(parent, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, title, static_cast<const gchar *>(msg));
 }
 
 void error_dlg(const char *msg, GtkWidget *parent)
@@ -77,7 +77,7 @@ void error_dlg(const char *msg, GtkWidget *parent)
 
 void error_dlg(const trstring &msg, GtkWidget *parent)
 {
-  vmessage(parent, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, _("Error"), msg.c_str());
+  vmessage(parent, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, _("Error"), static_cast<const gchar *>(msg));
 }
 
 void warning_dlg(const char *msg, GtkWidget *parent)
@@ -87,5 +87,5 @@ void warning_dlg(const char *msg, GtkWidget *parent)
 
 void warning_dlg(const trstring &msg, GtkWidget *parent)
 {
-  vmessage(parent, GTK_MESSAGE_WARNING, GTK_BUTTONS_CLOSE, _("Warning"), msg.c_str());
+  vmessage(parent, GTK_MESSAGE_WARNING, GTK_BUTTONS_CLOSE, _("Warning"), static_cast<const gchar *>(msg));
 }

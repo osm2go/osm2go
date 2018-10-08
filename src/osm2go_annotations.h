@@ -51,6 +51,8 @@
 #endif
 #endif
 
+class trstring;
+
 void __attribute__((format (printf, 4, 5))) __attribute__((noreturn)) ATTRIBUTE_COLD
 assert_msg_fmt(const char *file, const int line, const char *func, const char *fmt, ...);
 
@@ -111,6 +113,9 @@ public:
     if(unlikely(strcmp(a, b) != 0))
       fail(a, astr, b, bstr, file, func, line);
   }
+  // not inline, should happen only in test code
+  assert_cmpstr_struct(const trstring &a, const char *astr, const char *b, const char *file, const char *func, int line);
+  assert_cmpstr_struct(const trstring &a, const char *astr, const char *b, const char *bstr, const char *file, const char *func, int line);
 
 #if __cplusplus >= 201103L
   // catch if one passes a constant nullptr as second argument

@@ -287,13 +287,13 @@ bool osm2go_platform::yes_no(const char *title, const char *msg, unsigned int ag
 bool osm2go_platform::yes_no(const char *title, const trstring &msg, unsigned int again_flags,
                              osm2go_platform::Widget *parent)
 {
-  return yes_no(title, msg.c_str(), again_flags, parent);
+  return yes_no(title, static_cast<const gchar *>(msg), again_flags, parent);
 }
 
 bool osm2go_platform::yes_no(const trstring &title, const trstring &msg, unsigned int again_flags,
                              osm2go_platform::Widget *parent)
 {
-  return yes_no(title.c_str(), msg.c_str(), again_flags, parent);
+  return yes_no(static_cast<const gchar *>(title), static_cast<const gchar *>(msg), again_flags, parent);
 }
 
 const std::vector<dirguard> &osm2go_platform::base_paths()

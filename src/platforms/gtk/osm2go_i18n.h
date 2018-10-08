@@ -26,9 +26,11 @@
 
 #include <osm2go_stl.h>
 
+typedef char gchar;
+
 #define _(String) gettext(String)
 
-class trstring : public std::string {
+class trstring : private std::string {
   explicit inline trstring(const std::string &s) : std::string(s) {}
   std::string argn(const std::string &spattern, const std::string &a, std::string::size_type pos) const;
 public:
@@ -51,6 +53,19 @@ public:
   { return arg(static_cast<std::string>(a)); }
   template<typename T> inline trstring arg(T l) const
   { return arg(std::to_string(l)); }
+
+  std::string &toStdString() { return *this; }
+  const std::string &toStdString() const { return *this; }
+
+  inline bool isEmpty() const
+  { return empty(); }
+
+  // There is intentionally no c_str() here as it would too easily be used in generic code,
+  // instead there is a cast to a type that tells everyone "hey, this is glib specific".
+#if __cplusplus >= 201103L
+  explicit
+#endif
+  operator const gchar *() const { return c_str(); }
 };
 
 #endif // OSM2GO_I18N_H

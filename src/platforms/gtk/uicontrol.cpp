@@ -152,7 +152,7 @@ void MainUi::showNotification(const char *message, unsigned int flags)
 
 void MainUi::showNotification(const trstring &message, unsigned int flags)
 {
-  showNotification(message.c_str(), flags);
+  showNotification(static_cast<const gchar *>(message), flags);
 }
 
 GtkWidget *MainUiGtk::addMenu(GtkWidget *item)

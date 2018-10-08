@@ -577,7 +577,7 @@ void map_t::way_reverse() {
   if (n_tags_flipped != 0 && n_roles_flipped != 0) {
     msg = trstring("%1 & %2 updated").arg(tags).arg(rels);
   } else {
-    msg = trstring("%1 updated").arg(tags.empty() ? rels : tags);
+    msg = trstring("%1 updated").arg(tags.isEmpty() ? rels : tags);
   }
 
   appdata.uicontrol->showNotification(msg, MainUi::Brief);

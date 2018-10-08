@@ -30,6 +30,8 @@
 #include <iomanip>
 #include <iostream>
 
+#include <osm2go_i18n.h>
+
 void
 assert_msg_fmt(const char *file, const int line, const char *func, const char *fmt, ...)
 {
@@ -141,6 +143,18 @@ template<> assert_num_tpl<const float_t>::assert_num_tpl(float_t a, float_t b,
 {
   assert_num_tpl<pos_float_t>(a, b, amsg, opmsg, bmsg, file, func, line);
   abort();
+}
+
+assert_cmpstr_struct::assert_cmpstr_struct(const trstring &a, const char *astr, const char *b, const char *file, const char *func, int line)
+{
+  if(unlikely(a.toStdString() != b))
+    fail(static_cast<const gchar *>(a), astr, b, file, func, line);
+}
+
+assert_cmpstr_struct::assert_cmpstr_struct(const trstring &a, const char *astr, const char *b, const char *bstr, const char *file, const char *func, int line)
+{
+  if(unlikely(a.toStdString() != b))
+    fail(static_cast<const gchar *>(a), astr, b, bstr, file, func, line);
 }
 
 void assert_cmpstr_struct::fail(const char *a, const char *astr, const char *b, const char *file, const char *func, int line) {
