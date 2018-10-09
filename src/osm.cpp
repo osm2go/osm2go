@@ -1223,6 +1223,23 @@ bool way_t::is_closed() const noexcept {
   return node_chain.front() == node_chain.back();
 }
 
+bool way_t::is_area() const
+{
+  if(!is_closed())
+    return false;
+
+  const char *area = tags.get_value("area");
+  if(area != nullptr)
+    return strcmp(area, "yes") == 0;
+
+  // implicit areas
+  return tags.get_value("aeroway") != nullptr ||
+         tags.get_value("building") != nullptr ||
+         tags.get_value("landuse") != nullptr ||
+         tags.get_value("leisure") != nullptr ||
+         tags.get_value("natural") != nullptr;
+}
+
 struct relation_transfer {
   way_t * const dst;
   const way_t * const src;
@@ -1485,12 +1502,14 @@ std::string object_t::get_name(const osm_t &osm) const {
         typestr = nullptr;
       }
 
-      else if(!strcmp(highway, "pedestrian")) {
-        const char *area = obj->tags.get_value("area");
-        if(area != nullptr && strcmp(area, "yes") == 0)
-          typestr = _("pedestrian area");
-        else
-          typestr = _("pedestrian way");
+      else if(strcmp(highway, "pedestrian") == 0) {
+        if(likely(type == WAY)) {
+          if(way->is_area())
+            typestr = _("pedestrian area");
+          else
+            typestr = _("pedestrian way");
+        } else
+          typestr = highway;
       }
 
       else if(!strcmp(highway, "construction")) {

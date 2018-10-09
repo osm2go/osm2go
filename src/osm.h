@@ -607,6 +607,7 @@ public:
   void append_node(node_t *node);
   bool ends_with_node(const node_t *node) const noexcept;
   bool is_closed() const noexcept;
+  bool is_area() const;
 
   void reverse(osm_t::ref osm, unsigned int &tags_flipped, unsigned int &roles_flipped);
 

@@ -1481,7 +1481,16 @@ static void test_description()
   assert_cmpstr(o.get_name(*osm), _("pedestrian way"));
   tags.insert(osm_t::TagMap::value_type("area", "yes"));
   w->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm), _("pedestrian way"));
+  // needs to be a closed way to be considered an area
+  w->append_node(n);
+  node_t *n2 = osm->node_new(pos);
+  osm->node_attach(n2);
+  w->append_node(n2);
+  w->append_node(n);
   assert_cmpstr(o.get_name(*osm), _("pedestrian area"));
+  osm_node_chain_free(w->node_chain);
+  w->node_chain.clear();
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("highway", "construction"));
@@ -1513,6 +1522,23 @@ static void test_description()
   tags.insert(osm_t::TagMap::value_type("name", "Brook Hall"));
   w->tags.replace(tags);
   assert_cmpstr(o.get_name(*osm), "building: \"Brook Hall\"");
+
+  assert(!w->is_closed());
+  // unclosed ways are not considered an area
+  assert(!w->is_area());
+
+  w->append_node(n);
+  w->append_node(n2);
+  w->append_node(n);
+
+  assert(w->is_closed());
+  // there is no explicit area tag, but all buildings are considered areas
+  assert(w->is_area());
+
+  // ... unless explicitely specified otherwise
+  tags.insert(osm_t::TagMap::value_type("area", "no"));
+  w->tags.replace(tags);
+  assert(!w->is_area());
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("building", "residential"));
