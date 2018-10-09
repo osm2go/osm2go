@@ -791,30 +791,21 @@ void map_t::scroll_step(int x, int y) {
   map_limit_scroll(this, state.scroll_offset.x, state.scroll_offset.y);
 }
 
-bool map_t::item_is_selected_node(const map_item_t *map_item) const {
-  printf("check if item is a selected node\n");
-
-  if(map_item == nullptr) {
-    printf("  no item requested\n");
+bool map_t::item_is_selected_node(const map_item_t *map_item) const
+{
+  if(map_item == nullptr)
     return false;
-  }
 
   /* clicked the highlight directly */
-  if(map_item->object.type != object_t::NODE) {
-    printf("  didn't click node\n");
+  if(map_item->object.type != object_t::NODE)
     return false;
-  }
 
   if(selected.object.type == object_t::NODE) {
-    printf("  selected item is a node\n");
-
     return selected.object == map_item->object;
   } else if(selected.object.type == object_t::WAY) {
-    printf("  selected item is a way\n");
-
     return selected.object.way->contains_node(map_item->object.node);
   } else {
-    printf("  selected item is unknown (%s [%i])\n",
+    printf("%s: selected item is unknown (%s [%i])\n", __PRETTY_FUNCTION__,
            selected.object.type_string(), selected.object.type);
     return false;
   }
@@ -822,18 +813,13 @@ bool map_t::item_is_selected_node(const map_item_t *map_item) const {
 
 /* return true if the item given is the currenly selected way */
 /* also return false if nothing is selected or the selection is no way */
-bool map_t::item_is_selected_way(const map_item_t *map_item) const {
-  printf("check if item is the selected way\n");
-
-  if(map_item == nullptr) {
-    printf("  no item requested\n");
+bool map_t::item_is_selected_way(const map_item_t *map_item) const
+{
+  if(map_item == nullptr)
     return false;
-  }
 
-  if(selected.object.type != object_t::WAY) {
-    printf("  selected item is not a way\n");
+  if(selected.object.type != object_t::WAY)
     return false;
-  }
 
   return map_item->object == selected.object;
 }
