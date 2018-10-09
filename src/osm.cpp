@@ -124,6 +124,13 @@ static std::map<object_t::type_t, const char *> type_string_init()
 const char *object_t::type_string() const {
   static std::map<type_t, const char *> types = type_string_init();
 
+  if(type == WAY) {
+    if(!way->is_closed())
+      return "way";
+    else if(way->is_area())
+      return "area";
+  }
+
   const std::map<type_t, const char *>::const_iterator it = types.find(type);
 
   if(likely(it != types.end()))

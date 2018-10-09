@@ -1473,7 +1473,23 @@ static void test_description()
   osm->way_attach(w);
   o = w;
 
+  assert_cmpstr(o.get_name(*osm), "unspecified way");
+  w->append_node(n);
+  node_t *n2 = osm->node_new(pos);
+  tags.clear();
+  // prevent deletion of this node when the way count reaches 0
+  tags.insert(osm_t::TagMap::value_type("keep", "me"));
+  n2->tags.replace(tags);
+  osm->node_attach(n2);
+  w->append_node(n2);
+  w->append_node(n);
   assert_cmpstr(o.get_name(*osm), "unspecified way/area");
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("area", "yes"));
+  w->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm), "unspecified area");
+   osm_node_chain_free(w->node_chain);
+  w->node_chain.clear();
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("highway", "pedestrian"));
@@ -1484,8 +1500,6 @@ static void test_description()
   assert_cmpstr(o.get_name(*osm), _("pedestrian way"));
   // needs to be a closed way to be considered an area
   w->append_node(n);
-  node_t *n2 = osm->node_new(pos);
-  osm->node_attach(n2);
   w->append_node(n2);
   w->append_node(n);
   assert_cmpstr(o.get_name(*osm), _("pedestrian area"));
