@@ -385,10 +385,10 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
   /* --------- project structure ok: load its OSM file --------- */
 
   printf("project_open: loading osm %s\n", project->osmFile.c_str());
-  project->parse_osm();
+  bool b = project->parse_osm();
   std::swap(appdata.project, project);
 
-  return static_cast<bool>(appdata.project->osm);
+  return b;
 }
 
 static bool project_load_inner(appdata_t &appdata, const std::string &name) {
@@ -470,8 +470,9 @@ bool project_load(appdata_t &appdata, const std::string &name) {
   return ret;
 }
 
-void project_t::parse_osm() {
+bool project_t::parse_osm() {
   osm.reset(osm_t::parse(path, osmFile));
+  return static_cast<bool>(osm);
 }
 
 project_t::project_t(map_state_t &ms, const std::string &n, const std::string &base_path)

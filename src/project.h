@@ -71,7 +71,11 @@ struct project_t {
 
   std::unique_ptr<osm_t> osm;          ///< the OSM data
 
-  void parse_osm();
+  /**
+   * @brief parse the OSM data file
+   * @returns if the loading was successful
+   */
+  bool parse_osm();
 
   /**
    * @brief save the current project to disk

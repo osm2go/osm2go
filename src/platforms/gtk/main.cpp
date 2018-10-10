@@ -207,9 +207,10 @@ cb_menu_download(appdata_t *appdata) {
       appdata->map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
 
     appdata->uicontrol->showNotification(_("Drawing"), MainUi::Busy);
-    appdata->project->parse_osm();
-    diff_restore(appdata->project.get(), appdata->uicontrol.get());
-    appdata->map->paint();
+    if(appdata->project->parse_osm()) {
+      diff_restore(appdata->project.get(), appdata->uicontrol.get());
+      appdata->map->paint();
+    }
     appdata->uicontrol->showNotification(nullptr, MainUi::Busy);
   }
 
@@ -312,7 +313,8 @@ cb_menu_undo_changes(appdata_t *appdata) {
   appdata->map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
 
   project->diff_remove_file();
-  project->parse_osm();
+  bool b = project->parse_osm();
+  assert(b); // data has been opened before
   appdata->map->paint();
 
   appdata->uicontrol->showNotification(_("Undo all changes"), MainUi::Brief);

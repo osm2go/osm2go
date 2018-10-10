@@ -146,12 +146,13 @@ int main(int argc, char **argv)
   project_t project(dummystate, argv[2], osm_path);
   project.osmFile = argv[2] + std::string(".osm");
 
-  project.parse_osm();
-  osm_t::ref osm = project.osm;
-  if(!osm) {
+  bool b = project.parse_osm();
+  if(!b) {
     std::cerr << "cannot open " << argv[1] << argv[2] << ": " << strerror(errno) << std::endl;
     return 1;
   }
+  osm_t::ref osm = project.osm;
+  assert(osm);
 
   assert_cmpnum(osm->uploadPolicy, osm_t::Upload_Blocked);
   assert_null(osm->sanity_check());
@@ -237,7 +238,8 @@ int main(int argc, char **argv)
     const std::string origosmpath = project.path + project.osmFile;
     symlink(origosmpath.c_str(), osmpath.c_str());
     sproject.osmFile = project.osmFile;
-    sproject.parse_osm();
+    bool pvalid = sproject.parse_osm();
+    assert(pvalid);
     assert(sproject.osm);
 
     flags = sproject.diff_restore();

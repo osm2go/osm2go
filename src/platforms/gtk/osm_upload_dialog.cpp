@@ -373,11 +373,14 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
       appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
 
       context.append_str(_("Loading OSM ...\n"));
-      project->parse_osm();
-      context.append_str(_("Applying diff ...\n"));
-      diff_restore(project.get(), appdata.uicontrol.get());
-      context.append_str(_("Painting ...\n"));
-      appdata.map->paint();
+      if(project->parse_osm()) {
+        context.append_str(_("Applying diff ...\n"));
+        diff_restore(project.get(), appdata.uicontrol.get());
+        context.append_str(_("Painting ...\n"));
+        appdata.map->paint();
+      } else {
+        context.append_str(_("OSM data is empty\n"), COLOR_ERR);
+      }
       context.append_str(_("Done!\n"));
     }
   }

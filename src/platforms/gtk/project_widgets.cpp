@@ -433,9 +433,10 @@ static void on_project_edit(select_context_t *context) {
         }
 
         /* and load the (hopefully) new file */
-        cur->parse_osm();
-        diff_restore(appdata.project.get(), appdata.uicontrol.get());
-        appdata.map->paint();
+        if(cur->parse_osm()) {
+          diff_restore(appdata.project.get(), appdata.uicontrol.get());
+          appdata.map->paint();
+        }
 
         appdata.main_ui_enable();
       }
@@ -712,8 +713,8 @@ static void on_diff_remove_clicked(project_context_t *context) {
 
       /* just reload the map */
       appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
-      appdata.project->parse_osm();
-      appdata.map->paint();
+      if(appdata.project->parse_osm())
+        appdata.map->paint();
     }
 
     /* update button/label state */
