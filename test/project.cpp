@@ -86,6 +86,36 @@ static void testSave(const std::string &tmpdir, const char *empty_proj)
   assert_cmpnum(rmdir(project.path.c_str()), 0);
 }
 
+static void testNoData(const std::string &tmpdir)
+{
+  map_state_t dummystate;
+  std::unique_ptr<project_t> project(new project_t(dummystate, proj_name, tmpdir));
+
+  assert(project->save());
+
+  const std::string &pfile = project_filename(*project);
+  project_read(pfile, project, project->server(std::string()), -1);
+
+  const std::string &ofile = project->osmFile;
+
+  int osmfd = openat(project->dirfd, ofile.c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0644);
+  assert_cmpnum_op(osmfd, >=, 0);
+
+  bool b = project->parse_osm();
+  assert(!b);
+
+  const char *not_gzip = "<?xml version='1.0' encoding='UTF-8'?>\n<osm/>";
+  write(osmfd, not_gzip, strlen(not_gzip));
+  close(osmfd);
+
+  b = project->parse_osm();
+  assert(!b);
+
+  assert_cmpnum(unlinkat(project->dirfd, ofile.c_str(), 0), 0);
+  assert_cmpnum(unlink(pfile.c_str()), 0);
+  assert_cmpnum(rmdir(project->path.c_str()), 0);
+}
+
 int main(int argc, char **argv)
 {
   xmlInitParser();
@@ -105,6 +135,7 @@ int main(int argc, char **argv)
 
   testNoFiles(osm_path);
   testSave(osm_path, argv[1]);
+  testNoData(osm_path);
 
   assert_cmpnum(rmdir(tmpdir), 0);
 

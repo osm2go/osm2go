@@ -535,7 +535,8 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
     }
   }
 
-  assert_unreachable();
+  // no end tag for </osm> found in file, so assume it's invalid
+  return nullptr;
 }
 
 struct relation_ref_functor {
