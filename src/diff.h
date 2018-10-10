@@ -21,6 +21,7 @@
 #define DIFF_H
 
 #include "osm.h"
+#include "project.h"
 
 #include <libxml/tree.h>
 
@@ -38,7 +39,7 @@ enum diff_restore_results {
   DIFF_HAS_HIDDEN = (1 << 5), ///< some of the object have the hidden flag set
 };
 
-void diff_restore(project_t *project, MainUi *uicontrol);
+void diff_restore(project_t::ref project, MainUi *uicontrol);
 
 /**
  * @brief create an empty osmChange document

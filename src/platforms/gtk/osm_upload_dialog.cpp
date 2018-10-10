@@ -375,7 +375,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
       context.append_str(_("Loading OSM ...\n"));
       if(project->parse_osm()) {
         context.append_str(_("Applying diff ...\n"));
-        diff_restore(project.get(), appdata.uicontrol.get());
+        diff_restore(project, appdata.uicontrol.get());
         context.append_str(_("Painting ...\n"));
         appdata.map->paint();
       } else {

@@ -427,7 +427,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
   if(unlikely(appdata_t::window == nullptr))
     return false;
 
-  diff_restore(appdata.project.get(), appdata.uicontrol.get());
+  diff_restore(appdata.project, appdata.uicontrol.get());
 
   /* prepare colors etc, draw data and adjust scroll/zoom settings */
   osm2go_platform::process_events();

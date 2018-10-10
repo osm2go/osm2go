@@ -208,7 +208,7 @@ cb_menu_download(appdata_t *appdata) {
 
     appdata->uicontrol->showNotification(_("Drawing"), MainUi::Busy);
     if(appdata->project->parse_osm()) {
-      diff_restore(appdata->project.get(), appdata->uicontrol.get());
+      diff_restore(appdata->project, appdata->uicontrol.get());
       appdata->map->paint();
     }
     appdata->uicontrol->showNotification(nullptr, MainUi::Busy);

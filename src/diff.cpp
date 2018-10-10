@@ -567,10 +567,8 @@ unsigned int project_t::diff_restore() {
   return res;
 }
 
-void diff_restore(project_t *project, MainUi *uicontrol) {
-  if(unlikely(!project->osm))
-    return;
-
+void diff_restore(project_t::ref project, MainUi *uicontrol) {
+  assert(project->osm);
   unsigned int flags = project->diff_restore();
   if(flags & DIFF_HAS_HIDDEN) {
     printf("hidden flags have been restored, enable show_add menu\n");
