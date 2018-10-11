@@ -296,6 +296,9 @@ namespace std {
   std::string to_string(float);
   std::string to_string(double);
   std::string to_string(long double);
+
+  template<typename T>
+  inline T &move(T &a) { return a; }
 }
 #endif
 

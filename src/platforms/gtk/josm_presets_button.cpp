@@ -80,26 +80,28 @@ static void attach_right(preset_attach_context &attctx, const char *text, GtkWid
  * @param value the new value
  */
 static bool store_value(const presets_element_t *widget, osm_t::TagMap &tags,
-                        const std::string &value) {
-  bool changed = false;
+                        std::string value)
+{
+  bool changed;
   osm_t::TagMap::iterator ctag = tags.find(widget->key);
   if(!value.empty()) {
     if(ctag != tags.end()) {
       /* only update if the value actually changed */
-      if(ctag->second != value) {
-        ctag->second = value;
-        changed = true;
-      }
+      changed = ctag->second != value;
+      if(changed)
+        ctag->second.swap(value);
     } else {
-      tags.insert(osm_t::TagMap::value_type(widget->key, value));
+      tags.insert(osm_t::TagMap::value_type(widget->key, std::move(value)));
       changed = true;
     }
   } else if (ctag != tags.end()) {
     g_debug("removed key = %s, value = %s", widget->key.c_str(), ctag->second.c_str());
     tags.erase(ctag);
     changed = true;
-  } else
+  } else {
     g_debug("ignore empty key = %s", widget->key.c_str());
+    changed = false;
+  }
 
   return changed;
 }
@@ -227,7 +229,6 @@ void get_widget_functor::operator()(const presets_element_t* w)
 {
   const WidgetMap::const_iterator hint = gtk_widgets.find(w);
   WidgetMap::mapped_type akey = hint != hintEnd ? hint->second : nullptr;
-  std::string text;
 
   switch(w->type) {
   case WIDGET_TYPE_KEY:
@@ -235,8 +236,8 @@ void get_widget_functor::operator()(const presets_element_t* w)
   case WIDGET_TYPE_COMBO:
   case WIDGET_TYPE_MULTISELECT:
   case WIDGET_TYPE_TEXT:
-    text = w->getValue(akey);
-    break;
+    changed |= store_value(w, tags, w->getValue(akey));
+    return;
 
   case WIDGET_TYPE_REFERENCE: {
     const presets_element_reference * const r = static_cast<const presets_element_reference *>(w);
@@ -247,8 +248,6 @@ void get_widget_functor::operator()(const presets_element_t* w)
   default:
     return;
   }
-
-  changed |= store_value(w, tags, text);
 }
 
 static void presets_item_dialog(const presets_item *item) {
