@@ -39,15 +39,14 @@ struct map_highlight_t {
 
   void clear();
 
-  canvas_item_t *circle_new(map_t *map, canvas_group_t group, map_item_t *map_item,
-                            int x, int y, unsigned int radius, color_t color);
+  void circle_new(map_t *map, canvas_group_t group, map_item_t *map_item,
+                  int x, int y, unsigned int radius, color_t color);
 
-  canvas_item_t *polyline_new(map_t *map, canvas_group_t group, map_item_t *map_item,
-                              const std::vector<lpos_t> &points, unsigned int width,
-                              color_t color);
+  void polyline_new(map_t *map, canvas_group_t group, map_item_t *map_item,
+                    const std::vector<lpos_t> &points, unsigned int width, color_t color);
 
-  canvas_item_t *polygon_new(map_t *map, canvas_group_t group, map_item_t *map_item,
-                             const std::vector<lpos_t> &points, color_t color);
+  void polygon_new(map_t *map, canvas_group_t group, map_item_t *map_item,
+                   const std::vector<lpos_t> &points, color_t color);
 
 };
 
