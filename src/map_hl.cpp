@@ -78,7 +78,7 @@ void map_highlight_t::circle_new(map_t *map, canvas_group_t group,
   map_item->item = map->canvas->circle_new(group, x, y, radius, 0, color);
   items.push_back(map_item->item);
 
-  map_item->item->set_user_data(map_item, map_item_t::free);
+  map_item->item->set_user_data(map_item);
 }
 
 void map_highlight_t::polygon_new(map_t *map, canvas_group_t group, map_item_t *map_item,
@@ -86,7 +86,7 @@ void map_highlight_t::polygon_new(map_t *map, canvas_group_t group, map_item_t *
   map_item->item = map->canvas->polygon_new(group, points, 0, 0, color);
   items.push_back(map_item->item);
 
-  map_item->item->set_user_data(map_item, map_item_t::free);
+  map_item->item->set_user_data(map_item);
 }
 
 void map_highlight_t::polyline_new(map_t *map, canvas_group_t group, map_item_t *map_item,
@@ -95,5 +95,5 @@ void map_highlight_t::polyline_new(map_t *map, canvas_group_t group, map_item_t 
   map_item->item = map->canvas->polyline_new(group, points, width, color);
   items.push_back(map_item->item);
 
-  map_item->item->set_user_data(map_item, map_item_t::free);
+  map_item->item->set_user_data(map_item);
 }
