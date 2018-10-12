@@ -409,11 +409,9 @@ static map_item_t *map_way_new(map_t *map, canvas_group_t group,
 
   if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
     if(map->style->area.color & 0xff)
-      map_item->item = map->canvas->polygon_new(group, points,
-					  width, color, fill_color);
+      map_item->item = map->canvas->polygon_new(group, points, width, color, fill_color);
     else
-      map_item->item = map->canvas->polyline_new(group, points,
-					   width, color);
+      map_item->item = map->canvas->polyline_new(group, points, width, color);
   } else {
     map_item->item = map->canvas->polyline_new(group, points, width, color);
   }
