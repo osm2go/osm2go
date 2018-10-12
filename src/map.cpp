@@ -408,7 +408,7 @@ static map_item_t *map_way_new(map_t *map, canvas_group_t group,
   map_item_t *map_item = new map_item_t(object_t(way));
 
   if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
-    if(map->style->area.color & 0xff)
+    if(!map->style->area.color.is_transparent())
       map_item->item = map->canvas->polygon_new(group, points, width, color, fill_color);
     else
       map_item->item = map->canvas->polyline_new(group, points, width, color);
@@ -584,7 +584,7 @@ static void map_frisket_draw(map_t *map, const bounds_t &bounds) {
   std::vector<lpos_t> points(5);
 
   /* don't draw frisket at all if it's completely transparent */
-  if(map->style->frisket.color & 0xff) {
+  if(!map->style->frisket.color.is_transparent()) {
     color_t color = map->style->frisket.color;
 
     /* top rectangle */

@@ -40,6 +40,9 @@ public:
   inline color_t() = default;
   inline color_t(const color_t &other) = default;
   inline color_t &operator=(const color_t &other) = default;
+
+  // this usually just means "is_transparent()"
+  template<typename T> bool operator&(T) = delete;
 #else
   inline color_t() {}
   inline color_t(const color_t &other) : value(other.value) {}
@@ -49,6 +52,8 @@ public:
 
   inline uint32_t rgba() const noexcept { return value; }
   inline unsigned int rgb() const noexcept { return value >> 8; }
+
+  inline bool is_transparent() const noexcept { return (value & 0xff) == 0; }
 
   static inline color_t transparent() noexcept
   {
