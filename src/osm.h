@@ -373,7 +373,9 @@ public:
 xmlChar *osm_generate_xml_changeset(const std::string &comment, const std::string &src);
 
 class tag_t {
-  tag_t() {}
+  tag_t() O2G_DELETED_FUNCTION;
+  inline explicit tag_t(const char *k, const char *v, bool)
+    : key(k), value(v) {}
 public:
   const char *key, *value;
   tag_t(const char *k, const char *v);
@@ -383,10 +385,7 @@ public:
    */
   static inline tag_t uncached(const char *k, const char *v)
   {
-    tag_t r;
-    r.key = k;
-    r.value = v;
-    return r;
+    return tag_t(k, v, true);
   }
 
   bool is_creator_tag() const noexcept;
