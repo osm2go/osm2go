@@ -244,8 +244,11 @@ template<typename T> void shrink_to_fit(T &v) {
 #if __cplusplus >= 201103L
   v.shrink_to_fit();
 #else
-  T tmp;
-  tmp.resize(v.size());
+  // resize(size()) would only shrink to the next power of 2
+  size_t sz = v.size();
+  if(v.capacity() == sz)
+    return;
+  T tmp(sz);
   tmp = v;
   tmp.swap(v);
 #endif
