@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Rolf Eike Beer <eike@sf-mail.de>.
+ * Copyright (C) 2017-2018 Rolf Eike Beer <eike@sf-mail.de>.
  *
  * This file is part of OSM2Go.
  *
@@ -255,50 +255,57 @@ template<typename T> void shrink_to_fit(T &v) {
 }
 
 #if __cplusplus < 201103L
+#include <type_traits>
 namespace std {
+  template<typename T, bool = std::is_integral<T>::value>
+  struct to_string_tpl;
+
   template<typename T>
-  std::string to_string_tpl(T n, const char *fmt)
+  struct to_string_tpl<T, true> {
+    to_string_tpl() {}
+    std::string operator()(T n, const char *fmt)
+    {
+      char buf[sizeof(n) * 4];
+      snprintf(buf, sizeof(buf), fmt, n);
+      return buf;
+    }
+  };
+
+  template<typename T>
+  std::string to_string(T n)
   {
-    char buf[sizeof(n) * 4];
-    snprintf(buf, sizeof(buf), fmt, n);
-    return buf;
+    return to_string_tpl<T>()(n, "");
   }
 
-  inline std::string to_string(int n)
+  template<> inline std::string to_string(int n)
   {
-    return to_string_tpl(n, "%i");
+    return to_string_tpl<int>()(n, "%i");
   }
 
-  inline std::string to_string(long n)
+  template<> inline std::string to_string(long n)
   {
-    return to_string_tpl(n, "%li");
+    return to_string_tpl<long>()(n, "%li");
   }
 
-  inline std::string to_string(long long n)
+  template<> inline std::string to_string(long long n)
   {
-    return to_string_tpl(n, "%lli");
+    return to_string_tpl<long long>()(n, "%lli");
   }
 
-  inline std::string to_string(unsigned int n)
+  template<> inline std::string to_string(unsigned int n)
   {
-    return to_string_tpl(n, "%u");
+    return to_string_tpl<unsigned int>()(n, "%u");
   }
 
-  inline std::string to_string(unsigned long n)
+  template<> inline std::string to_string(unsigned long n)
   {
-    return to_string_tpl(n, "%lu");
+    return to_string_tpl<unsigned long>()(n, "%lu");
   }
 
-  inline std::string to_string(unsigned long long n)
+  template<> inline std::string to_string(unsigned long long n)
   {
-    return to_string_tpl(n, "%llu");
+    return to_string_tpl<unsigned long long>()(n, "%llu");
   }
-
-  // not implemented, just to catch accidential conversions
-  // the implementation would be trivial, but not local-safe
-  std::string to_string(float);
-  std::string to_string(double);
-  std::string to_string(long double);
 
   template<typename T>
   inline T &move(T &a) { return a; }
