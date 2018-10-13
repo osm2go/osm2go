@@ -440,10 +440,13 @@ public:
    * @brief replace the current tags with the given ones
    * @param ntags array of new tags
    *
-   * The old values will be freed, this object takes ownership of the values
-   * in ntags.
+   * The contents of ntags are undefined afterwards for C++98.
    */
+#if __cplusplus < 201103L
   void replace(std::vector<tag_t> &ntags);
+#else
+  void replace(std::vector<tag_t> &&ntags);
+#endif
 
   /**
    * @brief replace the current tags with the given ones

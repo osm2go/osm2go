@@ -1636,20 +1636,44 @@ void tag_list_t::clear()
   contents = nullptr;
 }
 
-void tag_list_t::replace(std::vector<tag_t> &ntags)
+#if __cplusplus < 201103L
+// workaround for the fact that the default constructor is unavailable
+template<> inline void shrink_to_fit(std::vector<tag_t> &v)
 {
-  clear();
-  if(ntags.empty())
+  size_t sz = v.size();
+  if(v.capacity() == sz)
     return;
+  std::vector<tag_t> tmp(sz, tag_t::uncached(nullptr, nullptr));
+  tmp = v;
+  tmp.swap(v);
+}
 
-#if __cplusplus >= 201103L
-  contents = new std::vector<tag_t>(std::move(ntags));
-  contents->shrink_to_fit();
+void tag_list_t::replace(std::vector<tag_t> &ntags)
 #else
-  contents = new std::vector<tag_t>();
-  contents->reserve(ntags.size());
-  contents->swap(ntags);
+void tag_list_t::replace(std::vector<tag_t> &&ntags)
 #endif
+{
+  if(ntags.empty()) {
+    clear();
+    return;
+  }
+
+  if(contents == nullptr) {
+#if __cplusplus >= 201103L
+    contents = new std::vector<tag_t>(std::move(ntags));
+#else
+    contents = new std::vector<tag_t>(ntags.size(), tag_t::uncached(nullptr, nullptr));
+    contents->swap(ntags);
+#endif
+  } else {
+#if __cplusplus >= 201103L
+    *contents = std::move(ntags);
+#else
+    contents->swap(ntags);
+#endif
+  }
+
+  shrink_to_fit(*contents);
 }
 
 struct tag_fill_functor {

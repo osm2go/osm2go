@@ -69,7 +69,7 @@ static void test_trivial() {
   tag_t cr_by("created_by", "test");
   assert(cr_by.is_creator_tag());
   std::vector<tag_t> ntags(1, cr_by);
-  tags.replace(ntags);
+  tags.replace(std::move(ntags));
   assert(!tags.hasRealTags());
   assert(!tags.hasTagCollisions());
 
@@ -137,9 +137,8 @@ static void test_taglist() {
   ntags.push_back(tag_t("a", "aa"));
   ntags.push_back(tag_t("b", "bb"));
 
-  tags.replace(ntags);
+  tags.replace(std::move(ntags));
 
-  assert(ntags.empty());
   assert(tags.get_value("a") != nullptr);
   assert_cmpstr(tags.get_value("a"), "aa");
   assert(tags.get_value("b") != nullptr);
@@ -202,7 +201,7 @@ static void test_taglist() {
 
   // check identity with permutations
   ntags = ab_with_creator();
-  tags.replace(ntags);
+  tags.replace(std::move(ntags));
   ntags = ab_with_creator();
   assert(tags == ntags);
   std::rotate(ntags.begin(), ntags.begin() + 1, ntags.end());
@@ -237,8 +236,16 @@ static void test_taglist() {
 
   ntags.push_back(tag_t("one", "1"));
   assert(tags != ntags);
-  tags.replace(ntags);
+  tags.replace(std::move(ntags));
+#if __cplusplus < 201103L
+  ntags.clear();
+#else
+  assert_cmpnum(ntags.size(), 0);
+#endif
   ntags.push_back(tag_t("one", "1"));
+  assert(tags == ntags);
+  ntags.clear();
+  ntags.push_back(tag_t::uncached("one", "1"));
   assert(tags == ntags);
   assert(virgin != tags.asMap());
 }
@@ -288,7 +295,7 @@ static void test_replace() {
   std::vector<tag_t> ntags;
   ntags.push_back(tag_t("created_by", "foo"));
   ntags.push_back(tag_t("a", "A"));
-  node.tags.replace(ntags);
+  node.tags.replace(std::move(ntags));
 
   assert_cmpnum(node.flags, 0);
   assert(!node.tags.empty());
@@ -322,7 +329,7 @@ static void test_split()
   otags.push_back(tag_t("f", "g"));
   const size_t ocnt = otags.size();
 
-  w->tags.replace(otags);
+  w->tags.replace(std::move(otags));
   v->tags.replace(w->tags.asMap());
 
   o->way_attach(v);

@@ -360,7 +360,7 @@ static void process_node(xmlTextReaderPtr reader, osm_t::ref osm) {
 
     ret = xmlTextReaderRead(reader);
   }
-  node->tags.replace(tags);
+  node->tags.replace(std::move(tags));
 }
 
 static node_t *process_nd(xmlTextReaderPtr reader, osm_t::ref osm) {
@@ -404,7 +404,7 @@ static void process_way(xmlTextReaderPtr reader, osm_t::ref osm) {
     }
     ret = xmlTextReaderRead(reader);
   }
-  way->tags.replace(tags);
+  way->tags.replace(std::move(tags));
 }
 
 static bool process_member(xmlTextReaderPtr reader, osm_t::ref osm, std::vector<member_t> &members) {
@@ -450,7 +450,7 @@ static void process_relation(xmlTextReaderPtr reader, osm_t::ref osm) {
     }
     ret = xmlTextReaderRead(reader);
   }
-  relation->tags.replace(tags);
+  relation->tags.replace(std::move(tags));
 }
 
 static osm_t::UploadPolicy parseUploadPolicy(const char *str) {
