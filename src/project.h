@@ -90,6 +90,12 @@ struct project_t {
   bool check_demo(osm2go_platform::Widget *parent = nullptr) const;
 
   /**
+   * @brief check if OSM data is present for the given project
+   * @return if OSM data file was found
+   */
+  bool osm_file_exists() const noexcept;
+
+  /**
    * @brief remove the file with the changes
    *
    * Does not affect the loaded data.

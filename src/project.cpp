@@ -352,6 +352,12 @@ bool project_t::check_demo(osm2go_platform::Widget *parent) const {
   return isDemo;
 }
 
+bool project_t::osm_file_exists() const noexcept
+{
+  struct stat st;
+  return fstatat(dirfd, osmFile.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode);
+}
+
 static bool project_open(appdata_t &appdata, const std::string &name) {
   std::unique_ptr<project_t> project;
   std::string project_file;

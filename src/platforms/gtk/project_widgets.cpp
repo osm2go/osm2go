@@ -147,23 +147,11 @@ enum {
   PROJECT_NUM_COLS
 };
 
-/**
- * @brief check if OSM data is present for the given project
- * @param project the project to check
- * @return if OSM data file was found
- */
-static bool osm_file_exists(const project_t *project) {
-  if(project == nullptr)
-    return false;
-  struct stat st;
-  return fstatat(project->dirfd, project->osmFile.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode);
-}
-
-static void view_selected(GtkWidget *dialog, project_t *project) {
+static void view_selected(GtkWidget *dialog, const project_t *project)
+{
   /* check if the selected project also has a valid osm file */
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
-                                    GTK_RESPONSE_ACCEPT,
-                                    osm_file_exists(project) ? TRUE : FALSE);
+  gboolean has_osm = (project != nullptr && project->osm_file_exists()) ? TRUE : FALSE;
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT, has_osm);
 }
 
 static void
@@ -340,7 +328,7 @@ project_get_status_icon_stock_id(project_t::ref current,
   /* is this the currently open project? */
   if(current && current->name == project->name)
     return GTK_STOCK_OPEN;
-  else if(!osm_file_exists(project))
+  else if(!project->osm_file_exists())
     return GTK_STOCK_DIALOG_WARNING;
   else if(project->diff_file_present())
     return GTK_STOCK_PROPERTIES;
@@ -453,7 +441,8 @@ project_update_all_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter
   project_t *prj = nullptr;
   gtk_tree_model_get(model, iter, PROJECT_COL_DATA, &prj, -1);
   /* if the project was already downloaded do it again */
-  if(osm_file_exists(prj)) {
+  assert(prj != nullptr);
+  if(prj->osm_file_exists()) {
     g_debug("found %s to update", prj->name.c_str());
     if (!osm_download(GTK_WIDGET(data), prj))
       return TRUE;
@@ -820,7 +809,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
   /* disable "ok" if there's no valid file downloaded */
   if(is_new)
     gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_ACCEPT,
-                                      osm_file_exists(project) ? TRUE : FALSE);
+                                      project->osm_file_exists() ? TRUE : FALSE);
 
   gtk_widget_show_all(dialog.get());
 
