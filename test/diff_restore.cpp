@@ -209,15 +209,17 @@ int main(int argc, char **argv)
     mkdir(bpath.c_str(), 0755);
     bpath.erase(bpath.rfind('/') + 1);
     // and create a new project from that
-    project_t sproject(dummystate, argv[2], bpath);
+    std::unique_ptr<project_t> sproject(new project_t(dummystate, argv[2], bpath));
     // CAUTION: osm is shared between the projects now
-    sproject.osm.reset(osm.get());
+    sproject->osm.reset(osm.get());
 
     // the directory is empty, there can't be any diff
-    flags = sproject.diff_restore();
+    flags = sproject->diff_restore();
     assert_cmpnum(flags, DIFF_NONE_PRESENT);
+    // should not do anything bad
+    diff_restore(sproject, nullptr);
 
-    sproject.diff_save();
+    sproject->diff_save();
     bpath += argv[2];
     std::string bdiff = bpath;
     std::string no_diff = bpath;
@@ -227,27 +229,27 @@ int main(int argc, char **argv)
     bpath += "diff";
 
     bdiff += "/backup.diff";
-    assert(sproject.diff_file_present());
+    assert(sproject->diff_file_present());
     assert_cmpnum(rename(bpath.c_str(), bdiff.c_str()), 0);
     // having backup.diff should still count as being present
-    assert(sproject.diff_file_present());
+    assert(sproject->diff_file_present());
     no_diff += "/no.diff";
     assert_cmpnum(rename(bdiff.c_str(), no_diff.c_str()), 0);
-    assert(!sproject.diff_file_present());
+    assert(!sproject->diff_file_present());
 
     // saving without OSM data should just do nothing
-    sproject.osm.release();
+    sproject->osm.release();
     // CAUTION: end of sharing
-    sproject.diff_save();
-    assert(!sproject.diff_file_present());
+    sproject->diff_save();
+    assert(!sproject->diff_file_present());
 
     // put the OSM data into this directory
     const std::string origosmpath = project.path + project.osmFile;
     symlink(origosmpath.c_str(), osmpath.c_str());
-    sproject.osmFile = project.osmFile;
-    bool pvalid = sproject.parse_osm();
+    sproject->osmFile = project.osmFile;
+    bool pvalid = sproject->parse_osm();
     assert(pvalid);
-    assert(sproject.osm);
+    assert(sproject->osm);
 
     // now create a diff file dummy
     fdguard fd(open(bpath.c_str(), O_CREAT | O_WRONLY | O_CLOEXEC, 0600));
@@ -256,12 +258,12 @@ int main(int argc, char **argv)
       fdguard none(-1);
       none.swap(fd);
     }
-    assert(sproject.diff_file_present());
-    sproject.diff_save();
-    assert(!sproject.diff_file_present());
+    assert(sproject->diff_file_present());
+    sproject->diff_save();
+    assert(!sproject->diff_file_present());
 
     assert_cmpnum(rename(no_diff.c_str(), bdiff.c_str()), 0);
-    flags = sproject.diff_restore();
+    flags = sproject->diff_restore();
     assert_cmpnum(flags, DIFF_RESTORED | DIFF_HAS_HIDDEN);
 
     verify_diff(osm);
