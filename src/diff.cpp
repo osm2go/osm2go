@@ -493,24 +493,34 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t::ref osm) {
   }
 }
 
-unsigned int project_t::diff_restore() {
+static std::string project_diff_name(const project_t *project)
+{
   struct stat st;
 
   /* first try to open a backup which is only present if saving the */
   /* actual diff didn't succeed */
   const char *backupfn = "backup.diff";
   std::string diff_name;
-  if(unlikely(fstatat(dirfd, backupfn, &st, 0) == 0 && S_ISREG(st.st_mode))) {
-    printf("diff backup present, loading it instead of real diff ...\n");
+  if(unlikely(fstatat(project->dirfd, backupfn, &st, 0) == 0 && S_ISREG(st.st_mode))) {
     diff_name = backupfn;
   } else {
-    diff_name = diff_filename(this);
+    diff_name = diff_filename(project);
 
-    if(fstatat(dirfd, diff_name.c_str(), &st, 0) != 0 || !S_ISREG(st.st_mode)) {
-      printf("no diff present!\n");
-      return DIFF_NONE_PRESENT;
-    }
-    printf("diff found, applying ...\n");
+    if(fstatat(project->dirfd, diff_name.c_str(), &st, 0) != 0 || !S_ISREG(st.st_mode))
+      diff_name.clear();
+  }
+
+  return diff_name;
+}
+
+unsigned int project_t::diff_restore()
+{
+  const std::string &diff_name = project_diff_name(this);
+  if(diff_name.empty()) {
+    printf("no diff present!\n");
+    return DIFF_NONE_PRESENT;
+  } else {
+    printf("diff %s found, applying ...\n", diff_name.c_str());
   }
 
   fdguard difffd(dirfd, diff_name.c_str(), O_RDONLY);
