@@ -11,6 +11,7 @@
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
+#include <fcntl.h>
 #include <iostream>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -219,6 +220,7 @@ int main(int argc, char **argv)
     sproject.diff_save();
     bpath += argv[2];
     std::string bdiff = bpath;
+    std::string no_diff = bpath;
     bpath += '/';
     bpath += argv[2];
     bpath += '.';
@@ -226,8 +228,13 @@ int main(int argc, char **argv)
 
     bdiff += "/backup.diff";
     assert(sproject.diff_file_present());
-    rename(bpath.c_str(), bdiff.c_str());
+    assert_cmpnum(rename(bpath.c_str(), bdiff.c_str()), 0);
+    // having backup.diff should still count as being present
+    assert(sproject.diff_file_present());
+    no_diff += "/no.diff";
+    assert_cmpnum(rename(bdiff.c_str(), no_diff.c_str()), 0);
     assert(!sproject.diff_file_present());
+
     // saving without OSM data should just do nothing
     sproject.osm.release();
     // CAUTION: end of sharing
@@ -242,6 +249,18 @@ int main(int argc, char **argv)
     assert(pvalid);
     assert(sproject.osm);
 
+    // now create a diff file dummy
+    fdguard fd(open(bpath.c_str(), O_CREAT | O_WRONLY | O_CLOEXEC, 0600));
+    assert(fd.valid());
+    {
+      fdguard none(-1);
+      none.swap(fd);
+    }
+    assert(sproject.diff_file_present());
+    sproject.diff_save();
+    assert(!sproject.diff_file_present());
+
+    assert_cmpnum(rename(no_diff.c_str(), bdiff.c_str()), 0);
     flags = sproject.diff_restore();
     assert_cmpnum(flags, DIFF_RESTORED | DIFF_HAS_HIDDEN);
 

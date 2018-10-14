@@ -52,6 +52,26 @@ static std::string diff_filename(const project_t *project) {
   return project->name + ".diff";
 }
 
+static std::string project_diff_name(const project_t *project)
+{
+  struct stat st;
+
+  /* first try to open a backup which is only present if saving the */
+  /* actual diff didn't succeed */
+  const char *backupfn = "backup.diff";
+  std::string diff_name;
+  if(unlikely(fstatat(project->dirfd, backupfn, &st, 0) == 0 && S_ISREG(st.st_mode))) {
+    diff_name = backupfn;
+  } else {
+    diff_name = diff_filename(project);
+
+    if(fstatat(project->dirfd, diff_name.c_str(), &st, 0) != 0 || !S_ISREG(st.st_mode))
+      diff_name.clear();
+  }
+
+  return diff_name;
+}
+
 struct diff_save_tags_functor {
   xmlNodePtr const node;
   explicit diff_save_tags_functor(xmlNodePtr n) : node(n) {}
@@ -493,26 +513,6 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t::ref osm) {
   }
 }
 
-static std::string project_diff_name(const project_t *project)
-{
-  struct stat st;
-
-  /* first try to open a backup which is only present if saving the */
-  /* actual diff didn't succeed */
-  const char *backupfn = "backup.diff";
-  std::string diff_name;
-  if(unlikely(fstatat(project->dirfd, backupfn, &st, 0) == 0 && S_ISREG(st.st_mode))) {
-    diff_name = backupfn;
-  } else {
-    diff_name = diff_filename(project);
-
-    if(fstatat(project->dirfd, diff_name.c_str(), &st, 0) != 0 || !S_ISREG(st.st_mode))
-      diff_name.clear();
-  }
-
-  return diff_name;
-}
-
 unsigned int project_t::diff_restore()
 {
   const std::string &diff_name = project_diff_name(this);
@@ -588,9 +588,14 @@ void diff_restore(project_t::ref project, MainUi *uicontrol) {
   }
 }
 
-bool project_t::diff_file_present() const {
+bool project_t::diff_file_present() const
+{
+  const std::string &dn = project_diff_name(this);
+  if(dn.empty())
+    return false;
+
   struct stat st;
-  return fstatat(dirfd, diff_filename(this).c_str(), &st, 0) == 0 && S_ISREG(st.st_mode);
+  return fstatat(dirfd, dn.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode);
 }
 
 void project_t::diff_remove_file() const {
