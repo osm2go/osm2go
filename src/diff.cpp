@@ -180,13 +180,13 @@ void project_t::diff_save() const {
   if(unlikely(!osm))
     return;
 
-  const std::string &diff_name = diff_filename(this);
-
   if(osm->is_clean(true)) {
     printf("data set is clean, removing diff if present\n");
-    unlinkat(dirfd, diff_name.c_str(), 0);
+    diff_remove_file();
     return;
   }
+
+  const std::string &diff_name = diff_filename(this);
 
   printf("data set is dirty, generating diff\n");
 
