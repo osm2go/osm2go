@@ -262,7 +262,7 @@ namespace std {
 
   template<typename T>
   struct to_string_tpl<T, true> {
-    to_string_tpl() {}
+    explicit inline to_string_tpl() {}
     std::string operator()(T n, const char *fmt)
     {
       char buf[sizeof(n) * 4];
