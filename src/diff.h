@@ -28,7 +28,6 @@
 #include <osm2go_platform.h>
 
 class MainUi;
-struct project_t;
 
 enum diff_restore_results {
   DIFF_RESTORED = 0, ///< a diff was present and has successfully been restored
