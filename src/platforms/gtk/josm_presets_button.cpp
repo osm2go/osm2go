@@ -639,12 +639,12 @@ static GtkWidget *presets_picker_embed(GtkTreeView *view, GtkListStore *store,
 static GtkTreeIter preset_insert_item(const presets_item_named *item, icon_t &icons,
                                       GtkListStore *store) {
   /* icon load can cope with empty string as name (returns nullptr then) */
-  icon_t::icon_item *icon = icons.load(item->icon, 16);
+  icon_item *icon = icons.load(item->icon, 16);
 
   /* Append a row and fill in some data */
   GtkTreeIter iter;
 
-  osm2go_platform::Pixmap pixmap = icon == nullptr ? nullptr : icon->buffer();
+  GdkPixbuf *pixmap = icon == nullptr ? nullptr : osm2go_platform::icon_pixmap(icon);
 
   gtk_list_store_insert_with_values(store, &iter, -1,
                                     PRESETS_PICKER_COL_ICON, pixmap,
@@ -713,8 +713,9 @@ struct picker_add_functor {
   GdkPixbuf * const subicon;
   bool &show_recent;
   bool scan_for_recent;
-  picker_add_functor(presets_context_t *c, GtkListStore *s, icon_t::icon_item *i, bool r, bool &w)
-    : context(c), store(s), subicon(i->buffer()), show_recent(w), scan_for_recent(r) {}
+  picker_add_functor(presets_context_t *c, GtkListStore *s, GdkPixbuf *i, bool r, bool &w)
+    : context(c), store(s), subicon(i), show_recent(w)
+    , scan_for_recent(r) {}
   void operator()(const presets_item_t *item);
 };
 
@@ -771,8 +772,9 @@ presets_context_t::presets_picker(const std::vector<presets_item_t *> &items,
   GtkListStore *store = presets_picker_store(&view);
 
   bool show_recent = false;
-  icon_t::icon_item *subicon = icons.load("submenu_arrow");
-  picker_add_functor fc(this, store, subicon, top_level, show_recent);
+  icon_item *subicon = icons.load("submenu_arrow");
+  GdkPixbuf *subpix = osm2go_platform::icon_pixmap(subicon);
+  picker_add_functor fc(this, store, subpix, top_level, show_recent);
 
   std::for_each(items.begin(), items.end(), fc);
   const std::vector<presets_item_t *> &lru = static_cast<const presets_items_internal *>(presets)->lru;
@@ -781,13 +783,13 @@ presets_context_t::presets_picker(const std::vector<presets_item_t *> &items,
      std::find_if(lru.begin(), lru.end(), matching_type_functor(presets_mask)) != lru.end())
     gtk_list_store_insert_with_values(store, nullptr, 0,
                        PRESETS_PICKER_COL_NAME, _("Last used presets"),
-                       PRESETS_PICKER_COL_SUBMENU_ICON, subicon->buffer(),
+                       PRESETS_PICKER_COL_SUBMENU_ICON, subpix,
                        -1);
 
   if(show_recent)
     gtk_list_store_insert_with_values(store, nullptr, 0,
                        PRESETS_PICKER_COL_NAME, _("Used presets"),
-                       PRESETS_PICKER_COL_SUBMENU_ICON, subicon->buffer(),
+                       PRESETS_PICKER_COL_SUBMENU_ICON, subpix,
                        -1);
 
   icons.icon_free(subicon);

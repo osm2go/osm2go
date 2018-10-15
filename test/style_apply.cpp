@@ -104,7 +104,7 @@ int main(int argc, char **argv)
   assert(!style->node_icons.empty());
   assert(style->node_icons[node->id] != nullptr);
 
-  icon_t::icon_item *oldicon = style->node_icons[node->id];
+  icon_item *oldicon = style->node_icons[node->id];
   float oldzoom = node->zoom_max;
 
   // this should change the icon and zoom_max

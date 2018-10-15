@@ -26,7 +26,6 @@
 #include <osm2go_stl.h>
 
 typedef struct _GMappedFile GMappedFile;
-typedef struct _GdkPixbuf GdkPixbuf;
 typedef struct _GtkBox GtkBox;
 typedef struct _GtkDialog GtkDialog;
 typedef struct _GtkWidget GtkWidget;
@@ -34,7 +33,6 @@ typedef struct _GtkWindow GtkWindow;
 
 namespace osm2go_platform {
   typedef GtkWidget Widget;
-  typedef ::GdkPixbuf *Pixmap;
 
   struct gtk_widget_deleter {
     void operator()(GtkWidget *mem);

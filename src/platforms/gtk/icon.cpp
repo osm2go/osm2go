@@ -37,27 +37,27 @@
 #include "osm2go_platform_gtk.h"
 #include <osm2go_stl.h>
 
+class icon_buffer_item : public icon_item {
+public:
+  explicit icon_buffer_item(GdkPixbuf *nbuf);
+
+  std::unique_ptr<GdkPixbuf, g_object_deleter> buf;
+  int use;
+
+  inline GdkPixbuf *buffer() const {
+    return buf.get();
+  }
+};
+
 class icon_buffer : public icon_t {
 public:
-  class icon_buffer_item : public icon_item {
-  public:
-    explicit icon_buffer_item(osm2go_platform::Pixmap nbuf);
-
-    std::unique_ptr<GdkPixbuf, g_object_deleter> buf;
-    int use;
-
-    inline osm2go_platform::Pixmap buffer() {
-      return buf.get();
-    }
-  };
-
   ~icon_buffer();
 
   typedef std::unordered_map<std::string, icon_buffer_item *> BufferMap;
   BufferMap entries;
 };
 
-icon_buffer::icon_buffer_item::icon_buffer_item(osm2go_platform::Pixmap nbuf)
+icon_buffer_item::icon_buffer_item(GdkPixbuf *nbuf)
   : buf(nbuf)
   , use(nbuf != nullptr ? 1 : 0)
 {
@@ -95,7 +95,8 @@ icon_file_exists(const std::string &file) {
   return std::string();
 }
 
-icon_t::icon_item *icon_t::load(const std::string &sname, int limit) {
+icon_item *icon_t::load(const std::string &sname, int limit)
+{
   if(sname.empty())
     return nullptr;
 
@@ -111,11 +112,11 @@ icon_t::icon_item *icon_t::load(const std::string &sname, int limit) {
 
   const std::string &fullname = icon_file_exists(sname);
   if(!fullname.empty()) {
-    osm2go_platform::Pixmap pix = gdk_pixbuf_new_from_file_at_size(fullname.c_str(), limit, limit, nullptr);
+    GdkPixbuf *pix = gdk_pixbuf_new_from_file_at_size(fullname.c_str(), limit, limit, nullptr);
 
     if(likely(pix)) {
       //    g_debug("Successfully loaded icon %s to %p", name, pix);
-      icon_buffer::icon_buffer_item *ret = new icon_buffer::icon_buffer_item(pix);
+      icon_buffer_item *ret = new icon_buffer_item(pix);
       entries[sname] = ret;
       return ret;
     }
@@ -130,28 +131,28 @@ GtkWidget *icon_t::widget_load(const std::string &name, int limit) {
   if(pix == nullptr)
     return nullptr;
 
-  return gtk_image_new_from_pixbuf(pix->buffer());
+  return gtk_image_new_from_pixbuf(static_cast<icon_buffer_item *>(pix)->buffer());
 }
 
-osm2go_platform::Pixmap icon_t::icon_item::buffer()
+int icon_item::maxDimension() const
 {
-  return static_cast<icon_buffer::icon_buffer_item *>(this)->buffer();
-}
-
-int icon_t::icon_item::maxDimension() const
-{
-  const osm2go_platform::Pixmap buf = const_cast<icon_t::icon_item *>(this)->buffer();
+  const GdkPixbuf *buf = static_cast<const icon_buffer_item *>(this)->buffer();
   return std::max(gdk_pixbuf_get_height(buf), gdk_pixbuf_get_width(buf));
 }
 
-static inline void icon_destroy_pair(std::pair<const std::string, icon_buffer::icon_buffer_item *> &pair) {
+GdkPixbuf *osm2go_platform::icon_pixmap(const icon_item *icon)
+{
+  return static_cast<const icon_buffer_item *>(icon)->buffer();
+}
+
+static inline void icon_destroy_pair(std::pair<const std::string, icon_buffer_item *> &pair) {
   delete pair.second;
 }
 
 struct find_icon_buf {
-  const icon_t::icon_item * const buf;
-  explicit find_icon_buf(const icon_t::icon_item *b) : buf(b) {}
-  bool operator()(const std::pair<std::string, icon_t::icon_item *> &pair) {
+  const icon_item * const buf;
+  explicit find_icon_buf(const icon_item *b) : buf(b) {}
+  bool operator()(const std::pair<std::string, icon_item *> &pair) {
     return pair.second == buf;
   }
 };

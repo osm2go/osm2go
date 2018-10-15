@@ -48,6 +48,7 @@
 
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
+#include "osm2go_platform_gtk.h"
 #include "osm2go_stl.h"
 #include "osm2go_platform_gtk.h"
 
@@ -568,8 +569,9 @@ canvas_item_t *canvas_t::polygon_new(canvas_group_t group, const std::vector<lpo
 }
 
 /* place the image in pix centered on x/y on the canvas */
-canvas_item_pixmap *canvas_t::image_new(canvas_group_t group, osm2go_platform::Pixmap pix, int x,
+canvas_item_pixmap *canvas_t::image_new(canvas_group_t group, icon_item *icon, int x,
                                    int y, float hscale, float vscale) {
+  GdkPixbuf *pix = osm2go_platform::icon_pixmap(icon);
   int width = gdk_pixbuf_get_width(pix);
   int height = gdk_pixbuf_get_height(pix);
   GooCanvasItem *item =

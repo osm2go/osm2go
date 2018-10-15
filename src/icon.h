@@ -24,19 +24,17 @@
 
 #include <osm2go_platform.h>
 
+class icon_item {
+protected:
+  inline icon_item() {}
+public:
+  int maxDimension() const;
+};
+
 class icon_t {
 protected:
   inline icon_t() {}
 public:
-  class icon_item {
-  protected:
-    inline icon_item() {}
-  public:
-    osm2go_platform::Pixmap buffer();
-
-    int maxDimension() const;
-  };
-
   static icon_t &instance();
   ~icon_t();
 

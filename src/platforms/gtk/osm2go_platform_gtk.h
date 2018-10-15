@@ -26,6 +26,7 @@
 #include <vector>
 
 typedef struct _GdkColor GdkColor;
+class icon_item;
 class statusbar_t;
 
 namespace osm2go_platform {
@@ -170,6 +171,8 @@ namespace osm2go_platform {
     inline bool isActive() const noexcept
     { return id != 0; }
   };
+
+  GdkPixbuf *icon_pixmap(const icon_item *icon);
 };
 
 // simplified form of unique_ptr

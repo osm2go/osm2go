@@ -388,7 +388,7 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
     map_item->item = map->canvas->circle_new(CANVAS_GROUP_NODES,
        node->lpos.x, node->lpos.y, radius, width, fill, border);
   else
-    map_item->item = map->canvas->image_new(CANVAS_GROUP_NODES, it->second->buffer(),
+    map_item->item = map->canvas->image_new(CANVAS_GROUP_NODES, it->second,
                                             node->lpos.x, node->lpos.y,
 		      map->state.detail * map->style->icon.scale,
 		      map->state.detail * map->style->icon.scale);

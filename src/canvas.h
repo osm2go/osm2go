@@ -65,6 +65,7 @@ typedef enum {
 #endif
 
 class canvas_item_info_t;
+class icon_item;
 struct map_item_t;
 
 struct canvas_item_t {
@@ -160,7 +161,7 @@ public:
   canvas_item_t *polygon_new(canvas_group_t group, const std::vector<lpos_t> &points,
                              unsigned int width, color_t color,
                              color_t fill);
-  canvas_item_pixmap *image_new(canvas_group_t group, osm2go_platform::Pixmap pix, int x, int y,
+  canvas_item_pixmap *image_new(canvas_group_t group, icon_item *icon, int x, int y,
                            float hscale, float vscale);
 
   void item_info_push(canvas_item_t *item);

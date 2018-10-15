@@ -91,7 +91,7 @@ struct style_t {
 
   std::vector<elemstyle_t *> elemstyles;
 
-  typedef std::unordered_map<item_id_t, icon_t::icon_item *> IconCache;
+  typedef std::unordered_map<item_id_t, icon_item *> IconCache;
   IconCache node_icons;
 
   void colorize_node(node_t *n);

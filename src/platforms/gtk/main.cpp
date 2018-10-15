@@ -1160,7 +1160,7 @@ static int application_run(const char *proj)
   appdata.set_title();
   /* Set a decent default size for the window. */
   gtk_window_set_default_size(GTK_WINDOW(appdata_t::window), DEFAULT_WIDTH, DEFAULT_HEIGHT);
-  gtk_window_set_icon(GTK_WINDOW(appdata_t::window), appdata.icons.load(PACKAGE)->buffer());
+  gtk_window_set_icon(GTK_WINDOW(appdata_t::window), osm2go_platform::icon_pixmap(appdata.icons.load(PACKAGE)));
 #endif
 
   g_signal_connect_swapped(appdata_t::window, "key_press_event",
