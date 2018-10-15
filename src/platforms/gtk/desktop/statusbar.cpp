@@ -21,7 +21,6 @@
 #include <statusbar.h>
 
 #include <appdata.h>
-#include <misc.h>
 
 #include <osm2go_cpp.h>
 #include <osm2go_platform.h>

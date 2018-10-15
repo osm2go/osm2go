@@ -21,10 +21,11 @@
 #define MAP_H
 
 #include "osm.h"
+#include "pos.h"
 #include "track.h"
 
+#include <string>
 #include <memory>
-#include <vector>
 
 #include <osm2go_stl.h>
 
@@ -81,11 +82,6 @@ struct map_item_t {
     delete p;
   }
 };
-
-/* this is a chain of map_items which is attached to all entries */
-/* in the osm tree (node_t, way_t, ...) to be able to get a link */
-/* to the screen representation of a give node/way/etc */
-struct map_item_chain_t;
 
 struct map_state_t {
   map_state_t() noexcept;

@@ -7,7 +7,6 @@
 #include <iconbar.h>
 #include <josm_presets.h>
 #include <map.h>
-#include <misc.h>
 #include <project.h>
 #include <style.h>
 #include <uicontrol.h>

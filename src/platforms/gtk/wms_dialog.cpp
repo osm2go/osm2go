@@ -23,7 +23,6 @@
 #include <appdata.h>
 #include "list.h"
 #include <map.h>
-#include <misc.h>
 #include <project.h>
 #include <settings.h>
 #include <uicontrol.h>

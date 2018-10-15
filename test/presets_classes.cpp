@@ -1,6 +1,5 @@
 #include <josm_presets.h>
 #include <josm_presets_p.h>
-#include <misc.h>
 #include <osm.h>
 
 #include <osm2go_annotations.h>

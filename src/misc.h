@@ -20,13 +20,7 @@
 #ifndef MISC_H
 #define MISC_H
 
-#include "fdguard.h"
-
 #include <string>
-#include <vector>
-
-#include <osm2go_cpp.h>
-#include <osm2go_stl.h>
 
 std::string find_file(const std::string &n);
 

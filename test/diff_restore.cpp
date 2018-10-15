@@ -2,7 +2,6 @@
 #include <diff.h>
 #include <icon.h>
 #include <map.h>
-#include <misc.h>
 #include <osm.h>
 #include <project.h>
 #include <xml_helpers.h>

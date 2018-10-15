@@ -22,7 +22,6 @@
 
 #include "icon.h"
 #include "info.h"
-#include "misc.h"
 #include "osm.h"
 
 #include <algorithm>

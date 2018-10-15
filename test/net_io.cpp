@@ -1,6 +1,5 @@
 #include <net_io.h>
 
-#include <misc.h>
 
 #include <cassert>
 #include <cerrno>

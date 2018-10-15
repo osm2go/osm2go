@@ -2,7 +2,6 @@
 #include <josm_presets_p.h>
 
 #include <fdguard.h>
-#include <misc.h>
 
 #include <algorithm>
 #include <array>

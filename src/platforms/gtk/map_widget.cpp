@@ -25,7 +25,6 @@
 #include "iconbar.h"
 #include "info.h"
 #include "map_hl.h"
-#include "misc.h"
 #include "osm2go_platform.h"
 #include "project.h"
 #include "style.h"

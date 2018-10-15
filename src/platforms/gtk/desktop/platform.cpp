@@ -20,7 +20,6 @@
 #include <osm2go_platform.h>
 #include <osm2go_platform_gtk.h>
 
-#include <misc.h>
 
 #include <algorithm>
 #include <cstdint>

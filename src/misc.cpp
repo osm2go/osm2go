@@ -17,16 +17,13 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "misc.h"
 #include "xml_helpers.h"
 
 #include <cassert>
-#include <cstring>
 #include <strings.h>
 #include <sys/stat.h>
 
 #include "osm2go_annotations.h"
-#include <osm2go_cpp.h>
 
 double xml_get_prop_float(xmlNode *node, const char *prop) {
   xmlString str(xmlGetProp(node, BAD_CAST prop));

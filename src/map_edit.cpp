@@ -20,22 +20,23 @@
 #include "map.h"
 
 #include "appdata.h"
+#include "canvas.h"
 #include "iconbar.h"
-#include "info.h"
-#include "map_hl.h"
-#include "misc.h"
 #include "notifications.h"
 #include "project.h"
 #include "style.h"
 #include "uicontrol.h"
 
-#include "osm2go_annotations.h"
-#include <osm2go_cpp.h>
-#include <osm2go_i18n.h>
-
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstdio>
+#include <utility>
+
+#include "osm2go_annotations.h"
+#include <osm2go_cpp.h>
+#include <osm2go_i18n.h>
+#include <osm2go_platform.h>
 
 /* -------------------------- way_add ----------------------- */
 

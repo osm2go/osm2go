@@ -20,7 +20,6 @@
 #include <notifications.h>
 
 #include "appdata.h"
-#include "misc.h"
 
 #include <cstdio>
 #ifdef FREMANTLE

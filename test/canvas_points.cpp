@@ -1,6 +1,5 @@
 #include <canvas.h>
 
-#include <misc.h>
 
 #include <cassert>
 #include <memory>

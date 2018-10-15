@@ -25,10 +25,6 @@
 #include "osm.h"
 
 #include "cache_set.h"
-#include "icon.h"
-#include "map.h"
-#include "misc.h"
-#include "osm2go_platform.h"
 #include "pos.h"
 #include "xml_helpers.h"
 
@@ -48,6 +44,7 @@
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
+#include <osm2go_platform.h>
 
 static_assert(sizeof(tag_list_t) == sizeof(tag_t *), "tag_list_t is not exactly as big as a pointer");
 

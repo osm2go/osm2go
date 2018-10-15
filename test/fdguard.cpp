@@ -1,6 +1,5 @@
 #include <fdguard.h>
 
-#include <misc.h>
 #include <osm2go_annotations.h>
 
 #include <cassert>

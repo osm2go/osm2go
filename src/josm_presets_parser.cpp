@@ -24,6 +24,9 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <dirent.h>
 #include <fdguard.h>
@@ -37,6 +40,7 @@
 #include <unordered_map>
 
 #include "osm2go_annotations.h"
+#include <osm2go_platform.h>
 #include "osm2go_stl.h"
 
 #ifndef LIBXML_TREE_ENABLED

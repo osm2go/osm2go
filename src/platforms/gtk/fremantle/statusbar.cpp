@@ -21,7 +21,6 @@
 #include "statusbar.h"
 
 #include <appdata.h>
-#include <misc.h>
 
 #include <hildon/hildon.h>
 #include <memory>

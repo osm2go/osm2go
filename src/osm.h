@@ -27,6 +27,7 @@
 #include <cinttypes>
 #include <cstdint>
 #include <cstdlib>
+#include <ctime>
 #include <map>
 #include <memory>
 #include <string>

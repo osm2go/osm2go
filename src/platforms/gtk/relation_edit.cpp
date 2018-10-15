@@ -23,7 +23,6 @@
 #include <josm_presets.h>
 #include "list.h"
 #include <map.h>
-#include <misc.h>
 
 #include <algorithm>
 #include <cassert>

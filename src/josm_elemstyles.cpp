@@ -24,6 +24,8 @@
 #include "josm_elemstyles.h"
 #include "josm_elemstyles_p.h"
 
+#include "color.h"
+#include "icon.h"
 #include "josm_presets.h"
 #include "map.h"
 #include "misc.h"
@@ -33,6 +35,8 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <limits>
@@ -41,6 +45,7 @@
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
+#include <osm2go_platform.h>
 #include "osm2go_stl.h"
 
 #ifndef LIBXML_TREE_ENABLED

@@ -33,7 +33,6 @@
 
 #include "list.h"
 
-#include "misc.h"
 
 #include <array>
 #include <cassert>

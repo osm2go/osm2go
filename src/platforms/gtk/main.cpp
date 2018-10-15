@@ -26,7 +26,6 @@
 #include <josm_presets.h>
 #include "MainUiGtk.h"
 #include <map.h>
-#include <misc.h>
 #include <notifications.h>
 #include <osm.h>
 #include <osm_api.h>

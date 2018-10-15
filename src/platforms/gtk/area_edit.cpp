@@ -20,7 +20,6 @@
 #include "area_edit.h"
 
 #include <gps_state.h>
-#include <misc.h>
 #include <notifications.h>
 
 #include "osm-gps-map.h"

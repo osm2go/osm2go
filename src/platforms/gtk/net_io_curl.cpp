@@ -19,7 +19,6 @@
 
 #include "net_io.h"
 
-#include <misc.h>
 #include <notifications.h>
 
 #include <cassert>

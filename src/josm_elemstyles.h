@@ -20,17 +20,17 @@
 #ifndef JOSM_ELEMSTYLES_H
 #define JOSM_ELEMSTYLES_H
 
-#include "color.h"
 #include "osm.h"
 
 #include <libxml/tree.h>
 
 #include <vector>
 
-// Ratio conversions
-
+class color_t;
 struct elemstyle_t;
 struct style_t;
+
+// Ratio conversions
 
 float scaledn_to_zoom(const float scaledn);
 

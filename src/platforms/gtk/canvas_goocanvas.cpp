@@ -38,7 +38,6 @@
 #include "canvas_p.h"
 
 #include "map.h"
-#include "misc.h"
 
 #include <algorithm>
 #include <array>

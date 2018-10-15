@@ -19,13 +19,12 @@
 
 #include "map_hl.h"
 
-#include "canvas.h"
 #include "map.h"
+#include "osm.h"
 #include "style.h"
 
 #include <algorithm>
 #include <cstdio>
-#include <memory>
 
 #include <osm2go_cpp.h>
 

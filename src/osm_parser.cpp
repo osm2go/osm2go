@@ -24,7 +24,6 @@
 
 #include "osm.h"
 
-#include "osm2go_platform.h"
 #include "pos.h"
 #include "xml_helpers.h"
 
@@ -43,6 +42,7 @@
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
+#include <osm2go_platform.h>
 
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"

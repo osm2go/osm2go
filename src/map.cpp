@@ -22,14 +22,12 @@
 
 #include "appdata.h"
 #include "canvas.h"
-#include "diff.h"
+#include "color.h"
 #include "gps_state.h"
 #include "iconbar.h"
 #include "info.h"
 #include "map_hl.h"
-#include "misc.h"
 #include "notifications.h"
-#include "osm2go_platform.h"
 #include "project.h"
 #include "style.h"
 #include "track.h"
@@ -39,6 +37,8 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <memory>
 #include <vector>
@@ -46,6 +46,7 @@
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
+#include <osm2go_platform.h>
 #include <osm2go_stl.h>
 
 /* this is a chain of map_items which is attached to all entries */
