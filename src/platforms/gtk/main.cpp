@@ -1298,7 +1298,7 @@ static int application_run(const char *proj)
 
   g_debug("gtk_main() left\n");
 
-  track_save(appdata.project.get(), appdata.track.track.get());
+  track_save(appdata.project, appdata.track.track.get());
   appdata.track_clear();
 
   /* save a diff if there are dirty entries */

@@ -228,7 +228,7 @@ static gboolean map_autosave(gpointer data) {
     g_debug("autosave ...");
 
     if(likely(map->appdata.project)) {
-      track_save(map->appdata.project.get(), map->appdata.track.track.get());
+      track_save(map->appdata.project, map->appdata.track.track.get());
       map->appdata.project->diff_save();
     }
   } else

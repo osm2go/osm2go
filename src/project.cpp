@@ -294,7 +294,7 @@ void project_close(appdata_t &appdata) {
   printf("closing current project\n");
 
   /* Save track and turn off the handler callback */
-  track_save(appdata.project.get(), appdata.track.track.get());
+  track_save(appdata.project, appdata.track.track.get());
   appdata.track_clear();
 
   appdata.map->clear(map_t::MAP_LAYER_ALL);

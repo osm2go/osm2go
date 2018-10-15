@@ -269,8 +269,9 @@ static void track_write(const char *name, const track_t *track, xmlDoc *d) {
 }
 
 /* save track in project */
-void track_save(project_t *project, track_t *track) {
-  if(project == nullptr)
+void track_save(project_t::ref project, track_t *track)
+{
+  if(!project)
     return;
 
   /* no need to save again if it has already been saved */
