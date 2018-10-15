@@ -179,10 +179,10 @@ changed(GtkTreeSelection *selection, gpointer userdata) {
  *
  * This assumes there is a selection and a project associated to it.
  */
-static project_t *project_get_selected(GtkWidget *list) {
+static project_t *project_get_selected(GtkWidget *list, GtkTreeIter &iter)
+{
   project_t *project = nullptr;
   GtkTreeModel     *model;
-  GtkTreeIter       iter;
 
   bool b = list_get_selected(list, &model, &iter);
   assert(b);
@@ -218,18 +218,6 @@ static void callback_modified_name(GtkWidget *widget, name_callback_context_t *c
 
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 				    GTK_RESPONSE_ACCEPT, ok);
-}
-
-static gboolean
-project_delete_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer data)
-{
-  project_t *prj = nullptr;
-  gtk_tree_model_get(model, iter, PROJECT_COL_DATA, &prj, -1);
-  if(prj == data) {
-    gtk_list_store_remove(GTK_LIST_STORE(model), iter);
-    return TRUE;
-  } else
-    return FALSE;
 }
 
 static project_t *project_new(select_context_t *context) {
@@ -327,7 +315,8 @@ static void on_project_new(select_context_t *context) {
 }
 
 static void on_project_delete(select_context_t *context) {
-  project_t *project = project_get_selected(context->list);
+  GtkTreeIter iter;
+  project_t *project = project_get_selected(context->list, iter);
 
   if(!yes_no(_("Delete project?"),
              trstring("Do you really want to delete the project \"%1\"?").arg(project->name),
@@ -345,7 +334,7 @@ static void on_project_delete(select_context_t *context) {
   }
 
   /* remove from view */
-  gtk_tree_model_foreach(GTK_TREE_MODEL(context->store.get()), project_delete_foreach, project);
+  gtk_list_store_remove(context->store.get(), &iter);
 
   /* de-chain entry from project list */
   const std::vector<project_t *>::iterator itEnd = context->projects.end();
@@ -361,21 +350,14 @@ static void on_project_delete(select_context_t *context) {
 }
 
 static void on_project_edit(select_context_t *context) {
-  project_t *project = project_get_selected(context->list);
+  GtkTreeIter iter;
+  project_t *project = project_get_selected(context->list, iter);
 
   if(project_edit(context, project, false)) {
-    GtkTreeModel     *model;
-    GtkTreeIter       iter;
-
     /* description etc. may have changed, so update list */
-    GtkTreeSelection *selection = list_get_selection(context->list);
-    gboolean b = gtk_tree_selection_get_selected(selection, &model, &iter);
-    assert(b == TRUE);
-
-    //     gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
     appdata_t &appdata = context->appdata;
     const gchar *status_stock_id = project_get_status_icon_stock_id(appdata.project, project);
-    gtk_list_store_set(GTK_LIST_STORE(model), &iter,
+    gtk_list_store_set(GTK_LIST_STORE(context->store.get()), &iter,
                        PROJECT_COL_NAME, project->name.c_str(),
                        PROJECT_COL_STATUS, status_stock_id,
                        PROJECT_COL_DESCRIPTION, project->desc.c_str(),
@@ -545,8 +527,10 @@ std::string project_select(appdata_t &appdata) {
                                     GTK_RESPONSE_ACCEPT, has_sel ? TRUE : FALSE);
 
   gtk_widget_show_all(context.dialog);
-  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog)))
-    return project_get_selected(context.list)->name;
+  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog))) {
+    GtkTreeIter dummy;
+    return project_get_selected(context.list, dummy)->name;
+  }
 
   return std::string();
 }
