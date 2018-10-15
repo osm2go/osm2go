@@ -129,7 +129,6 @@ public:
   /* background image related stuff */
   struct {
     struct { float x, y; } offset;
-    struct { float x, y; } scale;
   } bg;
 
   struct {

@@ -56,11 +56,6 @@ public:
 
   osm2go_platform::Timer autosave;
 
-  struct {
-    std::unique_ptr<GdkPixbuf, g_object_deleter> pix;
-    canvas_item_pixmap *item;
-  } background;
-
   static gboolean map_motion_notify_event(GtkWidget *, GdkEventMotion *event, map_internal *map);
   static gboolean map_button_event(map_internal *map, GdkEventButton *event);
 };
@@ -98,7 +93,7 @@ void map_t::bg_adjust(int x, int y) {
   x += osm->bounds.min.x + bg.offset.x - pen_down.at.x;
   y += osm->bounds.min.y + bg.offset.y - pen_down.at.y;
 
-  static_cast<map_internal *>(this)->background.item->image_move(x, y, bg.scale.x, bg.scale.y);
+  canvas->move_background(x, y);
 }
 
 gboolean map_internal::map_button_event(map_internal *map, GdkEventButton *event) {
@@ -239,8 +234,6 @@ static gboolean map_autosave(gpointer data) {
 map_internal::map_internal(appdata_t &a)
   : map_t(a, m_hl)
 {
-  background.item = nullptr;
-
   g_signal_connect_swapped(canvas->widget, "button_press_event",
                            G_CALLBACK(map_button_event), this);
   g_signal_connect_swapped(canvas->widget, "button_release_event",
@@ -271,9 +264,7 @@ void map_t::action_cancel() {
     bg.offset.y = appdata.project->wms_offset.y;
 
     const bounds_t &bounds = appdata.project->osm->bounds;
-    static_cast<map_internal *>(this)->background.item->image_move(bounds.min.x + bg.offset.x,
-                                                                   bounds.min.y + bg.offset.y,
-                                                                   bg.scale.x, bg.scale.y);
+    canvas->move_background(bounds.min.x + bg.offset.x, bounds.min.y + bg.offset.y);
     break;
   }
 
@@ -287,21 +278,7 @@ void map_t::action_cancel() {
 /* ------------------- map background ------------------ */
 
 void map_t::remove_bg_image() {
-  map_internal *m = static_cast<map_internal *>(this);
-  delete m->background.item;
-  m->background.item = nullptr;
-}
-
-static void map_bg_item_destroy_event(gpointer data) {
-  map_internal *map = static_cast<map_internal *>(data);
-
-  /* destroying background item */
-
-  map->background.item = nullptr;
-  if(map->background.pix) {
-    g_debug("destroying background item");
-    map->background.pix.reset();
-  }
+  canvas->set_background(std::string());
 }
 
 bool map_t::set_bg_image(const std::string &filename) {
@@ -309,26 +286,12 @@ bool map_t::set_bg_image(const std::string &filename) {
 
   remove_bg_image();
 
-  map_internal *m = static_cast<map_internal *>(this);
-
-  m->background.pix.reset(gdk_pixbuf_new_from_file(filename.c_str(), nullptr));
-  if(!m->background.pix)
+  if(!canvas->set_background(filename))
     return false;
-
-  /* calculate required scale factor */
-  bg.scale.x = static_cast<float>(bounds.max.x - bounds.min.x) /
-                    gdk_pixbuf_get_width(m->background.pix.get());
-  bg.scale.y = static_cast<float>(bounds.max.y - bounds.min.y) /
-                    gdk_pixbuf_get_height(m->background.pix.get());
-
-  m->background.item = canvas->image_new(CANVAS_GROUP_BG, m->background.pix.get(),
-                              bounds.min.x, bounds.min.y, bg.scale.x, bg.scale.y);
-
-  m->background.item->destroy_connect(map_bg_item_destroy_event, this);
 
   int x = bounds.min.x + bg.offset.x;
   int y = bounds.min.y + bg.offset.y;
-  m->background.item->image_move(x, y, bg.scale.x, bg.scale.y);
+  canvas->move_background(x, y);
 
   return true;
 }

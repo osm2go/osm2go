@@ -49,6 +49,7 @@
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
 #include "osm2go_stl.h"
+#include "osm2go_platform_gtk.h"
 
 struct canvas_points_deleter {
   void operator()(void *ptr) {
@@ -90,6 +91,11 @@ struct canvas_goocanvas : public canvas_t {
   struct {
     lpos_t min, max;
   } bounds;
+
+  struct {
+    struct { float x, y; } scale;
+    std::unique_ptr<GdkPixbuf, g_object_deleter> pix;
+  } bg;
 
   canvas_dimensions get_viewport_dimensions() const;
   bool isVisible(const lpos_t lpos) const;
@@ -135,6 +141,52 @@ canvas_goocanvas::canvas_goocanvas()
 void canvas_t::set_background(color_t bg_color) {
   g_object_set(G_OBJECT(widget),
                "background-color-rgb", bg_color.rgb(), nullptr);
+}
+
+bool canvas_t::set_background(const std::string &filename)
+{
+  canvas_goocanvas *gcanvas = static_cast<canvas_goocanvas *>(this);
+
+  GooCanvasItem *gr = gcanvas->group[CANVAS_GROUP_BG];
+  int n = goo_canvas_item_get_n_children(gr);
+  if(n > 0) {
+    assert_cmpnum(n, 1);
+    goo_canvas_item_remove_child(gr, 0);
+  }
+
+  if(filename.empty())
+    return false;
+
+  gcanvas->bg.pix.reset(gdk_pixbuf_new_from_file(filename.c_str(), nullptr));
+  if(!gcanvas->bg.pix)
+    return false;
+
+  int width = gdk_pixbuf_get_width(gcanvas->bg.pix.get());
+  int height = gdk_pixbuf_get_height(gcanvas->bg.pix.get());
+
+  /* calculate required scale factor */
+  gcanvas->bg.scale.x = static_cast<float>(gcanvas->bounds.max.x - gcanvas->bounds.min.x) / width;
+  gcanvas->bg.scale.y = static_cast<float>(gcanvas->bounds.max.y - gcanvas->bounds.min.y) / height;
+
+  GooCanvasItem *bg = goo_canvas_image_new(gr, gcanvas->bg.pix.get(),
+                                          gcanvas->bounds.min.x / gcanvas->bg.scale.x - width / 2,
+                                          gcanvas->bounds.min.y / gcanvas->bg.scale.y - height / 2,
+                                          nullptr);
+  goo_canvas_item_scale(bg, gcanvas->bg.scale.x, gcanvas->bg.scale.y);
+
+  return true;
+}
+
+void canvas_t::move_background(int x, int y)
+{
+  canvas_goocanvas *gcanvas = static_cast<canvas_goocanvas *>(this);
+  GooCanvasItem *bgitem = goo_canvas_item_get_child(gcanvas->group[CANVAS_GROUP_BG], 0);
+  assert(bgitem != nullptr);
+
+  g_object_set(G_OBJECT(bgitem),
+               "x", static_cast<gdouble>(x) / gcanvas->bg.scale.x,
+               "y", static_cast<gdouble>(y) / gcanvas->bg.scale.y,
+               nullptr);
 }
 
 lpos_t canvas_t::window2world(int x, int y) const {
@@ -259,8 +311,13 @@ void canvas_t::erase(unsigned int group_mask) {
   canvas_goocanvas *gcanvas = static_cast<canvas_goocanvas *>(this);
   GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(widget));
 
-  /* create the groups */
-  for(unsigned int group = 0; group < gcanvas->group.size() && group_mask != 0; group++) {
+  if(unlikely((group_mask & (1 << CANVAS_GROUP_BG)) != 0 &&
+              goo_canvas_item_get_n_children(gcanvas->group[CANVAS_GROUP_BG]) > 0)) {
+    // there can only be a single item in there
+    set_background(std::string());
+    group_mask ^= 1 << CANVAS_GROUP_BG;
+  }
+  for(unsigned int group = CANVAS_GROUP_BG + 1; group < gcanvas->group.size() && group_mask != 0; group++) {
     if(group_mask & (1 << group)) {
       goo_canvas_item_remove(gcanvas->group[group]);
       gcanvas->group[group] = goo_canvas_group_new(root, nullptr);
@@ -618,13 +675,6 @@ static void canvas_item_weak_notify(gpointer data, GObject *) {
 void canvas_item_t::destroy_connect(void (*c_handler)(void *), void *data) {
   g_object_weak_ref(G_OBJECT(this), canvas_item_weak_notify,
                     new weak_t(c_handler, data));
-}
-
-void canvas_item_pixmap::image_move(int x, int y, float hscale, float vscale) {
-  g_object_set(G_OBJECT(this),
-               "x", static_cast<gdouble>(x) / hscale,
-               "y", static_cast<gdouble>(y) / vscale,
-               nullptr);
 }
 
 int canvas_t::get_item_segment(const canvas_item_t *item, lpos_t pos) const {

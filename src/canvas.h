@@ -99,8 +99,6 @@ struct canvas_item_polyline : public canvas_item_t {
 struct canvas_item_pixmap : public canvas_item_t {
   canvas_item_pixmap() O2G_DELETED_FUNCTION;
   canvas_item_pixmap &operator=(const canvas_item_pixmap &) O2G_DELETED_FUNCTION;
-
-  void image_move(int x, int y, float hscale, float vscale);
 };
 
 class canvas_t {
@@ -121,6 +119,21 @@ public:
 
   /****** manipulating the canvas ******/
   void set_background(color_t bg_color);
+
+  /**
+   * @brief set the background image
+   * @param filename the file to load
+   * @returns if loading was successful
+   *
+   * Passing an empty string clears the current image.
+   */
+  bool set_background(const std::string &filename);
+
+  /**
+   * @brief move the background image
+   */
+  void move_background(int x, int y);
+
   void erase(unsigned int group_mask);
   canvas_item_t *get_item_at(lpos_t pos) const;
   /**
