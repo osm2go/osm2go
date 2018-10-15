@@ -232,40 +232,6 @@ project_delete_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gp
     return FALSE;
 }
 
-static bool project_delete_gui(select_context_t *context, project_t *project) {
-  g_debug("deleting project \"%s\"", project->name.c_str());
-
-  /* check if we are to delete the currently open project */
-  if(context->appdata.project &&
-     context->appdata.project->name == project->name) {
-
-    if(!yes_no(_("Delete current project?"), _("The project you are about to delete is the one "
-                                               "you are currently working on!\n\n"
-                                               "Do you want to delete it anyway?"),
-               0, context->dialog))
-      return false;
-
-    project_close(context->appdata);
-  }
-
-  /* remove from view */
-  gtk_tree_model_foreach(GTK_TREE_MODEL(context->store.get()), project_delete_foreach, project);
-
-  /* de-chain entry from project list */
-  const std::vector<project_t *>::iterator itEnd = context->projects.end();
-  std::vector<project_t *>::iterator it = std::find(context->projects.begin(),
-                                                    itEnd, project);
-  if(it != itEnd)
-    context->projects.erase(it);
-
-  project_delete(project);
-
-  /* disable ok button button */
-  view_selected(context->dialog, nullptr);
-
-  return true;
-}
-
 static project_t *project_new(select_context_t *context) {
   /* --------------  first choose a name for the project --------------- */
   osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Project name"),
@@ -306,8 +272,10 @@ static project_t *project_new(select_context_t *context) {
   project->bounds.max = pos_t(NAN, NAN);
 
   /* create project file on disk */
-  if(!project->save(context->dialog) || !project_edit(context, project.get(), true))
-    project_delete_gui(context, project.release());
+  if(!project->save(context->dialog) || !project_edit(context, project.get(), true)) {
+    g_debug("creation of project '%s' cancelled, deleting", project->name.c_str());
+    project_delete(project.release());
+  }
 
   /* enable/disable edit/remove buttons */
   view_selected(context->dialog, project.get());
@@ -366,7 +334,30 @@ static void on_project_delete(select_context_t *context) {
              0, context->dialog))
     return;
 
-  project_delete_gui(context, project);
+  /* check if we are to delete the currently open project */
+  if(context->appdata.project && context->appdata.project->name == project->name) {
+    if(!yes_no(_("Delete current project?"),
+               _("The project you are about to delete is the one you are currently working on!\n\n"
+                 "Do you want to delete it anyway?"), 0, context->dialog))
+      return;
+
+    project_close(context->appdata);
+  }
+
+  /* remove from view */
+  gtk_tree_model_foreach(GTK_TREE_MODEL(context->store.get()), project_delete_foreach, project);
+
+  /* de-chain entry from project list */
+  const std::vector<project_t *>::iterator itEnd = context->projects.end();
+  std::vector<project_t *>::iterator it = std::find(context->projects.begin(),
+                                                    itEnd, project);
+  if(it != itEnd)
+    context->projects.erase(it);
+
+  project_delete(project);
+
+  /* disable ok button button */
+  view_selected(context->dialog, nullptr);
 }
 
 static void on_project_edit(select_context_t *context) {
