@@ -40,18 +40,17 @@ enum canvas_item_type_t { CANVAS_ITEM_CIRCLE, CANVAS_ITEM_POLY };
 
 class canvas_item_info_t {
 protected:
-  canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_group_t g, canvas_item_t *it, void(*deleter)(void *));
+  canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_item_t *it, void(*deleter)(void *));
 public:
 
   canvas_t * const canvas;
   const canvas_item_type_t type;
-  const canvas_group_t group;
   canvas_item_t * const item;   ///< reference to visual representation
 };
 
 class canvas_item_info_circle : public canvas_item_info_t {
 public:
-  canvas_item_info_circle(canvas_t *cv, canvas_group_t g, canvas_item_t *it,
+  canvas_item_info_circle(canvas_t *cv, canvas_item_t *it,
                           const int cx, const int cy, const unsigned int radius);
 
   struct {
@@ -62,7 +61,7 @@ public:
 
 class canvas_item_info_poly : public canvas_item_info_t {
 public:
-  canvas_item_info_poly(canvas_t *cv, canvas_group_t g, canvas_item_t *it, bool poly,
+  canvas_item_info_poly(canvas_t *cv, canvas_item_t *it, bool poly,
                         unsigned int wd, const std::vector<lpos_t> &p);
 
   bool is_polygon;

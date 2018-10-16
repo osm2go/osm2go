@@ -504,7 +504,7 @@ canvas_item_circle *canvas_t::circle_new(canvas_group_t group,
                            nullptr);
 
   if(CANVAS_SELECTABLE & (1<<group))
-    (void) new canvas_item_info_circle(this, group, item, x, y, radius + border);
+    (void) new canvas_item_info_circle(this, item, x, y, radius + border);
 
   return static_cast<canvas_item_circle *>(item);
 }
@@ -541,7 +541,7 @@ canvas_item_polyline *canvas_t::polyline_new(canvas_group_t group, const std::ve
                             nullptr);
 
   if(CANVAS_SELECTABLE & (1<<group))
-    (void) new canvas_item_info_poly(this, group, item, false, width, points);
+    (void) new canvas_item_info_poly(this, item, false, width, points);
 
   return static_cast<canvas_item_polyline *>(item);
 }
@@ -561,7 +561,7 @@ canvas_item_t *canvas_t::polygon_new(canvas_group_t group, const std::vector<lpo
                             nullptr);
 
   if(CANVAS_SELECTABLE & (1<<group))
-    (void) new canvas_item_info_poly(this, group, item, true, width, points);
+    (void) new canvas_item_info_poly(this, item, true, width, points);
 
   return item;
 }
@@ -581,7 +581,7 @@ canvas_item_pixmap *canvas_t::image_new(canvas_group_t group, icon_item *icon, i
 
   if(CANVAS_SELECTABLE & (1<<group)) {
     int radius = 0.75 * scale * std::max(width, height);
-    (void) new canvas_item_info_circle(this, group, item, x, y, radius);
+    (void) new canvas_item_info_circle(this, item, x, y, radius);
   }
 
   return reinterpret_cast<canvas_item_pixmap *>(item);

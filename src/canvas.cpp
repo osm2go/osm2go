@@ -49,10 +49,9 @@ void item_info_destroy(void *data) {
   delete info;
 }
 
-canvas_item_info_t::canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_group_t g, canvas_item_t *it, void (*deleter)(void *))
+canvas_item_info_t::canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_item_t *it, void (*deleter)(void *))
   : canvas(cv)
   , type(t)
-  , group(g)
   , item(it)
 {
   canvas->item_mapping[it] = this;
@@ -60,18 +59,18 @@ canvas_item_info_t::canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canva
   item->destroy_connect(deleter, this);
 }
 
-canvas_item_info_circle::canvas_item_info_circle(canvas_t *cv, canvas_group_t g, canvas_item_t *it,
+canvas_item_info_circle::canvas_item_info_circle(canvas_t *cv, canvas_item_t *it,
                                                  const int cx, const int cy, const unsigned int radius)
-  : canvas_item_info_t(CANVAS_ITEM_CIRCLE, cv, g, it, item_info_destroy<canvas_item_info_circle>)
+  : canvas_item_info_t(CANVAS_ITEM_CIRCLE, cv, it, item_info_destroy<canvas_item_info_circle>)
   , r(radius)
 {
   center.x = cx;
   center.y = cy;
 }
 
-canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_group_t g, canvas_item_t* it,
+canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_item_t* it,
                                              bool poly, unsigned int wd, const std::vector<lpos_t> &p)
-  : canvas_item_info_t(CANVAS_ITEM_POLY, cv, g, it, item_info_destroy<canvas_item_info_poly>)
+  : canvas_item_info_t(CANVAS_ITEM_POLY, cv, it, item_info_destroy<canvas_item_info_poly>)
   , is_polygon(poly)
   , width(wd)
   , num_points(p.size())
