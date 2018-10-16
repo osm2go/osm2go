@@ -569,19 +569,20 @@ canvas_item_t *canvas_t::polygon_new(canvas_group_t group, const std::vector<lpo
 }
 
 /* place the image in pix centered on x/y on the canvas */
-canvas_item_pixmap *canvas_t::image_new(canvas_group_t group, icon_item *icon, int x,
-                                   int y, float hscale, float vscale) {
+canvas_item_pixmap *canvas_t::image_new(canvas_group_t group, icon_item *icon, int x, int y,
+                                        float scale)
+{
   GdkPixbuf *pix = osm2go_platform::icon_pixmap(icon);
   int width = gdk_pixbuf_get_width(pix);
   int height = gdk_pixbuf_get_height(pix);
   GooCanvasItem *item =
       goo_canvas_image_new(static_cast<canvas_goocanvas *>(this)->group[group],
-                           pix, x / hscale - width / 2,
-                           y / vscale - height / 2, nullptr);
-  goo_canvas_item_scale(item, hscale, vscale);
+                           pix, x / scale - width / 2,
+                           y / scale - height / 2, nullptr);
+  goo_canvas_item_scale(item, scale, scale);
 
   if(CANVAS_SELECTABLE & (1<<group)) {
-    int radius = 0.75 * hscale * std::max(width, height); /* hscale and vscale are the same */
+    int radius = 0.75 * scale * std::max(width, height);
     (void) new canvas_item_info_circle(this, group, item, x, y, radius);
   }
 

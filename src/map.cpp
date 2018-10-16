@@ -390,7 +390,6 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
   else
     map_item->item = map->canvas->image_new(CANVAS_GROUP_NODES, it->second,
                                             node->lpos.x, node->lpos.y,
-		      map->state.detail * map->style->icon.scale,
 		      map->state.detail * map->style->icon.scale);
 
   map_item->item->set_zoom_max(node->zoom_max / (2 * map->state.detail));

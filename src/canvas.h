@@ -161,8 +161,7 @@ public:
   canvas_item_t *polygon_new(canvas_group_t group, const std::vector<lpos_t> &points,
                              unsigned int width, color_t color,
                              color_t fill);
-  canvas_item_pixmap *image_new(canvas_group_t group, icon_item *icon, int x, int y,
-                           float hscale, float vscale);
+  canvas_item_pixmap *image_new(canvas_group_t group, icon_item *icon, int x, int y, float scale);
 
   void item_info_push(canvas_item_t *item);
 
