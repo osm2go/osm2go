@@ -609,7 +609,6 @@ void canvas_item_circle::set_radius(int radius) {
 void canvas_t::item_to_bottom(canvas_item_t *item) {
   GooCanvasItem *gitem = static_cast<GooCanvasItem *>(item);
   goo_canvas_item_lower(gitem, nullptr);
-  item_info_push(item);
 }
 
 void canvas_item_t::set_zoom_max(float zoom_max) {

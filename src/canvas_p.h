@@ -42,7 +42,6 @@ class canvas_item_info_t {
 protected:
   canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_group_t g, canvas_item_t *it, void(*deleter)(void *));
 public:
-  ~canvas_item_info_t();
 
   canvas_t * const canvas;
   const canvas_item_type_t type;

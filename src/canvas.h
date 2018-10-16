@@ -113,8 +113,6 @@ public:
   typedef std::unordered_map<canvas_item_t *, canvas_item_info_t *> item_mapping_t;
   item_mapping_t item_mapping;
 
-  std::array<std::vector<canvas_item_info_t *>, CANVAS_GROUPS> item_info;
-
   lpos_t window2world(int x, int y) const;
   void scroll_get(int &sx, int &sy) const;
 
@@ -162,8 +160,6 @@ public:
                              unsigned int width, color_t color,
                              color_t fill);
   canvas_item_pixmap *image_new(canvas_group_t group, icon_item *icon, int x, int y, float scale);
-
-  void item_info_push(canvas_item_t *item);
 
   /**
    * @brief get the polygon/polyway segment a certain coordinate is over

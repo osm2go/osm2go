@@ -55,23 +55,9 @@ canvas_item_info_t::canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canva
   , group(g)
   , item(it)
 {
-  canvas->item_info[group].push_back(this);
   canvas->item_mapping[it] = this;
 
   item->destroy_connect(deleter, this);
-}
-
-canvas_item_info_t::~canvas_item_info_t()
-{
-  std::vector<canvas_item_info_t *> &info_group = canvas->item_info[group];
-
-  /* search for item in chain */
-  const std::vector<canvas_item_info_t *>::iterator itEnd = info_group.end();
-  std::vector<canvas_item_info_t *>::iterator it = std::find(info_group.begin(),
-                                                             itEnd, this);
-  assert(it != itEnd);
-
-  info_group.erase(it);
 }
 
 canvas_item_info_circle::canvas_item_info_circle(canvas_t *cv, canvas_group_t g, canvas_item_t *it,
@@ -102,18 +88,3 @@ struct item_info_find {
     return item->item == citem;
   }
 };
-
-void canvas_t::item_info_push(canvas_item_t *item) {
-  /* search for item in all chains */
-  for(unsigned int group = 0; group < CANVAS_GROUPS; group++) {
-    std::vector<canvas_item_info_t *> &info_group = item_info[group];
-    const std::vector<canvas_item_info_t *>::iterator itEnd = info_group.end();
-    std::vector<canvas_item_info_t *>::iterator it = std::find_if(info_group.begin(), itEnd,
-                                                                  item_info_find(item));
-    if(it != itEnd) {
-      std::rotate(it, it + 1, itEnd);
-      return;
-    }
-  }
-  assert_unreachable();
-}
