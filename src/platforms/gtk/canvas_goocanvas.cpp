@@ -87,8 +87,6 @@ struct canvas_goocanvas : public canvas_t {
 
   std::array<GooCanvasItem *, CANVAS_GROUPS> group;
 
-  std::array<std::vector<canvas_item_info_t *>, CANVAS_GROUPS> item_info;
-
   struct {
     lpos_t min, max;
   } bounds;
