@@ -29,9 +29,6 @@ struct appdata_t;
 void style_select(appdata_t *appdata);
 #else
 GtkWidget *style_select_widget(const std::string &currentstyle);
-#endif
-
-#ifdef FREMANTLE
 void style_change(appdata_t &appdata, GtkWidget *widget);
 #endif
 

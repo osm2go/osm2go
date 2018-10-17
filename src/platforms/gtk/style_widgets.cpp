@@ -23,7 +23,6 @@
 #include "appdata.h"
 #include "map.h"
 #include <notifications.h>
-#include "osm2go_platform.h"
 #include "settings.h"
 #include "style.h"
 
@@ -36,28 +35,6 @@
 #include "osm2go_i18n.h"
 #include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
-
-using namespace osm2go_platform;
-
-struct combo_add_styles {
-  int cnt;
-  int &match;
-  const std::string &currentstyle;
-  std::vector<const char *> &styles;
-  combo_add_styles(const std::string &sname, int &m, std::vector<const char *> &s)
-    : cnt(0), match(m), currentstyle(sname), styles(s) {}
-  void operator()(const std::pair<std::string, std::string> &pair);
-};
-
-void combo_add_styles::operator()(const std::pair<std::string, std::string> &pair)
-{
-  if(match < 0 && style_basename(pair.second) == currentstyle)
-    match = cnt;
-
-  styles.push_back(pair.first.c_str());
-
-  cnt++;
-}
 
 struct selector_model_functor {
   GtkListStore * const store;
@@ -92,10 +69,6 @@ static GtkWidget *style_select_widget(const std::string &currentstyle,
   return ret;
 }
 
-GtkWidget *style_select_widget(const std::string &currentstyle) {
-  return style_select_widget(currentstyle, style_scan());
-}
-
 static void style_change(appdata_t &appdata, const std::string &style_path) {
   const std::string &new_style = style_basename(style_path);
   /* check if style has really been changed */
@@ -112,7 +85,7 @@ static void style_change(appdata_t &appdata, const std::string &style_path) {
 
   appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
   /* let gtk clean up first */
-  process_events();
+  osm2go_platform::process_events();
 
   appdata.style.reset(nstyle);
 
@@ -123,6 +96,7 @@ static void style_change(appdata_t &appdata, const std::string &style_path) {
 }
 
 #ifndef FREMANTLE
+
 /* in fremantle this happens inside the submenu handling since this button */
 /* is actually placed inside the submenu there */
 void style_select(appdata_t *appdata) {
@@ -160,7 +134,12 @@ void style_select(appdata_t *appdata) {
 
   style_change(*appdata, style);
 }
-#endif
+
+#else
+
+GtkWidget *style_select_widget(const std::string &currentstyle) {
+  return style_select_widget(currentstyle, style_scan());
+}
 
 void style_change(appdata_t &appdata, GtkWidget *widget) {
   const std::string &style = osm2go_platform::select_widget_value(widget);
@@ -169,3 +148,5 @@ void style_change(appdata_t &appdata, GtkWidget *widget) {
 
   style_change(appdata, style);
 }
+
+#endif
