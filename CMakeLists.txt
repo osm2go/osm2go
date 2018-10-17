@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
+foreach(p IN ITEMS CMP0071 CMP0073 CMP0074 CMP0075 CMP0076 CMP0077 CMP0079)
+	if(POLICY ${p})
+		cmake_policy(SET ${p} NEW)
+	endif()
+endforeach()
+
 project(osm2go VERSION 0.9.13 LANGUAGES C CXX)
 
 include(CheckFunctionExists)
