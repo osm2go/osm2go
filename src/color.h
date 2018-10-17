@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef COLOR_H
-#define COLOR_H
+#pragma once
 
 #include <cstdint>
 #include <osm2go_cpp.h>
@@ -62,5 +61,3 @@ public:
 } __attribute__ ((packed));
 
 static_assert(sizeof(color_t) == sizeof(unsigned int), "wrong size for color_t");
-
-#endif /* COLOR_H */

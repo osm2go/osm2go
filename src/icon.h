@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ICON_H
-#define ICON_H
+#pragma once
 
 #include <string>
 
@@ -53,5 +52,3 @@ public:
 
   void icon_free(icon_item *buf);
 };
-
-#endif // ICON_H

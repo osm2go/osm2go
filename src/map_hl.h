@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MAP_HL_H
-#define MAP_HL_H
+#pragma once
 
 #include "canvas.h"
 #include "color.h"
@@ -49,5 +48,3 @@ struct map_highlight_t {
                    const std::vector<lpos_t> &points, color_t color);
 
 };
-
-#endif // MAP_HL_H

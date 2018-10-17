@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef STATUSBAR_H
-#define STATUSBAR_H
+#pragma once
 
 #define STATUSBAR_DEFAULT_BRIEF_TIME 3
 
@@ -43,5 +42,3 @@ public:
   virtual void banner_busy_start(const char *text) = 0;
   virtual void banner_busy_stop() = 0;
 };
-
-#endif // STATUSBAR_H

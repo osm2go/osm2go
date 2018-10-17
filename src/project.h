@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef PROJECT_H
-#define PROJECT_H
+#pragma once
 
 #include "fdguard.h"
 #include "pos.h"
@@ -121,5 +120,3 @@ struct project_t {
 
 bool project_load(appdata_t &appdata, const std::string &name);
 std::string project_select(appdata_t &appdata);
-
-#endif // PROJECT_H

@@ -27,8 +27,7 @@
  *  Do not attempt to use it directly. @headername{mutex}
  */
 
-#ifndef _GLIBCXX72_MUTEX_H
-#define _GLIBCXX72_MUTEX_H 1
+#pragma once
 
 #include <glib.h>
 #include <osm2go_cpp.h>
@@ -122,5 +121,3 @@ namespace std
       mutex_type&  _M_device;
     };
 } // namespace
-
-#endif // _GLIBCXX72_MUTEX_H

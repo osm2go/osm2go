@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef POS_H
-#define POS_H
+#pragma once
 
 #ifdef USE_FLOAT
 /* use float instead of double on small machines */
@@ -164,5 +163,3 @@ bool pos_lon_valid(pos_float_t lon);
 void remove_trailing_zeroes(char *str);
 
 #endif
-
-#endif // POS_H

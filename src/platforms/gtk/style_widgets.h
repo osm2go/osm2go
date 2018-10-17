@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef STYLE_WIDGETS_H
-#define STYLE_WIDGETS_H
+#pragma once
 
 #include <gtk/gtk.h>
 #include <string>
@@ -31,5 +30,3 @@ void style_select(appdata_t *appdata);
 GtkWidget *style_select_widget(const std::string &currentstyle);
 void style_change(appdata_t &appdata, GtkWidget *widget);
 #endif
-
-#endif // STYLE_WIDGETS_H

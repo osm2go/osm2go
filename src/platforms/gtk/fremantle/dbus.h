@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef HDR_DBUS_H
-#define HDR_DBUS_H
+#pragma once
 
 #include "pos.h"
 
@@ -41,5 +40,3 @@ gboolean dbus_mm_set_position(dbus_mm_pos_t *mmp);
 #ifdef __cplusplus
 }
 #endif
-
-#endif // HDR_DBUS_H

@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef CANVAS_P_H
-#define CANVAS_P_H
+#pragma once
 
 #include "canvas.h"
 #include "pos.h"
@@ -70,5 +69,3 @@ public:
   const unsigned int num_points;
   std::unique_ptr<lpos_t[]> points;
 };
-
-#endif /* CANVAS_P_H */

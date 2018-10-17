@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef OSM2GO_I18N_H
-#define OSM2GO_I18N_H
+#pragma once
 
 #include <locale.h>
 #include <libintl.h>
@@ -67,5 +66,3 @@ public:
 #endif
   operator const gchar *() const { return c_str(); }
 };
-
-#endif // OSM2GO_I18N_H

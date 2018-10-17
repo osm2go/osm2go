@@ -17,11 +17,8 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MISC_H
-#define MISC_H
+#pragma once
 
 #include <string>
 
 std::string find_file(const std::string &n);
-
-#endif // MISC_H

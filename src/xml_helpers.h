@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef XML_HELPERS_H
-#define XML_HELPERS_H
+#pragma once
 
 #include <libxml/tree.h>
 #include <memory>
@@ -62,5 +61,3 @@ static inline double xml_parse_float(const xmlChar *str)
 }
 inline double xml_parse_float(const xmlString &str)
 { return xml_parse_float(str.get()); }
-
-#endif /* XML_HELPERS_H */

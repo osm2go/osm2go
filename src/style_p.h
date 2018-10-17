@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef STYLE_P_H
-#define STYLE_P_H
+#pragma once
 
 struct appdata_t;
 struct style_t;
@@ -29,5 +28,3 @@ struct style_t;
 style_t *style_load_fname(const std::string &filename);
 std::map<std::string, std::string> style_scan();
 std::string style_basename(const std::string &name);
-
-#endif // STYLE_P_H

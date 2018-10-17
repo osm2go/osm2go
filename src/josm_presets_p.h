@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef JOSM_PRESETS_P_H
-#define JOSM_PRESETS_P_H
+#pragma once
 
 #include "josm_presets.h"
 
@@ -390,5 +389,3 @@ static inline unsigned int widget_rows(unsigned int init, const presets_element_
 }
 
 unsigned int presets_type_mask(const object_t &obj);
-
-#endif // JOSM_PRESETS_P_H

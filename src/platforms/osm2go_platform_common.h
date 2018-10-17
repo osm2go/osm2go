@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef OSM2GO_PLATFORM_COMMON_H
-#define OSM2GO_PLATFORM_COMMON_H
+#pragma once
 
 class color_t;
 class trstring;
@@ -97,5 +96,3 @@ namespace osm2go_platform {
 
   bool create_directories(const std::string &path);
 };
-
-#endif // OSM2GO_PLATFORM_COMMON_H

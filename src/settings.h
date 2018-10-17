@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef SETTINGS_H
-#define SETTINGS_H
+#pragma once
 
 #include "fdguard.h"
 #include "track.h"
@@ -81,5 +80,3 @@ private:
  * @returns if the server was changed
  */
 bool api_adjust(std::string &rserver);
-
-#endif // SETTINGS_H

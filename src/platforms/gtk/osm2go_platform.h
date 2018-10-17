@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef OSM2GO_PLATFORM_H
-#define OSM2GO_PLATFORM_H
+#pragma once
 
 #include <memory>
 
@@ -75,5 +74,3 @@ namespace osm2go_platform {
 };
 
 #include "../osm2go_platform_common.h"
-
-#endif // OSM2GO_PLATFORM_H

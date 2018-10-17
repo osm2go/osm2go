@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef WMS_H
-#define WMS_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -38,5 +37,3 @@ void wms_remove(appdata_t &appdata);
 void wms_remove_file(project_t &project);
 
 std::vector<wms_server_t *> wms_server_get_default(void);
-
-#endif // WMS_H

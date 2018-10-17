@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ICONBAR_H
-#define ICONBAR_H
+#pragma once
 
 #ifdef FREMANTLE
 #define FINGER_UI
@@ -60,5 +59,3 @@ public:
 #ifdef FINGER_UI
 void iconbar_register_buttons(appdata_t &appdata, osm2go_platform::Widget *ok, osm2go_platform::Widget *cancel);
 #endif
-
-#endif // ICONBAR_H

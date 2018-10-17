@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef OSM2GO_PLATFORM_GTK_H
-#define OSM2GO_PLATFORM_GTK_H
+#pragma once
 
 #include <gtk/gtk.h>
 #include <memory>
@@ -189,5 +188,3 @@ struct g_object_deleter {
     g_object_unref(obj);
   }
 };
-
-#endif // OSM2GO_PLATFORM_GTK_H

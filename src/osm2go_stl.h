@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef OSM2GO_STL_H
-#define OSM2GO_STL_H
+#pragma once
 
 #include <string>
 
@@ -311,5 +310,3 @@ namespace std {
   inline T &move(T &a) { return a; }
 }
 #endif
-
-#endif // OSM2GO_STL_H

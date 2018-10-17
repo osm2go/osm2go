@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef CANVAS_H
-#define CANVAS_H
+#pragma once
 
 #include "color.h"
 #include "pos.h"
@@ -174,5 +173,3 @@ public:
    */
   bool ensureVisible(const lpos_t lpos);
 };
-
-#endif // CANVAS_H

@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef LIST_H
-#define LIST_H
+#pragma once
 
 #include <gtk/gtk.h>
 #include <vector>
@@ -94,5 +93,3 @@ void list_focus_on(GtkWidget *list, GtkTreeIter *iter);
 bool list_get_selected(GtkWidget *list, GtkTreeModel **model, GtkTreeIter *iter);
 void list_scroll(GtkWidget *list, GtkTreeIter *iter);
 void list_view_scroll(GtkTreeView *view, GtkTreeSelection *sel, GtkTreeIter* iter);
-
-#endif // LIST_H

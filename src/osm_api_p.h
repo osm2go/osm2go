@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef OSM_API_P_H
-#define OSM_API_P_H
+#pragma once
 
 // osm.h must come before net_io.h for Fremantle as curl would drag in inttypes.h (?),
 // but not all needed definitions to get the format specifiers in C++ mode
@@ -58,5 +57,3 @@ public:
 };
 
 void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty);
-
-#endif /* OSM_API_P_H */

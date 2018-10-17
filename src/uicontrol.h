@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef UICONTROL_H
-#define UICONTROL_H
+#pragma once
 
 class statusbar_t;
 class trstring;
@@ -81,5 +80,3 @@ public:
    */
   void about_box();
 };
-
-#endif /* UICONTROL_H */

@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef STYLE_H
-#define STYLE_H
+#pragma once
 
 #include "color.h"
 #include "icon.h"
@@ -100,5 +99,3 @@ struct style_t {
 };
 
 style_t *style_load(const std::string &name);
-
-#endif // STYLE_H

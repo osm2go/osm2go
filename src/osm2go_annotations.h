@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _ANNOTATIONS_H
-#define _ANNOTATIONS_H
+#pragma once
 
 #include <osm2go_cpp.h>
 #include <osm2go_stl.h>
@@ -147,5 +146,3 @@ private:
 
 #define assert_unreachable() \
        assert_msg_unreachable(__FILE__, __LINE__, __PRETTY_FUNCTION__);
-
-#endif /* _ANNOTATIONS_H */

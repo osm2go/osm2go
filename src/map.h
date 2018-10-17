@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MAP_H
-#define MAP_H
+#pragma once
 
 #include "osm.h"
 #include "pos.h"
@@ -267,5 +266,3 @@ private:
   void touchnode_clear();
   void touchnode_update(lpos_t pos);
 };
-
-#endif // MAP_H

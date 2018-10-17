@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef JOSM_ELEMSTYLES_P_H
-#define JOSM_ELEMSTYLES_P_H
+#pragma once
 
 #include "josm_elemstyles.h"
 
@@ -167,5 +166,3 @@ struct elemstyle_t {
   float zoom_max;
   elemstyle_icon_t icon;
 };
-
-#endif // JOSM_ELEMSTYLES_P_H

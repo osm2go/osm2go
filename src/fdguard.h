@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef FDGUARD_H
-#define FDGUARD_H
+#pragma once
 
 #include <dirent.h>
 #include <string>
@@ -118,5 +117,3 @@ public:
   inline const std::string &path() const noexcept
   { return p; }
 };
-
-#endif /* FDGUARD_H */

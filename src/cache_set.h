@@ -17,6 +17,8 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#pragma once
+
 #include <cstdint>
 #include <cstring>
 #include <unordered_set>

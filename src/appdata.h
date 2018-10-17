@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef APPDATA_H
-#define APPDATA_H
+#pragma once
 
 #include <memory>
 
@@ -70,5 +69,3 @@ struct appdata_t {
    */
   void set_title();
 };
-
-#endif // APPDATA_H

@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef RELATION_EDIT_H
-#define RELATION_EDIT_H
+#pragma once
 
 #include "osm.h"
 
@@ -32,5 +31,3 @@ void relation_membership_dialog(osm2go_platform::Widget *parent, const presets_i
 
 void relation_list(osm2go_platform::Widget *parent, map_t *map, osm_t::ref osm, presets_items *presets);
 void relation_show_members(osm2go_platform::Widget *parent, const relation_t *relation, osm_t::ref osm);
-
-#endif // RELATION_EDIT_H

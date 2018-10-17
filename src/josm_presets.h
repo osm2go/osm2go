@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef JOSM_PRESETS_H
-#define JOSM_PRESETS_H
+#pragma once
 
 #include <set>
 #include <string>
@@ -42,5 +41,3 @@ public:
 std::string josm_icon_name_adjust(const char *name);
 
 osm2go_platform::Widget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_context);
-
-#endif // JOSM_PRESETS_H

@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef OSM_API_H
-#define OSM_API_H
+#pragma once
 
 #include <osm2go_platform.h>
 
@@ -29,5 +28,3 @@ class settings_t;
 
 bool osm_download(osm2go_platform::Widget *parent, project_t *project);
 void osm_upload(appdata_t &appdata);
-
-#endif // OSM_API_H

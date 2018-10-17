@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef DIFF_H
-#define DIFF_H
+#pragma once
 
 #include "osm.h"
 #include "project.h"
@@ -54,5 +53,3 @@ xmlDocPtr osmchange_init();
  * @param changeset the changeset id
  */
 void osmchange_delete(const osm_t::dirty_t &dirty, xmlNodePtr xml_node, const char *changeset);
-
-#endif // DIFF_H

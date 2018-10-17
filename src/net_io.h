@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef NET_IO_H
-#define NET_IO_H
+#pragma once
 
 #include <curl/curl.h>
 #include <string>
@@ -70,5 +69,3 @@ struct curl_slist_deleter {
   inline void operator()(curl_slist *slist)
   { curl_slist_free_all(slist); }
 };
-
-#endif // NET_IO_H

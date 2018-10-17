@@ -20,8 +20,7 @@
  *
  */
 
-#ifndef GPS_STATE_H
-#define GPS_STATE_H
+#pragma once
 
 #include "pos.h"
 
@@ -66,5 +65,3 @@ public:
    */
   static gps_state_t *create(GpsCallback cb, void *context);
 };
-
-#endif // GPS_H

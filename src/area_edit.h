@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef AREA_EDIT_H
-#define AREA_EDIT_H
+#pragma once
 
 #include "pos.h"
 
@@ -38,5 +37,3 @@ struct area_edit_t {
 
   bool run();
 };
-
-#endif // AREA_EDIT_H

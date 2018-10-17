@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef INFO_H
-#define INFO_H
+#pragma once
 
 #include "osm.h"
 
@@ -43,5 +42,3 @@ public:
 };
 
 bool info_dialog(osm2go_platform::Widget *parent, map_t *map, osm_t::ref osm, presets_items *presets, object_t &object);
-
-#endif // INFO_H

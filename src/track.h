@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef TRACK_H
-#define TRACK_H
+#pragma once
 
 #include "pos.h"
 #include "project.h"
@@ -86,5 +85,3 @@ track_t *track_import(const char *filename);
 void track_menu_set(appdata_t &appdata);
 
 void track_enable_gps(appdata_t &appdata, bool enable);
-
-#endif // TRACK_H

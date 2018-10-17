@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef PROJECT_P_H
-#define PROJECT_P_H
+#pragma once
 
 #include "project.h"
 
@@ -41,5 +40,3 @@ struct projects_to_bounds {
   explicit projects_to_bounds(std::vector<pos_area> &b) : pbounds(b) {}
   void operator()(const project_t *project);
 };
-
-#endif // PROJECT_P_H

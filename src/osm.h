@@ -17,8 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef OSM_H
-#define OSM_H
+#pragma once
 
 #include "color.h"
 #include "pos.h"
@@ -735,5 +734,3 @@ void osm_t::relation_insert(relation_t *relation)
   relations[relation->id] = relation;
   assert_cmpnum(relations.size(), cnt + 1);
 }
-
-#endif /* OSM_H */
