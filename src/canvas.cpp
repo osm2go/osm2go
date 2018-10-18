@@ -24,6 +24,8 @@
 #include "canvas.h"
 #include "canvas_p.h"
 
+#include "map.h"
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -40,28 +42,33 @@ canvas_t::canvas_t(osm2go_platform::Widget *w)
 
 /* remove item_info from chain as its visual representation */
 /* has been destroyed */
-template<typename T>
-void item_info_destroy(void *data) {
-  T const *info = static_cast<T *>(data);
-  const canvas_t::item_mapping_t::iterator it = info->canvas->item_mapping.find(info->item);
-  assert(it != info->canvas->item_mapping.end());
-  info->canvas->item_mapping.erase(it);
-  delete info;
-}
+template<typename T> class item_info_destroyer : public canvas_item_destroyer {
+public:
+  T * const info;
+  canvas_t * const canvas;
+  explicit inline item_info_destroyer(T *i, canvas_t *cv)
+    : canvas_item_destroyer(), info(i), canvas(cv) {}
 
-canvas_item_info_t::canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_item_t *it, void (*deleter)(void *))
-  : canvas(cv)
-  , type(t)
-  , item(it)
+  virtual void run(canvas_item_t *item) override
+  {
+    const canvas_t::item_mapping_t::iterator it = canvas->item_mapping.find(item);
+    assert(it != canvas->item_mapping.end());
+    canvas->item_mapping.erase(it);
+    delete info;
+  }
+};
+
+canvas_item_info_t::canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_item_t *it, canvas_item_destroyer *d)
+  : type(t)
 {
-  canvas->item_mapping[it] = this;
+  cv->item_mapping[it] = this;
 
-  item->destroy_connect(deleter, this);
+  it->destroy_connect(d);
 }
 
 canvas_item_info_circle::canvas_item_info_circle(canvas_t *cv, canvas_item_t *it,
                                                  const int cx, const int cy, const unsigned int radius)
-  : canvas_item_info_t(CANVAS_ITEM_CIRCLE, cv, it, item_info_destroy<canvas_item_info_circle>)
+  : canvas_item_info_t(CANVAS_ITEM_CIRCLE, cv, it, new item_info_destroyer<canvas_item_info_circle>(this, cv))
   , r(radius)
 {
   center.x = cx;
@@ -70,7 +77,7 @@ canvas_item_info_circle::canvas_item_info_circle(canvas_t *cv, canvas_item_t *it
 
 canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_item_t* it,
                                              bool poly, unsigned int wd, const std::vector<lpos_t> &p)
-  : canvas_item_info_t(CANVAS_ITEM_POLY, cv, it, item_info_destroy<canvas_item_info_poly>)
+  : canvas_item_info_t(CANVAS_ITEM_POLY, cv, it, new item_info_destroyer<canvas_item_info_poly>(this, cv))
   , is_polygon(poly)
   , width(wd)
   , num_points(p.size())
@@ -78,4 +85,9 @@ canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_item_t* it,
 {
   // data() is a C++11 extension, but gcc has it since at least 4.2
   memcpy(points.get(), p.data(), p.size() * sizeof(points[0]));
+}
+
+void map_item_destroyer::run(canvas_item_t*)
+{
+  delete mi;
 }

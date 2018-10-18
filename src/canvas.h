@@ -67,6 +67,8 @@ class canvas_item_info_t;
 class icon_item;
 struct map_item_t;
 
+class canvas_item_destroyer;
+
 struct canvas_item_t {
   canvas_item_t() O2G_DELETED_FUNCTION;
   canvas_item_t &operator=(const canvas_item_t &) O2G_DELETED_FUNCTION;
@@ -77,9 +79,31 @@ struct canvas_item_t {
   void set_zoom_max(float zoom_max);
   void set_dashed(unsigned int line_width, unsigned int dash_length_on,
                   unsigned int dash_length_off);
+
+  /**
+   * @brief associates the map item with this canvas item
+   *
+   * A destroyer will be instantiated so the data is deleted when the
+   * canvas item is.
+   */
   void set_user_data(map_item_t *data);
   map_item_t *get_user_data();
-  void destroy_connect(void (*c_handler)(void *), void *data);
+  void destroy_connect(canvas_item_destroyer *d);
+};
+
+class canvas_item_destroyer {
+public:
+  virtual ~canvas_item_destroyer() {}
+
+  virtual void run(canvas_item_t *item) = 0;
+};
+
+class map_item_destroyer : public canvas_item_destroyer {
+public:
+  map_item_t * const mi;
+  explicit inline map_item_destroyer(map_item_t *m) : canvas_item_destroyer(), mi(m) {}
+
+  virtual void run(canvas_item_t *) override;
 };
 
 struct canvas_item_circle : public canvas_item_t {

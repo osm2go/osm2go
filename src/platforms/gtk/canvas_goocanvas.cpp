@@ -645,36 +645,23 @@ void canvas_item_t::set_dashed(unsigned int line_width, unsigned int dash_length
 void canvas_item_t::set_user_data(map_item_t *data)
 {
   g_object_set_data(G_OBJECT(this), "user data", data);
-  destroy_connect(reinterpret_cast<void (*)(void *)>(map_item_t::free), data);
+  destroy_connect(new map_item_destroyer(data));
 }
 
 map_item_t *canvas_item_t::get_user_data() {
   return static_cast<map_item_t *>(g_object_get_data(G_OBJECT(this), "user data"));
 }
 
-class weak_t {
-public:
-  weak_t(void(*cb)(gpointer), gpointer d)
-    : c_handler(cb)
-    , data(d)
-  {}
-  ~weak_t()
-  {
-    c_handler(data);
-  }
-
-private:
-  void(* const c_handler)(gpointer);
-  gpointer const data;
-};
-
-static void canvas_item_weak_notify(gpointer data, GObject *) {
-  delete static_cast<weak_t *>(data);
+static void canvas_item_weak_notify(gpointer data, GObject *obj)
+{
+  canvas_item_destroyer *d = static_cast<canvas_item_destroyer *>(data);
+  d->run(reinterpret_cast<canvas_item_t *>(obj));
+  delete d;
 }
 
-void canvas_item_t::destroy_connect(void (*c_handler)(void *), void *data) {
-  g_object_weak_ref(G_OBJECT(this), canvas_item_weak_notify,
-                    new weak_t(c_handler, data));
+void canvas_item_t::destroy_connect(canvas_item_destroyer *d)
+{
+  g_object_weak_ref(G_OBJECT(this), canvas_item_weak_notify, d);
 }
 
 int canvas_t::get_item_segment(const canvas_item_t *item, lpos_t pos) const {

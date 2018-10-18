@@ -39,12 +39,10 @@ enum canvas_item_type_t { CANVAS_ITEM_CIRCLE, CANVAS_ITEM_POLY };
 
 class canvas_item_info_t {
 protected:
-  canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_item_t *it, void(*deleter)(void *));
+  canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_item_t *it, canvas_item_destroyer *d);
 public:
 
-  canvas_t * const canvas;
   const canvas_item_type_t type;
-  canvas_item_t * const item;   ///< reference to visual representation
 };
 
 class canvas_item_info_circle : public canvas_item_info_t {

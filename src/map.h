@@ -76,10 +76,6 @@ struct map_item_t {
   object_t object;
   bool highlight;
   canvas_item_t *item;
-
-  static inline void free(map_item_t *p) {
-    delete p;
-  }
 };
 
 struct map_state_t {
