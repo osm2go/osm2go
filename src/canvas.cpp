@@ -79,11 +79,3 @@ canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_item_t* it,
   // data() is a C++11 extension, but gcc has it since at least 4.2
   memcpy(points.get(), p.data(), p.size() * sizeof(points[0]));
 }
-
-struct item_info_find {
-  const canvas_item_t * const citem;
-  explicit item_info_find(const canvas_item_t *i) : citem(i) {}
-  bool operator()(const canvas_item_info_t *item) {
-    return item->item == citem;
-  }
-};
