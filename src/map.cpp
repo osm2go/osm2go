@@ -1069,6 +1069,18 @@ void map_t::button_release(int x, int y) {
   }
 }
 
+/* move the background image (wms data) during wms adjustment */
+void map_t::bg_adjust(int x, int y)
+{
+  osm_t::ref osm = appdata.project->osm;
+  assert(osm);
+
+  x += osm->bounds.min.x + bg.offset.x - pen_down.at.x;
+  y += osm->bounds.min.y + bg.offset.y - pen_down.at.y;
+
+  canvas->move_background(x, y);
+}
+
 void map_t::handle_motion(int x, int y)
 {
   /* check if distance to press is above drag limit */
@@ -1622,9 +1634,30 @@ void map_t::remove_gps_position() {
 
 /* ------------------- map background ------------------ */
 
+void map_t::remove_bg_image()
+{
+  canvas->set_background(std::string());
+}
+
 void map_t::set_bg_color_from_style()
 {
   canvas->set_background(style->background.color);
+}
+
+bool map_t::set_bg_image(const std::string &filename)
+{
+  const bounds_t &bounds = appdata.project->osm->bounds;
+
+  remove_bg_image();
+
+  if(!canvas->set_background(filename))
+    return false;
+
+  int x = bounds.min.x + bg.offset.x;
+  int y = bounds.min.y + bg.offset.y;
+  canvas->move_background(x, y);
+
+  return true;
 }
 
 /* -------- hide and show objects (for performance reasons) ------- */
