@@ -840,7 +840,7 @@ static void map_handle_click(map_t *map) {
   if(map->pen_down.on_item != nullptr)
     map_item = *map->pen_down.on_item;
 
-  /* if we aready have something selected, then de-select it */
+  /* if we already have something selected, then de-select it */
   map->item_deselect();
 
   /* select the clicked item (if there was one) */
