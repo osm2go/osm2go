@@ -530,11 +530,6 @@ void map_t::draw(node_t *node) {
 }
 
 void map_t::redraw_item(object_t object) {
-  /* a relation cannot be redrawn as it doesn't have a visual */
-  /* representation */
-  if(object.type == object_t::RELATION)
-    return;
-
   /* check if the item to be redrawn is the selected one */
   bool is_selected = (object == selected.object);
   // object must not be passed by reference or by pointer because of this:
