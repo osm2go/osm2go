@@ -173,7 +173,6 @@ public:
   void track_update_seg(track_seg_t &seg);
   void track_pos(const lpos_t lpos);
 
-  void show_node(node_t *node);
   void cmenu_show();
 
   /* background stuff */

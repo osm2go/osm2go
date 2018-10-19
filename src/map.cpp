@@ -427,10 +427,6 @@ static map_item_t *map_way_new(map_t *map, canvas_group_t group,
   return map_item;
 }
 
-void map_t::show_node(node_t *node) {
-  map_node_new(this, node, style->node.radius, 0, style->node.color, 0);
-}
-
 struct map_way_draw_functor {
   map_t * const map;
   explicit map_way_draw_functor(map_t *m) : map(m) {}
