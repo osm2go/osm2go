@@ -537,7 +537,8 @@ void map_t::node_move(map_item_t *map_item, int ex, int ey) {
   draw(node);
 
   /* visually update ways, node is part of */
-  std::for_each(osm->ways.begin(), osm->ways.end(), redraw_way(node, this));
+  if(node->ways > 0)
+    std::for_each(osm->ways.begin(), osm->ways.end(), redraw_way(node, this));
 
   /* and mark the node as dirty */
   node->flags |= OSM_FLAG_DIRTY;
