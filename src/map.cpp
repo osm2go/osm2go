@@ -91,7 +91,8 @@ void visible_item_t::item_chain_destroy()
   map_item_chain = nullptr;
 }
 
-static void map_node_select(map_t *map, node_t *node) {
+static void map_object_select(map_t *map, node_t *node)
+{
   map_item_t *map_item = &map->selected;
 
   assert(map->highlight.isEmpty());
@@ -337,10 +338,16 @@ void map_t::select_relation(relation_t *relation) {
   std::for_each(relation->members.begin(), relation->members.end(), fc);
 }
 
-static void map_object_select(map_t *map, object_t &object) {
+static inline void map_object_select(map_t *map, way_t *way)
+{
+    map->select_way(way);
+}
+
+static void map_object_select(map_t *map, const object_t &object)
+{
   switch(object.type) {
   case object_t::NODE:
-    map_node_select(map, object.node);
+    map_object_select(map, object.node);
     break;
   case object_t::WAY:
     map->select_way(object.way);
@@ -529,9 +536,11 @@ void map_t::draw(node_t *node) {
   m(node);
 }
 
-void map_t::redraw_item(object_t object) {
+template<typename T>
+void map_t::redraw_item(T *obj)
+{
   /* check if the item to be redrawn is the selected one */
-  bool is_selected = (object == selected.object);
+  bool is_selected = (selected.object == obj);
   // object must not be passed by reference or by pointer because of this:
   // map_t::item_deselect would modify object.type of the selected object, if
   // exactly that is passed in the switch statements below would see an
@@ -539,25 +548,14 @@ void map_t::redraw_item(object_t object) {
   if(is_selected)
     item_deselect();
 
-  assert(object.is_real());
-  static_cast<visible_item_t *>(object.obj)->item_chain_destroy();
+  static_cast<visible_item_t *>(obj)->item_chain_destroy();
 
-  switch (object.type){
-  case object_t::WAY:
-    style->colorize(object.way);
-    draw(object.way);
-    break;
-  case object_t::NODE:
-    style->colorize(object.node);
-    draw(object.node);
-    break;
-  default:
-    assert_unreachable();
-  }
+  style->colorize(obj);
+  draw(obj);
 
   /* restore selection if there was one */
   if(is_selected)
-    map_object_select(this, object);
+    map_object_select(this, obj);
 }
 
 static void map_frisket_rectangle(std::vector<lpos_t> &points,
@@ -1027,7 +1025,7 @@ void map_t::button_release(int x, int y) {
     item_deselect();
 
     if(node != nullptr) {
-      map_node_select(this, node);
+      map_object_select(this, node);
 
       /* let the user specify some tags for the new node */
       info_selected();
@@ -1309,7 +1307,7 @@ void map_t::action_ok() {
     item_deselect();
 
     if(node != nullptr) {
-      map_node_select(this, node);
+      map_object_select(this, node);
 
       /* let the user specify some tags for the new node */
       info_selected();
@@ -1335,8 +1333,7 @@ void node_deleted_from_ways::operator()(way_t *way) {
     /* cause other nodes to be deleted as well) */
     map->appdata.project->osm->way_delete(way);
   } else {
-    object_t object(way);
-    map->redraw_item(object);
+    map->redraw_item(way);
   }
 }
 
@@ -1735,8 +1732,20 @@ void map_t::info_selected()
 
   /* since nodes being parts of ways but with no tags are invisible, */
   /* the result of editing them may have changed their visibility */
-  if(ret && selected.object.type != object_t::RELATION)
-    redraw_item(selected.object);
+  if(ret) {
+    switch(selected.object.type) {
+    case object_t::NODE:
+      redraw_item(selected.object.node);
+      break;
+    case object_t::WAY:
+      redraw_item(selected.object.way);
+      break;
+    case object_t::RELATION:
+      break;
+    default:
+      assert_unreachable();
+    }
+  }
 }
 
 map_state_t::map_state_t() noexcept

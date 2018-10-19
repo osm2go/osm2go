@@ -159,7 +159,7 @@ public:
   void highlight_refresh();
   void draw(node_t *node);
   void select_relation(relation_t *relation);
-  void redraw_item(object_t object);
+  template<typename T> void redraw_item(T *obj);
   void draw(way_t *way);
   void select_way(way_t *way);
   void set_action(map_action_t act);
