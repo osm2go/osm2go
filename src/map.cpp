@@ -544,11 +544,11 @@ void map_t::redraw_item(object_t object) {
 
   switch (object.type){
   case object_t::WAY:
-    style->colorize_way(object.way);
+    style->colorize(object.way);
     draw(object.way);
     break;
   case object_t::NODE:
-    style->colorize_node(object.node);
+    style->colorize(object.node);
     draw(object.node);
     break;
   default:

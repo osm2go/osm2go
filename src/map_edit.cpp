@@ -131,7 +131,7 @@ void map_t::way_add_segment(lpos_t pos) {
       action.way->item_chain_destroy();
 
       /* draw current way */
-      style->colorize_way(action.way);
+      style->colorize(action.way);
       draw(action.way);
     }
   }
@@ -401,12 +401,12 @@ void map_t::way_cut(lpos_t pos) {
   printf("original way still has %zu nodes\n", way->node_chain.size());
 
   /* draw the updated old way */
-  style->colorize_way(way);
+  style->colorize(way);
   draw(way);
 
   if(neww != nullptr) {
     /* colorize the new way before drawing */
-    style->colorize_way(neww);
+    style->colorize(neww);
     draw(neww);
   }
 
@@ -439,7 +439,7 @@ void redraw_way::operator()(const std::pair<item_id_t, way_t *> &p)
   way->item_chain_destroy();
 
   /* draw current way */
-  map->style->colorize_way(way);
+  map->style->colorize(way);
   map->draw(way);
 }
 

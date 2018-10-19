@@ -323,12 +323,12 @@ style_t::~style_t()
   std::for_each(node_icons.begin(), node_icons.end(), unref_icon);
 }
 
-void style_t::colorize_node(node_t *n)
+void style_t::colorize(node_t *n)
 {
   josm_elemstyles_colorize_node(this, n);
 }
 
-void style_t::colorize_way(way_t *w) const
+void style_t::colorize(way_t *w) const
 {
   josm_elemstyles_colorize_way(this, w);
 }

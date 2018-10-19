@@ -83,7 +83,7 @@ int main(int argc, char **argv)
   node_t * const node = osm->node_new(pos_t(0.0, 0.0));
   osm->node_attach(node);
 
-  style->colorize_node(node);
+  style->colorize(node);
 
   assert(style->node_icons.empty());
 
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
   tags.insert(osm_t::TagMap::value_type("barrier", "bollard"));
   node->tags.replace(tags);
 
-  style->colorize_node(node);
+  style->colorize(node);
 
   assert(style->node_icons.empty());
 
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
   tags.insert(osm_t::TagMap::value_type("access", "no"));
   node->tags.replace(tags);
 
-  style->colorize_node(node);
+  style->colorize(node);
 
   assert(!style->node_icons.empty());
   assert(style->node_icons[node->id] != nullptr);
@@ -132,7 +132,7 @@ int main(int argc, char **argv)
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("bridge", "yes"));
   way->tags.replace(tags);
-  style->colorize_way(way);
+  style->colorize(way);
   assert_cmpnum_op(memcmp(&(way->draw), &(w0.draw), sizeof(w0.draw)), !=, 0);
   assert_cmpnum(way->draw.color, 0x00008080);
   assert_cmpnum(way->draw.width, 7);
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
   tags.insert(osm_t::TagMap::value_type("bridge", "yes"));
   tags.insert(osm_t::TagMap::value_type("access", "no"));
   way->tags.replace(tags);
-  style->colorize_way(way);
+  style->colorize(way);
   assert_cmpnum(way->draw.color, 0xff8080ff);
   assert_cmpnum(way->draw.width, 5);
 
@@ -150,7 +150,7 @@ int main(int argc, char **argv)
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("highway", "residential"));
   way->tags.replace(tags);
-  style->colorize_way(way);
+  style->colorize(way);
   assert_cmpnum(way->draw.color, 0xc0c0c0ff);
   assert_cmpnum(way->draw.width, 2);
 
@@ -158,7 +158,7 @@ int main(int argc, char **argv)
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("highway", "platform"));
   way->tags.replace(tags);
-  style->colorize_way(way);
+  style->colorize(way);
   assert_cmpnum(way->draw.color, 0x809bc0ff);
   assert_cmpnum(way->draw.width, 1);
 
