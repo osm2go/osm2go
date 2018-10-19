@@ -833,19 +833,19 @@ void map_t::highlight_refresh() {
   map_object_select(this, old);
 }
 
-static void map_handle_click(map_t *map) {
-
+static void map_handle_click(map_t *map)
+{
   /* problem: on_item may be the highlight itself! So store it! */
-  map_item_t map_item;
+  object_t map_obj;
   if(map->pen_down.on_item != nullptr)
-    map_item = *map->pen_down.on_item;
+    map_obj = map->pen_down.on_item->object;
 
   /* if we already have something selected, then de-select it */
   map->item_deselect();
 
   /* select the clicked item (if there was one) */
-  if(map_item.object.type != object_t::ILLEGAL)
-    map_object_select(map, map_item.object);
+  if(map_obj.type != object_t::ILLEGAL)
+    map_object_select(map, map_obj);
 }
 
 struct hl_nodes {
