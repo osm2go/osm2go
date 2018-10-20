@@ -52,8 +52,8 @@
 /* in the osm tree (node_t, way_t, ...) to be able to get a link */
 /* to the screen representation of a give node/way/etc */
 struct map_item_chain_t {
-  map_item_chain_t()
-    : i0(nullptr), i1(nullptr) {}
+  map_item_chain_t(map_item_t *n0 = nullptr)
+    : i0(n0), i1(nullptr) {}
   map_item_t *i0;
   map_item_t *i1;
 
@@ -70,10 +70,10 @@ struct map_item_chain_t {
     }
   }
 
-  void reset()
+  void reset(map_item_t *n0 = nullptr)
   {
     clear();
-    i0 = nullptr;
+    i0 = n0;
     i1 = nullptr;
   }
 };
@@ -409,10 +409,13 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
   map_item->item->set_zoom_max(node->zoom_max / (2 * map->state.detail));
 
   /* attach map_item to nodes map_item_chain */
-  if(node->map_item_chain == nullptr)
-    node->map_item_chain = new map_item_chain_t();
-  assert(node->map_item_chain->i0 == nullptr);
-  node->map_item_chain->i0 = map_item;
+  if(node->map_item_chain == nullptr) {
+    node->map_item_chain = new map_item_chain_t(map_item);
+  } else {
+    // this is never used for nodes
+    assert(node->map_item_chain->i1 == nullptr);
+    node->map_item_chain->reset(map_item);
+  }
 
   map_item->item->set_user_data(map_item);
 }
@@ -463,7 +466,8 @@ void map_way_draw_functor::operator()(way_t *way)
   /* attach map_item to ways map_item_chain */
   if(way->map_item_chain == nullptr)
     way->map_item_chain = new map_item_chain_t();
-  assert(way->map_item_chain->i0 == nullptr);
+  else
+    way->map_item_chain->reset();
   map_item_t *map_item;
 
   /* allocate space for nodes */

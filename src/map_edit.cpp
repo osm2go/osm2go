@@ -127,9 +127,6 @@ void map_t::way_add_segment(lpos_t pos) {
         break;
       }
 
-      /* remove prior version of this way */
-      action.way->item_chain_destroy();
-
       /* draw current way */
       style->colorize(action.way);
       draw(action.way);
@@ -187,12 +184,7 @@ void map_draw_nodes::operator()(node_t* node)
   printf("    node #" ITEM_ID_FORMAT " (used by %u)\n",
          node->id, node->ways);
 
-  if(node->id != ID_ILLEGAL) {
-    /* a node may have been a stand-alone node before, so remove its */
-    /* visual representation as its now drawn as part of the way */
-    /* (if at all) */
-    node->item_chain_destroy();
-  } else {
+  if(node->id == ID_ILLEGAL) {
     /* we can be sure that no node gets inserted twice (even if twice in */
     /* the ways chain) because it gets assigned a non-ID_ILLEGAL id when */
     /* being moved to the osm node chain */
@@ -255,9 +247,6 @@ void map_t::way_add_ok() {
                   _("The resulting way contains some conflicting tags. Please solve these."));
   }
 
-  /* remove prior version of this way */
-  action.way->item_chain_destroy();
-
   /* draw the updated way */
   draw(action.way);
 
@@ -295,9 +284,6 @@ void map_t::way_node_add(lpos_t pos) {
 
       /* clear selection */
       item_deselect();
-
-      /* remove prior version of this way */
-      way->item_chain_destroy();
 
       /* draw the updated way */
       draw(way);
@@ -391,10 +377,6 @@ void map_t::way_cut(lpos_t pos) {
   /* clear selection */
   item_deselect();
 
-  /* remove prior version of this way */
-  printf("remove visible version of way #" ITEM_ID_FORMAT "\n", way->id);
-  way->item_chain_destroy();
-
   /* create a duplicate of the currently selected way */
   way_t * const neww = way->split(appdata.project->osm, cut_at, cut_at_node);
 
@@ -434,9 +416,6 @@ void redraw_way::operator()(const std::pair<item_id_t, way_t *> &p)
     return;
 
   printf("  node is part of way #" ITEM_ID_FORMAT ", redraw!\n", way->id);
-
-  /* remove prior version of this way */
-  way->item_chain_destroy();
 
   /* draw current way */
   map->style->colorize(way);
@@ -532,8 +511,6 @@ void map_t::node_move(map_item_t *map_item, int ex, int ey) {
   }
 
   /* now update the visual representation of the node */
-
-  node->item_chain_destroy();
   draw(node);
 
   /* visually update ways, node is part of */
