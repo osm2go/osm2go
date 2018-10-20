@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include "map_hl.h"
 #include "osm.h"
 #include "pos.h"
 #include "track.h"
@@ -64,7 +65,6 @@ struct appdata_t;
 class canvas_t;
 struct canvas_item_circle;
 struct canvas_item_t;
-struct map_highlight_t;
 struct style_t;
 struct track_seg_t;
 struct track_t;
@@ -91,7 +91,7 @@ struct map_state_t {
 
 class map_t {
 protected:
-  explicit map_t(appdata_t &a, map_highlight_t &hl);
+  explicit map_t(appdata_t &a);
 
   void handle_motion(int x, int y);
   void scroll_step(int x, int y);
@@ -114,7 +114,7 @@ public:
   canvas_t * const canvas;
   map_state_t &state;
 
-  map_highlight_t &highlight;      // list of elements used for highlighting
+  map_highlight_t highlight;       // list of elements used for highlighting
 
   map_item_t selected;             // the currently selected item (node or way)
 
