@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2008 Till Harbaum <till@harbaum.org>.
  *
@@ -53,15 +52,31 @@
 /* in the osm tree (node_t, way_t, ...) to be able to get a link */
 /* to the screen representation of a give node/way/etc */
 struct map_item_chain_t {
-  std::vector<map_item_t *> map_items;
-  canvas_item_t *firstCanvasItem() const;
-};
+  map_item_chain_t()
+    : i0(nullptr), i1(nullptr) {}
+  map_item_t *i0;
+  map_item_t *i1;
 
-canvas_item_t *map_item_chain_t::firstCanvasItem() const {
-  if(map_items.empty())
-    return nullptr;
-  return map_items.front()->item;
-}
+  inline canvas_item_t *firstCanvasItem() const
+  {
+    return i0 == nullptr ? nullptr : i0->item;
+  }
+
+  inline void clear() {
+    if(i0 != nullptr) {
+      delete i0->item;
+      if(i1 != nullptr)
+        delete i1->item;
+    }
+  }
+
+  void reset()
+  {
+    clear();
+    i0 = nullptr;
+    i1 = nullptr;
+  }
+};
 
 static void map_statusbar(const std::unique_ptr<MainUi> &uicontrol, const object_t &object,
                           osm_t::ref osm) {
@@ -75,17 +90,12 @@ void map_t::outside_error() {
   error_dlg(_("Items must not be placed outside the working area!"));
 }
 
-static inline void map_item_destroy_canvas_item(map_item_t *m) {
-  delete m->item;
-}
-
 void visible_item_t::item_chain_destroy()
 {
   if(map_item_chain == nullptr)
     return;
 
-  std::for_each(map_item_chain->map_items.begin(), map_item_chain->map_items.end(),
-                map_item_destroy_canvas_item);
+  map_item_chain->clear();
 
   delete map_item_chain;
   map_item_chain = nullptr;
@@ -404,7 +414,8 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
   /* attach map_item to nodes map_item_chain */
   if(node->map_item_chain == nullptr)
     node->map_item_chain = new map_item_chain_t();
-  node->map_item_chain->map_items.push_back(map_item);
+  assert(node->map_item_chain->i0 == nullptr);
+  node->map_item_chain->i0 = map_item;
 
   map_item->item->set_user_data(map_item);
 }
@@ -455,7 +466,7 @@ void map_way_draw_functor::operator()(way_t *way)
   /* attach map_item to ways map_item_chain */
   if(way->map_item_chain == nullptr)
     way->map_item_chain = new map_item_chain_t();
-  std::vector<map_item_t *> &chain = way->map_item_chain->map_items;
+  assert(way->map_item_chain->i0 == nullptr);
   map_item_t *map_item;
 
   /* allocate space for nodes */
@@ -482,20 +493,18 @@ void map_way_draw_functor::operator()(way_t *way)
       map_item = map_way_new(map, CANVAS_GROUP_POLYGONS, way, points,
                              width, way->draw.color, way->draw.area.color);
     } else if(way->draw.flags & OSM_DRAW_FLAG_BG) {
-      chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points,
-                                  width, way->draw.color));
+      map_item = map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points, width, way->draw.color);
 
-      map_item = map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
-                             way->draw.bg.width * map->state.detail,
-                             way->draw.bg.color);
-
+      way->map_item_chain->i1 = map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
+                                            way->draw.bg.width * map->state.detail,
+                                            way->draw.bg.color);
     } else {
       map_item = map_way_new(map, CANVAS_GROUP_WAYS, way, points,
                              width, way->draw.color);
     }
   }
 
-  chain.push_back(map_item);
+  way->map_item_chain->i0 = map_item;
 }
 
 void map_t::draw(way_t *way) {
@@ -683,8 +692,8 @@ void map_t::pen_down_item() {
   case object_t::NODE:
   case object_t::WAY: {
     visible_item_t * const vis = static_cast<visible_item_t *>(pen_down.on_item->object.obj);
-    if(vis->map_item_chain != nullptr && !vis->map_item_chain->map_items.empty()) {
-      map_item_t *parent = vis->map_item_chain->map_items.front();
+    if(vis->map_item_chain != nullptr) {
+      map_item_t *parent = vis->map_item_chain->i0;
 
       if(parent != nullptr) {
         printf("  using parent item %s #" ITEM_ID_FORMAT "\n", vis->apiString(), vis->id);
