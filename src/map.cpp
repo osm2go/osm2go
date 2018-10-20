@@ -554,7 +554,7 @@ void map_t::redraw_item(T *obj)
   if(is_selected)
     item_deselect();
 
-  static_cast<visible_item_t *>(obj)->item_chain_destroy();
+  obj->item_chain_destroy();
 
   style->colorize(obj);
   draw(obj);
