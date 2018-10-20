@@ -54,18 +54,17 @@ namespace std {
       typedef _Tp                       element_type;
       typedef _Dp                       deleter_type;
 
-      typedef std::pair<_Tp *, _Dp>  __tuple_type;
-      __tuple_type                  _M_t;
+      _Tp *_M_t;
 
       // Constructors.
-      explicit unique_ptr(_Tp *__p = nullptr, deleter_type __d = deleter_type())
-      : _M_t(__p, __d) { }
+      explicit unique_ptr(_Tp *__p = nullptr)
+      : _M_t(__p) { }
 
       // Destructor.
       ~unique_ptr() {
-        _Tp *&__ptr = _M_t.first;
+        _Tp *&__ptr = _M_t;
         if (__ptr != nullptr)
-          get_deleter()(__ptr);
+          _Dp()(__ptr);
         __ptr = nullptr;
       }
 
@@ -81,13 +80,7 @@ namespace std {
       }
 
       _Tp *get() const
-      { return _M_t.first; }
-
-      deleter_type& get_deleter()
-      { return _M_t.second; }
-
-      const deleter_type& get_deleter() const
-      { return _M_t.first; }
+      { return _M_t; }
 
       operator bool() const
       { return get() == nullptr ? false : true; }
@@ -95,15 +88,15 @@ namespace std {
       // Modifiers.
       _Tp *release() {
         _Tp *__p = get();
-        _M_t.first = nullptr;
+        _M_t = nullptr;
         return __p;
       }
 
       void reset(_Tp *__p = nullptr) {
         using std::swap;
-        swap(_M_t.first, __p);
+        swap(_M_t, __p);
         if (__p != nullptr)
-          get_deleter()(__p);
+          _Dp()(__p);
       }
 
       /// Exchange the pointer and deleter with another object.
