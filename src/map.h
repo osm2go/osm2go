@@ -72,6 +72,7 @@ struct track_t;
 struct map_item_t {
   map_item_t(object_t o = object_t(), bool hl = false, canvas_item_t *i = nullptr)
     : object(o), highlight(hl) , item(i) {}
+  map_item_t(const map_item_t &) O2G_DELETED_FUNCTION;
 
   object_t object;
   bool highlight;

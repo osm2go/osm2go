@@ -552,18 +552,18 @@ void map_t::node_move(map_item_t *map_item, int ex, int ey) {
 /* called from the "reverse" icon */
 void map_t::way_reverse() {
   /* work on local copy since de-selecting destroys the selection */
-  map_item_t item = selected;
+  object_t sel = selected.object;
 
   /* deleting the selected item de-selects it ... */
   item_deselect();
 
-  assert(item.object.type == object_t::WAY);
+  assert(sel.type == object_t::WAY);
 
   unsigned int n_tags_flipped;
   unsigned int n_roles_flipped;
-  item.object.way->reverse(appdata.project->osm, n_tags_flipped, n_roles_flipped);
+  sel.way->reverse(appdata.project->osm, n_tags_flipped, n_roles_flipped);
 
-  select_way(item.object.way);
+  select_way(sel.way);
 
   if (n_tags_flipped == 0 && n_roles_flipped == 0)
     return;

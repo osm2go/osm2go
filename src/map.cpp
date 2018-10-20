@@ -123,8 +123,7 @@ static void map_object_select(map_t *map, node_t *node)
   int x = map_item->object.node->lpos.x, y = map_item->object.node->lpos.y;
 
   /* create a copy of this map item and mark it as being a highlight */
-  map_item_t *new_map_item = new map_item_t(*map_item);
-  new_map_item->highlight = true;
+  map_item_t *new_map_item = new map_item_t(map_item->object, true);
 
   float radius = 0;
   style_t::IconCache::iterator it;
@@ -146,8 +145,7 @@ static void map_object_select(map_t *map, node_t *node)
 
   if(map_item->item == nullptr) {
     /* and draw a fake node */
-    new_map_item = new map_item_t(*map_item);
-    new_map_item->highlight = true;
+    new_map_item = new map_item_t(map_item->object, true);
     map->highlight.circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item, x, y,
                               map->style->node.radius, map->style->highlight.node_color);
   }
@@ -271,8 +269,7 @@ void map_t::select_way(way_t *way) {
   const std::vector<lpos_t> &points = points_from_node_chain(way);
   if(likely(!points.empty())) {
     /* create a copy of this map item and mark it as being a highlight */
-    map_item_t *new_map_item = new map_item_t(*map_item);
-    new_map_item->highlight = true;
+    map_item_t *new_map_item = new map_item_t(map_item->object, true);
 
     highlight.polyline_new(this, CANVAS_GROUP_WAYS_HL, new_map_item, points,
 		 ((way->draw.flags & OSM_DRAW_FLAG_BG)?
@@ -980,12 +977,12 @@ void map_t::button_release(int x, int y) {
     if(!pen_down.drag) {
       printf("left button released after click\n");
 
-      map_item_t old_sel = selected;
+      object_t old_sel = selected.object;
       map_handle_click(this);
 
-      if(old_sel.object.type != object_t::ILLEGAL && old_sel.object == selected.object) {
+      if(old_sel.type != object_t::ILLEGAL && old_sel == selected.object) {
         printf("re-selected same item of type %s, pushing it to the bottom\n",
-               old_sel.object.type_string());
+               old_sel.type_string());
         if(selected.item == nullptr) {
           printf("  item has no visible representation to push\n");
         } else {
@@ -1358,9 +1355,9 @@ struct short_way {
 /* called from icon "trash" */
 void map_t::delete_selected() {
   /* work on local copy since de-selecting destroys the selection */
-  map_item_t item = selected;
+  object_t sel = selected.object;
 
-  const char *objtype = item.object.type_string();
+  const char *objtype = sel.type_string();
   if(!osm2go_platform::yes_no(trstring("Delete selected %1?").arg(objtype),
              trstring("Do you really want to delete the selected %1?").arg(objtype),
              MISC_AGAIN_ID_DELETE | MISC_AGAIN_FLAG_DONT_SAVE_NO))
@@ -1370,14 +1367,14 @@ void map_t::delete_selected() {
   item_deselect();
 
   printf("request to delete %s #" ITEM_ID_FORMAT "\n",
-         objtype, item.object.obj->id);
+         objtype, sel.obj->id);
 
   osm_t::ref osm = appdata.project->osm;
-  switch(item.object.type) {
+  switch(sel.type) {
   case object_t::NODE: {
     /* check if this node is part of a way with two nodes only. */
     /* we cannot delete this as this would also delete the way */
-    if(osm->find_way(short_way(item.object.node)) != nullptr &&
+    if(osm->find_way(short_way(sel.node)) != nullptr &&
        !osm2go_platform::yes_no(_("Delete node in short way(s)?"),
                                 _("Deleting this node will also delete one or more ways "
                                 "since they'll contain only one node afterwards. "
@@ -1385,18 +1382,18 @@ void map_t::delete_selected() {
       return;
 
     /* and mark it "deleted" in the database */
-    const way_chain_t &chain = osm->node_delete(item.object.node);
+    const way_chain_t &chain = osm->node_delete(sel.node);
     std::for_each(chain.begin(), chain.end(), node_deleted_from_ways(this));
 
     break;
   }
 
   case object_t::WAY:
-    osm->way_delete(item.object.way);
+    osm->way_delete(sel.way);
     break;
 
   case object_t::RELATION:
-    osm->relation_delete(item.object.relation);
+    osm->relation_delete(sel.relation);
     break;
 
   default:
