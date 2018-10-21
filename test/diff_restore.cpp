@@ -251,7 +251,7 @@ int main(int argc, char **argv)
     assert(sproject->osm);
 
     // now create a diff file dummy
-    fdguard fd(open(bpath.c_str(), O_CREAT | O_WRONLY | O_CLOEXEC, 0600));
+    fdguard fd(open(bpath.c_str(), O_CREAT | O_WRONLY, 0600));
     assert(fd.valid());
     {
       fdguard none(-1);
