@@ -63,8 +63,6 @@ struct project_context_t {
 #endif
   area_edit_t area_edit;
   const std::vector<project_t *> &projects;
-
-  bool active_n_dirty() const;
 };
 
 /* create a left aligned label (normal ones are centered) */
@@ -592,7 +590,8 @@ static void project_filesize(project_context_t *context) {
 
 /* a project may currently be open. "unsaved changes" then also */
 /* means that the user may have unsaved changes */
-bool project_context_t::active_n_dirty() const {
+static bool active_n_dirty(appdata_t &appdata, const project_t *project)
+{
   if(appdata.project && appdata.project->osm && appdata.project->name == project->name) {
     g_debug("editing the currently open project");
 
@@ -605,7 +604,7 @@ bool project_context_t::active_n_dirty() const {
 static void project_diffstat(project_context_t &context) {
   const char *str;
 
-  if(context.project->diff_file_present() || context.active_n_dirty()) {
+  if(context.project->diff_file_present() || active_n_dirty(context.appdata, context.project)) {
     /* this should prevent the user from changing the area */
     str = _("unsaved changes pending");
   } else
@@ -617,7 +616,7 @@ static void project_diffstat(project_context_t &context) {
 static void on_edit_clicked(project_context_t *context) {
   project_t * const project = context->project;
 
-  if(project->diff_file_present() || context->active_n_dirty())
+  if(project->diff_file_present() || active_n_dirty(context->appdata, project))
     message_dlg(_("Pending changes"),
                 _("You have pending changes in this project.\n\nChanging "
                   "the area may cause pending changes to be "
@@ -770,7 +769,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
   gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_left_new(_("Changes:")), 0, 1, 5, 6);
   project_diffstat(context);
   gtk_table_attach_defaults(GTK_TABLE(table), context.diff_stat, 1, 4, 5, 6);
-  if(!project->diff_file_present() && !context.active_n_dirty())
+  if(!project->diff_file_present() && !active_n_dirty(context.appdata, project))
     gtk_widget_set_sensitive(context.diff_remove,  FALSE);
   g_signal_connect_swapped(context.diff_remove, "clicked",
                            G_CALLBACK(on_diff_remove_clicked), &context);
