@@ -544,19 +544,19 @@ static void project_filesize(project_context_t *context) {
 
   g_debug("Checking size of %s", project->osmFile.c_str());
 
+  gboolean en;
   struct stat st;
   bool stret = fstatat(project->dirfd, project->osmFile.c_str(), &st, 0) == 0 &&
                S_ISREG(st.st_mode);
+  const GdkColor *color;
   if(!stret && errno == ENOENT) {
-    gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, osm2go_platform::invalid_text_color());
+    color = osm2go_platform::invalid_text_color();
 
     str = _("Not downloaded!");
 
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
-				      GTK_RESPONSE_ACCEPT, context->is_new == TRUE ? FALSE : TRUE);
-
+    en = context->is_new == TRUE ? FALSE : TRUE;
   } else {
-    gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, nullptr);
+    color = nullptr;
 
     if(!project->data_dirty) {
       if(stret) {
@@ -581,10 +581,10 @@ static void project_filesize(project_context_t *context) {
     } else
       str = _("Outdated, please download!");
 
-    gboolean en = (context->is_new != TRUE || !project->data_dirty) ? TRUE : FALSE;
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
-                                      GTK_RESPONSE_ACCEPT, en);
+    en = (context->is_new != TRUE || !project->data_dirty) ? TRUE : FALSE;
   }
+  gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, color);
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, en);
 
   if(str != nullptr)
     gtk_label_set_text(GTK_LABEL(context->fsize), str);
