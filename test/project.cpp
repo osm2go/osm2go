@@ -69,11 +69,11 @@ static void testNoFiles(const std::string &tmpdir)
 static void testSave(const std::string &tmpdir, const char *empty_proj)
 {
   map_state_t dummystate;
-  project_t project(dummystate, proj_name, tmpdir);
+  std::unique_ptr<project_t> project(new project_t(dummystate, proj_name, tmpdir));
 
-  assert(project.save());
+  assert(project->save());
 
-  const std::string &pfile = project_filename(project);
+  const std::string &pfile = project_filename(*project);
 
   osm2go_platform::MappedFile empty(empty_proj);
   assert(empty);
@@ -82,8 +82,7 @@ static void testSave(const std::string &tmpdir, const char *empty_proj)
 
   assert_cmpmem(empty.data(), empty.length(), proj.data(), proj.length());
 
-  assert_cmpnum(unlink(pfile.c_str()), 0);
-  assert_cmpnum(rmdir(project.path.c_str()), 0);
+  project_delete(project.release());
 }
 
 static void testNoData(const std::string &tmpdir)
@@ -108,12 +107,16 @@ static void testNoData(const std::string &tmpdir)
   write(osmfd, not_gzip, strlen(not_gzip));
   close(osmfd);
 
+  assert(!project->check_demo(nullptr));
+  assert(project->osm_file_exists());
   b = project->parse_osm();
   assert(!b);
 
-  assert_cmpnum(unlinkat(project->dirfd, ofile.c_str(), 0), 0);
-  assert_cmpnum(unlink(pfile.c_str()), 0);
-  assert_cmpnum(rmdir(project->path.c_str()), 0);
+  // add an empty directories to see if project_delete() also cleans those
+  assert_cmpnum(mkdir((project->path + ".foo").c_str(), 0755), 0);
+  assert_cmpnum(mkdirat(project->dirfd, ".bar", 0755), 0);
+
+  project_delete(project.release());
 }
 
 int main(int argc, char **argv)
