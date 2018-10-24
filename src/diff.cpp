@@ -519,8 +519,6 @@ unsigned int project_t::diff_restore()
   if(diff_name.empty()) {
     printf("no diff present!\n");
     return DIFF_NONE_PRESENT;
-  } else {
-    printf("diff %s found, applying ...\n", diff_name.c_str());
   }
 
   fdguard difffd(dirfd, diff_name.c_str(), O_RDONLY);
@@ -531,6 +529,8 @@ unsigned int project_t::diff_restore()
     error_dlg(trstring("Error: could not parse file %1\n").arg(diff_name));
     return DIFF_INVALID;
   }
+
+  printf("diff %s found, applying ...\n", diff_name.c_str());
 
   unsigned int res = DIFF_RESTORED;
 
