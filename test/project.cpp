@@ -119,6 +119,37 @@ static void testNoData(const std::string &tmpdir)
   project_delete(project.release());
 }
 
+static void testServer(const std::string &tmpdir)
+{
+  map_state_t dummystate;
+  const std::string defaultserver = "https://api.openstreetmap.org/api/0.6";
+  const std::string oldserver = "http://api.openstreetmap.org/api/0.5";
+  project_t project(dummystate, proj_name, tmpdir);
+
+  assert_cmpstr(project.server(defaultserver), defaultserver.c_str());
+  assert_cmpstr(project.server(oldserver), oldserver.c_str());
+  assert(project.rserver.empty());
+
+  project.adjustServer(defaultserver.c_str(), defaultserver);
+  assert(project.rserver.empty());
+
+  project.adjustServer(oldserver.c_str(), defaultserver);
+  assert(!project.rserver.empty());
+  assert_cmpstr(project.server(defaultserver), oldserver.c_str());
+
+  project.adjustServer(nullptr, defaultserver);
+  assert(project.rserver.empty());
+  assert_cmpstr(project.server(defaultserver), defaultserver.c_str());
+
+  project.adjustServer(oldserver.c_str(), defaultserver);
+  assert(!project.rserver.empty());
+  assert_cmpstr(project.server(defaultserver), oldserver.c_str());
+
+  project.adjustServer("", defaultserver);
+  assert(project.rserver.empty());
+  assert_cmpstr(project.server(defaultserver), defaultserver.c_str());
+}
+
 int main(int argc, char **argv)
 {
   xmlInitParser();
@@ -139,6 +170,7 @@ int main(int argc, char **argv)
   testNoFiles(osm_path);
   testSave(osm_path, argv[1]);
   testNoData(osm_path);
+  testServer(osm_path);
 
   assert_cmpnum(rmdir(tmpdir), 0);
 
