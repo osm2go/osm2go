@@ -62,7 +62,8 @@ target_link_libraries(suppression-dummy PRIVATE ${LIBXML2_LIBRARIES} ${CURL_LIBR
 target_include_directories(suppression-dummy PRIVATE ${LIBXML2_INCLUDE_DIR} ${CURL_INCLUDE_DIRS})
 
 osm_test(i18n)
-osm_test(project "${CMAKE_CURRENT_SOURCE_DIR}/empty_proj.proj")
+osm_test(project "${CMAKE_CURRENT_SOURCE_DIR}/empty_proj.proj"
+		"${CMAKE_CURRENT_SOURCE_DIR}/diff_restore/diff_restore.osm")
 
 if (NETWORK_TESTS)
 	osm_test(net_io "${CMAKE_SOURCE_DIR}/data/COPYING")

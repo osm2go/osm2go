@@ -26,8 +26,23 @@
 #include <osm2go_cpp.h>
 #include <osm2go_platform.h>
 
+class MainUiDummy : public MainUi {
+public:
+  MainUiDummy() : MainUi() {}
+  virtual void setActionEnable(menu_items, bool) override
+  { abort(); }
+  virtual void showNotification(const char *message, unsigned int flags = NoFlags) override;
+  std::vector<std::string> messages;
+};
+
+void MainUiDummy::showNotification(const char *message, unsigned int)
+{
+  printf("%s: %s\n", __PRETTY_FUNCTION__, message);
+  messages.push_back(message);
+}
+
 appdata_t::appdata_t(map_state_t &mstate)
-  : uicontrol(nullptr)
+  : uicontrol(new MainUiDummy())
   , map_state(mstate)
   , map(nullptr)
   , icons(icon_t::instance())
@@ -150,11 +165,51 @@ static void testServer(const std::string &tmpdir)
   assert_cmpstr(project.server(defaultserver), defaultserver.c_str());
 }
 
+static void testLoad(const std::string &tmpdir, const char *osmfile)
+{
+  map_state_t dummystate;
+  appdata_t appdata(dummystate);
+
+  // create dummy project
+  std::unique_ptr<project_t> project(new project_t(dummystate, proj_name, tmpdir));
+  assert(project->save());
+
+  const std::string fn = project_filename(*project);
+  project.reset();
+
+  // 2 attempts of loading, the first will fail because of missing OSM data
+  for (size_t i = 2; i > 0; i--) {
+    if(i == 1) {
+      // copy the OSM data
+      osm2go_platform::MappedFile osm(osmfile);
+      assert(static_cast<bool>(osm));
+      fdguard osmfd(open((tmpdir + proj_name + "/" + proj_name + ".osm").c_str(), O_CREAT | O_WRONLY, 0644));
+      assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
+      assert_cmpnum(write(osmfd, osm.data(), osm.length()), osm.length());
+    }
+
+    // loading will fail because window is nullptr (and map also)
+    assert(!project_load(appdata, fn));
+
+    MainUiDummy *uid = static_cast<MainUiDummy *>(appdata.uicontrol.get());
+    assert_cmpnum(uid->messages.size(), i);
+    assert(!appdata.project);
+
+    const std::vector<std::string>::const_iterator itEnd = uid->messages.end();
+    // every expected message contains the project name
+    for(std::vector<std::string>::const_iterator it = uid->messages.begin(); it != itEnd; it++)
+      assert(it->find(proj_name) != std::string::npos);
+    uid->messages.clear();
+  }
+
+  project_delete(new project_t(dummystate, proj_name, tmpdir));
+}
+
 int main(int argc, char **argv)
 {
   xmlInitParser();
 
-  if(argc != 2)
+  if(argc != 3)
     return 1;
 
   char tmpdir[] = "/tmp/osm2go-project-XXXXXX";
@@ -171,6 +226,7 @@ int main(int argc, char **argv)
   testSave(osm_path, argv[1]);
   testNoData(osm_path);
   testServer(osm_path);
+  testLoad(osm_path, argv[2]);
 
   assert_cmpnum(rmdir(tmpdir), 0);
 
