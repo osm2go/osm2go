@@ -65,23 +65,38 @@ struct project_context_t {
   const std::vector<project_t *> &projects;
 };
 
+static void pos_lat_label_set(GtkWidget *label, pos_float_t lat)
+{
+  char str[32];
+  pos_lat_str(str, sizeof(str), lat);
+  gtk_label_set_text(GTK_LABEL(label), str);
+}
+
+static void pos_lon_label_set(GtkWidget *label, pos_float_t lon)
+{
+  char str[32];
+  pos_lon_str(str, sizeof(str), lon);
+  gtk_label_set_text(GTK_LABEL(label), str);
+}
+
+static void boundsUpdated(project_context_t *context)
+{
+  const pos_area &bounds = context->project->bounds;
+
+  pos_lat_label_set(context->minlat, bounds.min.lat);
+  pos_lon_label_set(context->minlon, bounds.min.lon);
+  pos_lat_label_set(context->maxlat, bounds.max.lat);
+  pos_lon_label_set(context->maxlon, bounds.max.lon);
+
+  bool pos_valid =  bounds.valid();
+  gtk_widget_set_sensitive(context->download, pos_valid ? TRUE : FALSE);
+}
+
 /* create a left aligned label (normal ones are centered) */
 static GtkWidget *gtk_label_left_new(const char *str = nullptr) {
   GtkWidget *label = gtk_label_new(str);
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, .5f);
   return label;
-}
-
-static GtkWidget *pos_lat_label_new(pos_float_t lat) {
-  char str[32];
-  pos_lat_str(str, sizeof(str), lat);
-  return gtk_label_new(str);
-}
-
-static GtkWidget *pos_lon_label_new(pos_float_t lon) {
-  char str[32];
-  pos_lon_str(str, sizeof(str), lon);
-  return gtk_label_new(str);
 }
 
 project_context_t::project_context_t(appdata_t &a, project_t *p, gboolean n,
@@ -95,10 +110,10 @@ project_context_t::project_context_t(appdata_t &a, project_t *p, gboolean n,
   , diff_remove(button_new_with_label(_("Undo all")))
   , desc(entry_new())
   , download(button_new_with_label(_("Download")))
-  , minlat(pos_lat_label_new(project->bounds.min.lat))
-  , minlon(pos_lon_label_new(project->bounds.min.lon))
-  , maxlat(pos_lat_label_new(project->bounds.max.lat))
-  , maxlon(pos_lon_label_new(project->bounds.max.lon))
+  , minlat(gtk_label_new(nullptr))
+  , minlon(gtk_label_new(nullptr))
+  , maxlat(gtk_label_new(nullptr))
+  , maxlon(gtk_label_new(nullptr))
   , is_new(n)
 #ifdef SERVER_EDITABLE
   , server(entry_new(EntryFlagsNoAutoCap))
@@ -119,18 +134,6 @@ struct select_context_t {
   GtkWidget *list;
   std::unique_ptr<GtkListStore, g_object_deleter> store;
 };
-
-static void pos_lat_label_set(GtkWidget *label, pos_float_t lat) {
-  char str[32];
-  pos_lat_str(str, sizeof(str), lat);
-  gtk_label_set_text(GTK_LABEL(label), str);
-}
-
-static void pos_lon_label_set(GtkWidget *label, pos_float_t lon) {
-  char str[32];
-  pos_lon_str(str, sizeof(str), lon);
-  gtk_label_set_text(GTK_LABEL(label), str);
-}
 
 static bool project_edit(select_context_t *scontext, project_t *project, bool is_new);
 
@@ -632,16 +635,10 @@ static void on_edit_clicked(project_context_t *context) {
     /* the wms layer isn't usable with new coordinates */
     wms_remove_file(*project);
 
-    pos_lat_label_set(context->minlat, project->bounds.min.lat);
-    pos_lon_label_set(context->minlon, project->bounds.min.lon);
-    pos_lat_label_set(context->maxlat, project->bounds.max.lat);
-    pos_lon_label_set(context->maxlon, project->bounds.max.lon);
-
-    bool pos_valid =  project->bounds.valid();
-    gtk_widget_set_sensitive(context->download, pos_valid ? TRUE : FALSE);
+    boundsUpdated(context);
 
     /* (re-) download area */
-    if(pos_valid && osm_download(GTK_WIDGET(context->dialog), project))
+    if(project->bounds.valid() && osm_download(GTK_WIDGET(context->dialog), project))
       project->data_dirty = false;
     project_filesize(context);
   }
@@ -759,8 +756,6 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
   gtk_table_attach_defaults(GTK_TABLE(table), context.fsize, 1, 4, 4, 5);
   g_signal_connect_swapped(context.download, "clicked",
                            G_CALLBACK(on_download_clicked), &context);
-  gtk_widget_set_sensitive(context.download,
-                           project->bounds.valid() ? TRUE : FALSE);
 
   gtk_table_attach_defaults(GTK_TABLE(table), context.download, 4, 5, 4, 5);
 
@@ -783,6 +778,8 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
   if(is_new)
     gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_ACCEPT,
                                       project->osm_file_exists() ? TRUE : FALSE);
+
+  boundsUpdated(&context);
 
   gtk_widget_show_all(dialog.get());
 
