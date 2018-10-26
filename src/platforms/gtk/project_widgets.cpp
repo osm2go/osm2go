@@ -51,6 +51,9 @@ using namespace osm2go_platform;
 
 struct project_context_t {
   explicit project_context_t(appdata_t &a, project_t *p, gboolean n, const std::vector<project_t *> &j, GtkWidget *dlg);
+  ~project_context_t()
+  { delete area_edit; }
+
   project_t * const project;
   appdata_t &appdata;
   GtkWidget * const dialog;
@@ -61,7 +64,7 @@ struct project_context_t {
 #ifdef SERVER_EDITABLE
   GtkWidget * const server;
 #endif
-  area_edit_t area_edit;
+  area_edit_t *area_edit;
   const std::vector<project_t *> &projects;
 };
 
@@ -118,7 +121,7 @@ project_context_t::project_context_t(appdata_t &a, project_t *p, gboolean n,
 #ifdef SERVER_EDITABLE
   , server(entry_new(EntryFlagsNoAutoCap))
 #endif
-  , area_edit(a.gps_state.get(), project->bounds, dlg)
+  , area_edit(nullptr)
   , projects(j)
 {
 }
@@ -625,11 +628,15 @@ static void on_edit_clicked(project_context_t *context) {
                   "the area may cause pending changes to be "
                   "lost if they are outside the updated area."), context->dialog);
 
-  context->area_edit.other_bounds.clear();
-  std::for_each(context->projects.begin(), context->projects.end(),
-                projects_to_bounds(context->area_edit.other_bounds));
+  if(context->area_edit == nullptr)
+    context->area_edit = new area_edit_t(context->appdata.gps_state.get(), project->bounds,
+                                         context->dialog);
 
-  if(context->area_edit.run()) {
+  context->area_edit->other_bounds.clear();
+  std::for_each(context->projects.begin(), context->projects.end(),
+                projects_to_bounds(context->area_edit->other_bounds));
+
+  if(context->area_edit->run()) {
     g_debug("coordinates changed!");
 
     /* the wms layer isn't usable with new coordinates */
