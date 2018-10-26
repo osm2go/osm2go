@@ -304,7 +304,7 @@ static void area_main_update(area_context_t *context) {
 }
 
 static GSList *pos_append_rad(GSList *list, pos_float_t lat, pos_float_t lon) {
-  OsmGpsMapPoint *coo = g_new0(OsmGpsMapPoint, 1);
+  OsmGpsMapPoint *coo = g_new(OsmGpsMapPoint, 1);
   coo->rlat = lat;
   coo->rlon = lon;
   return g_slist_append(list, coo);
