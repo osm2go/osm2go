@@ -56,8 +56,8 @@ struct project_t {
 
   pos_area bounds;
 
-  const std::string name;
-  const std::string path;
+  std::string name;
+  std::string path; ///< the project directory on disk (ends with '/')
   std::string desc;
   std::string osmFile;
   std::string rserver;
@@ -81,6 +81,18 @@ struct project_t {
    * @param parent parent window for dialogs
    */
   bool save(osm2go_platform::Widget *parent = nullptr);
+
+  /**
+   * @brief rename the project
+   * @param nname the new name (must be valid)
+   * @param parent parent window for dialogs
+   * @param global the currently active project
+   *
+   * If global matches the current project it will be updated with the
+   * changed values as well. It must not be the same pointer as this
+   * object.
+   */
+  bool rename(const std::string &nname, project_t::ref global, osm2go_platform::Widget *parent = nullptr);
 
   /**
    * @brief check if the current project is the demo project

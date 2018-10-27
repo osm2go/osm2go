@@ -224,10 +224,21 @@ static void callback_modified_name(GtkWidget *widget, name_callback_context_t *c
 				    GTK_RESPONSE_ACCEPT, ok);
 }
 
-static project_t *project_new(select_context_t *context) {
+/**
+ * @brief query the user for a project name
+ * @param parent the parent widget
+ * @param oldname the current name of the project
+ * @return the new project name
+ * @retval std::string() the user cancelled the dialog
+ *
+ * This will prevent the user entering an invalid project name, which
+ * includes a name that is already in use.
+ */
+static std::string project_name_dialog(GtkWidget *parent, const std::string &oldname)
+{
   /* --------------  first choose a name for the project --------------- */
   osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Project name"),
-                                              GTK_WINDOW(context->dialog), GTK_DIALOG_MODAL,
+                                              GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                               nullptr));
@@ -238,21 +249,30 @@ static project_t *project_new(select_context_t *context) {
   name_callback_context_t name_context(dialog.get(), settings_t::instance()->base_path_fd);
   GtkWidget *entry = entry_new();
   gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
+  if(!oldname.empty())
+    gtk_entry_set_text(GTK_ENTRY(entry), oldname.c_str());
   g_signal_connect(entry, "changed", G_CALLBACK(callback_modified_name), &name_context);
 
   gtk_box_pack_start(dialog.vbox(), hbox, TRUE, TRUE, 0);
 
-  /* don't allow user to click ok until a valid area has been specified */
+  /* don't allow user to click ok until a valid name has been specified */
   gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_ACCEPT, FALSE);
 
   gtk_widget_show_all(dialog.get());
   if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(dialog))
+    return std::string();
+
+  return gtk_entry_get_text(GTK_ENTRY(entry));
+}
+
+static project_t *project_new(select_context_t *context) {
+  const std::string &name = project_name_dialog(context->dialog, std::string());
+
+  if(name.empty())
     return nullptr;
 
-  std::unique_ptr<project_t> project(new project_t(context->dummystate,
-                                                   gtk_entry_get_text(GTK_ENTRY(entry)),
+  std::unique_ptr<project_t> project(new project_t(context->dummystate, name,
                                                    settings_t::instance()->base_path));
-  dialog.reset();
 
   /* no data downloaded yet */
   project->data_dirty = true;
@@ -660,6 +680,30 @@ static void on_download_clicked(project_context_t *context) {
   project_filesize(context);
 }
 
+static void on_rename_clicked(project_context_t *context)
+{
+  project_t * const project = context->project;
+
+  const std::string &name = project_name_dialog(context->dialog, project->name);
+
+  if(name.empty() || name == project->name)
+    return;
+
+  project_t::ref openProject = context->appdata.project;
+  const bool isOpen = openProject && openProject->name == project->name;
+
+  if(!project->rename(name, openProject, context->dialog))
+    return;
+
+  g_string str(g_strdup_printf(_("Edit project - %s"), project->name.c_str()));
+  gtk_window_set_title(GTK_WINDOW(context->dialog), str.get());
+
+  if(!isOpen)
+    return;
+
+  context->appdata.set_title();
+}
+
 static void on_diff_remove_clicked(project_context_t *context) {
   const project_t * const project = context->project;
 
@@ -727,7 +771,11 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
   gtk_entry_set_activates_default(GTK_ENTRY(context.desc), TRUE);
   if(!project->desc.empty())
     gtk_entry_set_text(GTK_ENTRY(context.desc), project->desc.c_str());
-  gtk_table_attach_defaults(GTK_TABLE(table),  context.desc, 1, 5, 0, 1);
+  gtk_table_attach_defaults(GTK_TABLE(table),  context.desc, 1, 4, 0, 1);
+
+  GtkWidget *renameBtn = button_new_with_label(_("Rename"));
+  gtk_table_attach_defaults(GTK_TABLE(table), renameBtn, 4, 5, 0, 1);
+  g_signal_connect_swapped(renameBtn, "clicked", G_CALLBACK(on_rename_clicked), &context);
   gtk_table_set_row_spacing(GTK_TABLE(table), 0, 4);
 
   gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_left_new(_("Latitude:")), 0, 1, 1, 2);

@@ -588,6 +588,36 @@ void diff_restore(project_t::ref project, MainUi *uicontrol) {
   }
 }
 
+bool diff_rename(project_t::ref oldproj, project_t *nproj)
+{
+  const std::string &diff_name = project_diff_name(oldproj.get());
+  if(unlikely(diff_name.empty()))
+    return false;
+
+  fdguard difffd(oldproj->dirfd, diff_name.c_str(), O_RDONLY);
+
+  /* parse the file and get the DOM */
+  xmlDocGuard doc(xmlReadFd(difffd, nullptr, nullptr, XML_PARSE_NONET));
+  if(unlikely(!doc)) {
+    error_dlg(trstring("Error: could not parse file %1\n").arg(diff_name));
+    return false;
+  }
+
+  for (xmlNode *cur_node = xmlDocGetRootElement(doc.get()); cur_node != nullptr;
+       cur_node = cur_node->next) {
+    if (cur_node->type == XML_ELEMENT_NODE) {
+      if(likely(strcmp(reinterpret_cast<const char *>(cur_node->name), "diff") == 0)) {
+        xmlSetProp(cur_node, BAD_CAST "name", BAD_CAST nproj->name.c_str());
+        break;
+      }
+    }
+  }
+
+  xmlSaveFormatFileEnc((nproj->path + diff_filename(nproj)).c_str(), doc.get(), "UTF-8", 1);
+
+  return true;
+}
+
 bool project_t::diff_file_present() const
 {
   const std::string &dn = project_diff_name(this);

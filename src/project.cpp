@@ -24,6 +24,7 @@
 #include "area_edit.h"
 #include "diff.h"
 #include "map.h"
+#include "net_io.h"
 #include "notifications.h"
 #include "osm2go_platform.h"
 #include "settings.h"
@@ -234,6 +235,83 @@ bool project_t::save(osm2go_platform::Widget *parent) {
   }
 
   xmlSaveFormatFileEnc(project_file.c_str(), doc.get(), "UTF-8", 1);
+
+  return true;
+}
+
+static void swap_project(project_t *one, project_t *other)
+{
+  one->path.swap(other->path);
+  one->name.swap(other->name);
+  one->osmFile.swap(other->osmFile);
+  one->dirfd.swap(other->dirfd);
+}
+
+bool project_t::rename(const std::string &nname, project_t::ref global, osm2go_platform::Widget *parent)
+{
+  const bool isGlobal = global && global->name == name;
+  assert(global.get() != this);
+
+  std::unique_ptr<project_t> tmpproj(new project_t(map_state, nname, path.substr(0, path.size() - 1 /* slash */ - name.size())));
+  const bool oldOsmExists = osm_file_exists();
+
+  swap_project(tmpproj.get(), this);
+
+  // if it is a local path create a local one again, otherwise just keep the old location
+  if(tmpproj->osmFile.empty() || tmpproj->osmFile.find('/') != std::string::npos) {
+    osmFile = tmpproj->osmFile;
+  } else {
+    osmFile = nname + ".osm";
+    osm2go_platform::MappedFile osmData((tmpproj->path + tmpproj->osmFile).c_str());
+    if(likely(osmData) && check_gzip(osmData.data(), osmData.length()))
+      osmFile += ".gz";
+  }
+
+  // project file
+  if(unlikely(!save(parent))) {
+    swap_project(tmpproj.get(), this);
+    return false;
+  }
+
+  // simply link the OSM data over, it is the same for both projects
+  if(oldOsmExists && unlikely(linkat(tmpproj->dirfd, tmpproj->osmFile.c_str(), dirfd.fd, osmFile.c_str(), 0) != 0)) {
+    error_dlg(trstring("Unable to link new OSM data file %1").arg(osmFile), parent);
+    swap_project(tmpproj.get(), this);
+    project_delete(tmpproj.release());
+    return false;
+  }
+
+  // diff has project name in it
+  if(tmpproj->diff_file_present() && !diff_rename(tmpproj, this)) {
+    swap_project(tmpproj.get(), this);
+    project_delete(tmpproj.release());
+    return false;
+  }
+
+  // track
+  if(linkat(tmpproj->dirfd, (tmpproj->name + ".trk").c_str(), dirfd.fd, (nname + ".trk").c_str(), 0) != 0 && errno != ENOENT) {
+    error_dlg(_("Unable to link OSM track file"), parent);
+    swap_project(tmpproj.get(), this);
+    project_delete(tmpproj.release());
+    return false;
+  }
+
+  // everything fine up until here, get rid of the old things
+
+  // the project file first, that will prevent the file to be loaded again
+  project_delete(tmpproj.release());
+
+  if(isGlobal) {
+    global->name = name;
+    global->osmFile = osmFile;
+    global->path = path;
+
+    fdguard nfd(dup(dirfd));
+    if(unlikely(!nfd.valid()))
+      printf("Unable to dup project path fd, error %i", errno);
+
+    global->dirfd.swap(nfd);
+  }
 
   return true;
 }

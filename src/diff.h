@@ -40,6 +40,15 @@ enum diff_restore_results {
 void diff_restore(project_t::ref project, MainUi *uicontrol);
 
 /**
+ * @brief move the diff from one project to another
+ * @param oldproj the source project
+ * @param nproj the destination project
+ *
+ * The diff file is removed from the old project.
+ */
+bool diff_rename(project_t::ref oldproj, project_t *nproj);
+
+/**
  * @brief create an empty osmChange document
  *
  * This sets the root node (osmChange) and it's properties, but does not add any content.

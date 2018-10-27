@@ -63,7 +63,8 @@ target_include_directories(suppression-dummy PRIVATE ${LIBXML2_INCLUDE_DIR} ${CU
 
 osm_test(i18n)
 osm_test(project "${CMAKE_CURRENT_SOURCE_DIR}/empty_proj.proj"
-		"${CMAKE_CURRENT_SOURCE_DIR}/diff_restore/diff_restore.osm")
+		"${CMAKE_CURRENT_SOURCE_DIR}/diff_restore/diff_restore.osm"
+		"${CMAKE_CURRENT_SOURCE_DIR}/diff_restore/diff_restore.diff")
 
 if (NETWORK_TESTS)
 	osm_test(net_io "${CMAKE_SOURCE_DIR}/data/COPYING")
