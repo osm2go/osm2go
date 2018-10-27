@@ -535,9 +535,8 @@ void colorize_node::operator()(const elemstyle_t *elemstyle)
     return;
 
   // if any condition mismatches->rule mismatches
-  if(std::find_if(elemstyle->conditions.begin(),
-                  elemstyle->conditions.end(),
-                  condition_not_matches_obj(node)) != elemstyle->conditions.end())
+  const std::vector<elemstyle_condition_t>::const_iterator itEnd = elemstyle->conditions.end();
+  if(std::find_if(elemstyle->conditions.begin(), itEnd, condition_not_matches_obj(node)) != itEnd)
     return;
 
   somematch = true;
