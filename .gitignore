@@ -15,3 +15,6 @@ osm2go.kdev4
 
 # CTest script
 my_osm2go*.cmake
+
+# embedded curl
+curl
