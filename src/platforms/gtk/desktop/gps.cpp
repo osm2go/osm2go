@@ -80,17 +80,16 @@ pos_t gpsd_state_t::get_pos(float* alt)
   return pos;
 }
 
-static gps_data_t *gps_connect()
+static bool gps_connect(gps_data_t &gps)
 {
-  std::unique_ptr<gps_data_t> ret(new gps_data_t);
-  memset(ret.get(), 0, sizeof(*ret.get()));
-  if(gps_open("localhost", DEFAULT_GPSD_PORT, ret.get()) != 0)
-    return nullptr;
+  memset(&gps, 0, sizeof(gps));
+  if(gps_open("localhost", DEFAULT_GPSD_PORT, &gps) != 0)
+    return false;
 
-  if(gps_stream(ret.get(), WATCH_ENABLE | WATCH_JSON, NULL) < 0)
-    return nullptr;
+  if(gps_stream(&gps, WATCH_ENABLE | WATCH_JSON, NULL) < 0)
+    return false;
 
-  return ret.release();
+  return true;
 }
 
 
@@ -112,35 +111,36 @@ gpointer gps_thread(gpointer data) {
   gpsd_state_t * const gps_state = static_cast<gpsd_state_t *>(data);
   gps_state->gpsdata.set = 0;
 
-  std::unique_ptr<gps_data_t> gps;
+  gps_data_t gps;
+  bool connected = false;
 
   while(!gps_state->terminate) {
     if(gps_state->enable) {
-      if(!gps) {
+      if(!connected) {
         g_debug("trying to connect\n");
 
-        gps.reset(gps_connect());
-        if(!gps)
+        connected = gps_connect(gps);
+        if(!connected)
           sleep(10);
       } else {
         /* update every second, wait here to make sure a complete */
         /* reply is received */
-        if(gps_waiting(gps.get(), 1000000)) {
-          int r = gps_read(gps.get());
+        if(gps_waiting(&gps, 1000000)) {
+          int r = gps_read(&gps);
 
           std::lock_guard<std::mutex> lock(gps_state->mutex);
 
           if(G_LIKELY(r > 0))
-            gps_state->gpsdata = *gps;
+            gps_state->gpsdata = gps;
           else
             gps_clear_fix(&gps_state->gpsdata.fix);
         }
       }
     } else {
-      if(gps) {
+      if(connected) {
         g_debug("stopping GPS connection due to user request\n");
-        gps_stream(gps.get(), WATCH_DISABLE, nullptr);
-        gps.reset();
+        gps_stream(&gps, WATCH_DISABLE, nullptr);
+        connected = false;
       } else
         sleep(1);
     }
