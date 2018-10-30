@@ -139,7 +139,8 @@ namespace osm2go_platform {
     MISC_DIALOG_MEDIUM =  1,
     MISC_DIALOG_LARGE  =  2,
     MISC_DIALOG_WIDE   =  3,
-    MISC_DIALOG_HIGH   =  4
+    MISC_DIALOG_HIGH   =  4,
+    _MISC_DIALOG_SIZEHINT_COUNT
   };
 
   void dialog_size_hint(GtkWindow *window, DialogSizeHint hint);

@@ -26,6 +26,7 @@
 #include <pos.h>
 
 #include <algorithm>
+#include <array>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -84,24 +85,24 @@ void osm2go_platform::Timer::stop()
 
 void osm2go_platform::dialog_size_hint(GtkWindow *window, osm2go_platform::DialogSizeHint hint)
 {
-  static const gint dialog_sizes[][2] = {
+  static const std::array<std::array<gint, 2>, _MISC_DIALOG_SIZEHINT_COUNT> dialog_sizes = { {
 #ifdef FREMANTLE
-    { 400, 100 },  // SMALL
+    { { 400, 100 } },  // SMALL
     /* in maemo5 most dialogs are full screen */
-    { 800, 480 },  // MEDIUM
-    { 790, 380 },  // LARGE
-    { 640, 100 },  // WIDE
-    { 450, 480 },  // HIGH
+    { { 800, 480 } },  // MEDIUM
+    { { 790, 380 } },  // LARGE
+    { { 640, 100 } },  // WIDE
+    { { 450, 480 } },  // HIGH
 #else
-    { 300, 100 },  // SMALL
-    { 400, 300 },  // MEDIUM
-    { 500, 350 },  // LARGE
-    { 450, 100 },  // WIDE
-    { 200, 350 },  // HIGH
+    { { 300, 100 } },  // SMALL
+    { { 400, 300 } },  // MEDIUM
+    { { 500, 350 } },  // LARGE
+    { { 450, 100 } },  // WIDE
+    { { 200, 350 } },  // HIGH
 #endif
-  };
+  }};
 
-  gtk_window_set_default_size(window, dialog_sizes[hint][0], dialog_sizes[hint][1]);
+  gtk_window_set_default_size(window, dialog_sizes.at(hint).at(0), dialog_sizes.at(hint).at(1));
 }
 
 osm2go_platform::MappedFile::MappedFile(const char *fname)
