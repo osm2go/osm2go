@@ -32,8 +32,6 @@
 #include <osm2go_platform.h>
 #include <osm2go_platform_gtk.h>
 
-#define MAXTAGLEN    8       /* maximum length of sentence tag name */
-
 /* setup for direct gpsd based communication */
 class gpsd_state_t : public gps_state_t {
 public:
