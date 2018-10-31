@@ -195,7 +195,7 @@ struct draw_selected_way_functor {
   void operator()(node_t *node);
 };
 
-void draw_selected_way_functor::operator()(node_t* node)
+void draw_selected_way_functor::operator()(node_t *node)
 {
   map_item_t item;
   item.object = node;

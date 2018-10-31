@@ -140,7 +140,7 @@ struct map_unref_ways {
   void operator()(node_t *node);
 };
 
-void map_unref_ways::operator()(node_t* node)
+void map_unref_ways::operator()(node_t *node)
 {
   printf("    node #" ITEM_ID_FORMAT " (used by %u)\n",
          node->id, node->ways);

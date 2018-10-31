@@ -87,7 +87,7 @@ canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_item_t* it,
   memcpy(points.get(), p.data(), p.size() * sizeof(points[0]));
 }
 
-void map_item_destroyer::run(canvas_item_t*)
+void map_item_destroyer::run(canvas_item_t *)
 {
   delete mi;
 }
