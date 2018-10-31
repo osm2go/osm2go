@@ -406,6 +406,11 @@ public:
   /**
    * @brief check if any tag that is not "created_by" is present
    */
+  bool hasNonCreatorTags() const noexcept;
+
+  /**
+   * @brief check if any tag that is not "created_by" or "source" is present
+   */
   bool hasRealTags() const noexcept;
 
   const char *get_value(const char *key) const;

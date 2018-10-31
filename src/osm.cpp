@@ -1012,7 +1012,7 @@ void osm_unref_way_free::operator()(node_t* node)
   node->ways--;
 
   /* this node must only be part of this way */
-  if(!node->ways && !node->tags.hasRealTags()) {
+  if(!node->ways && !node->tags.hasNonCreatorTags()) {
     /* delete this node, but don't let this actually affect the */
     /* associated ways as the only such way is the one we are currently */
     /* deleting */
@@ -1587,7 +1587,7 @@ bool tag_list_t::empty() const noexcept
   return contents == nullptr || contents->empty();
 }
 
-bool tag_list_t::hasRealTags() const noexcept
+bool tag_list_t::hasNonCreatorTags() const noexcept
 {
   if(empty())
     return false;
@@ -1595,6 +1595,19 @@ bool tag_list_t::hasRealTags() const noexcept
   const std::vector<tag_t>::const_iterator itEnd = contents->end();
   std::vector<tag_t>::const_iterator it = contents->begin();
   while(it != itEnd && it->is_creator_tag())
+    it++;
+
+  return it != itEnd;
+}
+
+bool tag_list_t::hasRealTags() const noexcept
+{
+  if(empty())
+    return false;
+
+  const std::vector<tag_t>::const_iterator itEnd = contents->end();
+  std::vector<tag_t>::const_iterator it = contents->begin();
+  while(it != itEnd && (it->is_creator_tag() || strcmp(it->key, "source") == 0))
     it++;
 
   return it != itEnd;

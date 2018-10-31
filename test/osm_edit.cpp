@@ -70,6 +70,16 @@ static void test_trivial() {
   std::vector<tag_t> ntags(1, cr_by);
   tags.replace(std::move(ntags));
   assert(!tags.hasRealTags());
+  assert(!tags.hasNonCreatorTags());
+  assert(!tags.hasTagCollisions());
+  tag_t src("source", "test");
+  assert(!src.is_creator_tag());
+  ntags.clear();
+  ntags.push_back(cr_by);
+  ntags.push_back(src);
+  tags.replace(std::move(ntags));
+  assert(!tags.hasRealTags());
+  assert(tags.hasNonCreatorTags());
   assert(!tags.hasTagCollisions());
 
   std::unique_ptr<osm_t> osm(new osm_t());
