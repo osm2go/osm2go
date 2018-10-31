@@ -1297,7 +1297,6 @@ void map_t::action_ok() {
       osm->node_attach(node);
       draw(node);
     }
-    set_action(MAP_ACTION_IDLE);
 
     item_deselect();
 
