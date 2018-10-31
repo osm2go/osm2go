@@ -1193,18 +1193,16 @@ static int application_run(const char *proj)
   gtk_box_pack_start(GTK_BOX(vbox), appdata.map->canvas->widget, TRUE, TRUE, 0);
 
   GtkWidget *sbar = osm2go_platform::statusBarWidget(static_cast<MainUiGtk *>(appdata.uicontrol.get())->statusBar());
+  gtk_box_pack_start(GTK_BOX(vbox), sbar, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
+
   /* fremantle has seperate zoom/details buttons on the right screen side */
 #ifndef FREMANTLE
   icon_button(appdata.map, "detailup_thumb",   G_CALLBACK(cb_menu_view_detail_inc), sbar);
   icon_button(appdata.map, "detaildown_thumb", G_CALLBACK(cb_menu_view_detail_dec), sbar);
   appdata.btn_zoom_out = icon_button(appdata.map, "zoom-in", G_CALLBACK(cb_menu_zoomout), sbar);
   appdata.btn_zoom_in = icon_button(appdata.map, "zoom-out", G_CALLBACK(cb_menu_zoomin), sbar);
-#endif
-  gtk_box_pack_start(GTK_BOX(vbox), sbar, FALSE, FALSE, 0);
-
-  gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
-
-#ifdef FREMANTLE
+#else
   /* fremantle has a set of buttons on the right screen side as well */
   vbox = gtk_vbox_new(FALSE, 0);
 
