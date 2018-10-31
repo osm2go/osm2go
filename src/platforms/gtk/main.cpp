@@ -1185,7 +1185,7 @@ static int application_run(const char *proj)
   if(unlikely(!appdata.map))
     return -1;
 
-  /* if tracking is enable, start it now */
+  /* if tracking is enabled, start it now */
   track_enable_gps(appdata, settings->enable_gps);
 
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
