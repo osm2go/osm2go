@@ -510,17 +510,21 @@ void map_node_draw_functor::operator()(node_t *node)
   if(node->isDeleted())
     return;
 
-  if(node->ways == 0)
-    map_node_new(map, node,
-		 map->style->node.radius * map->state.detail,
-		 map->style->node.border_radius * map->state.detail,
-		 map->style->node.fill_color,
-		 map->style->node.color);
+  int width;
+  color_t fill, col;
+  if(node->ways == 0) {
+    width = map->style->node.border_radius * map->state.detail;
+    fill = map->style->node.fill_color;
+    col = map->style->node.color;
+  } else if(map->style->node.show_untagged || node->tags.hasRealTags()) {
+    width = 0;
+    fill = map->style->node.color;
+    col = 0;
+  } else {
+    return;
+  }
 
-  else if(map->style->node.show_untagged || node->tags.hasRealTags())
-    map_node_new(map, node,
-		 map->style->node.radius * map->state.detail, 0,
-		 map->style->node.color, 0);
+  map_node_new(map, node, map->style->node.radius * map->state.detail, width, fill, col);
 }
 
 void map_t::draw(node_t *node) {
