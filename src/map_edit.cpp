@@ -270,8 +270,8 @@ void map_t::way_node_add(lpos_t pos) {
   map_item_t *item = item_at(pos);
   if(item_is_selected_way(item)) {
     /* convert mouse position to canvas (world) position */
-    int insert_after = canvas->get_item_segment(item->item, pos) + 1;
-    if(insert_after > 0) {
+    const int insert_after = canvas->get_item_segment(item->item, pos);
+    if(insert_after >= 0) {
       /* create new node */
       node_t* node = appdata.project->osm->node_new(pos);
       appdata.project->osm->node_attach(node);
@@ -280,7 +280,7 @@ void map_t::way_node_add(lpos_t pos) {
       way_t *way = item->object.way;
 
       /* search correct position */
-      way->node_chain.insert(way->node_chain.begin() + insert_after, node);
+      way->node_chain.insert(way->node_chain.begin() + insert_after + 1, node);
 
       /* clear selection */
       item_deselect();
