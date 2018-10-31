@@ -1182,8 +1182,6 @@ static int application_run(const char *proj)
 
   /* generate main map view */
   appdata.map = map_t::create(appdata);
-  if(unlikely(!appdata.map))
-    return -1;
 
   /* if tracking is enabled, start it now */
   track_enable_gps(appdata, settings->enable_gps);
