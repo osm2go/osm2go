@@ -119,12 +119,7 @@ static void map_object_select(map_t *map, node_t *node)
   map_statusbar(map->appdata.uicontrol, map_item->object, map->appdata.project->osm);
   map->appdata.iconbar->map_item_selected(map_item->object);
 
-  /* highlight node */
-  int x = map_item->object.node->lpos.x, y = map_item->object.node->lpos.y;
-
   /* create a copy of this map item and mark it as being a highlight */
-  map_item_t *new_map_item = new map_item_t(map_item->object, true);
-
   float radius = 0;
   style_t::IconCache::iterator it;
   if(map->style->icon.enable &&
@@ -138,17 +133,13 @@ static void map_object_select(map_t *map, node_t *node)
       radius += map->style->node.border_radius;
   }
 
-  radius *= map->state.detail;
+  map->highlight.circle_new(map, CANVAS_GROUP_NODES_HL, node, radius * map->state.detail,
+                            map->style->highlight.color);
 
-  map->highlight.circle_new(map, CANVAS_GROUP_NODES_HL, new_map_item, x, y,
-                            radius, map->style->highlight.color);
-
-  if(map_item->item == nullptr) {
+  if(map_item->item == nullptr)
     /* and draw a fake node */
-    new_map_item = new map_item_t(map_item->object, true);
-    map->highlight.circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item, x, y,
+    map->highlight.circle_new(map, CANVAS_GROUP_NODES_IHL, node,
                               map->style->node.radius, map->style->highlight.node_color);
-  }
 }
 
 struct set_point_pos {
@@ -213,8 +204,6 @@ void draw_selected_way_functor::operator()(node_t *node)
     float len = std::sqrt(std::pow(diff.x, 2) + std::pow(diff.y, 2));
     if(len > map->style->highlight.arrow_limit * arrow_width) {
       /* create a new map item for every arrow */
-      map_item_t *new_map_item = new map_item_t(object_t(way), true);
-
       len /= arrow_width;
       diff.x /= len;
       diff.y /= len;
@@ -225,16 +214,14 @@ void draw_selected_way_functor::operator()(node_t *node)
       points[2] = lpos_t(center.x - diff.y - diff.x, center.y + diff.x - diff.y);
       points[3] = points[0];
 
-      map->highlight.polygon_new(map, CANVAS_GROUP_WAYS_DIR, new_map_item,
+      map->highlight.polygon_new(map, CANVAS_GROUP_WAYS_DIR, way,
                                  points, map->style->highlight.arrow_color);
     }
   }
 
   if(!map->highlight.isHighlighted(item)) {
     /* create a new map item for every node */
-    map->highlight.circle_new(map, CANVAS_GROUP_NODES_IHL,
-                              new map_item_t(object_t(node), true),
-                              node->lpos.x, node->lpos.y,
+    map->highlight.circle_new(map, CANVAS_GROUP_NODES_IHL, node,
                               map->style->node.radius * map->state.detail,
                               map->style->highlight.node_color);
   }
@@ -267,16 +254,9 @@ void map_t::select_way(way_t *way) {
   /* a way needs at least 2 points to be drawn */
   assert(map_item->object.way == way);
   const std::vector<lpos_t> &points = points_from_node_chain(way);
-  if(likely(!points.empty())) {
+  if(likely(!points.empty()))
     /* create a copy of this map item and mark it as being a highlight */
-    map_item_t *new_map_item = new map_item_t(map_item->object, true);
-
-    highlight.polyline_new(this, CANVAS_GROUP_WAYS_HL, new_map_item, points,
-		 ((way->draw.flags & OSM_DRAW_FLAG_BG)?
-                  2 * style->highlight.width + way->draw.bg.width:
-                  2 * style->highlight.width + way->draw.width)
-                 * state.detail, style->highlight.color);
-  }
+    highlight.polyline_new(this, CANVAS_GROUP_WAYS_HL, way, points, style->highlight.color);
 }
 
 struct relation_select_functor {

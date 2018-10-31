@@ -27,6 +27,8 @@
 
 struct map_item_t;
 class map_t;
+class node_t;
+class way_t;
 
 struct map_highlight_t {
   std::vector<canvas_item_t *> items;
@@ -38,13 +40,13 @@ struct map_highlight_t {
 
   void clear();
 
-  void circle_new(map_t *map, canvas_group_t group, map_item_t *map_item,
-                  int x, int y, unsigned int radius, color_t color);
+  void circle_new(map_t *map, canvas_group_t group, node_t *node,
+                  unsigned int radius, color_t color);
 
-  void polyline_new(map_t *map, canvas_group_t group, map_item_t *map_item,
-                    const std::vector<lpos_t> &points, unsigned int width, color_t color);
+  void polyline_new(map_t *map, canvas_group_t group, way_t *way,
+                    const std::vector<lpos_t> &points, color_t color);
 
-  void polygon_new(map_t *map, canvas_group_t group, map_item_t *map_item,
+  void polygon_new(map_t *map, canvas_group_t group, way_t *way,
                    const std::vector<lpos_t> &points, color_t color);
 
 };
