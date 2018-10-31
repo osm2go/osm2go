@@ -1050,7 +1050,7 @@ void map_t::button_release(int x, int y) {
     break;
 
   default:
-    break;
+    assert_unreachable();
   }
 }
 
@@ -1110,7 +1110,7 @@ void map_t::handle_motion(int x, int y)
     break;
 
   default:
-    break;
+    assert_unreachable();
   }
 }
 
