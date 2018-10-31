@@ -1114,10 +1114,10 @@ void map_t::handle_motion(int x, int y)
   }
 }
 
-map_t::map_t(appdata_t &a)
+map_t::map_t(appdata_t &a, canvas_t *c)
   : gps_item(nullptr)
   , appdata(a)
-  , canvas(canvas_t::create())
+  , canvas(c)
   , state(appdata.map_state)
   , cursor(nullptr)
   , touchnode(nullptr)

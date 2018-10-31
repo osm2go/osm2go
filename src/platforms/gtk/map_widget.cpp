@@ -220,7 +220,7 @@ static gboolean map_autosave(gpointer data) {
 }
 
 map_internal::map_internal(appdata_t &a)
-  : map_t(a)
+  : map_t(a, canvas_t::create())
 {
   g_signal_connect_swapped(canvas->widget, "button_press_event",
                            G_CALLBACK(map_button_event), this);

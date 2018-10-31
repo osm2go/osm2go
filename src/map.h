@@ -91,7 +91,7 @@ struct map_state_t {
 
 class map_t {
 protected:
-  explicit map_t(appdata_t &a);
+  explicit map_t(appdata_t &a, canvas_t *c);
 
   void handle_motion(int x, int y);
   void scroll_step(int x, int y);
