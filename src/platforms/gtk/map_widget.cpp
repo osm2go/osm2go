@@ -58,7 +58,8 @@ public:
   static gboolean map_button_event(map_internal *map, GdkEventButton *event);
 };
 
-static gboolean map_destroy_event(map_t *map) {
+static gboolean map_destroy_event(map_internal *map)
+{
   g_debug("destroying entire map");
 
   map->appdata.map = nullptr;
