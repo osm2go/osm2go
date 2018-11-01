@@ -1,2 +1,4 @@
 ignore:
+ - "curl"
  - "test"
+ - "/src/platforms/gtk/osm-gps-map/"
