@@ -1615,6 +1615,30 @@ void map_t::remove_gps_position() {
   gps_item = nullptr;
 }
 
+void map_t::action_cancel()
+{
+  switch(action.type) {
+  case MAP_ACTION_WAY_ADD:
+    way_add_cancel();
+    break;
+
+  case MAP_ACTION_BG_ADJUST: {
+    /* undo all changes to bg_offset */
+    bg.offset.x = appdata.project->wms_offset.x;
+    bg.offset.y = appdata.project->wms_offset.y;
+
+    const bounds_t &bounds = appdata.project->osm->bounds;
+    canvas->move_background(bounds.min.x + bg.offset.x, bounds.min.y + bg.offset.y);
+    break;
+  }
+
+  default:
+    break;
+  }
+
+  set_action(MAP_ACTION_IDLE);
+}
+
 /* ------------------- map background ------------------ */
 
 void map_t::remove_bg_image()

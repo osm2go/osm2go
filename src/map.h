@@ -107,8 +107,7 @@ public:
     MAP_LAYER_OBJECTS_ONLY
   };
 
-  static map_t *create(appdata_t &a);
-  ~map_t();
+  virtual ~map_t();
 
   appdata_t &appdata;
   canvas_t * const canvas;
@@ -151,8 +150,7 @@ public:
   osm_t::TagMap last_node_tags;           // used to "repeat" tagging
   osm_t::TagMap last_way_tags;
 
-  void set_autosave(bool enable);
-  bool key_press_event(unsigned int keyval);
+  virtual void set_autosave(bool enable) = 0;
   void init();
   void paint();
   void clear(clearLayers layers);

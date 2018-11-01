@@ -26,6 +26,7 @@
 #include <josm_presets.h>
 #include "MainUiGtk.h"
 #include <map.h>
+#include "map_gtk.h"
 #include <notifications.h>
 #include <osm.h>
 #include <osm_api.h>
@@ -1071,7 +1072,7 @@ static void on_window_destroy() {
 static gboolean on_window_key_press(appdata_internal *appdata, GdkEventKey *event) {
   /* forward unprocessed key presses to map */
   if(appdata->project && appdata->project->osm && event->type == GDK_KEY_PRESS)
-    return appdata->map->key_press_event(event->keyval) ? TRUE : FALSE;
+    return static_cast<map_gtk *>(appdata->map)->key_press_event(event->keyval);
 
   return FALSE;
 }
@@ -1173,7 +1174,7 @@ static int application_run(const char *proj)
   settings->enable_gps = true;
 
   /* generate main map view */
-  appdata.map = map_t::create(appdata);
+  appdata.map = new map_gtk(appdata);
 
   menu_create(appdata, mainvbox);
 

@@ -17,7 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "map.h"
+#include "map_gtk.h"
 
 #include "appdata.h"
 #include "canvas.h"
@@ -48,17 +48,7 @@
 #include "osm2go_platform_gtk.h"
 #include <osm2go_stl.h>
 
-class map_internal : public map_t {
-public:
-  explicit map_internal(appdata_t &a);
-
-  osm2go_platform::Timer autosave;
-
-  static gboolean map_motion_notify_event(GtkWidget *, GdkEventMotion *event, map_internal *map);
-  static gboolean map_button_event(map_internal *map, GdkEventButton *event);
-};
-
-static gboolean map_destroy_event(map_internal *map)
+static gboolean map_destroy_event(map_gtk *map)
 {
   g_debug("destroying entire map");
 
@@ -84,7 +74,7 @@ static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event, map_t *map)
   return TRUE;
 }
 
-gboolean map_internal::map_button_event(map_internal *map, GdkEventButton *event) {
+gboolean map_gtk::map_button_event(map_gtk *map, GdkEventButton *event) {
   if(unlikely(!map->appdata.project->osm))
     return FALSE;
 
@@ -101,7 +91,7 @@ gboolean map_internal::map_button_event(map_internal *map, GdkEventButton *event
   return FALSE;  /* forward to further processing */
 }
 
-gboolean map_internal::map_motion_notify_event(GtkWidget *, GdkEventMotion *event, map_internal *map) {
+gboolean map_gtk::map_motion_notify_event(GtkWidget *, GdkEventMotion *event, map_gtk *map) {
   gint x, y;
   GdkModifierType state;
 
@@ -136,7 +126,8 @@ gboolean map_internal::map_motion_notify_event(GtkWidget *, GdkEventMotion *even
   return FALSE;  /* forward to further processing */
 }
 
-bool map_t::key_press_event(unsigned int keyval) {
+gboolean map_gtk::key_press_event(unsigned int keyval)
+{
   switch(keyval) {
   case GDK_Left:
     scroll_step(-50, 0);
@@ -182,7 +173,7 @@ bool map_t::key_press_event(unsigned int keyval) {
   case GDK_KP_Add:
 #endif
     set_zoom(state.zoom * ZOOM_FACTOR_BUTTON, true);
-    return true;
+    return TRUE;
 
 #ifdef FREMANTLE
   case HILDON_HARDKEY_DECREASE:
@@ -191,14 +182,14 @@ bool map_t::key_press_event(unsigned int keyval) {
   case GDK_KP_Subtract:
 #endif
     set_zoom(state.zoom / ZOOM_FACTOR_BUTTON, true);
-    return true;
+    return TRUE;
 
   default:
     g_debug("key event %d", keyval);
     break;
   }
 
-  return false;
+  return FALSE;
 }
 
 static gboolean map_autosave(gpointer data) {
@@ -219,7 +210,7 @@ static gboolean map_autosave(gpointer data) {
   return TRUE;
 }
 
-map_internal::map_internal(appdata_t &a)
+map_gtk::map_gtk(appdata_t &a)
   : map_t(a, canvas_t::create())
 {
   g_signal_connect_swapped(canvas->widget, "button_press_event",
@@ -235,40 +226,10 @@ map_internal::map_internal(appdata_t &a)
                            G_CALLBACK(map_destroy_event), this);
 }
 
-map_t *map_t::create(appdata_t &a)
+void map_gtk::set_autosave(bool enable)
 {
-  return new map_internal(a);
-}
-
-void map_t::action_cancel() {
-  switch(action.type) {
-  case MAP_ACTION_WAY_ADD:
-    way_add_cancel();
-    break;
-
-  case MAP_ACTION_BG_ADJUST: {
-    /* undo all changes to bg_offset */
-    bg.offset.x = appdata.project->wms_offset.x;
-    bg.offset.y = appdata.project->wms_offset.y;
-
-    const bounds_t &bounds = appdata.project->osm->bounds;
-    canvas->move_background(bounds.min.x + bg.offset.x, bounds.min.y + bg.offset.y);
-    break;
-  }
-
-  default:
-    break;
-  }
-
-  set_action(MAP_ACTION_IDLE);
-}
-
-/* -------- hide and show objects (for performance reasons) ------- */
-
-void map_t::set_autosave(bool enable) {
-  map_internal *m = static_cast<map_internal *>(this);
   if(enable)
-    m->autosave.restart(120, map_autosave, this);
+    autosave.restart(120, map_autosave, this);
   else
-    m->autosave.stop();
+    autosave.stop();
 }
