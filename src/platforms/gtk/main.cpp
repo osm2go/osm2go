@@ -1171,6 +1171,10 @@ static int application_run(const char *proj)
 
   /* unconditionally enable the GPS */
   settings->enable_gps = true;
+
+  /* generate main map view */
+  appdata.map = map_t::create(appdata);
+
   menu_create(appdata, mainvbox);
 
 #ifdef ACCELS_FILE
@@ -1179,9 +1183,6 @@ static int application_run(const char *proj)
 #endif
 
   /* ----------------------- setup main window ---------------- */
-
-  /* generate main map view */
-  appdata.map = map_t::create(appdata);
 
   /* if tracking is enabled, start it now */
   track_enable_gps(appdata, settings->enable_gps);
