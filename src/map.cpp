@@ -52,7 +52,7 @@
 /* in the osm tree (node_t, way_t, ...) to be able to get a link */
 /* to the screen representation of a give node/way/etc */
 struct map_item_chain_t {
-  map_item_chain_t(map_item_t *n0 = nullptr)
+  explicit map_item_chain_t(map_item_t *n0 = nullptr)
     : i0(n0), i1(nullptr) {}
   map_item_t *i0;
   map_item_t *i1;
