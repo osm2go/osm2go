@@ -85,8 +85,8 @@ public:
          const typeof(b) &cb = b; \
          if (unlikely(!(ca op static_cast<std::remove_const<typeof(a)>::type>(cb)))) { \
            __builtin_constant_p(b) ? \
-             assert_num_tpl<typeof(ca)>(a,    #a, #op, #b, __FILE__, __PRETTY_FUNCTION__, __LINE__) : \
-             assert_num_tpl<typeof(ca)>(a, b, #a, #op, #b, __FILE__, __PRETTY_FUNCTION__, __LINE__); \
+             assert_num_tpl<typeof(ca)>(ca,     #a, #op, #b, __FILE__, __PRETTY_FUNCTION__, __LINE__) : \
+             assert_num_tpl<typeof(ca)>(ca, cb, #a, #op, #b, __FILE__, __PRETTY_FUNCTION__, __LINE__); \
          } \
        } while (0)
 
