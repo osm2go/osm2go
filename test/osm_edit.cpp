@@ -246,11 +246,7 @@ static void test_taglist() {
   ntags.push_back(tag_t("one", "1"));
   assert(tags != ntags);
   tags.replace(std::move(ntags));
-#if __cplusplus < 201103L
   ntags.clear();
-#else
-  assert_cmpnum(ntags.size(), 0);
-#endif
   ntags.push_back(tag_t("one", "1"));
   assert(tags == ntags);
   ntags.clear();
