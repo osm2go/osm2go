@@ -322,7 +322,7 @@ class presets_element_multiselect_test: public presets_element_multiselect {
 public:
   presets_element_multiselect_test(char del, std::vector<std::string> vals)
     : presets_element_multiselect("key", "text", std::string(), nullptr, del,
-                                  vals, std::vector<std::string>(), 0) {}
+                                  std::move(vals), std::vector<std::string>(), 0) {}
 
   inline std::vector<unsigned int> matchTest(const std::string &preset) const
   { return matchedIndexes(preset); }

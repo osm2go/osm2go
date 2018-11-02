@@ -1204,8 +1204,8 @@ presets_element_selectable::presets_element_selectable(presets_element_type_t t,
                                                        std::vector<std::string> dvals, bool canEdit)
   : presets_element_t(t, parseMatch(m), k, txt)
   , def(deflt)
-  , values(vals)
-  , display_values(dvals)
+  , values(std::move(vals))
+  , display_values(std::move(dvals))
   , editable(canEdit)
 {
 }
@@ -1236,7 +1236,7 @@ presets_element_combo::presets_element_combo(const std::string &k, const std::st
                                            const std::string &deflt, const char *m,
                                            std::vector<std::string> vals, std::vector<std::string> dvals,
                                            bool canEdit)
-  : presets_element_selectable(WIDGET_TYPE_COMBO, k, txt, deflt, m, vals, dvals, canEdit)
+  : presets_element_selectable(WIDGET_TYPE_COMBO, k, txt, deflt, m, std::move(vals), std::move(dvals), canEdit)
 {
 }
 
@@ -1244,10 +1244,10 @@ presets_element_multiselect::presets_element_multiselect(const std::string &k, c
                                                          const std::string &deflt, const char *m, char del,
                                                          std::vector<std::string> vals,
                                                          std::vector<std::string> dvals, unsigned int rws)
-  : presets_element_selectable(WIDGET_TYPE_MULTISELECT, k, txt, deflt, m, vals, dvals, false)
+  : presets_element_selectable(WIDGET_TYPE_MULTISELECT, k, txt, deflt, m, std::move(vals), std::move(dvals), false)
   , delimiter(del)
 #ifndef FREMANTLE
-  , rows_height(rws == 0 ? std::min(8, static_cast<int>(vals.size())) : rws)
+  , rows_height(rws == 0 ? std::min(8, static_cast<int>(values.size())) : rws)
 #endif
 {
 }
