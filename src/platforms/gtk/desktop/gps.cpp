@@ -84,7 +84,7 @@ static bool gps_connect(gps_data_t &gps)
   if(gps_open("localhost", DEFAULT_GPSD_PORT, &gps) != 0)
     return false;
 
-  if(gps_stream(&gps, WATCH_ENABLE | WATCH_JSON, NULL) < 0)
+  if(gps_stream(&gps, WATCH_ENABLE | WATCH_JSON, nullptr) < 0)
     return false;
 
   return true;
