@@ -1194,6 +1194,51 @@ static void test_merge_nodes()
   assert_cmpnum(n1->ways, 2);
 
   /// ==================
+  // now join 2 nodes which are 2 ends of the same way
+  // this should trigger the second "mayMerge = false" in node_t::mergeNodes()
+  std::vector<node_t *> nn;
+  w = new way_t(0);
+  o->way_attach(w);
+  for (int i = 0; i < 4; i++) {
+    lpos_t p(10 + (i % 2) * 10, 10 + (i / 2) * 10);
+    nn.push_back(o->node_new(p));
+    o->node_attach(nn.back());
+    w->append_node(nn.back());
+  }
+  n1 = nn.front();
+  n2 = nn.back();
+  assert(w->ends_with_node(n1));
+  assert(w->ends_with_node(n2));
+
+  conflict = true;
+  n = o->mergeNodes(n1, n2, conflict, ways2join);
+  assert(!conflict);
+  assert(n == n1);
+  assert(ways2join[0] == nullptr);
+  assert(ways2join[1] == nullptr);
+
+  /// ==================
+  // now join 2 nodes where the first is in the middle of a way
+  // this should trigger the first "mayMerge = false" in node_t::mergeNodes()
+  n1 = nn.at(1);
+  w = new way_t(0);
+  o->way_attach(w);
+  for (int i = 0; i < 3; i++) {
+    lpos_t p(30 + (i % 2) * 10, 30 + (i / 2) * 10);
+    nn.push_back(o->node_new(p));
+    o->node_attach(nn.back());
+    w->append_node(nn.back());
+  }
+  n2 = nn.back();
+
+  conflict = true;
+  n = o->mergeNodes(n1, n2, conflict, ways2join);
+  assert(!conflict);
+  assert(n == n1);
+  assert(ways2join[0] == nullptr);
+  assert(ways2join[1] == nullptr);
+
+  /// ==================
   // the relation with the highest id (since all are negative)
   // test is unrelated to the rest
   assert_cmpstr(r->descriptive_name(), "<ID #-1>");

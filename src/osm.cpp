@@ -350,7 +350,7 @@ node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict, way_t *
         itEnd = way->node_chain.end();
       } else {
         if(mayMerge) {
-          if(way->ends_with_node(remove)) {
+          if(way != mergeways[0] && way->ends_with_node(remove)) {
             mergeways[1] = way;
           } else {
             mergeways[0] = nullptr;
@@ -392,6 +392,7 @@ node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict, way_t *
 
 way_t *osm_t::mergeWays(way_t *first, way_t *second, bool &conflict)
 {
+  assert(first != second);
   std::vector<relation_t *> rels;
   if(!checkObjectPersistence(object_t(first), object_t(second), rels))
     std::swap(first, second);
