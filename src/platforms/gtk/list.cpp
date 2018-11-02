@@ -202,7 +202,6 @@ static void on_row_activated(GtkTreeView *treeview,
     assert(g_object_get_data(G_OBJECT(userdata), "priv") != nullptr);
 
     GtkWidget *toplevel = gtk_widget_get_toplevel(GTK_WIDGET(treeview));
-    assert(GTK_IS_DIALOG(toplevel) == TRUE);
 
     /* emit a "response accept" signal so we might close the */
     /* dialog */
