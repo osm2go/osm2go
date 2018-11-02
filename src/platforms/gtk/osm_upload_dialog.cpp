@@ -25,7 +25,6 @@
 #include <map.h>
 #include <net_io.h>
 #include <osm.h>
-#include "osm2go_platform.h"
 #include <project.h>
 #include <settings.h>
 #include <uicontrol.h>
@@ -40,10 +39,9 @@
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
+#include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
 #include <osm2go_stl.h>
-
-using namespace osm2go_platform;
 
 #define COLOR_ERR  "red"
 #define COLOR_OK   "darkgreen"
@@ -188,7 +186,7 @@ static void info_more(const osm_t::dirty_t &context, GtkWidget *parent) {
                                       GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, nullptr));
 
-  dialog_size_hint(dialog, MISC_DIALOG_SMALL);
+  osm2go_platform::dialog_size_hint(dialog, osm2go_platform::MISC_DIALOG_SMALL);
   gtk_dialog_set_default_response(dialog, GTK_RESPONSE_CANCEL);
 
   details_table(dialog, context);
@@ -209,7 +207,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                               nullptr));
 
-  dialog_size_hint(dialog, MISC_DIALOG_MEDIUM);
+  osm2go_platform::dialog_size_hint(dialog, osm2go_platform::MISC_DIALOG_MEDIUM);
 
 #ifndef FREMANTLE
   details_table(dialog, dirty);
@@ -223,7 +221,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
 
   GtkWidget *table = gtk_table_new(2, 2, FALSE);
   table_attach_label_l(table, _("Username:"), 0, 1, 0, 1);
-  GtkWidget *uentry = entry_new(EntryFlagsNoAutoCap);
+  GtkWidget *uentry = osm2go_platform::entry_new(osm2go_platform::EntryFlagsNoAutoCap);
 
   settings_t::ref settings = settings_t::instance();
   osm2go_platform::setEntryText(GTK_ENTRY(uentry), settings->username.c_str(),
@@ -231,7 +229,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
 
   gtk_table_attach_defaults(GTK_TABLE(table),  uentry, 1, 2, 0, 1);
   table_attach_label_l(table, _("Password:"), 0, 1, 1, 2);
-  GtkWidget *pentry = entry_new(EntryFlagsNoAutoCap);
+  GtkWidget *pentry = osm2go_platform::entry_new(osm2go_platform::EntryFlagsNoAutoCap);
   if(!settings->password.empty())
     gtk_entry_set_text(GTK_ENTRY(pentry), settings->password.c_str());
   gtk_entry_set_visibility(GTK_ENTRY(pentry), FALSE);
@@ -239,7 +237,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
   gtk_box_pack_start(dialog.vbox(), table, FALSE, FALSE, 0);
 
   table_attach_label_l(table, _("Source:"), 0, 1, 2, 3);
-  GtkWidget *sentry = entry_new(EntryFlagsNoAutoCap);
+  GtkWidget *sentry = osm2go_platform::entry_new(osm2go_platform::EntryFlagsNoAutoCap);
   gtk_table_attach_defaults(GTK_TABLE(table),  sentry, 1, 2, 2, 3);
   gtk_box_pack_start(dialog.vbox(), table, FALSE, FALSE, 0);
 
@@ -269,7 +267,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
   g_object_set_data(G_OBJECT(view), "first_click", GINT_TO_POINTER(TRUE));
   g_signal_connect(view, "focus-in-event", G_CALLBACK(cb_focus_in), buffer);
 
-  gtk_box_pack_start(dialog.vbox(), scrollable_container(GTK_WIDGET(view)), TRUE, TRUE, 0);
+  gtk_box_pack_start(dialog.vbox(), osm2go_platform::scrollable_container(GTK_WIDGET(view)), TRUE, TRUE, 0);
   gtk_widget_show_all(dialog.get());
 
   bool done = false;
@@ -319,7 +317,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
                                            GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                            nullptr));
 
-  dialog_size_hint(dialog, MISC_DIALOG_LARGE);
+  osm2go_platform::dialog_size_hint(dialog, osm2go_platform::MISC_DIALOG_LARGE);
   gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_CLOSE, FALSE);
 
   /* ------- main ui element is this text view --------------- */

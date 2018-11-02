@@ -49,8 +49,6 @@
 #include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
 
-using namespace osm2go_platform;
-
 /* ---------------------- use ------------------- */
 
 struct find_wms_functor {
@@ -222,11 +220,11 @@ bool wms_server_edit(wms_server_context_t *context, bool edit_name, wms_server_t
                                       GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                       GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, nullptr));
 
-  dialog_size_hint(dialog, MISC_DIALOG_WIDE);
+  osm2go_platform::dialog_size_hint(dialog, osm2go_platform::MISC_DIALOG_WIDE);
   gtk_dialog_set_default_response(dialog, GTK_RESPONSE_ACCEPT);
 
   GtkWidget *label = gtk_label_new(_("Name:"));
-  GtkWidget *name = entry_new(EntryFlagsNoAutoCap);
+  GtkWidget *name = osm2go_platform::entry_new(osm2go_platform::EntryFlagsNoAutoCap);
   GtkWidget *table = gtk_table_new(2, 3, FALSE);
 
   gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
@@ -238,7 +236,7 @@ bool wms_server_edit(wms_server_context_t *context, bool edit_name, wms_server_t
   g_signal_connect(name, "changed", G_CALLBACK(callback_modified_name), nullptr);
 
   label = gtk_label_new(_("Server:"));
-  GtkWidget *server = entry_new(EntryFlagsNoAutoCap);
+  GtkWidget *server = osm2go_platform::entry_new(osm2go_platform::EntryFlagsNoAutoCap);
   gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2,
 		   GTK_FILL, static_cast<GtkAttachOptions>(0), 0, 0);
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
@@ -355,7 +353,7 @@ static bool wms_server_dialog(appdata_t &appdata, wms_t *wms) {
                                                            nullptr));
 
   /* server selection box */
-  dialog_size_hint(GTK_WINDOW(context.dialog), MISC_DIALOG_MEDIUM);
+  osm2go_platform::dialog_size_hint(GTK_WINDOW(context.dialog), osm2go_platform::MISC_DIALOG_MEDIUM);
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
                      wms_server_widget(&context), TRUE, TRUE, 0);
 
@@ -478,7 +476,7 @@ static std::string wms_layer_dialog(project_t::ref project, const wms_layer_t::l
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                               nullptr));
 
-  dialog_size_hint(dialog, MISC_DIALOG_LARGE);
+  osm2go_platform::dialog_size_hint(dialog, osm2go_platform::MISC_DIALOG_LARGE);
 
   /* layer list */
   gtk_box_pack_start(dialog.vbox(), sel_widget, TRUE, TRUE, 0);

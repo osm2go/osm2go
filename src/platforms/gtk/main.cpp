@@ -76,8 +76,6 @@
 #include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
 
-using namespace osm2go_platform;
-
 #define LOCALEDIR PREFIX "/locale"
 
 #ifndef FREMANTLE
@@ -274,7 +272,7 @@ static bool track_visibility_select(GtkWidget *parent) {
   if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(dialog)) {
     g_debug("user clicked cancel\n");
   } else {
-    int index = combo_box_get_active(cbox);
+    int index = osm2go_platform::combo_box_get_active(cbox);
     g_debug("user clicked ok on %i\n", index);
 
     TrackVisibility tv = static_cast<TrackVisibility>(index);
@@ -306,7 +304,7 @@ cb_menu_undo_changes(appdata_t *appdata) {
   if (!project->diff_file_present() && project->osm->is_clean(true))
     return;
 
-  if(!yes_no(_("Undo all changes?"),
+  if(!osm2go_platform::yes_no(_("Undo all changes?"),
              _("Throw away all the changes you've not uploaded yet? This cannot be undone.")))
     return;
 
@@ -486,7 +484,7 @@ cb_menu_track_export(appdata_t *appdata) {
       g_debug("export to %s\n", filename.get());
 
       if(g_file_test(filename.get(), G_FILE_TEST_EXISTS) != TRUE ||
-         yes_no(_("Overwrite existing file"),
+         osm2go_platform::yes_no(_("Overwrite existing file"),
                 _("The file already exists. Do you really want to replace it?"),
                 MISC_AGAIN_ID_EXPORT_OVERWRITE | MISC_AGAIN_FLAG_DONT_SAVE_NO, dialog.get())) {
         settings->track_path = filename.get();
@@ -807,7 +805,7 @@ static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items subm
   GtkWidget *dialog = gtk_dialog_new_with_buttons(title, GTK_WINDOW(appdata_t::window),
                                                   GTK_DIALOG_MODAL, nullptr);
 
-  osm2go_platform::dialog_size_hint(GTK_WINDOW(dialog), MISC_DIALOG_SMALL);
+  osm2go_platform::dialog_size_hint(GTK_WINDOW(dialog), osm2go_platform::MISC_DIALOG_SMALL);
   gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
   GtkWidget *table = gtk_table_new(rows / COLUMNS, COLUMNS, TRUE);
@@ -888,7 +886,7 @@ static void on_submenu_track_clicked(appdata_internal *appdata)
 
   GtkWidget *combo_widget = GTK_WIDGET(g_object_get_data(G_OBJECT(menu), "track_widget"));
   if(combo_widget != nullptr) {
-    TrackVisibility tv = static_cast<TrackVisibility>(combo_box_get_active(combo_widget));
+    TrackVisibility tv = static_cast<TrackVisibility>(osm2go_platform::combo_box_get_active(combo_widget));
     settings_t::ref settings = settings_t::instance();
     if(tv != settings->trackVisibility && appdata->track.track) {
       appdata->map->track_draw(tv, *(appdata->track.track.get()));

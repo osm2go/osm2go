@@ -42,8 +42,6 @@
 #include <osm2go_platform.h>
 #include <osm2go_platform_gtk.h>
 
-using namespace osm2go_platform;
-
 /* --------------------- the items dialog -------------------- */
 
 struct preset_attach_context {
@@ -276,7 +274,7 @@ static void presets_item_dialog(const presets_item *item) {
     /* a button for this */
     if(!item->link.empty()) {
       GtkWidget *button = gtk_dialog_add_button(dialog, _("Info"), GTK_RESPONSE_HELP);
-      g_signal_connect_swapped(button, "clicked", G_CALLBACK(open_url),
+      g_signal_connect_swapped(button, "clicked", G_CALLBACK(osm2go_platform::open_url),
                                const_cast<char *>(item->link.c_str()));
     }
 
@@ -589,7 +587,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
 static GtkListStore *presets_picker_store(GtkTreeView **view) {
   GtkCellRenderer *renderer;
 
-  *view = tree_view_new();
+  *view = osm2go_platform::tree_view_new();
 
   gtk_tree_view_set_headers_visible(*view, FALSE);
 
@@ -881,7 +879,7 @@ static gint on_button_destroy(presets_context_t *context) {
 GtkWidget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_context) {
   presets_context_t *context = new presets_context_t(presets, tag_context);
 
-  GtkWidget *but = button_new_with_label(_("Presets"));
+  GtkWidget *but = osm2go_platform::button_new_with_label(_("Presets"));
   gtk_widget_set_events(but, GDK_EXPOSURE_MASK);
   gtk_widget_add_events(but, GDK_BUTTON_PRESS_MASK);
   g_signal_connect(but, "button-press-event", G_CALLBACK(button_press), nullptr);
@@ -893,7 +891,7 @@ GtkWidget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_
 presets_element_t::attach_key *presets_element_text::attach(preset_attach_context &attctx,
                                                             const std::string &preset) const
 {
-  GtkWidget *ret = entry_new();
+  GtkWidget *ret = osm2go_platform::entry_new();
   if(!preset.empty())
     gtk_entry_set_text(GTK_ENTRY(ret), preset.c_str());
   else if(!def.empty())
@@ -907,7 +905,7 @@ presets_element_t::attach_key *presets_element_text::attach(preset_attach_contex
 std::string presets_element_text::getValue(presets_element_t::attach_key *akey) const
 {
   GtkWidget * const widget = reinterpret_cast<GtkWidget *>(akey);
-  assert(isEntryWidget(widget));
+  assert(osm2go_platform::isEntryWidget(widget));
 
   return gtk_entry_get_text(GTK_ENTRY(widget));
 }
@@ -956,7 +954,7 @@ presets_element_t::attach_key *presets_element_combo::attach(preset_attach_conte
     ret = select_widget_wrapped(text.c_str(), GTK_TREE_MODEL(store), osm2go_platform::AllowEditing);
   } else {
     gtk_list_store_insert_with_values(store, nullptr, 0, 0, _("unset"), 1, "", -1);
-    ret = select_widget_wrapped(text.c_str(), GTK_TREE_MODEL(store));
+    ret = osm2go_platform::select_widget_wrapped(text.c_str(), GTK_TREE_MODEL(store));
   }
 
   g_object_unref(store);
@@ -972,10 +970,10 @@ presets_element_t::attach_key *presets_element_combo::attach(preset_attach_conte
   }
 
   if(editable && !matched) {
-    combo_box_set_active(ret, -1);
-    combo_box_set_active_text(ret, preset.c_str());
+    osm2go_platform::combo_box_set_active(ret, -1);
+    osm2go_platform::combo_box_set_active_text(ret, preset.c_str());
   } else
-    combo_box_set_active(ret, active);
+    osm2go_platform::combo_box_set_active(ret, active);
 #ifndef FREMANTLE
   attach_right(attctx, text.c_str(), ret);
 #else
@@ -1003,7 +1001,7 @@ presets_element_t::attach_key *presets_element_multiselect::attach(preset_attach
 
   const std::vector<unsigned int> &indexes = matchedIndexes(pr);
 
-  select_widget_select(ret, indexes);
+  osm2go_platform::select_widget_select(ret, indexes);
 
 #ifndef FREMANTLE
   // arbitrary number for height scaling
@@ -1031,8 +1029,8 @@ presets_element_t::attach_key *presets_element_checkbox::attach(preset_attach_co
   else
     deflt = def;
 
-  GtkWidget *ret = check_button_new_with_label(text.c_str());
-  check_button_set_active(ret, deflt);
+  GtkWidget *ret = osm2go_platform::check_button_new_with_label(text.c_str());
+  osm2go_platform::check_button_set_active(ret, deflt);
 #ifndef FREMANTLE
   attach_right(attctx, nullptr, ret);
 #else
@@ -1045,9 +1043,9 @@ presets_element_t::attach_key *presets_element_checkbox::attach(preset_attach_co
 std::string presets_element_checkbox::getValue(presets_element_t::attach_key *akey) const
 {
   GtkWidget * const widget = reinterpret_cast<GtkWidget *>(akey);
-  assert(isCheckButtonWidget(widget));
+  assert(osm2go_platform::isCheckButtonWidget(widget));
 
-  return check_button_get_active(widget) ?
+  return osm2go_platform::check_button_get_active(widget) ?
          (value_on.empty() ? "yes" : value_on) : std::string();
 }
 
@@ -1059,7 +1057,7 @@ presets_element_t::attach_key *presets_element_link::attach(preset_attach_contex
                                                             const std::string &) const
 {
   g_string label(g_strdup_printf(_("[Preset] %s"), item->name.c_str()));
-  GtkWidget *button = button_new_with_label(label.get());
+  GtkWidget *button = osm2go_platform::button_new_with_label(label.get());
   GtkWidget *img = icon_t::instance().widget_load(item->icon, 16);
   if(img != nullptr) {
     gtk_button_set_image(GTK_BUTTON(button), img);

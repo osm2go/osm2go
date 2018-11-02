@@ -47,8 +47,6 @@
 #include "osm2go_platform_gtk.h"
 #include "osm2go_stl.h"
 
-using namespace osm2go_platform;
-
 struct project_context_t {
   explicit project_context_t(appdata_t &a, project_t *p, gboolean n, const std::vector<project_t *> &j, GtkWidget *dlg);
   ~project_context_t()
@@ -110,16 +108,16 @@ project_context_t::project_context_t(appdata_t &a, project_t *p, gboolean n,
   , fsizehdr(gtk_label_left_new(_("Map data:")))
   , fsize(gtk_label_left_new())
   , diff_stat(gtk_label_left_new())
-  , diff_remove(button_new_with_label(_("Undo all")))
-  , desc(entry_new())
-  , download(button_new_with_label(_("Download")))
+  , diff_remove(osm2go_platform::button_new_with_label(_("Undo all")))
+  , desc(osm2go_platform::entry_new())
+  , download(osm2go_platform::button_new_with_label(_("Download")))
   , minlat(gtk_label_new(nullptr))
   , minlon(gtk_label_new(nullptr))
   , maxlat(gtk_label_new(nullptr))
   , maxlon(gtk_label_new(nullptr))
   , is_new(n)
 #ifdef SERVER_EDITABLE
-  , server(entry_new(EntryFlagsNoAutoCap))
+  , server(entry_new(osm2go_platform::EntryFlagsNoAutoCap))
 #endif
   , area_edit(nullptr)
   , projects(j)
@@ -247,7 +245,7 @@ static std::string project_name_dialog(GtkWidget *parent, const std::string &old
   gtk_box_pack_start(GTK_BOX(hbox), gtk_label_new(_("Name:")), TRUE, TRUE, 0);
 
   name_callback_context_t name_context(dialog.get(), settings_t::instance()->base_path_fd);
-  GtkWidget *entry = entry_new();
+  GtkWidget *entry = osm2go_platform::entry_new();
   gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
   if(!oldname.empty())
     gtk_entry_set_text(GTK_ENTRY(entry), oldname.c_str());
@@ -342,14 +340,14 @@ static void on_project_delete(select_context_t *context) {
   GtkTreeIter iter;
   project_t *project = project_get_selected(context->list, iter);
 
-  if(!yes_no(_("Delete project?"),
+  if(!osm2go_platform::yes_no(_("Delete project?"),
              trstring("Do you really want to delete the project \"%1\"?").arg(project->name),
              0, context->dialog))
     return;
 
   /* check if we are to delete the currently open project */
   if(context->appdata.project && context->appdata.project->name == project->name) {
-    if(!yes_no(_("Delete current project?"),
+    if(!osm2go_platform::yes_no(_("Delete current project?"),
                _("The project you are about to delete is the one you are currently working on!\n\n"
                  "Do you want to delete it anyway?"), 0, context->dialog))
       return;
@@ -535,7 +533,7 @@ std::string project_select(appdata_t &appdata) {
                                     GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
                                     nullptr));
 
-  dialog_size_hint(GTK_WINDOW(context.dialog), MISC_DIALOG_MEDIUM);
+  osm2go_platform::dialog_size_hint(GTK_WINDOW(context.dialog), osm2go_platform::MISC_DIALOG_MEDIUM);
 
   /* under fremantle the dialog does not have an "Open" button */
   /* as it's closed when a project is being selected */
@@ -709,7 +707,7 @@ static void on_diff_remove_clicked(project_context_t *context) {
 
   g_debug("clicked diff remove");
 
-  if(yes_no(_("Discard changes?"), _("Do you really want to discard your changes? This will "
+  if(osm2go_platform::yes_no(_("Discard changes?"), _("Do you really want to discard your changes? This will "
                                      "permanently undo all changes you have made so far and which "
                                      "you did not upload yet."), 0, context->dialog)) {
     project->diff_remove_file();
@@ -756,7 +754,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
     dialog.reset(gtk_dialog_new_with_buttons(str.get(), GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                              GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT, nullptr));
   }
-  dialog_size_hint(dialog, MISC_DIALOG_WIDE);
+  osm2go_platform::dialog_size_hint(dialog, osm2go_platform::MISC_DIALOG_WIDE);
 
   project_context_t context(scontext->appdata, project, is_new ? TRUE : FALSE,
                             scontext->projects, dialog.get());
@@ -773,7 +771,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
     gtk_entry_set_text(GTK_ENTRY(context.desc), project->desc.c_str());
   gtk_table_attach_defaults(GTK_TABLE(table),  context.desc, 1, 4, 0, 1);
 
-  GtkWidget *renameBtn = button_new_with_label(_("Rename"));
+  GtkWidget *renameBtn = osm2go_platform::button_new_with_label(_("Rename"));
   gtk_table_attach_defaults(GTK_TABLE(table), renameBtn, 4, 5, 0, 1);
   g_signal_connect_swapped(renameBtn, "clicked", G_CALLBACK(on_rename_clicked), &context);
   gtk_table_set_row_spacing(GTK_TABLE(table), 0, 4);
@@ -788,7 +786,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
   gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new(_("to")), 2, 3, 2, 3);
   gtk_table_attach_defaults(GTK_TABLE(table), context.maxlon, 3, 4, 2, 3);
 
-  GtkWidget *edit = button_new_with_label(_("Edit"));
+  GtkWidget *edit = osm2go_platform::button_new_with_label(_("Edit"));
   g_signal_connect_swapped(edit, "clicked", G_CALLBACK(on_edit_clicked), &context);
   gtk_table_attach(GTK_TABLE(table), edit, 4, 5, 1, 3,
                    static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),

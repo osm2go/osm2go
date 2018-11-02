@@ -36,8 +36,6 @@
 #include <cstring>
 #include <strings.h>
 
-using namespace osm2go_platform;
-
 #define TAB_LABEL_MAP    "Map"
 #define TAB_LABEL_DIRECT "Direct"
 #define TAB_LABEL_EXTENT "Extent"
@@ -100,7 +98,7 @@ static void callback_modified_lat(GtkWidget *widget) {
 
 /* a entry that is colored red when being "active" */
 static GtkWidget *pos_lat_entry_new(pos_float_t lat) {
-  GtkWidget *widget = entry_new();
+  GtkWidget *widget = osm2go_platform::entry_new();
   gtk_widget_modify_text(widget, GTK_STATE_PRELIGHT, osm2go_platform::invalid_text_color());
 
   char str[32];
@@ -119,7 +117,7 @@ static void callback_modified_lon(GtkWidget *widget) {
 
 /* a entry that is colored red when filled with invalid coordinate */
 static GtkWidget *pos_lon_entry_new(pos_float_t lon) {
-  GtkWidget *widget = entry_new();
+  GtkWidget *widget = osm2go_platform::entry_new();
   gtk_widget_modify_text(widget, GTK_STATE_PRELIGHT, osm2go_platform::invalid_text_color());
 
   char str[32];
@@ -195,7 +193,7 @@ struct area_context_t {
 
 area_context_t::area_context_t(area_edit_t &a, GtkWidget *dlg)
   : dialog(dlg)
-  , notebook(notebook_new())
+  , notebook(osm2go_platform::notebook_new())
   , area(a)
   , bounds(a.bounds)
   , warning(nullptr)
@@ -234,7 +232,7 @@ static bool current_tab_is(GtkNotebook *nb, GtkWidget *w, const char *str) {
 }
 
 static bool current_tab_is(area_context_t *context, const char *str) {
-  GtkNotebook *nb = notebook_get_gtk_notebook(context->notebook);
+  GtkNotebook *nb = osm2go_platform::notebook_get_gtk_notebook(context->notebook);
 
   gint page_num = gtk_notebook_get_current_page(nb);
 
@@ -269,7 +267,7 @@ static bool area_warning(area_context_t *context) {
     g_string text(warn_text(area));
     g_string msg(g_strdup_printf(_("%s\n\nDo you really want to continue?"), text.get()));
     text.reset();
-    ret = yes_no(_("Area size warning!"), msg.get(),
+    ret = osm2go_platform::yes_no(_("Area size warning!"), msg.get(),
                  MISC_AGAIN_ID_AREA_TOO_BIG | MISC_AGAIN_FLAG_DONT_SAVE_NO, context->dialog.get());
   }
 
@@ -480,8 +478,7 @@ static void callback_modified_unit(area_context_t *context) {
   double width  = pos_dist_get(context->extent.width, context->extent.is_mil);
 
   /* adjust unit flag */
-  context->extent.is_mil =
-    combo_box_get_active(context->extent.mil_km) == 0;
+  context->extent.is_mil = (osm2go_platform::combo_box_get_active(context->extent.mil_km) == 0);
 
   /* save values */
   pos_dist_entry_set(context->extent.width, width, context->extent.is_mil);
@@ -677,7 +674,7 @@ bool area_edit_t::run() {
                                                GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                                nullptr));
 
-  dialog_size_hint(context.dialog, MISC_DIALOG_HIGH);
+  osm2go_platform::dialog_size_hint(context.dialog, osm2go_platform::MISC_DIALOG_HIGH);
   context.warning = gtk_dialog_add_button(context.dialog, _("Warning"), GTK_RESPONSE_HELP);
 
   gtk_button_set_image(GTK_BUTTON(context.warning),
@@ -707,11 +704,11 @@ bool area_edit_t::run() {
                    G_CALLBACK(on_map_button_release_event), &context);
 
   /* install handler for timed updates of the gps button */
-  Timer timer;
+  osm2go_platform::Timer timer;
   timer.restart(1, map_gps_update, &context);
   context.map.start.rlon = context.map.start.rlat = NAN;
 
-  notebook_append_page(context.notebook, GTK_WIDGET(context.map.widget), _(TAB_LABEL_MAP));
+  osm2go_platform::notebook_append_page(context.notebook, GTK_WIDGET(context.map.widget), _(TAB_LABEL_MAP));
 
   /* ------------ direct min/max edit --------------- */
 
@@ -756,7 +753,7 @@ bool area_edit_t::run() {
   gtk_table_attach_defaults(table, context.direct.error, 0, 3, 3, 4);
 
   gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), FALSE, FALSE, 0);
-  notebook_append_page(context.notebook, vbox, _(TAB_LABEL_DIRECT));
+  osm2go_platform::notebook_append_page(context.notebook, vbox, _(TAB_LABEL_DIRECT));
 
   /* ------------- center/extent edit ------------------------ */
 
@@ -778,13 +775,13 @@ bool area_edit_t::run() {
   label = gtk_label_new(_("Width:"));
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
   gtk_table_attach_defaults(table,  label, 0, 1, 1, 2);
-  context.extent.width = entry_new();
+  context.extent.width = osm2go_platform::entry_new();
   gtk_table_attach_defaults(table, context.extent.width, 1, 2, 1, 2);
 
   label = gtk_label_new(_("Height:"));
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
   gtk_table_attach_defaults(table,  label, 0, 1, 2, 3);
-  context.extent.height = entry_new();
+  context.extent.height = osm2go_platform::entry_new();
   gtk_table_attach_defaults(table,
 			    context.extent.height, 1, 2, 2, 3);
 
@@ -822,14 +819,13 @@ bool area_edit_t::run() {
   gtk_table_attach_defaults(table, context.extent.error, 0, 3, 4, 5);
 
   gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), FALSE, FALSE, 0);
-  notebook_append_page(context.notebook, vbox, _(TAB_LABEL_EXTENT));
+  osm2go_platform::notebook_append_page(context.notebook, vbox, _(TAB_LABEL_EXTENT));
 
 #ifdef HAS_MAEMO_MAPPER
   /* ------------- fetch from maemo mapper ------------------------ */
 
   vbox = gtk_vbox_new(FALSE, 8);
-  context.mmapper.fetch =
-    button_new_with_label(_("Get from Maemo Mapper"));
+  context.mmapper.fetch = osm2go_platform::button_new_with_label(_("Get from Maemo Mapper"));
   gtk_box_pack_start(GTK_BOX(vbox), context.mmapper.fetch, FALSE, FALSE, 0);
 
   g_signal_connect_swapped(context.mmapper.fetch, "clicked",
@@ -839,14 +835,14 @@ bool area_edit_t::run() {
   label = gtk_label_new(_("(recommended MM zoom level < 7)"));
   gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
-  notebook_append_page(context.notebook, vbox, _("M.Mapper"));
+  osm2go_platform::notebook_append_page(context.notebook, vbox, _("M.Mapper"));
 #endif
 
   /* ------------------------------------------------------ */
 
   gtk_box_pack_start(context.dialog.vbox(), context.notebook, TRUE, TRUE, 0);
 
-  g_signal_connect(notebook_get_gtk_notebook(context.notebook),
+  g_signal_connect(osm2go_platform::notebook_get_gtk_notebook(context.notebook),
                    "switch-page", G_CALLBACK(on_page_switch), &context);
 
   gtk_widget_show_all(context.dialog.get());

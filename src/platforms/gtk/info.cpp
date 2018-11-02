@@ -35,8 +35,6 @@
 #include <osm2go_i18n.h>
 #include "osm2go_platform_gtk.h"
 
-using namespace osm2go_platform;
-
 enum {
   TAG_COL_KEY = 0,
   TAG_COL_VALUE,
@@ -166,11 +164,11 @@ static bool tag_edit(GtkWindow *window, std::string &k, std::string &v) {
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                               nullptr));
 
-  dialog_size_hint(dialog, MISC_DIALOG_SMALL);
+  osm2go_platform::dialog_size_hint(dialog, osm2go_platform::MISC_DIALOG_SMALL);
   gtk_dialog_set_default_response(dialog, GTK_RESPONSE_ACCEPT);
 
   GtkWidget *label = gtk_label_new(_("Key:"));
-  GtkWidget *key = entry_new(EntryFlagsNoAutoCap);
+  GtkWidget *key = entry_new(osm2go_platform::EntryFlagsNoAutoCap);
   GtkWidget *table = gtk_table_new(2, 2, FALSE);
 
   gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
@@ -181,7 +179,7 @@ static bool tag_edit(GtkWindow *window, std::string &k, std::string &v) {
   gtk_entry_set_activates_default(GTK_ENTRY(key), TRUE);
 
   label = gtk_label_new(_("Value:"));
-  GtkWidget *value = entry_new(EntryFlagsNoAutoCap);
+  GtkWidget *value = osm2go_platform::entry_new(osm2go_platform::EntryFlagsNoAutoCap);
   gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2,
                    static_cast<GtkAttachOptions>(0),
                    static_cast<GtkAttachOptions>(0), 0, 0);
@@ -334,7 +332,7 @@ static bool replace_with_last(const info_tag_context_t *context, const osm_t::Ta
     return true;
 
   const char *ts = context->object.type_string();
-  return yes_no(_("Overwrite tags?"),
+  return osm2go_platform::yes_no(_("Overwrite tags?"),
                 trstring("This will overwrite all tags of this %1 with the ones from "
                          "the %1 selected last.\n\nDo you really want this?").arg(ts),
                 MISC_AGAIN_ID_OVERWRITE_TAGS, context->dialog.get());
@@ -550,7 +548,7 @@ static GtkWidget *details_widget(const info_tag_context_t &context, bool big) {
     g_string str(g_strdup_printf(_("Members: %u nodes, %u ways, %u relations"),
                                  nodes, ways, relations));
 
-    GtkWidget *member_btn = button_new_with_label(str.get());
+    GtkWidget *member_btn = osm2go_platform::button_new_with_label(str.get());
     g_signal_connect(member_btn, "clicked", G_CALLBACK(on_relation_members),
                      const_cast<info_tag_context_t *>(&context));
 
@@ -574,7 +572,7 @@ static void info_more(const info_tag_context_t &context) {
                                       context.dialog, GTK_DIALOG_MODAL,
                                       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, nullptr));
 
-  dialog_size_hint(dialog, MISC_DIALOG_SMALL);
+  osm2go_platform::dialog_size_hint(dialog, osm2go_platform::MISC_DIALOG_SMALL);
   gtk_dialog_set_default_response(dialog, GTK_RESPONSE_CANCEL);
 
   gtk_box_pack_start(dialog.vbox(), details_widget(context, true), FALSE, FALSE, 0);
@@ -622,7 +620,7 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *p
                                                nullptr));
   str.reset();
 
-  dialog_size_hint(context.dialog, MISC_DIALOG_LARGE);
+  osm2go_platform::dialog_size_hint(context.dialog, osm2go_platform::MISC_DIALOG_LARGE);
   gtk_dialog_set_default_response(context.dialog, GTK_RESPONSE_ACCEPT);
 
 #ifndef FREMANTLE

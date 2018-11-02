@@ -42,8 +42,6 @@
 #include "osm2go_i18n.h"
 #include <osm2go_platform_gtk.h>
 
-using namespace osm2go_platform;
-
 struct list_priv_t {
   GtkTreeView *view;
   GtkMenu *menu;
@@ -75,7 +73,7 @@ static void list_set_user_buttons(list_priv_t *priv, const std::vector<list_butt
       continue;
     GCallback cb = buttons[id].second;
 
-    priv->button.widget[id] = button_new_with_label(label);
+    priv->button.widget[id] = osm2go_platform::button_new_with_label(label);
     if(priv->button.flags & LIST_BTN_2ROW)
       gtk_table_attach_defaults(GTK_TABLE(priv->table), priv->button.widget[id],
 		id-LIST_BUTTON_USER0, id-LIST_BUTTON_USER0+1, 1, 2);
@@ -284,14 +282,14 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
   priv->callback_context = context;
   priv->change = cb_changed;
 
-  priv->view = tree_view_new();
+  priv->view = osm2go_platform::tree_view_new();
 
   /* hildon hides these by default */
   gtk_tree_view_set_headers_visible(priv->view, show_headers ? TRUE : FALSE);
 
   GtkTreeSelection *sel = gtk_tree_view_get_selection(priv->view);
 
-  gtk_box_pack_start(GTK_BOX(vbox), scrollable_container(GTK_WIDGET(priv->view)),
+  gtk_box_pack_start(GTK_BOX(vbox), osm2go_platform::scrollable_container(GTK_WIDGET(priv->view)),
                      TRUE, TRUE, 0);
 
   /* make list react on clicks */
@@ -320,7 +318,7 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
     if(strchr(buttons[i].first, '_') != nullptr)
       priv->button.widget[i] = gtk_button_new_with_mnemonic(buttons[i].first);
     else
-      priv->button.widget[i] = button_new_with_label(buttons[i].first);
+      priv->button.widget[i] = osm2go_platform::button_new_with_label(buttons[i].first);
     gtk_table_attach_defaults(GTK_TABLE(priv->table),
                               priv->button.widget[i], i, i + 1, 0, 1);
     g_signal_connect_swapped(priv->button.widget[i], "clicked",

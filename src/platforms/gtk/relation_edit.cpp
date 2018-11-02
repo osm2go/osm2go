@@ -37,8 +37,6 @@
 #include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
 
-using namespace osm2go_platform;
-
 /* --------------- relation dialog for an item (node or way) ----------- */
 
 struct relitem_context_t {
@@ -73,7 +71,7 @@ struct entry_insert_text {
   GtkWidget * const entry;
   explicit entry_insert_text(GtkWidget *en) : entry(en) {}
   inline void operator()(const std::string &role) {
-    combo_box_append_text(entry, role.c_str());
+    osm2go_platform::combo_box_append_text(entry, role.c_str());
   }
 };
 
@@ -126,12 +124,12 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
 
   GtkWidget *entry = nullptr;
   if(!roles.empty()) {
-    entry = combo_box_entry_new(_("Role"));
+    entry = osm2go_platform::combo_box_entry_new(_("Role"));
 
     /* fill combo box with presets */
     std::for_each(roles.begin(), roles.end(), entry_insert_text(entry));
   } else
-    entry = entry_new();
+    entry = osm2go_platform::entry_new();
 
   gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
   gtk_box_pack_start(dialog.vbox(), hbox, TRUE, TRUE, 0);
@@ -148,8 +146,8 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
   const char *role = nullptr;
   std::string rstr;
 
-  if(isComboBoxEntryWidget(entry)) {
-    rstr = combo_box_get_active_text(entry);
+  if(osm2go_platform::isComboBoxEntryWidget(entry)) {
+    rstr = osm2go_platform::combo_box_get_active_text(entry);
     if(!rstr.empty())
       role = rstr.c_str();
   } else {
@@ -287,7 +285,7 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
 }
 
 static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
-  GtkTreeView *view = tree_view_new();
+  GtkTreeView *view = osm2go_platform::tree_view_new();
 
 #ifdef FREMANTLE
   /* hildon hides these by default */
@@ -346,7 +344,7 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
 
   g_signal_connect_swapped(context.selection, "changed", G_CALLBACK(changed), &context);
 
-  return scrollable_container(GTK_WIDGET(view));
+  return osm2go_platform::scrollable_container(GTK_WIDGET(view));
 }
 
 void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
@@ -362,7 +360,7 @@ void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
                                                nullptr));
   str.reset();
 
-  dialog_size_hint(context.dialog, MISC_DIALOG_LARGE);
+  osm2go_platform::dialog_size_hint(context.dialog, osm2go_platform::MISC_DIALOG_LARGE);
   gtk_dialog_set_default_response(context.dialog, GTK_RESPONSE_CLOSE);
 
   gtk_box_pack_start(context.dialog.vbox(), relation_item_list_widget(context), TRUE, TRUE, 0);
@@ -486,7 +484,7 @@ void members_list_functor::operator()(const member_t &member)
 
 static GtkWidget *member_list_widget(member_context_t &context) {
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
-  GtkTreeView * const view = tree_view_new();
+  GtkTreeView * const view = osm2go_platform::tree_view_new();
 
   gtk_tree_selection_set_select_function(gtk_tree_view_get_selection(view),
                                          member_list_selection_func, &context, nullptr);
@@ -542,7 +540,7 @@ static GtkWidget *member_list_widget(member_context_t &context) {
   std::for_each(context.relation->members.begin(), context.relation->members.end(),
                 members_list_functor(store, context.osm));
 
-  gtk_box_pack_start(GTK_BOX(vbox), scrollable_container(GTK_WIDGET(view)), TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox), osm2go_platform::scrollable_container(GTK_WIDGET(view)), TRUE, TRUE, 0);
 
   return vbox;
 }
@@ -562,7 +560,7 @@ void relation_show_members(GtkWidget *parent, const relation_t *relation, osm_t:
                                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                                         nullptr));
 
-  dialog_size_hint(GTK_WINDOW(mcontext.dialog), MISC_DIALOG_MEDIUM);
+  osm2go_platform::dialog_size_hint(GTK_WINDOW(mcontext.dialog), osm2go_platform::MISC_DIALOG_MEDIUM);
   gtk_dialog_set_default_response(GTK_DIALOG(mcontext.dialog),
 				  GTK_RESPONSE_CLOSE);
 
@@ -688,7 +686,7 @@ static void on_relation_remove(relation_context_t *context) {
     g_string msg(g_strdup_printf(ngettext("This relation still has %zu member. Delete it anyway?",
                                           "This relation still has %zu members. Delete it anyway?",
                                           sel->members.size()), sel->members.size()));
-    if(!yes_no(_("Delete non-empty relation?"), msg.get(), 0, context->dialog.get()))
+    if(!osm2go_platform::yes_no(_("Delete non-empty relation?"), msg.get(), 0, context->dialog.get()))
       return;
   }
 
@@ -775,7 +773,7 @@ void relation_list(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items 
                                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                                          nullptr));
 
-  dialog_size_hint(context.dialog, MISC_DIALOG_LARGE);
+  osm2go_platform::dialog_size_hint(context.dialog, osm2go_platform::MISC_DIALOG_LARGE);
   gtk_dialog_set_default_response(context.dialog, GTK_RESPONSE_CLOSE);
 
   gtk_box_pack_start(context.dialog.vbox(), relation_list_widget(context), TRUE, TRUE, 0);
