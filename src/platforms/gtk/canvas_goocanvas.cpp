@@ -106,7 +106,8 @@ canvas_t *canvas_t::create() {
 
 /* ------------------- creating and destroying the canvas ----------------- */
 
-static void canvas_delete(canvas_t *canvas) {
+static void canvas_delete(canvas_goocanvas *canvas)
+{
   delete canvas;
 }
 
