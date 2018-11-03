@@ -274,7 +274,7 @@ void canvas_t::scroll_to(int sx, int sy) {
   sy = std::min(std::max(sy, min_sy_cu), max_sy_cu);
   sx = std::min(std::max(sx, min_sx_cu), max_sx_cu);
 
-  gdouble zoom = get_zoom();
+  double zoom = get_zoom();
 
   /* adjust to screen center */
   sx -= widget->allocation.width / (2 * zoom);
