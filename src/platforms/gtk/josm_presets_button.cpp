@@ -944,18 +944,19 @@ presets_element_t::attach_key *presets_element_combo::attach(preset_attach_conte
                                                              const std::string &preset) const
 {
   const std::string &pr = preset.empty() ? def : preset;
-  GtkWidget *ret;
   int active = editable ? 0 : 1; // account for the extra "unset" entry for non-editable ones
   bool matched = false;
 
   GtkListStore *store = selectorModel(values, display_values);
+  unsigned int flags;
 
   if(editable) {
-    ret = select_widget_wrapped(text.c_str(), GTK_TREE_MODEL(store), osm2go_platform::AllowEditing);
+    flags = osm2go_platform::AllowEditing;
   } else {
     gtk_list_store_insert_with_values(store, nullptr, 0, 0, _("unset"), 1, "", -1);
-    ret = osm2go_platform::select_widget_wrapped(text.c_str(), GTK_TREE_MODEL(store));
+    flags = osm2go_platform::NoSelectionFlags;
   }
+  GtkWidget * const ret = osm2go_platform::select_widget_wrapped(text.c_str(), GTK_TREE_MODEL(store), flags);
 
   g_object_unref(store);
 
