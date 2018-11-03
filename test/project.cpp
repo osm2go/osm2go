@@ -173,29 +173,42 @@ static void testLoad(const std::string &tmpdir, const char *osmfile)
   map_state_t dummystate;
   appdata_t appdata(dummystate);
 
-  // create dummy project
-  std::unique_ptr<project_t> project(new project_t(dummystate, proj_name, tmpdir));
-  assert(project->save());
+  // 3 attempts of loading, the first will fail because of missing OSM data
+  for (size_t i = 3; i > 0; i--) {
+    // create dummy project
+    std::unique_ptr<project_t> project(new project_t(dummystate, proj_name, tmpdir));
 
-  const std::string fn = project_filename(*project);
-  project.reset();
-
-  // 2 attempts of loading, the first will fail because of missing OSM data
-  for (size_t i = 2; i > 0; i--) {
-    if(i == 1) {
+    size_t msgs = i;
+    switch (i) {
+    case 3:
+      msgs = 2;
+      break;
+    case 2:
+      // let it fail because of invalid bounds
+      msgs = 2;
+      project->bounds.min.lat = 222;
+      // fallthrough
+    case 1: {
+      // save for the base directory
+      assert(project->save());
       // copy the OSM data
       osm2go_platform::MappedFile osm(osmfile);
       assert(static_cast<bool>(osm));
       fdguard osmfd(open((tmpdir + proj_name + "/" + proj_name + ".osm").c_str(), O_CREAT | O_WRONLY, 0644));
       assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
       assert_cmpnum(write(osmfd, osm.data(), osm.length()), osm.length());
+      }
     }
+
+    assert(project->save());
+    const std::string fn = project_filename(*project);
+    project.reset();
 
     // loading will fail because window is nullptr (and map also)
     assert(!project_load(appdata, fn));
 
     MainUiDummy *uid = static_cast<MainUiDummy *>(appdata.uicontrol.get());
-    assert_cmpnum(uid->messages.size(), i);
+    assert_cmpnum(uid->messages.size(), msgs);
     assert(!appdata.project);
 
     const std::vector<std::string>::const_iterator itEnd = uid->messages.end();

@@ -493,6 +493,12 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
     return false;
   }
 
+  if(unlikely(!appdata.project->bounds.valid())) {
+    appdata.uicontrol->showNotification(trstring("Invalid project bounds in %1").arg(name), MainUi::Brief);
+
+    return false;
+  }
+
   if(unlikely(appdata_t::window == nullptr))
     return false;
 
