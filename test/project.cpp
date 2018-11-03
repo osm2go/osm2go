@@ -177,6 +177,10 @@ static void testLoad(const std::string &tmpdir, const char *osmfile)
   for (size_t i = 3; i > 0; i--) {
     // create dummy project
     std::unique_ptr<project_t> project(new project_t(dummystate, proj_name, tmpdir));
+    project->bounds.min.lat = 0.5;
+    project->bounds.min.lon = 0.5;
+    project->bounds.max.lat = 0.6;
+    project->bounds.max.lon = 0.6;
 
     size_t msgs = i;
     switch (i) {
@@ -186,7 +190,7 @@ static void testLoad(const std::string &tmpdir, const char *osmfile)
     case 2:
       // let it fail because of invalid bounds
       msgs = 2;
-      project->bounds.min.lat = 222;
+      project->bounds.min.lat = 2;
       // fallthrough
     case 1: {
       // save for the base directory

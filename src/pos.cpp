@@ -31,7 +31,7 @@
 #include <cstring>
 #include <glib.h>
 
-bool pos_t::valid() const
+bool pos_t::valid() const noexcept
 {
   return pos_lat_valid(lat) && pos_lon_valid(lon);
 }
@@ -49,11 +49,13 @@ void pos_lat_str(char *str, size_t len, pos_float_t latitude) {
   strncat(str + offs, "°", len - offs);
 }
 
-bool pos_lat_valid(pos_float_t lat) {
+bool pos_lat_valid(pos_float_t lat) noexcept
+{
   return(!std::isnan(lat) && (lat >= -90.0) && (lat <= 90.0));
 }
 
-bool pos_lon_valid(pos_float_t lon) {
+bool pos_lon_valid(pos_float_t lon) noexcept
+{
   return(!std::isnan(lon) && (lon >= -180.0) && (lon <= 180.0));
 }
 
@@ -150,6 +152,14 @@ bool pos_area::contains(pos_t pos) const noexcept
   if((pos.lon < min.lon) || (pos.lon > max.lon))
     return false;
   return true;
+}
+
+bool pos_area::valid() const noexcept
+{
+  return min.valid() &&
+         max.valid() &&
+         min.lat < max.lat &&
+         min.lon < max.lon;
 }
 
 std::string pos_area::print() const

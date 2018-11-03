@@ -58,7 +58,7 @@ typedef struct pos_t {
   { return lat == other.lat && lon == other.lon; }
   inline bool operator!=(const pos_t &other) const noexcept
   { return !operator==(other); }
-  bool valid() const;
+  bool valid() const noexcept;
 
   /**
    * @brief calculate the screen coordinates
@@ -93,8 +93,7 @@ struct pos_area {
   pos_t max;
 
   bool contains(pos_t pos) const noexcept;
-  inline bool valid() const
-  { return min.valid() && max.valid(); }
+  bool valid() const noexcept;
 
   inline pos_float_t centerLat() const noexcept
   { return (max.lat + min.lat) / 2; }
@@ -149,8 +148,8 @@ static inline void pos_lon_str(char *str, size_t len, pos_float_t longitude)
   pos_lat_str(str, len, longitude);
 }
 
-bool pos_lat_valid(pos_float_t lat);
-bool pos_lon_valid(pos_float_t lon);
+bool pos_lat_valid(pos_float_t lat) noexcept;
+bool pos_lon_valid(pos_float_t lon) noexcept;
 
 /**
  * @brief remove trailing zeroes from a number string
