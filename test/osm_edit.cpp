@@ -123,6 +123,7 @@ static void test_taglist() {
   assert(osm_t::tagSubset(nstags, nstags));
   // real subsets
   osm_t::TagMap tmpTags;
+  assert(osm_t::tagSubset(tmpTags, nstags));
   tmpTags.insert(osm_t::TagMap::value_type("a", "A"));
   assert(osm_t::tagSubset(tmpTags, nstags));
   tmpTags.clear();

@@ -323,10 +323,6 @@ static void on_tag_edit(info_tag_context_t *context) {
 }
 
 static bool replace_with_last(const info_tag_context_t *context, const osm_t::TagMap &ntags) {
-  // if the new object has no tags replacing is always permitted
-  if(context->tags.empty())
-    return true;
-
   // if all tags of the object are part of the new tag list no information will be lost
   if(osm_t::tagSubset(context->tags, ntags))
     return true;
