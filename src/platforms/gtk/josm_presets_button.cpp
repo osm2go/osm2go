@@ -947,18 +947,16 @@ presets_element_t::attach_key *presets_element_combo::attach(preset_attach_conte
   int active = editable ? 0 : 1; // account for the extra "unset" entry for non-editable ones
   bool matched = false;
 
-  GtkListStore *store = selectorModel(values, display_values);
+  std::unique_ptr<GtkListStore, g_object_deleter> store(selectorModel(values, display_values));
   unsigned int flags;
 
   if(editable) {
     flags = osm2go_platform::AllowEditing;
   } else {
-    gtk_list_store_insert_with_values(store, nullptr, 0, 0, _("unset"), 1, "", -1);
+    gtk_list_store_insert_with_values(store.get(), nullptr, 0, 0, _("unset"), 1, "", -1);
     flags = osm2go_platform::NoSelectionFlags;
   }
-  GtkWidget * const ret = osm2go_platform::select_widget_wrapped(text.c_str(), GTK_TREE_MODEL(store), flags);
-
-  g_object_unref(store);
+  GtkWidget * const ret = osm2go_platform::select_widget_wrapped(text.c_str(), GTK_TREE_MODEL(store.get()), flags);
 
   if(!pr.empty()) {
     const std::vector<std::string>::const_iterator itEnd = values.end();
@@ -994,11 +992,10 @@ presets_element_t::attach_key *presets_element_multiselect::attach(preset_attach
 {
   const std::string &pr = preset.empty() ? def : preset;
 
-  GtkListStore *store = selectorModel(values, display_values);
-  GtkWidget *ret = osm2go_platform::select_widget_wrapped(text.c_str(), GTK_TREE_MODEL(store),
+  std::unique_ptr<GtkListStore, g_object_deleter> store(selectorModel(values, display_values));
+  GtkWidget *ret = osm2go_platform::select_widget_wrapped(text.c_str(), GTK_TREE_MODEL(store.get()),
                                                           osm2go_platform::AllowMultiSelection,
                                                           &delimiter);
-  g_object_unref(store);
 
   const std::vector<unsigned int> &indexes = matchedIndexes(pr);
 

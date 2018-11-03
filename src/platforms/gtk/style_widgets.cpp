@@ -59,12 +59,11 @@ static GtkWidget *style_select_widget(const std::string &currentstyle,
 
   /* fill combo box with presets */
   int match = -1;
-  GtkListStore *store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
+  std::unique_ptr<GtkListStore, g_object_deleter> store(gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING));
 
-  std::for_each(styles.begin(), styles.end(), selector_model_functor(store, match, currentstyle));
+  std::for_each(styles.begin(), styles.end(), selector_model_functor(store.get(), match, currentstyle));
 
-  GtkWidget *ret = osm2go_platform::select_widget_wrapped(_("Style"), GTK_TREE_MODEL(store));
-  g_object_unref(store);
+  GtkWidget *ret = osm2go_platform::select_widget_wrapped(_("Style"), GTK_TREE_MODEL(store.get()));
   osm2go_platform::combo_box_set_active(ret, match);
   return ret;
 }
