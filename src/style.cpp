@@ -54,7 +54,7 @@ static float parse_scale_max(xmlNodePtr cur_node) {
     return 0.0f;
 }
 
-static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
+static void parse_style_node(xmlNode *a_node, xmlString *fname, style_t &style) {
   /* -------------- setup defaults -------------------- */
   /* (the defaults are pretty much the potlatch style) */
   style.area.border_width      = 2.0;
@@ -95,7 +95,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       const char *nodename = reinterpret_cast<const char *>(cur_node->name);
       if(strcmp(nodename, "elemstyles") == 0) {
-        *fname = xmlGetProp(cur_node, BAD_CAST "filename");
+        fname->reset(xmlGetProp(cur_node, BAD_CAST "filename"));
 
       } else if(strcmp(nodename, "node") == 0) {
         parse_color(cur_node, "color", style.node.color);
@@ -174,7 +174,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
  *
  * fname may be nullptr when name_only is true
  */
-static bool style_parse(const std::string &fullname, xmlChar **fname, style_t &style)
+static bool style_parse(const std::string &fullname, xmlString *fname, style_t &style)
 {
   xmlDocGuard doc(xmlReadFile(fullname.c_str(), nullptr, XML_PARSE_NONET));
   bool ret = false;
@@ -206,13 +206,12 @@ static bool style_parse(const std::string &fullname, xmlChar **fname, style_t &s
 }
 
 style_t *style_load_fname(const std::string &filename) {
-  xmlChar *fname = nullptr;
+  xmlString fname;
   std::unique_ptr<style_t> style(new style_t());
 
   if(likely(style_parse(filename, &fname, *style))) {
-    printf("  elemstyle filename: %s\n", fname);
-    style->elemstyles = josm_elemstyles_load(reinterpret_cast<char *>(fname));
-    xmlFree(fname);
+    printf("  elemstyle filename: %s\n", static_cast<const char *>(fname));
+    style->elemstyles = josm_elemstyles_load(fname);
     return style.release();
   }
 
