@@ -48,10 +48,6 @@ void MainUiDummy::showNotification(const char *message, unsigned int)
   msg = message;
 }
 
-appdata_t::~appdata_t()
-{
-}
-
 static char tmpdir[32] = "/tmp/osm2go_api_dl_XXXXXX";
 static const char *dev_url  = "https://master.apis.dev.openstreetmap.org/api/0.6";
 static map_state_t mapstate;
@@ -212,7 +208,4 @@ int main(int argc, char **argv)
   return 0;
 }
 
-void appdata_t::track_clear()
-{
-  assert_unreachable();
-}
+#include "appdata_dummy.h"

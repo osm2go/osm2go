@@ -28,15 +28,6 @@ appdata_t::appdata_t(map_state_t &mstate)
 {
 }
 
-appdata_t::~appdata_t()
-{
-}
-
-void appdata_t::track_clear()
-{
-  assert_unreachable();
-}
-
 int main(int argc, char **argv)
 {
   OSM2GO_TEST_INIT(argc, argv);
@@ -228,3 +219,5 @@ int main(int argc, char **argv)
 
   return 0;
 }
+
+#include "appdata_dummy.h"

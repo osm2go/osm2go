@@ -52,10 +52,6 @@ appdata_t::appdata_t(map_state_t &mstate)
 {
 }
 
-appdata_t::~appdata_t()
-{
-}
-
 static const char *proj_name = "test_proj";
 
 static void testNoFiles(const std::string &tmpdir)
@@ -346,12 +342,4 @@ int main(int argc, char **argv)
   return 0;
 }
 
-void appdata_t::main_ui_enable()
-{
-  assert_unreachable();
-}
-
-void appdata_t::track_clear()
-{
-  assert_unreachable();
-}
+#include "appdata_dummy.h"

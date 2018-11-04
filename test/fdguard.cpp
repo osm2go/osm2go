@@ -107,8 +107,4 @@ int main(int argc, char **argv)
   return 0;
 }
 
-#include "appdata.h"
-void appdata_t::track_clear()
-{
-  abort();
-}
+#include "appdata_dummy.h"

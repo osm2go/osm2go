@@ -19,11 +19,6 @@
 #include <osm2go_cpp.h>
 #include <osm2go_platform.h>
 
-void appdata_t::track_clear()
-{
-  assert_unreachable();
-}
-
 static void verify_diff(osm_t::ref osm)
 {
   assert_cmpnum(12, osm->nodes.size());
@@ -282,7 +277,4 @@ int main(int argc, char **argv)
   return result;
 }
 
-void appdata_t::main_ui_enable()
-{
-  assert_unreachable();
-}
+#include "appdata_dummy.h"
