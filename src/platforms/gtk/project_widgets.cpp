@@ -486,6 +486,35 @@ void project_list_add::operator()(const project_t *project)
   }
 }
 
+static gboolean
+project_matches(GtkTreeModel *model, GtkTreeIter *iter, gpointer data)
+{
+  gchar *pname, *pdescr;
+
+  GtkEntry *entry = static_cast<GtkEntry *>(data);
+  const gchar *text = gtk_entry_get_text(entry);
+  if(text == nullptr || *text == '\0')
+    return TRUE;
+
+  gtk_tree_model_get(model, iter, PROJECT_COL_NAME, &pname,
+                                  PROJECT_COL_DESCRIPTION, &pdescr, -1);
+  g_string name(pname);
+  g_string descr(pdescr);
+
+  if(name && strcasestr(name.get(), text) != nullptr)
+    return TRUE;
+  if(descr && strcasestr(descr.get(), text) != nullptr)
+    return TRUE;
+
+  return FALSE;
+}
+
+static void
+on_filter_changed(gpointer user_data)
+{
+  gtk_tree_model_filter_refilter(static_cast<GtkTreeModelFilter *>(user_data));
+}
+
 /**
  * @brief create a widget to list the projects
  * @param context the context struct
@@ -510,8 +539,11 @@ static GtkWidget *project_list_widget(select_context_t &context, bool &has_sel) 
                                          G_TYPE_STRING,    // desc
                                          G_TYPE_POINTER));  // data
 
+  GtkTreeModelFilter *filter = reinterpret_cast<GtkTreeModelFilter *>(
+            gtk_tree_model_filter_new(GTK_TREE_MODEL(context.store.get()), nullptr));
+
   context.list = list_new(LIST_HILDON_WITHOUT_HEADERS, 0, &context, changed,
-                          buttons, columns, GTK_TREE_MODEL(context.store.get()));
+                          buttons, columns, GTK_TREE_MODEL(filter));
 
   GtkTreeIter seliter;
   std::for_each(context.projects.begin(), context.projects.end(),
@@ -522,6 +554,14 @@ static GtkWidget *project_list_widget(select_context_t &context, bool &has_sel) 
 
   if(has_sel)
     list_scroll(context.list, &seliter);
+
+  GtkWidget *entry = osm2go_platform::entry_new(osm2go_platform::EntryFlagsNoAutoCap);
+  gtk_box_pack_start(GTK_BOX(context.list), entry, FALSE, FALSE, 0);
+  gtk_box_reorder_child(GTK_BOX(context.list), entry, 1);
+  gtk_tree_model_filter_set_visible_func(filter, project_matches, entry, nullptr);
+  gtk_widget_grab_focus(entry);
+
+  g_signal_connect_swapped(entry, "changed", G_CALLBACK(on_filter_changed), filter);
 
   return context.list;
 }
