@@ -253,7 +253,7 @@ bool osm2go_platform::yes_no(const char *title, const char *msg, unsigned int ag
                   hildon_note_new_confirmation(p, msg));
 #endif
 
-  osm2go_platform::Widget *cbut = nullptr;
+  GtkWidget *cbut = nullptr;
   if(again_bit) {
 #ifdef FREMANTLE
     /* make sure there's some space before the checkbox */
