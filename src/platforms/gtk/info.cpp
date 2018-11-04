@@ -438,7 +438,7 @@ static GtkWidget *tag_widget(info_tag_context_t &context) {
                                           G_TYPE_BOOLEAN, G_TYPE_POINTER));
 
   context.list = list_new(LIST_HILDON_WITHOUT_HEADERS, LIST_BTN_2ROW, &context, changed,
-                          buttons, columns, context.store.get());
+                          buttons, columns, GTK_TREE_MODEL(context.store.get()));
 
   list_set_custom_user_button(context.list, LIST_BUTTON_USER1,
                               josm_build_presets_button(context.presets, &context));

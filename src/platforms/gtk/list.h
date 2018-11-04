@@ -82,7 +82,7 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
                     void(*cb_changed)(GtkTreeSelection*,void*),
                     const std::vector<list_button> &buttons,
                     const std::vector<list_view_column> &columns,
-                    GtkListStore *store);
+                    GtkTreeModel *store);
 
 void list_set_custom_user_button(GtkWidget *list, list_button_t id,
 				 GtkWidget *widget);

@@ -332,7 +332,7 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
   context->list = list_new(LIST_HILDON_WITHOUT_HEADERS, 0, context,
                            wms_server_changed, buttons,
                            std::vector<list_view_column>(1, list_view_column(_("Name"), LIST_FLAG_ELLIPSIZE)),
-                           context->store.get());
+                           GTK_TREE_MODEL(context->store.get()));
 
   settings_t::ref settings = settings_t::instance();
   const std::vector<wms_server_t *> &servers = settings->wms_server;

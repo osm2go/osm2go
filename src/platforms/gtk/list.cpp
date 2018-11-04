@@ -48,7 +48,7 @@ struct list_priv_t {
 
   GtkTreeView * const view;
 
-  change_cb change;
+  const change_cb change;
   void * const callback_context;
 
   GtkWidget * const table;
@@ -284,7 +284,7 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
                     void(*cb_changed)(GtkTreeSelection*,void*),
                     const std::vector<list_button> &buttons,
                     const std::vector<list_view_column> &columns,
-                    GtkListStore *store)
+                    GtkTreeModel *store)
 {
   assert(cb_changed != nullptr);
 
@@ -337,7 +337,7 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
   if(buttons.size() > 3)
     list_set_user_buttons(priv, buttons);
 
-  gtk_tree_view_set_model(priv->view, GTK_TREE_MODEL(store));
+  gtk_tree_view_set_model(priv->view, store);
 
   // set this up last so it will not be called with an incompletely set up
   // context pointer

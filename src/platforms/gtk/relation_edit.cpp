@@ -747,7 +747,7 @@ static GtkWidget *relation_list_widget(relation_context_t &context) {
 
   context.list = list_new(LIST_HILDON_WITH_HEADERS, 0, &context,
                           relation_list_changed, buttons, columns,
-                          context.store.get());
+                          GTK_TREE_MODEL(context.store.get()));
 
   // Sorting by ref/name by default is useful for places with lots of numbered
   // bus routes. Especially for small screens.

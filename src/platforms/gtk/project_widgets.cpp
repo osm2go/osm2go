@@ -510,8 +510,8 @@ static GtkWidget *project_list_widget(select_context_t &context, bool &has_sel) 
                                          G_TYPE_STRING,    // desc
                                          G_TYPE_POINTER));  // data
 
-  context.list = list_new(LIST_HILDON_WITHOUT_HEADERS, 0,
-                          &context, changed, buttons, columns, context.store.get());
+  context.list = list_new(LIST_HILDON_WITHOUT_HEADERS, 0, &context, changed,
+                          buttons, columns, GTK_TREE_MODEL(context.store.get()));
 
   GtkTreeIter seliter;
   std::for_each(context.projects.begin(), context.projects.end(),
