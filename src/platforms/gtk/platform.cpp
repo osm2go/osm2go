@@ -48,14 +48,14 @@ void osm2go_platform::gtk_widget_deleter::operator()(GtkWidget *mem) {
 osm2go_platform::DialogGuard::DialogGuard(GtkWidget *dlg)
   : WidgetGuard(dlg)
 {
-  assert(GTK_WINDOW(dlg) != nullptr);
-  assert(GTK_DIALOG(dlg) != nullptr);
+  assert(GTK_IS_WINDOW(dlg) == TRUE);
+  assert(GTK_IS_DIALOG(dlg) == TRUE);
 }
 
 void osm2go_platform::DialogGuard::reset(GtkWidget *dlg)
 {
-  assert(GTK_WINDOW(dlg) != nullptr);
-  assert(GTK_DIALOG(dlg) != nullptr);
+  assert(GTK_IS_WINDOW(dlg) == TRUE);
+  assert(GTK_IS_DIALOG(dlg) == TRUE);
   WidgetGuard::reset(dlg);
 }
 
