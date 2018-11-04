@@ -162,11 +162,11 @@ GtkTreeSelection *list_get_selection(GtkWidget *list) {
 /* returns true if something is selected. on in mode multiple returns */
 /* true if exactly one item is selected */
 bool list_get_selected(GtkWidget *list, GtkTreeModel **model, GtkTreeIter *iter) {
-  bool retval = false;
+  GtkTreeSelection *sel = list_get_selection(list);
 
 #if 1
   // this copes with multiple selections ...
-  GtkTreeSelection *sel = list_get_selection(list);
+  bool retval = false;
 
   GList *slist = gtk_tree_selection_get_selected_rows(sel, model);
 
