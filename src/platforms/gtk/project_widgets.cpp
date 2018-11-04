@@ -151,7 +151,7 @@ enum {
 static void view_selected(GtkWidget *dialog, const project_t *project)
 {
   /* check if the selected project also has a valid osm file */
-  gboolean has_osm = (project != nullptr && project->osm_file_exists()) ? TRUE : FALSE;
+  gboolean has_osm = project->osm_file_exists() ? TRUE : FALSE;
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT, has_osm);
 }
 
@@ -166,6 +166,7 @@ changed(GtkTreeSelection *selection, gpointer userdata) {
   if(sel) {
     project_t *project = nullptr;
     gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
+    assert(project != nullptr);
 
     view_selected(context->dialog, project);
   }
@@ -368,7 +369,7 @@ static void on_project_delete(select_context_t *context) {
   project_delete(project);
 
   /* disable ok button button */
-  view_selected(context->dialog, nullptr);
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, FALSE);
 }
 
 static void on_project_edit(select_context_t *context) {
