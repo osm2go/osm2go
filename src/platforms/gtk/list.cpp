@@ -43,20 +43,30 @@
 #include <osm2go_platform_gtk.h>
 
 struct list_priv_t {
-  GtkTreeView *view;
-  GtkMenu *menu;
+  typedef void (*change_cb)(GtkTreeSelection *, void *);
+  list_priv_t(change_cb cb, void *cb_ctx, GtkWidget *tw, unsigned int btnflags);
 
-  void *callback_context;
+  GtkTreeView * const view;
 
-  void(*change)(GtkTreeSelection *, gpointer);
+  change_cb change;
+  void * const callback_context;
 
-  GtkWidget *table;
+  GtkWidget * const table;
 
   struct {
     std::array<GtkWidget *, 6> widget;
     int flags;
   } button;
 };
+
+list_priv_t::list_priv_t(change_cb cb, void *cb_ctx, GtkWidget *tw, unsigned int btnflags)
+  : view(osm2go_platform::tree_view_new())
+  , change(cb)
+  , callback_context(cb_ctx)
+  , table(tw)
+{
+  button.flags = btnflags;
+}
 
 struct tree_path_deleter {
   inline void operator()(GtkTreePath *path)
@@ -263,6 +273,11 @@ static void changed(GtkTreeSelection *treeselection, gpointer user_data) {
   priv->change(treeselection, priv->callback_context);
 }
 
+static void del_priv(gpointer p)
+{
+  delete static_cast<list_priv_t *>(p);
+}
+
 /* a generic list widget with "add", "edit" and "remove" buttons as used */
 /* for all kinds of lists in osm2go */
 GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
@@ -271,18 +286,21 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
                     const std::vector<list_view_column> &columns,
                     GtkListStore *store)
 {
-  list_priv_t *priv = g_new0(list_priv_t, 1);
-
   assert(cb_changed != nullptr);
 
+  guint rows = 1;
+  guint cols = 3;
+  /* make space for user buttons */
+  if(btn_flags & LIST_BTN_2ROW)
+    rows = 2;
+  else
+    cols = buttons.size();
+
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
+  list_priv_t *priv = new list_priv_t(cb_changed, context, gtk_table_new(rows, cols, TRUE), btn_flags);
+
   g_object_set_data(G_OBJECT(vbox), "priv", priv);
-  g_signal_connect_swapped(vbox, "destroy", G_CALLBACK(g_free), priv);
-
-  priv->callback_context = context;
-  priv->change = cb_changed;
-
-  priv->view = osm2go_platform::tree_view_new();
+  g_signal_connect_swapped(vbox, "destroy", G_CALLBACK(del_priv), priv);
 
   /* hildon hides these by default */
   gtk_tree_view_set_headers_visible(priv->view, show_headers ? TRUE : FALSE);
@@ -295,20 +313,8 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
   /* make list react on clicks */
   g_signal_connect_after(priv->view, "row-activated", G_CALLBACK(on_row_activated), vbox);
 
-  guint rows = 1;
-  guint cols = 3;
-  /* make space for user buttons */
-  if(btn_flags & LIST_BTN_2ROW)
-    rows = 2;
-  else
-    cols = buttons.size();
-
   /* add button box */
-  priv->table = gtk_table_new(rows, cols, TRUE);
-
   gtk_box_pack_start(GTK_BOX(vbox), priv->table, FALSE, FALSE, 0);
-
-  priv->button.flags = btn_flags;
 
   assert_cmpnum_op(buttons.size(), >=, cols);
   assert_cmpnum_op(buttons.size(), <=, cols * rows);
