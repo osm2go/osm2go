@@ -22,7 +22,6 @@
 
 #include "josm_elemstyles.h"
 #include "map.h"
-#include "misc.h"
 #include "settings.h"
 #include "xml_helpers.h"
 
@@ -221,11 +220,11 @@ style_t *style_load_fname(const std::string &filename) {
 style_t *style_load(const std::string &name) {
   printf("Trying to load style %s\n", name.c_str());
 
-  std::string fullname = find_file(name + ".style");
+  std::string fullname = osm2go_platform::find_file(name + ".style");
 
   if (unlikely(fullname.empty())) {
     printf("style %s not found, trying %s instead\n", name.c_str(), DEFAULT_STYLE);
-    fullname = find_file(DEFAULT_STYLE ".style");
+    fullname = osm2go_platform::find_file(DEFAULT_STYLE ".style");
     if (unlikely(fullname.empty())) {
       printf("  style not found, failed to find fallback style too\n");
       return nullptr;

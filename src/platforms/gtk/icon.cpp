@@ -19,8 +19,6 @@
 
 #include "icon.h"
 
-#include "misc.h"
-
 #include <algorithm>
 #include <array>
 #include <cstring>
@@ -86,7 +84,7 @@ icon_file_exists(const std::string &file) {
 
   for(unsigned int i = 0; i < icon_exts.size(); i++) {
     iname += icon_exts[i];
-    const std::string &fullname = find_file(iname);
+    const std::string &fullname = osm2go_platform::find_file(iname);
 
     if(!fullname.empty())
       return fullname;

@@ -19,8 +19,6 @@
 
 #include "josm_presets_p.h"
 
-#include "misc.h" // for find_file()
-
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -1064,7 +1062,7 @@ presets_items *presets_items::load()
 
   std::unique_ptr<presets_items_internal> presets(new presets_items_internal());
 
-  const std::string &filename = find_file("defaultpresets.xml");
+  const std::string &filename = osm2go_platform::find_file("defaultpresets.xml");
   if(likely(!filename.empty()))
     presets->addFile(filename, std::string(), -1);
 

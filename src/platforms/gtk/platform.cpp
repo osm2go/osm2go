@@ -37,6 +37,7 @@
 #ifdef FREMANTLE
 #include <hildon/hildon-note.h>
 #endif
+#include <sys/stat.h>
 
 #include <osm2go_annotations.h>
 
@@ -338,6 +339,29 @@ const std::vector<dirguard> &osm2go_platform::base_paths()
   }
 
   return ret;
+}
+
+std::string osm2go_platform::find_file(const std::string &n)
+{
+  assert(!n.empty());
+
+  struct stat st;
+
+  if(unlikely(n[0] == '/')) {
+    if(stat(n.c_str(), &st) == 0 && S_ISREG(st.st_mode))
+      return n;
+    return std::string();
+  }
+
+  const std::vector<dirguard> &paths = osm2go_platform::base_paths();
+  const std::vector<dirguard>::const_iterator itEnd = paths.end();
+
+  for(std::vector<dirguard>::const_iterator it = paths.begin(); it != itEnd; it++) {
+    if(fstatat(it->dirfd(), n.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode))
+      return it->path() + n;
+  }
+
+  return std::string();
 }
 
 dirguard osm2go_platform::userdatapath()

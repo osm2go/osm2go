@@ -21,7 +21,6 @@
 
 #include "appdata.h"
 #include "icon.h"
-#include "misc.h"
 
 #ifndef FREMANTLE
 #define LINK_COLOR "blue"
@@ -89,7 +88,7 @@ static GtkWidget *license_page_new()
 {
   GtkWidget *label = label_wrap(nullptr);
 
-  const std::string &name = find_file("COPYING");
+  const std::string &name = osm2go_platform::find_file("COPYING");
   bool found = false;
   if(!name.empty()) {
     osm2go_platform::MappedFile licMap(name.c_str());

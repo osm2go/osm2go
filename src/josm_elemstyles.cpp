@@ -28,7 +28,6 @@
 #include "icon.h"
 #include "josm_presets.h"
 #include "map.h"
-#include "misc.h"
 #include "style.h"
 #include "xml_helpers.h"
 
@@ -453,7 +452,7 @@ std::vector<elemstyle_t *> josm_elemstyles_load(const char *name) {
   printf("Loading JOSM elemstyles %s ...\n", name);
 
   std::vector<elemstyle_t *> ret;
-  const std::string &filename = find_file(name);
+  const std::string &filename = osm2go_platform::find_file(name);
   if(unlikely(filename.empty())) {
     printf("elemstyle file not found\n");
     return ret;
