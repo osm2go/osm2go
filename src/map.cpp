@@ -1136,6 +1136,7 @@ map_t::map_t(appdata_t &a, canvas_t *c)
 map_t::~map_t()
 {
   map_free_map_item_chains(appdata);
+  appdata.map = nullptr;
 }
 
 void map_t::init() {
