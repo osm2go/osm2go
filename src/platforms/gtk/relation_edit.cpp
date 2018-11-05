@@ -306,19 +306,19 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
   GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
   g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, nullptr );
   GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
-       "Name", renderer, "text", RELITEM_COL_NAME, nullptr);
+       _("Name"), renderer, "text", RELITEM_COL_NAME, nullptr);
   gtk_tree_view_column_set_expand(column, TRUE);
   gtk_tree_view_insert_column(view, column, -1);
 
   /* --- "Type" column --- */
   renderer = gtk_cell_renderer_text_new();
   gtk_tree_view_insert_column_with_attributes(view,
-      -1, "Type", renderer, "text", RELITEM_COL_TYPE, nullptr);
+      -1, _("Type"), renderer, "text", RELITEM_COL_TYPE, nullptr);
 
   /* --- "Role" column --- */
   renderer = gtk_cell_renderer_text_new();
   gtk_tree_view_insert_column_with_attributes(view,
-      -1, "Role", renderer, "text", RELITEM_COL_ROLE, nullptr);
+      -1, _("Role"), renderer, "text", RELITEM_COL_ROLE, nullptr);
 
   /* build and fill the store */
   context.store.reset(gtk_list_store_new(RELITEM_NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
