@@ -27,6 +27,7 @@
 #include <string>
 #include <memory>
 
+#include <osm2go_platform.h>
 #include <osm2go_stl.h>
 
 /* -------- all sizes are in meters ---------- */
@@ -93,11 +94,11 @@ class map_t {
 protected:
   explicit map_t(appdata_t &a, canvas_t *c);
 
-  void handle_motion(int x, int y);
-  void scroll_step(int x, int y);
-  void button_press(float x, float y);
-  void button_release(int x, int y);
-  void bg_adjust(int x, int y);
+  void handle_motion(const osm2go_platform::screenpos &p);
+  void scroll_step(const osm2go_platform::screenpos &p);
+  void button_press(const osm2go_platform::screenpos &p);
+  void button_release(const osm2go_platform::screenpos &p);
+  void bg_adjust(const osm2go_platform::screenpos &p);
 
   canvas_item_circle *gps_item; ///< the purple circle
 
@@ -122,9 +123,7 @@ public:
   node_t *touchnode_node;          ///< the underlying node belonging to touchnode
 
   /* background image related stuff */
-  struct {
-    struct { float x, y; } offset;
-  } bg;
+  osm2go_platform::screenpos bg_offset;
 
   struct {
     map_action_t type;            // current action type in progress
@@ -134,11 +133,12 @@ public:
   } action;
 
   /* variables required for pen/mouse handling */
-  struct {
+  struct _pd {
+    _pd();
     bool is;
     bool drag;
     map_item_t *on_item;
-    struct { int x,y; } at;    // point mouse button was last pressed
+    osm2go_platform::screenpos at;    // point mouse button was last pressed
     bool on_selected_node;      // the currently clicked node
                                 // (may be part of a selected way)
   } pen_down;
@@ -244,7 +244,7 @@ protected:
 
   void way_node_add(lpos_t pos);
 
-  void node_move(map_item_t *map_item, int ex, int ey);
+  void node_move(map_item_t *map_item, const osm2go_platform::screenpos &p);
 
   void way_reverse();
 

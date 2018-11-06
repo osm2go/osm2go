@@ -136,7 +136,7 @@ public:
   typedef std::unordered_map<canvas_item_t *, canvas_item_info_t *> item_mapping_t;
   item_mapping_t item_mapping;
 
-  lpos_t window2world(int x, int y) const;
+  lpos_t window2world(const osm2go_platform::screenpos &p) const;
   void scroll_get(int &sx, int &sy) const;
 
   /****** manipulating the canvas ******/
@@ -169,7 +169,7 @@ public:
   double set_zoom(double zoom);
   double get_zoom() const;
   void scroll_to(int sx, int sy);
-  void scroll_step(int dx, int dy);
+  void scroll_step(const osm2go_platform::screenpos &d);
   void set_bounds(lpos_t min, lpos_t max);
   void item_to_bottom(canvas_item_t *item);
 

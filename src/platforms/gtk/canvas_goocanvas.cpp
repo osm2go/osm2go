@@ -189,8 +189,9 @@ void canvas_t::move_background(int x, int y)
                nullptr);
 }
 
-lpos_t canvas_t::window2world(int x, int y) const {
-  double sx = x, sy = y;
+lpos_t canvas_t::window2world(const osm2go_platform::screenpos &p) const
+{
+  double sx = p.x(), sy = p.y();
   goo_canvas_convert_from_pixels(GOO_CANVAS(widget), &sx, &sy);
   return lpos_t(sx, sy);
 }
@@ -283,11 +284,11 @@ void canvas_t::scroll_to(int sx, int sy) {
   goo_canvas_scroll_to(GOO_CANVAS(widget), sx, sy);
 }
 
-void canvas_t::scroll_step(int dx, int dy)
+void canvas_t::scroll_step(const osm2go_platform::screenpos &d)
 {
   GooCanvas *gc = GOO_CANVAS(widget);
-  gdouble hs = gtk_adjustment_get_value(gc->hadjustment) + dx;
-  gdouble vs = gtk_adjustment_get_value(gc->vadjustment) + dy;
+  gdouble hs = gtk_adjustment_get_value(gc->hadjustment) + d.x();
+  gdouble vs = gtk_adjustment_get_value(gc->vadjustment) + d.y();
   goo_canvas_convert_from_pixels(gc, &hs, &vs);
 
   goo_canvas_scroll_to(GOO_CANVAS(widget), hs, vs);

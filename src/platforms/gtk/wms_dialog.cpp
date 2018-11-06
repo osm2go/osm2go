@@ -505,8 +505,7 @@ void wms_import(appdata_t &appdata) {
   appdata.project->wms_offset.y = 0;
 
   /* ... as well as in the map */
-  appdata.map->bg.offset.x = 0;
-  appdata.map->bg.offset.y = 0;
+  appdata.map->bg_offset = osm2go_platform::screenpos(0, 0);
 
   /* get server from dialog */
   if(!wms_server_dialog(appdata, &wms))

@@ -79,20 +79,19 @@ gboolean map_gtk::map_button_event(map_gtk *map, GdkEventButton *event) {
     return FALSE;
 
   if(event->button == 1) {
-    float x = event->x, y = event->y;
+    osm2go_platform::screenpos p(event->x, event->y);
 
     if(event->type == GDK_BUTTON_PRESS)
-      map->button_press(x, y);
+      map->button_press(p);
 
     else if(event->type == GDK_BUTTON_RELEASE)
-      map->button_release(x, y);
+      map->button_release(p);
   }
 
   return FALSE;  /* forward to further processing */
 }
 
 gboolean map_gtk::map_motion_notify_event(GtkWidget *, GdkEventMotion *event, map_gtk *map) {
-  gint x, y;
   GdkModifierType state;
 
   if(unlikely(!map->appdata.project || !map->appdata.project->osm))
@@ -112,16 +111,18 @@ gboolean map_gtk::map_motion_notify_event(GtkWidget *, GdkEventMotion *event, ma
   if(!map->pen_down.is)
     return FALSE;
 
+  osm2go_platform::screenpos p(0, 0);
   /* handle hints */
-  if(event->is_hint)
+  if(event->is_hint) {
+    gint x, y;
     gdk_window_get_pointer(event->window, &x, &y, &state);
-  else {
-    x = event->x;
-    y = event->y;
+    p = osm2go_platform::screenpos(x, y);
+  } else {
+    p = osm2go_platform::screenpos(event->x, event->y);
     state = static_cast<GdkModifierType>(event->state);
   }
 
-  map->handle_motion(x, y);
+  map->handle_motion(p);
 
   return FALSE;  /* forward to further processing */
 }
@@ -130,19 +131,19 @@ gboolean map_gtk::key_press_event(unsigned int keyval)
 {
   switch(keyval) {
   case GDK_Left:
-    scroll_step(-50, 0);
+    scroll_step(osm2go_platform::screenpos(-50, 0));
     break;
 
   case GDK_Right:
-    scroll_step(+50, 0);
+    scroll_step(osm2go_platform::screenpos(+50, 0));
     break;
 
   case GDK_Up:
-    scroll_step(0, -50);
+    scroll_step(osm2go_platform::screenpos(0, -50));
     break;
 
   case GDK_Down:
-    scroll_step(0, +50);
+    scroll_step(osm2go_platform::screenpos(0, +50));
     break;
 
   case GDK_Return:   // same as HILDON_HARDKEY_SELECT

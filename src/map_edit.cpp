@@ -422,7 +422,8 @@ void redraw_way::operator()(const std::pair<item_id_t, way_t *> &p)
   map->draw(way);
 }
 
-void map_t::node_move(map_item_t *map_item, int ex, int ey) {
+void map_t::node_move(map_item_t *map_item, const osm2go_platform::screenpos &p)
+{
   osm_t::ref osm = appdata.project->osm;
 
   assert(map_item->object.type == object_t::NODE);
@@ -494,7 +495,7 @@ void map_t::node_move(map_item_t *map_item, int ex, int ey) {
     /* finally update dragged nodes position */
 
     /* convert mouse position to canvas (world) position */
-    lpos_t pos = canvas->window2world(ex, ey);
+    lpos_t pos = canvas->window2world(p);
     if(!osm->bounds.contains(pos)) {
       map_t::outside_error();
       return;

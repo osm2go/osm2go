@@ -491,8 +491,8 @@ void wms_load(appdata_t &appdata) {
     filename.erase(extpos);
     filename += it->second;
 
-    appdata.map->bg.offset.x = appdata.project->wms_offset.x;
-    appdata.map->bg.offset.y = appdata.project->wms_offset.y;
+    appdata.map->bg_offset = osm2go_platform::screenpos(appdata.project->wms_offset.x,
+                                                        appdata.project->wms_offset.y);
 
     if(setBgImage(appdata, filename))
       return;

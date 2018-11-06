@@ -71,6 +71,23 @@ namespace osm2go_platform {
 
     void reset();
   };
+
+  class screenpos {
+  public:
+    typedef double value_type;
+    inline screenpos(value_type px, value_type py) noexcept : m_x(px), m_y(py) {}
+    inline value_type x() const noexcept { return m_x; }
+    inline value_type y() const noexcept { return m_y; }
+
+    screenpos operator-(const screenpos &other) const noexcept
+    { return screenpos(x() - other.x(), y() - other.y()); }
+
+    screenpos &operator+=(const screenpos &other) noexcept
+    { m_x += other.x(); m_y +=other.y(); return *this; }
+  private:
+    value_type m_x, m_y;
+
+  };
 };
 
 #include "../osm2go_platform_common.h"
