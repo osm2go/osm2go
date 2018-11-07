@@ -168,7 +168,15 @@ public:
    */
   double set_zoom(double zoom);
   double get_zoom() const;
-  void scroll_to(int sx, int sy);
+
+  /**
+   * @brief scroll to the given position or a valid position close to it
+   *
+   * This will try to center the view on the given position, or a bounded
+   * value if the given position is too close to the canvas edges. The
+   * actual position is returned.
+   */
+  void scroll_to(int &sx, int &sy);
   void scroll_step(const osm2go_platform::screenpos &d);
   void set_bounds(lpos_t min, lpos_t max);
   void item_to_bottom(canvas_item_t *item);

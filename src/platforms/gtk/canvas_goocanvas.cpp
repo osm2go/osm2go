@@ -261,7 +261,8 @@ void canvas_t::scroll_get(int &sx, int &sy) const {
 }
 
 /* set scroll position in meters */
-void canvas_t::scroll_to(int sx, int sy) {
+void canvas_t::scroll_to(int &sx, int &sy)
+{
   canvas_goocanvas *gcanvas = static_cast<canvas_goocanvas *>(this);
   /* get size of visible area in canvas units (meters) */
   canvas_dimensions dim = gcanvas->get_viewport_dimensions() / 2;
@@ -278,10 +279,9 @@ void canvas_t::scroll_to(int sx, int sy) {
   double zoom = get_zoom();
 
   /* adjust to screen center */
-  sx -= widget->allocation.width / (2 * zoom);
-  sy -= widget->allocation.height / (2 * zoom);
-
-  goo_canvas_scroll_to(GOO_CANVAS(widget), sx, sy);
+  goo_canvas_scroll_to(GOO_CANVAS(widget),
+                       sx - widget->allocation.width / (2 * zoom),
+                       sy - widget->allocation.height / (2 * zoom));
 }
 
 void canvas_t::scroll_step(const osm2go_platform::screenpos &d)
@@ -702,7 +702,8 @@ bool canvas_t::ensureVisible(const lpos_t lpos)
   if(static_cast<canvas_goocanvas *>(this)->isVisible(lpos))
     return false;
 
-  scroll_to(lpos.x, lpos.y);
+  int x = lpos.x, y = lpos.y;
+  scroll_to(x, y);
 
   return true;
 }
