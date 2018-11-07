@@ -284,14 +284,20 @@ void canvas_t::scroll_to(int &sx, int &sy)
                        sy - widget->allocation.height / (2 * zoom));
 }
 
-void canvas_t::scroll_step(const osm2go_platform::screenpos &d)
+void canvas_t::scroll_step(const osm2go_platform::screenpos &d, int &nx, int &ny)
 {
   GooCanvas *gc = GOO_CANVAS(widget);
   gdouble hs = gtk_adjustment_get_value(gc->hadjustment) + d.x();
   gdouble vs = gtk_adjustment_get_value(gc->vadjustment) + d.y();
   goo_canvas_convert_from_pixels(gc, &hs, &vs);
 
-  goo_canvas_scroll_to(GOO_CANVAS(widget), hs, vs);
+  goo_canvas_scroll_to(gc, hs, vs);
+
+  gdouble zoom = goo_canvas_get_scale(gc);
+
+  /* convert to position relative to screen center */
+  nx = hs + widget->allocation.width / (2 * zoom);
+  ny = vs + widget->allocation.height / (2 * zoom);
 }
 
 void canvas_t::set_bounds(lpos_t min, lpos_t max) {

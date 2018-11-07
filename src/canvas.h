@@ -177,7 +177,14 @@ public:
    * actual position is returned.
    */
   void scroll_to(int &sx, int &sy);
-  void scroll_step(const osm2go_platform::screenpos &d);
+
+  /**
+   * @brief relative move of the visible screen area
+   * @param d the offset to the current position
+   * @param nx the new x position in canvas coordinates
+   * @param ny the new y position in canvas coordinates
+   */
+  void scroll_step(const osm2go_platform::screenpos &d, int &nx, int &ny);
   void set_bounds(lpos_t min, lpos_t max);
   void item_to_bottom(canvas_item_t *item);
 

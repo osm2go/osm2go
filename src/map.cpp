@@ -760,8 +760,7 @@ static bool distance_above(const map_t *map, const osm2go_platform::screenpos &p
 /* scroll a certain step */
 void map_t::scroll_step(const osm2go_platform::screenpos &p)
 {
-  canvas->scroll_step(p);
-  canvas->scroll_get(state.scroll_offset.x, state.scroll_offset.y);
+  canvas->scroll_step(p, state.scroll_offset.x, state.scroll_offset.y);
   canvas->scroll_to(state.scroll_offset.x, state.scroll_offset.y);
 }
 
