@@ -761,7 +761,6 @@ static bool distance_above(const map_t *map, const osm2go_platform::screenpos &p
 void map_t::scroll_step(const osm2go_platform::screenpos &p)
 {
   canvas->scroll_step(p, state.scroll_offset.x, state.scroll_offset.y);
-  canvas->scroll_to(state.scroll_offset.x, state.scroll_offset.y);
 }
 
 bool map_t::item_is_selected_node(const map_item_t *map_item) const
