@@ -146,6 +146,7 @@ gboolean map_gtk::key_press_event(unsigned int keyval)
     scroll_step(osm2go_platform::screenpos(0, +50));
     break;
 
+  case GDK_KP_Enter:
   case GDK_Return:   // same as HILDON_HARDKEY_SELECT
     /* if the ok button is enabled, call its function */
     if(appdata.iconbar->isOkEnabled())
