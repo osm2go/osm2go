@@ -184,7 +184,9 @@ public:
 
   void set_zoom(double zoom, bool update_scroll_offsets);
 
-  void detail_change(float detail, const char *banner_msg);
+private:
+  void detail_change(float detail, const char *banner_msg) __attribute__((nonnull(3)));
+public:
   void detail_increase();
   void detail_decrease();
   void detail_normal();

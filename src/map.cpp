@@ -1699,9 +1699,9 @@ void map_t::show_all() {
   appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_MAP_SHOW_ALL, false);
 }
 
-void map_t::detail_change(float detail, const char *banner_msg) {
-  if(banner_msg != nullptr)
-    appdata.uicontrol->showNotification(banner_msg, MainUi::Busy);
+void map_t::detail_change(float detail, const char *banner_msg)
+{
+  appdata.uicontrol->showNotification(banner_msg, MainUi::Busy);
   /* deselecting anything allows us not to care about automatic deselection */
   /* as well as items becoming invisible by the detail change */
   item_deselect();
@@ -1711,8 +1711,8 @@ void map_t::detail_change(float detail, const char *banner_msg) {
 
   clear(MAP_LAYER_OBJECTS_ONLY);
   paint();
-  if(banner_msg != nullptr)
-    appdata.uicontrol->showNotification(nullptr, MainUi::Busy);
+
+  appdata.uicontrol->showNotification(nullptr, MainUi::Busy);
 }
 
 void map_t::detail_increase() {
