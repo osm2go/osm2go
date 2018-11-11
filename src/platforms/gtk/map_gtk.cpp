@@ -92,8 +92,6 @@ gboolean map_gtk::map_button_event(map_gtk *map, GdkEventButton *event) {
 }
 
 gboolean map_gtk::map_motion_notify_event(GtkWidget *, GdkEventMotion *event, map_gtk *map) {
-  GdkModifierType state;
-
   if(unlikely(!map->appdata.project || !map->appdata.project->osm))
     return FALSE;
 
@@ -115,11 +113,10 @@ gboolean map_gtk::map_motion_notify_event(GtkWidget *, GdkEventMotion *event, ma
   /* handle hints */
   if(event->is_hint) {
     gint x, y;
-    gdk_window_get_pointer(event->window, &x, &y, &state);
+    gdk_window_get_pointer(event->window, &x, &y, nullptr);
     p = osm2go_platform::screenpos(x, y);
   } else {
     p = osm2go_platform::screenpos(event->x, event->y);
-    state = static_cast<GdkModifierType>(event->state);
   }
 
   map->handle_motion(p);
