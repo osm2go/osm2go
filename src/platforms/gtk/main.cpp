@@ -291,9 +291,10 @@ cb_menu_track_vis(appdata_t *appdata) {
 
 static void
 cb_menu_save_changes(appdata_t *appdata) {
-  if(likely(appdata->project))
+  if(likely(appdata->project)) {
     appdata->project->diff_save();
-  appdata->uicontrol->showNotification(_("Saved local changes"), MainUi::Brief);
+    appdata->uicontrol->showNotification(_("Saved local changes"), MainUi::Brief);
+  }
 }
 #endif
 
