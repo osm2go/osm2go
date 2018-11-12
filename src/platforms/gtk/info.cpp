@@ -144,8 +144,8 @@ static void on_tag_remove(info_tag_context_t *context) {
     /* and remove from store */
     gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
 
-    // no collision was there if this was the only instance of the key
-    if(unlikely(context->tags.count(k) > 0))
+    // collision flag has only changed if there is exactly one instance of this tag left
+    if(unlikely(context->tags.count(k) == 1))
       context->update_collisions(k);
   }
 }
