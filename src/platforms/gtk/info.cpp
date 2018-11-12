@@ -80,8 +80,7 @@ static void changed(GtkTreeSelection *, gpointer user_data) {
 
 struct update_collisions_context {
   inline update_collisions_context(const std::string &k, const osm_t::TagMap &t)
-    : checkAll(k.empty()), key(k), tags(t) {}
-  const bool checkAll;
+    : key(k), tags(t) {}
   const std::string &key;
   const osm_t::TagMap &tags;
 };
@@ -94,7 +93,7 @@ update_collisions_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter,
   const gchar *key = nullptr;
   gtk_tree_model_get(model, iter, TAG_COL_KEY, &key, -1);
   assert(key != nullptr);
-  if(ctx->checkAll || ctx->key == key)
+  if(ctx->key == key)
     gtk_list_store_set(GTK_LIST_STORE(model), iter,
                        TAG_COL_COLLISION, (ctx->tags.count(key) > 1) ? TRUE : FALSE,
                        -1);
@@ -150,6 +149,32 @@ static void on_tag_remove(info_tag_context_t *context) {
   }
 }
 
+struct key_context {
+  key_context(const osm_t::TagMap &k, const std::string &s) : m_tags(k), initial(s) {}
+  const osm_t::TagMap &m_tags;
+  const std::string &initial;
+};
+
+static void callback_modified_key(GtkWidget *key, const key_context *context)
+{
+  const char *txt = gtk_entry_get_text(GTK_ENTRY(key));
+  GtkDialog *dialog = GTK_DIALOG(gtk_widget_get_toplevel(key));
+  gboolean en;
+
+  if(txt == nullptr || *txt == '\0') {
+    // new keys that are empty are not allowed
+    en = FALSE;
+  } else if(context->initial == txt) {
+    // collision or not, if the key is the original one this is fine
+    en = TRUE;
+  } else {
+    // only allow a new key if it is not already in the map (i.e. no collision)
+    en = context->m_tags.find(txt) == context->m_tags.end() ? TRUE : FALSE;
+  }
+
+  gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_ACCEPT, en);
+}
+
 /**
  * @brief request user input for the given tag
  * @param window the parent window
@@ -158,7 +183,9 @@ static void on_tag_remove(info_tag_context_t *context) {
  * @return if the tag was actually modified
  * @retval false the tag is the same as before
  */
-static bool tag_edit(GtkWindow *window, std::string &k, std::string &v) {
+static bool tag_edit(GtkWindow *window, std::string &k, std::string &v,
+                     const osm_t::TagMap &otherkeys)
+{
   osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Edit Tag"), window, GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
@@ -170,6 +197,9 @@ static bool tag_edit(GtkWindow *window, std::string &k, std::string &v) {
   GtkWidget *label = gtk_label_new(_("Key:"));
   GtkWidget *key = entry_new(osm2go_platform::EntryFlagsNoAutoCap);
   GtkWidget *table = gtk_table_new(2, 2, FALSE);
+
+  key_context kctx(otherkeys, k);
+  g_signal_connect(key, "changed", G_CALLBACK(callback_modified_key), &kctx);
 
   gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
                    static_cast<GtkAttachOptions>(0),
@@ -193,6 +223,8 @@ static bool tag_edit(GtkWindow *window, std::string &k, std::string &v) {
   gtk_box_pack_start(dialog.vbox(), table, TRUE, TRUE, 0);
 
   gtk_widget_show_all(dialog.get());
+
+  callback_modified_key(key, &kctx);
 
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(dialog)) {
     const gchar *nk = gtk_entry_get_text(GTK_ENTRY(key));
@@ -265,13 +297,10 @@ static void on_tag_edit(info_tag_context_t *context) {
 
   std::string k = oldk, v = oldv;
 
-  if(tag_edit(context->dialog, k, v)) {
-    if(k == kc && v == oldv)
-      return;
-
+  if(tag_edit(context->dialog, k, v, context->m_tags)) {
     g_debug("setting %s/%s", k.c_str(), v.c_str());
 
-    const std::pair<osm_t::TagMap::iterator, osm_t::TagMap::iterator> matches = context->m_tags.equal_range(oldk);
+    std::pair<osm_t::TagMap::iterator, osm_t::TagMap::iterator> matches = context->m_tags.equal_range(oldk);
     assert(matches.first != matches.second);
     osm_t::TagMap::iterator it = std::find_if(matches.first, matches.second, value_match_functor(oldv));
     assert(it != matches.second);
@@ -297,22 +326,14 @@ static void on_tag_edit(info_tag_context_t *context) {
       }
       it->second = v;
     } else {
+      const bool was_collision = ++matches.first != matches.second;
       context->m_tags.erase(it);
-      it = context->m_tags.findTag(k, v);
-      if(unlikely(it != context->tags.end())) {
-        // this tag is now duplicate, drop it and select the other one
-        gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
-
-        select_item(k, v, context);
-        // update collision marker for the old entry
+      // update collisions for the old entry if there was one
+      if(unlikely(was_collision))
         context->update_collisions(oldk);
-        return;
-      } else {
-        context->m_tags.insert(osm_t::TagMap::value_type(k, v));
 
-        /* update collisions for all entries */
-        context->update_collisions(std::string());
-      }
+      // There can't be collisions for the new entry as the Ok button is not enabled then
+      context->m_tags.insert(osm_t::TagMap::value_type(k, v));
     }
 
     gtk_list_store_set(context->store.get(), &iter,
@@ -364,28 +385,15 @@ static GtkTreeIter store_append(GtkListStore *store, const std::string &key,
 static void on_tag_add(info_tag_context_t *context) {
   std::string k, v;
 
-  if(!tag_edit(context->dialog, k, v)) {
-    g_debug("cancelled");
+  if(!tag_edit(context->dialog, k, v, context->m_tags))
     return;
-  }
 
-  osm_t::TagMap::iterator it = context->m_tags.findTag(k, v);
-  if(unlikely(it != context->tags.end())) {
-    select_item(k, v, context);
-    return;
-  }
-
-  // check if the new key introduced a collision
-  unsigned int tcount = context->tags.count(k);
+  // there can't be a new collision as the ok button in tag_edit() is not enabled then
   context->m_tags.insert(osm_t::TagMap::value_type(k, v));
   /* append a row for the new data */
-  GtkTreeIter iter = store_append(context->store.get(), k, v, tcount > 0);
+  GtkTreeIter iter = store_append(context->store.get(), k, v, FALSE);
 
   gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
-
-  // the collision flag only needs to be updated if there was no collision before
-  if(unlikely(tcount == 1))
-    context->update_collisions(k);
 }
 
 // bad name, but avoids name collisions
