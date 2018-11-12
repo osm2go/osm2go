@@ -90,9 +90,10 @@ update_collisions_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter,
 {
   const update_collisions_context * const ctx = static_cast<update_collisions_context *>(data);
 
-  const gchar *key = nullptr;
+  gchar *key = nullptr;
   gtk_tree_model_get(model, iter, TAG_COL_KEY, &key, -1);
-  assert(key != nullptr);
+  g_string skey(key);
+  assert(skey);
   if(ctx->key == key)
     gtk_list_store_set(GTK_LIST_STORE(model), iter,
                        TAG_COL_COLLISION, (ctx->tags.count(key) > 1) ? TRUE : FALSE,
