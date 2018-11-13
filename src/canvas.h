@@ -35,21 +35,21 @@
 #define CANVAS_FRISKET_SCALE 2.0
 
 typedef enum {
-  CANVAS_GROUP_BG=0,       // 0: background layer (wms overlay)
-  CANVAS_GROUP_POLYGONS,   // 1: polygons (forrests, buildings, lakes) */
-  CANVAS_GROUP_WAYS_HL,    // 2: highlighting of ways
-  CANVAS_GROUP_WAYS_OL,    // 3: outlines for ways (e.g. for highways)
-  CANVAS_GROUP_WAYS,       // 4: ways
-  CANVAS_GROUP_WAYS_INT,   // 5: interior of ways with outlines
-  CANVAS_GROUP_WAYS_DIR,   // 6: direction arrows for ways
-  CANVAS_GROUP_NODES_HL,   // 7: highlighting for nodes
-  CANVAS_GROUP_NODES,      // 8: nodes
-  CANVAS_GROUP_NODES_IHL,  // 9: highlighting for otherwise invisible way nodes
-  CANVAS_GROUP_TRACK,      // 10: (GPS) track
-  CANVAS_GROUP_GPS,        // 11: current GPS position
-  CANVAS_GROUP_FRISKET,    // 12: the (white) frisket limiting the view
-  CANVAS_GROUP_DRAW,       // 13: "cursor" functionality
-  CANVAS_GROUPS            // 14: total number of groups
+  CANVAS_GROUP_BG=0,       ///< background layer (wms overlay)
+  CANVAS_GROUP_POLYGONS,   ///< polygons (forrests, buildings, lakes) */
+  CANVAS_GROUP_WAYS_HL,    ///< highlighting of ways
+  CANVAS_GROUP_WAYS_OL,    ///< outlines for ways (e.g. for highways)
+  CANVAS_GROUP_WAYS,       ///< ways
+  CANVAS_GROUP_WAYS_INT,   ///< interior of ways with outlines
+  CANVAS_GROUP_WAYS_DIR,   ///< direction arrows for ways
+  CANVAS_GROUP_NODES_HL,   ///< highlighting for nodes
+  CANVAS_GROUP_NODES,      ///< nodes
+  CANVAS_GROUP_NODES_IHL,  ///< highlighting for otherwise invisible way nodes
+  CANVAS_GROUP_TRACK,      ///< (GPS) track
+  CANVAS_GROUP_GPS,        ///< current GPS position
+  CANVAS_GROUP_FRISKET,    ///< the (white) frisket limiting the view
+  CANVAS_GROUP_DRAW,       ///< "cursor" functionality
+  CANVAS_GROUPS            ///< total number of groups
 } canvas_group_t;
 
 /* only objects in the "selectable" groups are returned by item_at */
