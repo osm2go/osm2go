@@ -38,7 +38,6 @@
 #include <cstring>
 #include <ctime>
 #include <fcntl.h>
-#include <glib.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <map>
@@ -58,7 +57,6 @@
 #include <osm2go_stl.h>
 
 /* format string used to altitude and time */
-#define ALT_FORMAT  "%.02f"
 #define DATE_FORMAT "%FT%T"
 
 class TrackSax {
@@ -170,19 +168,42 @@ struct track_save_segs {
 
 void track_save_segs::save_point::operator()(const track_point_t &point)
 {
-  char str[G_ASCII_DTOSTR_BUF_SIZE];
-
   xmlNodePtr node_point = xmlNewChild(node, nullptr, BAD_CAST "trkpt", nullptr);
 
   point.pos.toXmlProperties(node_point);
 
   if(!std::isnan(point.altitude)) {
-    g_ascii_formatd(str, sizeof(str), ALT_FORMAT, point.altitude);
+    // The whole purpose of this is to avoid using Glib, which would provide
+    // g_ascii_formatd(). One can't simply use snprintf() or friends, as the
+    // decimal separator is locale dependent and changing the locale is expensive
+    // and not thread safe. At the end this code is twice as fast as the Glib
+    // code, likely because it is much less general and uses less floating point
+    // operations.
+    int alt = round(point.altitude * 100);
+    char str[16]; // int needs at most 10 digits, '-', '.', '\0' -> 13
+    unsigned int off = 0;
+    // handle the sign explicitely so it does not count in the minimum
+    // output length, could result in "-.42" otherwise
+    if(alt < 0) {
+      str[0] = '-';
+      off++;
+    }
+    // make sure there are at least 3 characters in the output
+    int l = snprintf(str + off, sizeof(str) - 1, "%03u", abs(alt)) + off;
+    // move the last 2 digits and \0 one position to the right
+    memmove(str + l - 1, str + l - 2, 3);
+    // insert dot
+    str[l - 2] = '.';
+    // remove any trailing zeroes, use the knowledge about the string length
+    // to avoid needless searching
+    remove_trailing_zeroes(str + l - 3);
+
     xmlNewTextChild(node_point, nullptr, BAD_CAST "ele", BAD_CAST str);
   }
 
   if(likely(point.time)) {
     struct tm loctime;
+    char str[32];
     localtime_r(&point.time, &loctime);
     strftime(str, sizeof(str), DATE_FORMAT, &loctime);
     xmlNewTextChild(node_point, nullptr, BAD_CAST "time", BAD_CAST str);

@@ -28,30 +28,39 @@
         <time>2014-07-01T16:41:13</time>
       </trkpt>
       <trkpt lat="52.272098" lon="9.5814367">
+        <ele>-42.47</ele>
         <time>2014-07-01T16:41:14</time>
       </trkpt>
       <trkpt lat="52.2721078" lon="9.5813966">
+        <ele>0.47</ele>
         <time>2014-07-01T16:41:15</time>
       </trkpt>
       <trkpt lat="52.2721174" lon="9.5813569">
+        <ele>-0.47</ele>
         <time>2014-07-01T16:41:16</time>
       </trkpt>
       <trkpt lat="52.272128" lon="9.5813114">
+        <ele>-0.07</ele>
         <time>2014-07-01T16:41:17</time>
       </trkpt>
       <trkpt lat="52.2721394" lon="9.5812612">
+        <ele>0.07</ele>
         <time>2014-07-01T16:41:18</time>
       </trkpt>
       <trkpt lat="52.2721512" lon="9.5812097">
+        <ele>0</ele>
         <time>2014-07-01T16:41:19</time>
       </trkpt>
       <trkpt lat="52.2721621" lon="9.5811606">
+        <ele>47</ele>
         <time>2014-07-01T16:41:20</time>
       </trkpt>
       <trkpt lat="52.2721722" lon="9.5811135">
+        <ele>4.5</ele>
         <time>2014-07-01T16:41:21</time>
       </trkpt>
       <trkpt lat="52.2721834" lon="9.5810681">
+        <ele>4.2</ele>
         <time>2014-07-01T16:41:22</time>
       </trkpt>
       <trkpt lat="52.2721938" lon="9.5810265">
