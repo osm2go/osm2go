@@ -675,27 +675,15 @@ void map_t::pen_down_item() {
     return;
 
   /* get the item (parent) this item is the highlight of */
-  switch(pen_down.on_item->object.type) {
-  case object_t::NODE:
-  case object_t::WAY: {
-    visible_item_t * const vis = static_cast<visible_item_t *>(pen_down.on_item->object.obj);
-    if(vis->map_item_chain != nullptr) {
-      map_item_t *parent = vis->map_item_chain->i0;
+  assert(pen_down.on_item->object.type == object_t::NODE || pen_down.on_item->object.type == object_t::WAY);
 
-      if(parent != nullptr) {
-        printf("  using parent item %s #" ITEM_ID_FORMAT "\n", vis->apiString(), vis->id);
-        pen_down.on_item = parent;
-        return;
-      }
-    }
-    break;
+  visible_item_t * const vis = static_cast<visible_item_t *>(pen_down.on_item->object.obj);
+  if(vis->map_item_chain != nullptr && vis->map_item_chain->i0 != nullptr) {
+    printf("  using parent item %s #" ITEM_ID_FORMAT "\n", vis->apiString(), vis->id);
+    pen_down.on_item = vis->map_item_chain->i0;
+  } else {
+    printf("  no parent, working on highlight itself\n");
   }
-
-  default:
-    assert_unreachable();
-  }
-
-  printf("  no parent, working on highlight itself\n");
 }
 
 /*
