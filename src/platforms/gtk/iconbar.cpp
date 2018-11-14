@@ -47,8 +47,6 @@ static inline gboolean gtk_widget_is_sensitive(const GtkWidget *w) {
 #define MENU_ICON(a)  a
 #endif
 
-#define MARKUP "<span size='xx-small'>%s</span>"
-
 class iconbar_gtk : public iconbar_t {
 public:
   explicit iconbar_gtk(appdata_t &appdata);
