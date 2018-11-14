@@ -79,16 +79,18 @@ icon_file_exists(const std::string &file) {
       return std::string();
   }
 
-  std::string iname = "icons/" + file + icon_exts[0];
-  iname.erase(iname.size() - strlen(icon_exts[0]));
+  std::string iname = "icons/" + file + icon_exts.front();
+  std::string::size_type olen = strlen(icon_exts.front());
+  int wpos = iname.length() - olen;
 
   for(unsigned int i = 0; i < icon_exts.size(); i++) {
-    iname += icon_exts[i];
+    std::string::size_type nlen = strlen(icon_exts.at(i));
+    iname.replace(wpos, olen, icon_exts[i], nlen);
+    olen = nlen;
     const std::string &fullname = osm2go_platform::find_file(iname);
 
     if(!fullname.empty())
       return fullname;
-    iname.erase(iname.size() - strlen(icon_exts[i]));
   }
   return std::string();
 }
