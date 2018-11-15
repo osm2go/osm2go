@@ -205,14 +205,11 @@ static void callback_modified_name(GtkWidget *widget) {
   std::vector<wms_server_t *>::iterator it = std::find_if(servers.begin(), itEnd,
                                                           find_wms_functor(name));
 
-  gboolean ok = it == itEnd ? TRUE : FALSE;
-
   GtkWidget *toplevel = gtk_widget_get_toplevel(widget);
   /* toplevel is a dialog only of dialog has been realized */
   if(GTK_IS_DIALOG(toplevel))
-    gtk_dialog_set_response_sensitive(
-		      GTK_DIALOG(gtk_widget_get_toplevel(widget)),
-		      GTK_RESPONSE_ACCEPT, ok);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(toplevel), GTK_RESPONSE_ACCEPT,
+                                      it == itEnd ? TRUE : FALSE);
 }
 
 /* edit url and path of a given wms server entry */
