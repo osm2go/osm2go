@@ -141,17 +141,19 @@ static void wms_server_selected(wms_server_context_t *context,
 
   /* user can click ok if a entry is selected or if both fields are */
   /* otherwise valid */
+  gboolean en;
+  const std::string *s;
   if(selected != nullptr) {
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, TRUE);
-
-    gtk_label_set_text(GTK_LABEL(context->server_label), selected->server.c_str());
+    en = TRUE;
+    s = &selected->server;
   } else {
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
-                                      GTK_RESPONSE_ACCEPT,
-                                      context->wms->server.empty() ? FALSE : TRUE);
-
-    gtk_label_set_text(GTK_LABEL(context->server_label), context->wms->server.c_str());
+    en = context->wms->server.empty() ? FALSE : TRUE;
+    s = &context->wms->server;
   }
+
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, en);
+
+  gtk_label_set_text(GTK_LABEL(context->server_label), s->c_str());
 }
 
 static void
