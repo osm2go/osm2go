@@ -293,28 +293,25 @@ GtkTreeIter store_fill_functor::operator()(const wms_server_t *srv)
 /* user clicked "add..." button in the wms server list */
 static void on_server_add(wms_server_context_t *context) {
 
-  wms_server_t *newserver = new wms_server_t();
+  std::unique_ptr<wms_server_t> newserver(new wms_server_t());
   // in case the project has a server set, but the global list is empty,
   // fill the data of the project server
   if(settings_t::instance()->wms_server.empty() &&
      !context->appdata.project->wms_server.empty())
     newserver->server = context->appdata.project->wms_server;
 
-  if(!wms_server_edit(context, true, newserver)) {
-    /* user has cancelled request. remove newly added item */
-    g_debug("user clicked cancel");
-
-    delete newserver;
-  } else {
+  if(wms_server_edit(context, true, newserver.get())) {
     /* attach a new server item to the chain */
-    settings_t::instance()->wms_server.push_back(newserver);
+    settings_t::instance()->wms_server.push_back(newserver.get());
 
-    GtkTreeIter iter = store_fill_functor(context->store.get())(newserver);
+    GtkTreeIter iter = store_fill_functor(context->store.get())(newserver.get());
 
     GtkTreeSelection *selection = list_get_selection(context->list);
     gtk_tree_selection_select_iter(selection, &iter);
 
-    wms_server_selected(context, newserver);
+    wms_server_selected(context, newserver.get());
+
+    newserver.release();
   }
 }
 
