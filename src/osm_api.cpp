@@ -418,9 +418,10 @@ struct osm_delete_objects_final {
  * @brief upload the given osmChange document
  * @param context the context pointer
  * @param doc the document to upload
+ * @param server_reply the data returned from the server will be stored here
  * @returns if the operation was successful
  */
-static bool osmchange_upload(osm_upload_context_t &context, xmlDocGuard &doc)
+static bool osmchange_upload(osm_upload_context_t &context, xmlDocGuard &doc, std::string &server_reply)
 {
   /* make sure gui gets updated */
   osm2go_platform::process_events();
@@ -433,15 +434,9 @@ static bool osmchange_upload(osm_upload_context_t &context, xmlDocGuard &doc)
   xmlDocDumpFormatMemoryEnc(doc.get(), &xml_str, &len, "UTF-8", 1);
   xmlString xml(xml_str);
 
-  std::string server_reply;
   bool ret = osm_post_xml(context, xml, len, url.c_str(), server_reply);
-  if(ret) {
+  if(ret)
     context.project->data_dirty = true;
-  } else {
-    context.append_str(_("Server reply: "));
-    context.append_str(server_reply.c_str(), COLOR_ERR);
-    context.append_str("\n");
-  }
 
   return ret;
 }
@@ -529,11 +524,16 @@ void osm_upload_context_t::upload(const osm_t::dirty_t &dirty)
       append_str(_("Uploading object deletions "));
 
       // deletion was successful, remove the objects
-      if(osmchange_upload(*this, doc)) {
+      std::string server_reply;
+      if(osmchange_upload(*this, doc, server_reply)) {
         osm_delete_objects_final finfc(*this);
         std::for_each(dirty.relations.deleted.begin(), dirty.relations.deleted.end(), finfc);
         std::for_each(dirty.ways.deleted.begin(), dirty.ways.deleted.end(), finfc);
         std::for_each(dirty.nodes.deleted.begin(), dirty.nodes.deleted.end(), finfc);
+      } else {
+        append_str(_("Server reply: "));
+        append_str(server_reply.c_str(), COLOR_ERR);
+        append_str("\n");
       }
     }
 
