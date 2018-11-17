@@ -358,9 +358,11 @@ static void upload_object(osm_upload_context_t &context, base_object_t *obj) {
     printf("uploading %s " ITEM_ID_FORMAT " to %s\n", obj->apiString(), obj->id, url.c_str());
 
     item_id_t tmp;
-    if(osm_update_item(context, xml_str.get(), url.c_str(), obj->isNew() ? &obj->id : &tmp)) {
+    if(osm_update_item(context, xml_str.get(), url.c_str(), &tmp)) {
       if(!obj->isNew())
         obj->version = tmp;
+      else
+        obj->id = tmp;
       obj->flags ^= OSM_FLAG_DIRTY;
       context.project->data_dirty = true;
     }
