@@ -100,7 +100,7 @@ struct appdata_internal : public appdata_t {
 
 /* disable/enable main screen control dependant on presence of open project */
 void appdata_t::main_ui_enable() {
-  gboolean osm_valid = (project && project->osm) ? TRUE : FALSE;
+  bool osm_valid = (project && project->osm);
 
   if(unlikely(window == nullptr)) {
     g_debug("%s: main window gone\n", __PRETTY_FUNCTION__);
@@ -114,18 +114,17 @@ void appdata_t::main_ui_enable() {
   /* ---- set project name as window title ----- */
   set_title();
 
-  iconbar->setToolbarEnable(osm_valid == TRUE);
+  iconbar->setToolbarEnable(osm_valid);
   /* disable all menu entries related to map */
   uicontrol->setActionEnable(MainUi::SUBMENU_MAP, static_cast<bool>(project));
 
   // those icons that get enabled or disabled depending on OSM data being loaded
 #ifndef FREMANTLE
-  std::array<MainUi::menu_items, 7> osm_active_items = { {
+  std::array<MainUi::menu_items, 6> osm_active_items = { {
     MainUi::MENU_ITEM_MAP_SAVE_CHANGES,
 #else
-  std::array<MainUi::menu_items, 6> osm_active_items = { {
+  std::array<MainUi::menu_items, 5> osm_active_items = { {
 #endif
-    MainUi::MENU_ITEM_MAP_UPLOAD,
     MainUi::MENU_ITEM_MAP_UNDO_CHANGES,
     MainUi::MENU_ITEM_MAP_RELATIONS,
     MainUi::SUBMENU_TRACK,
@@ -133,10 +132,12 @@ void appdata_t::main_ui_enable() {
     MainUi::SUBMENU_WMS
   } };
   for(unsigned int i = 0; i < osm_active_items.size(); i++)
-    uicontrol->setActionEnable(osm_active_items[i], osm_valid == TRUE);
+    uicontrol->setActionEnable(osm_active_items[i], osm_valid);
 
-  gtk_widget_set_sensitive(static_cast<appdata_internal *>(this)->btn_zoom_in, osm_valid);
-  gtk_widget_set_sensitive(static_cast<appdata_internal *>(this)->btn_zoom_out, osm_valid);
+  uicontrol->setActionEnable(MainUi::MENU_ITEM_MAP_UPLOAD, osm_valid && !project->isDemo);
+
+  gtk_widget_set_sensitive(static_cast<appdata_internal *>(this)->btn_zoom_in, osm_valid ? TRUE : FALSE);
+  gtk_widget_set_sensitive(static_cast<appdata_internal *>(this)->btn_zoom_out, osm_valid ? TRUE : FALSE);
 
   if(!project)
     uicontrol->showNotification(_("Please load or create a project"));
@@ -176,18 +177,16 @@ cb_menu_project_open(appdata_t *appdata) {
 
 static void
 cb_menu_upload(appdata_t *appdata) {
-  if(!appdata->project || !appdata->project->osm)
-    return;
-
-  if(appdata->project->check_demo())
-    return;
+  assert(appdata->project);
+  assert(appdata->project->osm);
+  assert(!appdata->project->isDemo);
 
   osm_upload(*appdata);
 }
 
 static void
 cb_menu_download(appdata_t *appdata) {
-  if(!appdata->project) return;
+  assert(appdata->project);
 
   if(appdata->project->check_demo())
     return;
