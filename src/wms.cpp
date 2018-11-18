@@ -438,10 +438,6 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
   /* uses epsg4326 if possible */
   const char *srs = srss.empty() ? wms_layer_t::EPSG4326() : srss.c_str();
 
-  /* append styles entry */
-  // it is required, but it may be entirely empty since at least version 1.1.0
-  // meaning "default styles for all layers"
-  url += "&STYLES=";
 
   /* build strings of min and max lat and lon to be used in url */
   const std::string coords = appdata.project->bounds.print();
@@ -457,6 +453,10 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
 
   /* build complete url */
   const std::array<const char *, 7> parts = { {
+  /* append styles entry */
+  // it is required, but it may be entirely empty since at least version 1.1.0
+  // meaning "default styles for all layers"
+                          "&STYLES="
                           "&SRS=", srs, "&BBOX=", coords.c_str(),
                           buf, it->first, "&reaspect=false"
                           } };
