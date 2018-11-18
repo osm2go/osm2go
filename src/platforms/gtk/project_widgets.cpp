@@ -132,6 +132,7 @@ struct select_context_t {
   map_state_t dummystate;
   std::vector<project_t *> projects;
   GtkWidget * const dialog;
+  GtkTreeModelFilter *filter;
   GtkWidget *list;
   std::unique_ptr<GtkListStore, g_object_deleter> store;
 };
@@ -373,13 +374,15 @@ static void on_project_delete(select_context_t *context) {
 }
 
 static void on_project_edit(select_context_t *context) {
-  GtkTreeIter iter;
-  project_t *project = project_get_selected(context->list, iter);
+  GtkTreeIter fiter;
+  project_t *project = project_get_selected(context->list, fiter);
 
   if(project_edit(context, project, false)) {
     /* description etc. may have changed, so update list */
     appdata_t &appdata = context->appdata;
     const gchar *status_stock_id = project_get_status_icon_stock_id(appdata.project, project);
+    GtkTreeIter iter;
+    gtk_tree_model_filter_convert_iter_to_child_iter(context->filter, &iter, &fiter);
     gtk_list_store_set(GTK_LIST_STORE(context->store.get()), &iter,
                        PROJECT_COL_NAME, project->name.c_str(),
                        PROJECT_COL_STATUS, status_stock_id,
@@ -539,11 +542,11 @@ static GtkWidget *project_list_widget(select_context_t &context, bool &has_sel) 
                                          G_TYPE_STRING,    // desc
                                          G_TYPE_POINTER));  // data
 
-  GtkTreeModelFilter *filter = reinterpret_cast<GtkTreeModelFilter *>(
+  context.filter = reinterpret_cast<GtkTreeModelFilter *>(
             gtk_tree_model_filter_new(GTK_TREE_MODEL(context.store.get()), nullptr));
 
   context.list = list_new(LIST_HILDON_WITHOUT_HEADERS, 0, &context, changed,
-                          buttons, columns, GTK_TREE_MODEL(filter));
+                          buttons, columns, GTK_TREE_MODEL(context.filter));
 
   GtkTreeIter seliter;
   std::for_each(context.projects.begin(), context.projects.end(),
@@ -558,10 +561,10 @@ static GtkWidget *project_list_widget(select_context_t &context, bool &has_sel) 
   GtkWidget *entry = osm2go_platform::entry_new(osm2go_platform::EntryFlagsNoAutoCap);
   gtk_box_pack_start(GTK_BOX(context.list), entry, FALSE, FALSE, 0);
   gtk_box_reorder_child(GTK_BOX(context.list), entry, 1);
-  gtk_tree_model_filter_set_visible_func(filter, project_matches, entry, nullptr);
+  gtk_tree_model_filter_set_visible_func(context.filter, project_matches, entry, nullptr);
   gtk_widget_grab_focus(entry);
 
-  g_signal_connect_swapped(entry, "changed", G_CALLBACK(on_filter_changed), filter);
+  g_signal_connect_swapped(entry, "changed", G_CALLBACK(on_filter_changed), context.filter);
 
   return context.list;
 }
@@ -906,6 +909,7 @@ select_context_t::select_context_t(appdata_t &a, GtkWidget *dial)
   , projects(project_scan(dummystate, settings_t::instance()->base_path,
                           settings_t::instance()->base_path_fd, settings_t::instance()->server))
   , dialog(dial)
+  , filter(nullptr)
   , list(nullptr)
 {
 }
