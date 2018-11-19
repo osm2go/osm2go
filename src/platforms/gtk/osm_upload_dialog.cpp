@@ -86,13 +86,9 @@ void osm_upload_context_t::append_str(const char *msg, const char *colorname) {
   osm2go_platform::process_events();
 }
 
-void osm_upload_context_t::appendf(const char *colname, const char *fmt, ...) {
-  va_list args;
-  va_start( args, fmt );
-  g_string buf(g_strdup_vprintf(fmt, args));
-  va_end( args );
-
-  append_str(buf.get(), colname);
+void osm_upload_context_t::append(const trstring &msg, const char *colorname)
+{
+  append_str(static_cast<const gchar *>(msg), colorname);
 }
 
 osm_upload_context_gtk::osm_upload_context_gtk(appdata_t &a, project_t::ref p, const char *c, const char *s)

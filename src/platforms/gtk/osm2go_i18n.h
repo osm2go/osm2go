@@ -39,6 +39,7 @@ public:
   // catch if one passes a constant nullptr as argument
   trstring(std::nullptr_t) = delete;
   trstring(std::nullptr_t, const char *, int) = delete;
+  trstring arg(std::nullptr_t) = delete;
 #endif
   trstring(const char *msg, const char *, int n) __attribute__((nonnull(2)))
     : std::string(trstring(msg).argn("%n", std::to_string(n), std::string(msg).find("%n"))) { }
