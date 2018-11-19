@@ -1415,10 +1415,22 @@ void tag_list_t::copy(const tag_list_t &other)
   std::for_each(other.contents->begin(), other.contents->end(), tag_vector_copy_functor(*contents));
 }
 
-struct relation_member_functor {
+struct any_relation_member_functor {
+  const object_t &member;
+  std::vector<member_t>::const_iterator &mit;
+  any_relation_member_functor(const object_t &o, std::vector<member_t>::const_iterator &mi)
+    : member(o), mit(mi) {}
+  bool operator()(const std::pair<item_id_t, relation_t *> &it) const
+  {
+    mit = it.second->find_member_object(member);
+    return mit != it.second->members.end();
+  }
+};
+
+struct typed_relation_member_functor {
   const member_t member;
   const char * const type;
-  relation_member_functor(const char *t, const char *r, const object_t &o)
+  typed_relation_member_functor(const char *t, const char *r, const object_t &o)
     : member(o, r), type(value_cache.insert(t)) {}
   bool operator()(const std::pair<item_id_t, relation_t *> &it) const
   { return it.second->tags.get_value("type") == type &&
@@ -1438,6 +1450,53 @@ struct pt_relation_member_functor {
            std::find(it.second->members.begin(), it.second->members.end(), member) != it.second->members.end(); }
 };
 
+static trstring unspecified_name(const object_t &obj, const osm_t &osm)
+{
+  const std::map<item_id_t, relation_t *>::const_iterator itEnd = osm.relations.end();
+  std::vector<member_t>::const_iterator mit, bmit;
+  int rtype = -1; // type of the relation: 3 mp with name, 2 mp, 1 name, 0 anything else
+  std::map<item_id_t, relation_t *>::const_iterator it = std::find_if(osm.relations.begin(), itEnd,
+                                                                      any_relation_member_functor(obj, mit));
+  std::map<item_id_t, relation_t *>::const_iterator best = it;
+  std::string bname;
+
+  while(it != itEnd && rtype < 3) {
+    int nrtype = 0;
+    if(it->second->is_multipolygon())
+      nrtype += 2;
+    std::string nname = it->second->descriptive_name();
+    assert(!nname.empty());
+    if(nname[0] != '<')
+      nrtype += 1;
+
+    if(nrtype > rtype) {
+      rtype = nrtype;
+      best = it;
+      bname.swap(nname);
+      bmit = mit;
+    }
+
+    it = std::find_if(++it, itEnd, any_relation_member_functor(obj, mit));
+  }
+
+  if(best != itEnd) {
+    if(best->second->is_multipolygon() && member_t::has_role(*bmit)) {
+      return trstring("%1: '%2' of multipolygon '%3'").arg(obj.type_string()).arg(bmit->role).arg(bname);
+    } else {
+      const char *reltype = best->second->tags.get_value("type");
+      if(unlikely(reltype == nullptr))
+        reltype = _("relation");
+      if(member_t::has_role(*bmit))
+        return trstring("%1: '%2' in %3 '%4'").arg(obj.type_string()).arg(bmit->role).arg(reltype).arg(bname);
+      else
+        return trstring("%1: member of %2 '%3'").arg(obj.type_string()).arg(reltype).arg(bname);
+    }
+  }
+
+  // look if this is part of relations
+  return trstring("unspecified %1").arg(obj.type_string());
+}
+
 /* try to get an as "speaking" description of the object as possible */
 std::string object_t::get_name(const osm_t &osm) const {
   std::string ret;
@@ -1446,7 +1505,7 @@ std::string object_t::get_name(const osm_t &osm) const {
 
   /* worst case: we have no tags at all. return techincal info then */
   if(!obj->tags.hasRealTags())
-    return trstring("unspecified %1").arg(type_string()).toStdString();
+    return unspecified_name(*this, osm).toStdString();
 
   /* try to figure out _what_ this is */
   const std::array<const char *, 5> name_tags = { { "name", "ref", "note", "fix" "me", "sport" } };
@@ -1471,7 +1530,7 @@ std::string object_t::get_name(const osm_t &osm) const {
     if(hn != nullptr) {
       if(street == nullptr) {
         // check if there is an "associatedStreet" relation where this is a "house" member
-        const relation_t *astreet = osm.find_relation(relation_member_functor("associatedStreet", "house", *this));
+        const relation_t *astreet = osm.find_relation(typed_relation_member_functor("associatedStreet", "house", *this));
         if(astreet != nullptr)
           street = astreet->tags.get_value("name");
       }
@@ -1561,7 +1620,17 @@ std::string object_t::get_name(const osm_t &osm) const {
     ret += name;
     ret += '"';
   } else if(ret.empty()) {
-    ret = trstring("unspecified %1").arg(type_string()).toStdString();
+    // look if this has only one real tag and use that one
+    const tag_t *stag = obj->tags.singleTag();
+    if(stag != nullptr) {
+      ret = stag->key;
+    } else {
+      // last chance
+      const char *bp = obj->tags.get_value("building:part");
+      if(bp != nullptr && strcmp(bp, "yes") == 0)
+        return _("building part");
+      ret = unspecified_name(*this, osm).toStdString();
+    }
   }
 
   /* remove underscores from string and replace them by spaces as this is */
@@ -1609,17 +1678,43 @@ bool tag_list_t::hasNonCreatorTags() const noexcept
   return it != itEnd;
 }
 
+static bool isRealTag(const tag_t &tag)
+{
+  return !tag.is_creator_tag() && strcmp(tag.key, "source") != 0;
+}
+
+static std::vector<tag_t>::const_iterator firstRealTag(const std::vector<tag_t> &contents)
+{
+  const std::vector<tag_t>::const_iterator itEnd = contents.end();
+  std::vector<tag_t>::const_iterator it = contents.begin();
+  while(it != itEnd && !isRealTag(*it))
+    it++;
+
+  return it;
+}
+
 bool tag_list_t::hasRealTags() const noexcept
 {
   if(empty())
     return false;
 
-  const std::vector<tag_t>::const_iterator itEnd = contents->end();
-  std::vector<tag_t>::const_iterator it = contents->begin();
-  while(it != itEnd && (it->is_creator_tag() || strcmp(it->key, "source") == 0))
-    it++;
+  return firstRealTag(*contents) != contents->end();
+}
 
-  return it != itEnd;
+const tag_t *tag_list_t::singleTag() const noexcept
+{
+  if(unlikely(empty()))
+    return nullptr;
+
+  const std::vector<tag_t>::const_iterator itEnd = contents->end();
+  const std::vector<tag_t>::const_iterator it = firstRealTag(*contents);
+  if(unlikely(it == itEnd))
+    return nullptr;
+  for(std::vector<tag_t>::const_iterator itn = it + 1; itn != itEnd; itn++)
+    if(isRealTag(*itn))
+      return nullptr;
+
+  return &(*it);
 }
 
 struct key_match_functor {

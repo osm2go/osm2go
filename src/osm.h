@@ -413,6 +413,13 @@ public:
    */
   bool hasRealTags() const noexcept;
 
+  /**
+   * @brief scan for the only non-trivial tag of this object
+   * @returns tag if there is only one tag present that satisfies hasRealTags()
+   * @retval nullptr either hasRealTags() is false or there are multiple tags on this object
+   */
+  const tag_t *singleTag() const noexcept;
+
   const char *get_value(const char *key) const;
 
   template<typename _Predicate>

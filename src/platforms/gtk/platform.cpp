@@ -192,7 +192,7 @@ trstring trstring::arg(const std::string &a) const
   // increase as needed
   std::string spattern = "%1";
   std::string::size_type pos = find(spattern);
-  for (int i = 1; i < 3 && pos == std::string::npos; i++) {
+  for (int i = 1; i < 5 && pos == std::string::npos; i++) {
     spattern = '%' + std::to_string(i);
     pos = find(spattern);
   }

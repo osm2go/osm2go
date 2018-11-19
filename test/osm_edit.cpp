@@ -675,7 +675,7 @@ static void test_reverse()
 
   w->flags = 0;
 
-  // some relations the way is member in to see how the roles change
+  // some relations the way is member of to see how the roles change
   std::vector<relation_t *> rels;
   for(unsigned int i = 0; i < 5; i++) {
     relation_t *r = new relation_t();
@@ -1545,6 +1545,18 @@ static void test_description()
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("area", "yes"));
   w->tags.replace(tags);
+  // this is a bit too underspecified, so this case isn't explicitely catched
+  assert_cmpstr(o.get_name(*osm), "area");
+  // add some worthless tags that should not change the description in any way
+  tags.insert(osm_t::TagMap::value_type("created_by", "testcase"));
+  w->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm), "area");
+  tags.insert(osm_t::TagMap::value_type("source", "imagination"));
+  w->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm), "area");
+  // give it some more information
+  tags.insert(osm_t::TagMap::value_type("foo", "bar"));
+  w->tags.replace(tags);
   assert_cmpstr(o.get_name(*osm), "unspecified area");
    osm_node_chain_free(w->node_chain);
   w->node_chain.clear();
@@ -1575,6 +1587,9 @@ static void test_description()
   tags.insert(osm_t::TagMap::value_type("construction:highway", "bar"));
   w->tags.replace(tags);
   assert_cmpstr(o.get_name(*osm), trstring("%1 road under construction").arg("bar").toStdString().c_str());
+  tags.insert(osm_t::TagMap::value_type("name", "baz"));
+  w->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm), (trstring("%1 road under construction").arg("bar").toStdString() + ": \"baz\"").c_str());
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("name", "foo"));
@@ -1642,14 +1657,18 @@ static void test_description()
   w->tags.replace(tags);
   assert_cmpstr(o.get_name(*osm), "building Highway to hell 42");
 
+  // if there are not tags there is a description by relation
+  w->tags.clear();
+  assert_cmpstr(o.get_name(*osm), "way/area: member of associatedStreet '21 Jump Street'");
+
   // check PTv2 relation naming
-  r = new relation_t();
-  osm->relation_attach(r);
+  relation_t *pt_r = new relation_t();
+  osm->relation_attach(pt_r);
   rtags.clear();
   rtags.insert(osm_t::TagMap::value_type("type", "public_transport"));
   rtags.insert(osm_t::TagMap::value_type("public_transport", "stop_area"));
   rtags.insert(osm_t::TagMap::value_type("name", "Kröpcke"));
-  r->tags.replace(rtags);
+  pt_r->tags.replace(rtags);
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("public_transport", "platform"));
@@ -1658,17 +1677,80 @@ static void test_description()
   assert_cmpstr(o.get_name(*osm), "platform");
 
   // wrong role
-  r->members.push_back(member_t(o, nullptr));
+  pt_r->members.push_back(member_t(o, nullptr));
   assert_cmpstr(o.get_name(*osm), "platform");
 
   // correct role
-  r->members.push_back(member_t(o, "platform"));
+  pt_r->members.push_back(member_t(o, "platform"));
   assert_cmpstr(o.get_name(*osm), "platform: \"Kröpcke\"");
 
   // local name takes precedence
   tags.insert(osm_t::TagMap::value_type("name", "Kroepcke"));
   n->tags.replace(tags);
   assert_cmpstr(o.get_name(*osm), "platform: \"Kroepcke\"");
+
+  // check description of untagged objects by relation membership
+  o = w;
+  relation_t *simple_r = new relation_t();
+  osm->relation_attach(simple_r);
+  simple_r->members.push_back(member_t(object_t(w)));
+
+  // a relation with name takes precedence
+  assert_cmpstr(o.get_name(*osm), "way/area: member of associatedStreet '21 Jump Street'");
+  // drop the member with empty role
+  r->remove_member(r->find_member_object(object_t(w)));
+  assert_cmpstr(o.get_name(*osm), "way/area: 'house' in associatedStreet '21 Jump Street'");
+  r->remove_member(r->find_member_object(object_t(w)));
+
+  assert_cmpstr(o.get_name(*osm), "way/area: member of relation '<ID #-3>'");
+  simple_r->members.clear();
+  simple_r->members.push_back(member_t(object_t(w), "outer"));
+  assert_cmpstr(o.get_name(*osm), "way/area: 'outer' in relation '<ID #-3>'");
+
+  pt_r->members.push_back(member_t(object_t(w)));
+  assert_cmpstr(o.get_name(*osm), "way/area: member of public_transport 'Kröpcke'");
+  pt_r->members.clear();
+  pt_r->members.push_back(member_t(object_t(w), "foo"));
+  assert_cmpstr(o.get_name(*osm), "way/area: 'foo' in public_transport 'Kröpcke'");
+
+  // multipolygons take precedence over other relations
+  rtags.clear();
+  rtags.insert(osm_t::TagMap::value_type("type", "multipolygon"));
+  simple_r->tags.replace(rtags);
+  assert(simple_r->is_multipolygon());
+  assert_cmpstr(o.get_name(*osm), "way/area: 'outer' of multipolygon '<ID #-3>'");
+  simple_r->members.clear();
+  simple_r->members.push_back(member_t(object_t(w)));
+  assert_cmpstr(o.get_name(*osm), "way/area: member of multipolygon '<ID #-3>'");
+
+  // another relation, found first in the map because of lower id
+  relation_t *other_r  = new relation_t();
+  osm->relation_attach(other_r);
+  other_r->members.push_back(member_t(object_t(w)));
+  other_r->tags.replace(rtags);
+  assert_cmpstr(o.get_name(*osm), "way/area: member of multipolygon '<ID #-4>'");
+
+  // but if the first one has a name (or any non-default description) it is picked
+  rtags.insert(osm_t::TagMap::value_type("name", "Deister"));
+  simple_r->tags.replace(rtags);
+  assert_cmpstr(o.get_name(*osm), "way/area: member of multipolygon 'Deister'");
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("building:part", "yes"));
+  w->tags.replace(tags);
+  // only a single tag, this is simply copied
+  assert_cmpstr(o.get_name(*osm), "building:part");
+
+  // there is still only a single tag because these 2 are ignored
+  tags.insert(osm_t::TagMap::value_type("source", "foo"));
+  tags.insert(osm_t::TagMap::value_type("created_by", "testcase"));
+  w->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm), "building:part");
+
+  tags.insert(osm_t::TagMap::value_type("building:levels", "3"));
+  w->tags.replace(tags);
+  // but building:part is catched even if there are more tags
+  assert_cmpstr(o.get_name(*osm), "building part");
 }
 
 static void test_relation_members()
