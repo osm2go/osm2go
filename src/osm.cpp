@@ -1518,7 +1518,15 @@ std::string object_t::get_name(const osm_t &osm) const {
       }
 
       else if(!strcmp(highway, "construction")) {
-        typestr = _("road/street under construction");
+        const char *cstr = obj->tags.get_value("construction:highway");
+        if(cstr == nullptr)
+          cstr = obj->tags.get_value("construction");
+        if(cstr == nullptr) {
+          typestr = _("road/street under construction");
+        } else {
+          typestr = nullptr;
+          ret = trstring("%1 road under construction").arg(cstr).toStdString();
+        }
       }
 
       else

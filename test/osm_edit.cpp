@@ -1568,6 +1568,13 @@ static void test_description()
   tags.insert(osm_t::TagMap::value_type("highway", "construction"));
   w->tags.replace(tags);
   assert_cmpstr(o.get_name(*osm), _("road/street under construction"));
+  tags.insert(osm_t::TagMap::value_type("construction", "foo"));
+  w->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm), trstring("%1 road under construction").arg("foo").toStdString().c_str());
+  // construction:highway is the proper namespaced tag, so prefer that one
+  tags.insert(osm_t::TagMap::value_type("construction:highway", "bar"));
+  w->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm), trstring("%1 road under construction").arg("bar").toStdString().c_str());
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("name", "foo"));
