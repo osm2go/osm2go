@@ -482,9 +482,15 @@ bool tag_list_t::merge(tag_list_t &other)
   return conflict;
 }
 
-static inline bool is_creator_tag(const tag_t &tag) {
-  return tag.is_creator_tag();
-}
+struct check_creator_tag {
+  inline bool operator()(const tag_t tag) {
+    return tag.is_creator_tag();
+  }
+  inline bool operator()(const osm_t::TagMap::value_type tag)
+  {
+    return tag_t::is_creator_tag(tag.first.c_str());
+  }
+};
 
 struct tag_find_functor {
   const char * const needle;
@@ -494,25 +500,38 @@ struct tag_find_functor {
   }
 };
 
-bool tag_list_t::operator!=(const std::vector<tag_t> &t2) const {
-  if(empty() && t2.empty())
-    return false;
+/**
+ * @brief do the common check to compare a tag_list with another set of tags
+ * @param result the result of the compare
+ * @returns if the end result is fixed
+ * @retval true the compare has finished, result hold the decision
+ * @retval false further checks have to be done
+ */
+template<typename T>
+bool tag_list_compare_base(bool &result, const tag_list_t &list, const std::vector<tag_t> *contents,
+                           const T &other, std::vector<tag_t>::const_iterator &t1cit)
+{
+  if(list.empty() && other.empty()) {
+    result = false;
+    return true;
+  }
 
   // Special case for an empty list as contents is not set in this case and
   // must not be dereferenced. Check if t2 only consists of a creator tag, in
   // which case both lists would still be considered the same, or not. Not
   // further checks need to be done for the end result.
-  const std::vector<tag_t>::const_iterator t2start = t2.begin();
-  const std::vector<tag_t>::const_iterator t2End = t2.end();
-  bool t2HasCreator = (std::find_if(t2start, t2End, is_creator_tag) != t2End);
-  if(empty())
-    return t2HasCreator ? (t2.size() != 1) : !t2.empty();
+  const typename T::const_iterator t2start = other.begin();
+  const typename T::const_iterator t2End = other.end();
+  bool t2HasCreator = (std::find_if(t2start, t2End, check_creator_tag()) != t2End);
+  if(list.empty()) {
+    result = t2HasCreator ? (other.size() != 1) : !other.empty();
+    return true;
+  }
 
   /* first check list length, otherwise deleted tags are hard to detect */
   std::vector<tag_t>::size_type ocnt = contents->size();
-  std::vector<tag_t>::const_iterator t1it = contents->begin();
   const std::vector<tag_t>::const_iterator t1End = contents->end();
-  const std::vector<tag_t>::const_iterator t1cit = std::find_if(t1it, t1End, is_creator_tag);
+  t1cit = std::find_if(std::cbegin(*contents), t1End, check_creator_tag());
 
   if(t2HasCreator)
     ocnt++;
@@ -521,8 +540,25 @@ bool tag_list_t::operator!=(const std::vector<tag_t> &t2) const {
   if(t1cit != t1End)
     ocnt--;
 
-  if (t2.size() != ocnt)
+  if (other.size() != ocnt) {
+    result = true;
     return true;
+  }
+
+  return false;
+}
+
+bool tag_list_t::operator!=(const std::vector<tag_t> &t2) const {
+  bool result;
+  std::vector<tag_t>::const_iterator t1cit;
+  if(tag_list_compare_base(result, *this, contents, t2, t1cit))
+    return result;
+
+  const std::vector<tag_t>::const_iterator t2End = t2.end();
+  const std::vector<tag_t>::const_iterator t2start = t2.begin();
+
+  std::vector<tag_t>::const_iterator t1it = contents->begin();
+  const std::vector<tag_t>::const_iterator t1End = contents->end();
 
   for (; t1it != t1End; t1it++) {
     if (t1it == t1cit)
@@ -544,33 +580,13 @@ bool tag_list_t::operator!=(const std::vector<tag_t> &t2) const {
 }
 
 bool tag_list_t::operator!=(const osm_t::TagMap &t2) const {
-  if(empty() && t2.empty())
-    return false;
+  bool result;
+  std::vector<tag_t>::const_iterator t1cit;
+  if(tag_list_compare_base(result, *this, contents, t2, t1cit))
+    return result;
 
-  // Special case for an empty list as contents is not set in this case and
-  // must not be dereferenced. Check if t2 only consists of a creator tag, in
-  // which case both lists would still be considered the same, or not. No
-  // further checks need to be done for the end result.
-  const osm_t::TagMap::const_iterator t2End = t2.end();
-  bool t2HasCreator = (t2.find("created_by") != t2End);
-  if(empty())
-    return t2HasCreator ? (t2.size() != 1) : !t2.empty();
-
-  /* first check list length, otherwise deleted tags are hard to detect */
-  std::vector<tag_t>::size_type ocnt = contents->size();
   std::vector<tag_t>::const_iterator t1it = contents->begin();
   const std::vector<tag_t>::const_iterator t1End = contents->end();
-  const std::vector<tag_t>::const_iterator t1cit = std::find_if(t1it, t1End, is_creator_tag);
-
-  if(t2HasCreator)
-    ocnt++;
-
-  // ocnt can't become negative here as it was checked before that contents is not empty
-  if(t1cit != t1End)
-    ocnt--;
-
-  if (t2.size() != ocnt)
-    return true;
 
   for (; t1it != t1End; t1it++) {
     if (t1it == t1cit)
