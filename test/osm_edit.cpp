@@ -93,9 +93,51 @@ static void test_trivial() {
   assert(!osm->bounds.contains(lpos_t(-1, 0)));
   assert(!osm->bounds.contains(lpos_t(0, -1)));
 
-  way_t w(0);
-  assert_null(w.first_node());
-  assert_null(w.last_node());
+  way_t *w = new way_t();
+  osm->way_attach(w);;
+  // must work even on empty way
+  assert_null(w->first_node());
+  assert_null(w->last_node());
+
+  lpos_t l(10, 20);
+  node_t *n = osm->node_new(l);
+  osm->node_attach(n);
+  // the sanity check look on the node map which now isn't empty anymore
+  assert_null(osm->sanity_check());
+
+  w->append_node(n);
+  assert(w->ends_with_node(n));
+  // deleted ways never return true for any node
+  w->flags |= OSM_FLAG_DELETED;
+  assert(!w->ends_with_node(n));
+
+  relation_t *r = new relation_t();
+  osm->relation_attach(r);
+  object_t robj(r);
+  // check compare
+  assert(robj == r);
+  assert(robj != w);
+
+  object_t inv;
+  assert_cmpnum(inv.get_id(), ID_ILLEGAL);
+
+  assert_cmpstr(r->descriptive_name(), "<ID #-1>");
+
+  osm_t::TagMap tmap;
+  tmap.insert(osm_t::TagMap::value_type("ref", "KHM 55"));
+  r->tags.replace(tmap);
+  assert_cmpstr(r->descriptive_name(), "KHM 55");
+  // name is preferred over ref
+  tmap.insert(osm_t::TagMap::value_type("name", "Rumpelstilzchen"));
+  r->tags.replace(tmap);
+  assert_cmpstr(r->descriptive_name(), "Rumpelstilzchen");
+  // another way to clear
+  std::vector<tag_t> notags;
+  r->tags.replace(std::move(notags));
+  assert_cmpstr(r->descriptive_name(), "<ID #-1>");
+
+  member_t mb(object_t::RELATION);
+  assert_null(mb.role);
 }
 
 static void test_taglist() {
@@ -1234,11 +1276,6 @@ static void test_merge_nodes()
   assert(n == n1);
   assert(ways2join[0] == nullptr);
   assert(ways2join[1] == nullptr);
-
-  /// ==================
-  // the relation with the highest id (since all are negative)
-  // test is unrelated to the rest
-  assert_cmpstr(r->descriptive_name(), "<ID #-1>");
 }
 
 static void setup_way_relations_for_merge(osm_t::ref o, way_t *w0, way_t *w1)

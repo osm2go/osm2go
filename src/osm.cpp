@@ -133,7 +133,7 @@ const char *object_t::type_string() const {
   if(likely(it != types.end()))
     return it->second;
 
-  return nullptr;
+  assert_unreachable();
 }
 
 std::string object_t::id_string() const {
