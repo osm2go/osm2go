@@ -26,6 +26,7 @@
 
 #include <string>
 #include <memory>
+#include <unordered_map>
 
 #include <osm2go_platform.h>
 #include <osm2go_stl.h>
@@ -91,6 +92,8 @@ struct map_state_t {
 };
 
 class map_t {
+  friend struct map_bg_modifier;
+  std::unordered_map<visible_item_t *, map_item_t *> background_items;
 protected:
   explicit map_t(appdata_t &a, canvas_t *c);
 

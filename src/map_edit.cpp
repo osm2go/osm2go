@@ -166,8 +166,8 @@ void map_t::way_add_cancel() {
   std::for_each(chain.begin(), chain.end(), map_unref_ways(osm));
   chain.clear();
 
-  /* remove ways visual representation */
-  action.way->item_chain_destroy();
+  /* Remove ways visual representation. There is no background item yet. */
+  action.way->item_chain_destroy(nullptr);
 
   osm->way_free(action.way);
   action.way = nullptr;
@@ -211,7 +211,7 @@ void map_t::way_add_ok() {
   if(action.extending != nullptr) {
     // this is triggered when the user started with extending an existing way
     // since the merged way is a temporary one there are no relation memberships
-    action.extending->merge(action.way, osm);
+    action.extending->merge(action.way, osm, this);
 
     action.way = action.extending;
   } else {
@@ -239,7 +239,7 @@ void map_t::way_add_ok() {
     /* two existing ways using a new way between them */
 
     bool conflict;
-    action.way = osm->mergeWays(action.way, action.ends_on, conflict);
+    action.way = osm->mergeWays(action.way, action.ends_on, conflict, this);
     action.ends_on = nullptr;
 
     if(conflict)
@@ -480,7 +480,7 @@ void map_t::node_move(map_item_t *map_item, const osm2go_platform::screenpos &p)
         printf("  about to join ways #" ITEM_ID_FORMAT " and #" ITEM_ID_FORMAT "\n",
                ways2join[0]->id, ways2join[1]->id);
 
-        osm->mergeWays(ways2join[0], ways2join[1], conflict);
+        osm->mergeWays(ways2join[0], ways2join[1], conflict, this);
         if(conflict)
           message_dlg(_("Way tag conflict"),
                       _("The resulting way contains some conflicting tags. Please solve these."));

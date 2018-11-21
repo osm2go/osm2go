@@ -53,9 +53,8 @@
 /* to the screen representation of a give node/way/etc */
 struct map_item_chain_t {
   explicit map_item_chain_t(map_item_t *n0 = nullptr)
-    : i0(n0), i1(nullptr) {}
+    : i0(n0) {}
   map_item_t *i0;
-  map_item_t *i1;
 
   inline canvas_item_t *firstCanvasItem() const
   {
@@ -65,8 +64,6 @@ struct map_item_chain_t {
   inline void clear() {
     if(i0 != nullptr) {
       delete i0->item;
-      if(i1 != nullptr)
-        delete i1->item;
     }
   }
 
@@ -74,9 +71,39 @@ struct map_item_chain_t {
   {
     clear();
     i0 = n0;
-    i1 = nullptr;
   }
 };
+
+static void delete_bg_pair(const std::pair<visible_item_t *, map_item_t *> &pair)
+{
+  delete pair.second->item;
+}
+
+struct map_bg_modifier {
+  map_bg_modifier() O2G_DELETED_FUNCTION;
+  ~map_bg_modifier() O2G_DELETED_FUNCTION;
+
+  static void remove(map_t *map, visible_item_t *way);
+  static inline void add(map_t *map, way_t *way, map_item_t *item)
+  {
+    map->background_items[way] = item;
+  }
+  static void clear(map_t *map)
+  {
+    std::for_each(map->background_items.begin(), map->background_items.end(), delete_bg_pair);
+    map->background_items.clear();
+  }
+};
+
+void map_bg_modifier::remove(map_t *map, visible_item_t *way)
+{
+  std::unordered_map<visible_item_t *, map_item_t *>::iterator it = map->background_items.find(way);
+  if(it == map->background_items.end())
+    return;
+
+  delete it->second->item;
+  map->background_items.erase(it);
+}
 
 static void map_statusbar(const std::unique_ptr<MainUi> &uicontrol, const object_t &object,
                           osm_t::ref osm) {
@@ -90,11 +117,13 @@ void map_t::outside_error() {
   error_dlg(_("Items must not be placed outside the working area!"));
 }
 
-void visible_item_t::item_chain_destroy()
+void visible_item_t::item_chain_destroy(map_t *map)
 {
   if(map_item_chain == nullptr)
     return;
 
+  if(map != nullptr)
+    map_bg_modifier::remove(map, this);
   map_item_chain->clear();
 
   delete map_item_chain;
@@ -394,8 +423,6 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
   if(node->map_item_chain == nullptr) {
     node->map_item_chain = new map_item_chain_t(map_item);
   } else {
-    // this is never used for nodes
-    assert(node->map_item_chain->i1 == nullptr);
     node->map_item_chain->reset(map_item);
   }
 
@@ -448,8 +475,10 @@ void map_way_draw_functor::operator()(way_t *way)
   /* attach map_item to ways map_item_chain */
   if(way->map_item_chain == nullptr)
     way->map_item_chain = new map_item_chain_t();
-  else
+  else {
+    map_bg_modifier::remove(map, way);
     way->map_item_chain->reset();
+  }
   map_item_t *map_item;
 
   /* allocate space for nodes */
@@ -478,9 +507,9 @@ void map_way_draw_functor::operator()(way_t *way)
     } else if(way->draw.flags & OSM_DRAW_FLAG_BG) {
       map_item = map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points, width, way->draw.color);
 
-      way->map_item_chain->i1 = map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
-                                            way->draw.bg.width * map->state.detail,
-                                            way->draw.bg.color);
+      map_bg_modifier::add(map, way, map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
+                                                 way->draw.bg.width * map->state.detail,
+                                                 way->draw.bg.color));
     } else {
       map_item = map_way_new(map, CANVAS_GROUP_WAYS, way, points,
                              width, way->draw.color);
@@ -544,7 +573,7 @@ void map_t::redraw_item(T *obj)
   if(is_selected)
     item_deselect();
 
-  obj->item_chain_destroy();
+  obj->item_chain_destroy(this);
 
   style->colorize(obj);
   draw(obj);
@@ -1119,6 +1148,8 @@ map_t::map_t(appdata_t &a, canvas_t *c)
 
 map_t::~map_t()
 {
+  // no need to clear background_items here, the items were all deleted when
+  // destroying the canvas
   map_free_map_item_chains(appdata);
   appdata.map = nullptr;
 }
@@ -1164,6 +1195,7 @@ void map_t::clear(clearLayers layers) {
     break;
   }
 
+  map_bg_modifier::clear(this);
   map_free_map_item_chains(appdata);
 
   /* remove a possibly existing highlight */
@@ -1310,7 +1342,7 @@ void node_deleted_from_ways::operator()(way_t *way) {
     /* this way now only contains one node and thus isn't a valid */
     /* way anymore. So it'll also get deleted (which in turn may */
     /* cause other nodes to be deleted as well) */
-    map->appdata.project->osm->way_delete(way);
+    map->appdata.project->osm->way_delete(way, map);
   } else {
     map->redraw_item(way);
   }
@@ -1362,7 +1394,7 @@ void map_t::delete_selected() {
   }
 
   case object_t::WAY:
-    osm->way_delete(sel.way);
+    osm->way_delete(sel.way, this);
     break;
 
   case object_t::RELATION:
@@ -1664,7 +1696,7 @@ void map_t::hide_selected() {
 
   item_deselect();
   appdata.project->osm->waySetHidden(way);
-  way->item_chain_destroy();
+  way->item_chain_destroy(this);
 
   appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_MAP_SHOW_ALL, true);
 }

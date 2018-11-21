@@ -390,7 +390,7 @@ node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict, way_t *
   return keep;
 }
 
-way_t *osm_t::mergeWays(way_t *first, way_t *second, bool &conflict)
+way_t *osm_t::mergeWays(way_t *first, way_t *second, bool &conflict, map_t *map)
 {
   assert(first != second);
   std::vector<relation_t *> rels;
@@ -398,7 +398,7 @@ way_t *osm_t::mergeWays(way_t *first, way_t *second, bool &conflict)
     std::swap(first, second);
 
   /* ---------- transfer tags from second to first ----------- */
-  conflict = first->merge(second, this, rels);
+  conflict = first->merge(second, this, map, rels);
 
   return first;
 }
@@ -954,7 +954,7 @@ way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
     remove_from_relations(object_t(node));
 
   /* remove that nodes map representations */
-  node->item_chain_destroy();
+  node->item_chain_destroy(nullptr);
 
   if(!node->isNew()) {
     printf("mark node #" ITEM_ID_FORMAT " as deleted\n", node->id);
@@ -1041,11 +1041,12 @@ void osm_unref_way_free::operator()(node_t* node)
   }
 }
 
-void osm_t::way_delete(way_t *way) {
+void osm_t::way_delete(way_t *way, map_t *map)
+{
   remove_from_relations(object_t(way));
 
   /* remove it visually from the screen */
-  way->item_chain_destroy();
+  way->item_chain_destroy(map);
 
   /* delete all nodes that aren't in other use now */
   std::for_each(way->node_chain.begin(), way->node_chain.end(),
@@ -1943,12 +1944,12 @@ void way_t::cleanup() {
   assert_null(map_item_chain);
 }
 
-bool way_t::merge(way_t *other, osm_t *osm, const std::vector<relation_t *> &rels)
+bool way_t::merge(way_t *other, osm_t *osm, map_t *map, const std::vector<relation_t *> &rels)
 {
   printf("  request to extend way #" ITEM_ID_FORMAT "\n", other->id);
 
   // drop the visible items
-  other->item_chain_destroy();
+  other->item_chain_destroy(map);
 
   assert(ends_with_node(other->node_chain.front()) ||
            ends_with_node(other->node_chain.back()));

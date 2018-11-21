@@ -490,10 +490,10 @@ static void test_split()
   o->way_attach(area);
 
   // drop the other ways to make reference counting easier
-  o->way_delete(v);
-  o->way_delete(w);
-  o->way_delete(neww);
-  o->way_delete(neww2);
+  o->way_delete(v, nullptr);
+  o->way_delete(w, nullptr);
+  o->way_delete(neww, nullptr);
+  o->way_delete(neww2, nullptr);
   assert_cmpnum(o->ways.size(), 1);
   for(unsigned int i = 1; i < nodes.size(); i++)
     assert_cmpnum(nodes[i]->ways, 1);
@@ -811,7 +811,7 @@ static void test_way_delete()
   w->append_node(n2);
   o->way_attach(w);
 
-  o->way_delete(w);
+  o->way_delete(w, nullptr);
 
   assert_cmpnum(o->nodes.size(), 0);
   assert_cmpnum(o->ways.size(), 0);
@@ -834,7 +834,7 @@ static void test_way_delete()
   w->append_node(n1);
   assert(w->is_closed());
 
-  o->way_delete(w);
+  o->way_delete(w, nullptr);
 
   assert_cmpnum(o->nodes.size(), 0);
   assert_cmpnum(o->ways.size(), 0);
@@ -887,7 +887,7 @@ static void test_way_delete()
   // n1 should be preserved as it has tags on it's own
   // n2 should be preserved as it is still referenced by a relation
   // n3 should be preserved as it is used in another way
-  o->way_delete(w);
+  o->way_delete(w, nullptr);
 
   assert_cmpnum(o->nodes.size(), 4);
   assert_cmpnum(o->ways.size(), 1);
@@ -1086,7 +1086,7 @@ static void test_merge_nodes()
   assert_null(ways2join[0]);
   assert_null(ways2join[1]);
 
-  o->way_delete(w);
+  o->way_delete(w, nullptr);
   assert_cmpnum(o->nodes.size(), 0);
   assert_cmpnum(o->ways.size(), 0);
 
@@ -1212,7 +1212,7 @@ static void test_merge_nodes()
   /// ==================
   // now join 2 nodes which both terminate one way
   assert_cmpnum(o->ways.size(), 3);
-  o->way_delete(w);
+  o->way_delete(w, nullptr);
   ways.erase(wit);
   w = ways.back();
   assert_cmpnum(w->node_chain.size(), 2);
@@ -1394,7 +1394,7 @@ static void test_merge_ways()
     const node_chain_t &expect = setup_ways_for_merge(nodes, o, w0, w1, i, 0);
 
     // verify direct merging
-    assert(!w1->merge(w0, o));
+    assert(!w1->merge(w0, o, nullptr));
 
     verify_merged_way(w1, o, nodes, expect, false);
 
@@ -1402,7 +1402,7 @@ static void test_merge_ways()
 
     // check that merging with relation checking works
     bool conflict = true;
-    way_t *r = o->mergeWays(w1, w0, conflict);
+    way_t *r = o->mergeWays(w1, w0, conflict, nullptr);
     assert(r == w1);
     assert(!conflict);
 
@@ -1413,7 +1413,7 @@ static void test_merge_ways()
     conflict = true;
 
     // check that the right way is picked
-    r = o->mergeWays(w0, w1, conflict);
+    r = o->mergeWays(w0, w1, conflict, nullptr);
     assert(r == w1);
     assert(!conflict);
 
@@ -1487,7 +1487,7 @@ static void test_way_merge_relation_neighbors()
   relcmp->members.push_back(member_t(object_t(w1), "rolem"));
 
   bool conflict = true;
-  osm->mergeWays(w1, w2, conflict);
+  osm->mergeWays(w1, w2, conflict, nullptr);
   assert(!conflict);
 
   for (unsigned int i = 0; i < relcmp->members.size(); i++) {

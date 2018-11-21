@@ -51,8 +51,9 @@ typedef int64_t item_id_t;
 #define ID_ILLEGAL  (static_cast<item_id_t>(0))
 
 class base_object_t;
-class osm_t;
+class map_t;
 class node_t;
+class osm_t;
 class relation_t;
 class way_t;
 class tag_t;
@@ -224,7 +225,18 @@ public:
    * @brief insert a node using the id already set
    */
   inline void node_insert(node_t *node);
-  void way_delete(way_t *way);
+
+  /**
+   * @brief mark a way as deleted
+   * @param way the way to get rid of
+   * @param map the map to delete the visual items
+   *
+   * map is only used to delete possibly existing additional map items.
+   *
+   * @see visible_item_t::item_chain_destroy
+   */
+  void way_delete(way_t *way, map_t *map);
+
   /**
    * @brief insert a way and create a new temporary id
    */
@@ -352,7 +364,7 @@ public:
    *
    * The victim way is deleted.
    */
-  way_t *mergeWays(way_t *first, way_t *second, bool &conflict);
+  way_t *mergeWays(way_t *first, way_t *second, bool &conflict, map_t *map);
 
   /**
    * @brief check if there are any modifications
@@ -560,7 +572,14 @@ public:
 
   float zoom_max;
 
-  void item_chain_destroy();
+  /**
+   * @brief destroy the visible items
+   * @param map the map pointer needed to release additional items
+   *
+   * It is known that there are no additional items the map pointer
+   * may be nullptr.
+   */
+  void item_chain_destroy(map_t *map);
 };
 
 class node_t : public visible_item_t {
@@ -665,10 +684,10 @@ public:
    * @other will be removed.
    */
 private:
-  bool merge(way_t *other, osm_t *osm, const std::vector<relation_t *> &rels = std::vector<relation_t *>());
+  bool merge(way_t *other, osm_t *osm, map_t *map, const std::vector<relation_t *> &rels = std::vector<relation_t *>());
 public:
-  inline bool merge(way_t *other, osm_t::ref osm, const std::vector<relation_t *> &rels = std::vector<relation_t *>())
-  { return merge(other, osm.get(), rels); }
+  inline bool merge(way_t *other, osm_t::ref osm, map_t *map, const std::vector<relation_t *> &rels = std::vector<relation_t *>())
+  { return merge(other, osm.get(), map, rels); }
 
 protected:
   virtual void generate_xml_custom(xmlNodePtr xml_node) const override {
