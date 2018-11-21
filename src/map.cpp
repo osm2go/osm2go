@@ -1499,10 +1499,10 @@ void map_t::track_update_seg(track_seg_t &seg) {
    * points, second_last must be valid and its "next" (last) also */
   assert(begin != itEnd);
   assert(last != itEnd);
-  assert_cmpnum_op(seg.track_points.size(), >=, itEnd - begin);
 
   /* count points to be placed */
-  const size_t npoints = itEnd - begin;
+  const size_t npoints = std::distance(begin, itEnd);
+  assert_cmpnum_op(seg.track_points.size(), >=, npoints);
   elements_drawn = last_is_visible ? npoints : 0;
 
   lpos_t lpos = last->pos.toLpos(bounds);

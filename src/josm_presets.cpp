@@ -211,7 +211,7 @@ std::vector<unsigned int> presets_element_multiselect::matchedIndexes(const std:
     // the first one
     it = std::find(itBegin, itEnd, preset.substr(0, pos));
     if(it != itEnd)
-      indexes.push_back(it - itBegin);
+      indexes.push_back(std::distance(itBegin, it));
     // skip first delimiter
     pos++;
     // all indermediate ones
@@ -219,7 +219,7 @@ std::vector<unsigned int> presets_element_multiselect::matchedIndexes(const std:
     while(newpos != std::string::npos) {
       it = std::find(itBegin, itEnd, preset.substr(pos, newpos - pos));
       if(it != itEnd)
-        indexes.push_back(it - itBegin);
+        indexes.push_back(std::distance(itBegin, it));
       pos = newpos + 1;
       newpos = preset.find(delimiter, pos);
     }
@@ -228,7 +228,7 @@ std::vector<unsigned int> presets_element_multiselect::matchedIndexes(const std:
   }
 
   if(it != itEnd)
-    indexes.push_back(it - itBegin);
+    indexes.push_back(std::distance(itBegin, it));
 
   return indexes;
 }

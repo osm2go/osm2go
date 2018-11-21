@@ -1299,7 +1299,7 @@ void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pai
   std::vector<member_t>::iterator it = std::find_if(itBegin, itEnd, fc);
   for(; it != itEnd; it = std::find_if(it, itEnd, fc)) {
     printf("way #" ITEM_ID_FORMAT " is part of relation #" ITEM_ID_FORMAT " at position %zu, adding way #" ITEM_ID_FORMAT "\n",
-           src->id, relation->id, it - relation->members.begin(), dst->id);
+           src->id, relation->id, std::distance(relation->members.begin(), it), dst->id);
 
     member_t m(object_t(dst), *it);
 

@@ -964,7 +964,7 @@ presets_element_t::attach_key *presets_element_combo::attach(preset_attach_conte
     const std::vector<std::string>::const_iterator it = std::find(itBegin, itEnd, pr);
     if(it != itEnd) {
       matched = true;
-      active += (it - itBegin);
+      active += std::distance(itBegin, it);
     }
   }
 
