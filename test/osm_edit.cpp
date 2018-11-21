@@ -1671,6 +1671,12 @@ static void test_description()
   w->tags.replace(tags);
   assert(!w->is_area());
 
+  // or we say it's no building
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("building", "no"));
+  w->tags.replace(tags);
+  assert(!w->is_area());
+
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("building", "residential"));
   tags.insert(osm_t::TagMap::value_type("addr:housenumber", "42"));

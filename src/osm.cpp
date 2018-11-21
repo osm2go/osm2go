@@ -1244,6 +1244,23 @@ bool way_t::is_closed() const noexcept {
   return node_chain.front() == node_chain.back();
 }
 
+static bool implicit_area(const tag_t &tg)
+{
+  std::array<const char *, 5> keys = { {
+    "aeroway", "building", "landuse", "leisure", "natural"
+  } };
+
+  // this can be checked faster than the keys, so do it first
+  if(strcmp(tg.value, "no") == 0)
+    return false;
+
+  for(unsigned int i = 0; i < keys.size(); i++)
+    if(strcmp(tg.key, keys.at(i)) == 0)
+      return true;
+
+  return false;
+}
+
 bool way_t::is_area() const
 {
   if(!is_closed())
@@ -1253,12 +1270,7 @@ bool way_t::is_area() const
   if(area != nullptr)
     return strcmp(area, "yes") == 0;
 
-  // implicit areas
-  return tags.get_value("aeroway") != nullptr ||
-         tags.get_value("building") != nullptr ||
-         tags.get_value("landuse") != nullptr ||
-         tags.get_value("leisure") != nullptr ||
-         tags.get_value("natural") != nullptr;
+  return tags.contains(implicit_area);
 }
 
 struct relation_transfer {
