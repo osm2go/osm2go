@@ -561,14 +561,14 @@ class visible_item_t : public base_object_t {
 protected:
   inline visible_item_t(unsigned int ver = 0, item_id_t i = ID_ILLEGAL) noexcept
     : base_object_t(ver, i)
-    , map_item_chain(nullptr)
+    , map_item(nullptr)
     , zoom_max(0.0f)
   {
   }
 
 public:
   /* a link to the visual representation on screen */
-  struct map_item_chain_t *map_item_chain;
+  struct map_item_t *map_item;
 
   float zoom_max;
 

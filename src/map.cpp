@@ -48,37 +48,6 @@
 #include <osm2go_platform.h>
 #include <osm2go_stl.h>
 
-/* this is a chain of map_items which is attached to all entries */
-/* in the osm tree (node_t, way_t, ...) to be able to get a link */
-/* to the screen representation of a give node/way/etc */
-struct map_item_chain_t {
-  explicit map_item_chain_t(map_item_t *n0 = nullptr)
-    : i0(n0) {}
-  map_item_t *i0;
-
-  inline canvas_item_t *firstCanvasItem() const
-  {
-    return i0 == nullptr ? nullptr : i0->item;
-  }
-
-  inline void clear() {
-    if(i0 != nullptr) {
-      delete i0->item;
-    }
-  }
-
-  void reset(map_item_t *n0 = nullptr)
-  {
-    clear();
-    i0 = n0;
-  }
-};
-
-static void delete_bg_pair(const std::pair<visible_item_t *, map_item_t *> &pair)
-{
-  delete pair.second->item;
-}
-
 struct map_bg_modifier {
   map_bg_modifier() O2G_DELETED_FUNCTION;
   ~map_bg_modifier() O2G_DELETED_FUNCTION;
@@ -87,11 +56,6 @@ struct map_bg_modifier {
   static inline void add(map_t *map, way_t *way, map_item_t *item)
   {
     map->background_items[way] = item;
-  }
-  static void clear(map_t *map)
-  {
-    std::for_each(map->background_items.begin(), map->background_items.end(), delete_bg_pair);
-    map->background_items.clear();
   }
 };
 
@@ -119,15 +83,14 @@ void map_t::outside_error() {
 
 void visible_item_t::item_chain_destroy(map_t *map)
 {
-  if(map_item_chain == nullptr)
+  if(map_item == nullptr)
     return;
 
   if(map != nullptr)
     map_bg_modifier::remove(map, this);
-  map_item_chain->clear();
 
-  delete map_item_chain;
-  map_item_chain = nullptr;
+  delete map_item->item;
+  map_item = nullptr;
 }
 
 static void map_object_select(map_t *map, node_t *node)
@@ -140,8 +103,8 @@ static void map_object_select(map_t *map, node_t *node)
   map_item->highlight = false;
 
   /* node may not have any visible representation at all */
-  if(node->map_item_chain != nullptr)
-    map_item->item = node->map_item_chain->firstCanvasItem();
+  if(node->map_item != nullptr)
+    map_item->item = node->map_item->item;
   else
     map_item->item = nullptr;
 
@@ -267,7 +230,7 @@ void map_t::select_way(way_t *way) {
 
   map_item->object = way;
   map_item->highlight = false;
-  map_item->item      = way->map_item_chain->firstCanvasItem();
+  map_item->item      = way->map_item != nullptr ? way->map_item->item : nullptr;
 
   map_statusbar(appdata.uicontrol, map_item->object, appdata.project->osm);
   appdata.iconbar->map_item_selected(map_item->object);
@@ -420,11 +383,9 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
   map_item->item->set_zoom_max(node->zoom_max / (2 * map->state.detail));
 
   /* attach map_item to nodes map_item_chain */
-  if(node->map_item_chain == nullptr) {
-    node->map_item_chain = new map_item_chain_t(map_item);
-  } else {
-    node->map_item_chain->reset(map_item);
-  }
+  if(node->map_item != nullptr)
+    delete node->map_item->item;
+  node->map_item = map_item;
 
   map_item->item->set_user_data(map_item);
 }
@@ -473,50 +434,46 @@ void map_way_draw_functor::operator()(way_t *way)
     return;
 
   /* attach map_item to ways map_item_chain */
-  if(way->map_item_chain == nullptr)
-    way->map_item_chain = new map_item_chain_t();
-  else {
+  if(way->map_item != nullptr) {
+    delete way->map_item->item;
+    // no need to reset map_item, it will immediately be overwritten
     map_bg_modifier::remove(map, way);
-    way->map_item_chain->reset();
   }
-  map_item_t *map_item;
 
   /* allocate space for nodes */
   /* a way needs at least 2 points to be drawn */
   const std::vector<lpos_t> &points = points_from_node_chain(way);
   if(unlikely(points.empty())) {
     /* draw a single dot where this single node is */
-    map_item = new map_item_t(object_t(way));
+    way->map_item = new map_item_t(object_t(way));
 
     assert(!way->node_chain.empty());
     const lpos_t &firstPos = way->node_chain.front()->lpos;
-    map_item->item = map->canvas->circle_new(CANVAS_GROUP_WAYS, firstPos.x, firstPos.y,
+    way->map_item->item = map->canvas->circle_new(CANVAS_GROUP_WAYS, firstPos.x, firstPos.y,
                                              map->style->node.radius, 0,
                                              map->style->node.color, 0);
 
     // TODO: decide: do we need canvas_item_t::set_zoom_max() here too?
 
-    map_item->item->set_user_data(map_item);
+    way->map_item->item->set_user_data(way->map_item);
   } else {
     /* draw way */
     float width = way->draw.width * map->state.detail;
 
     if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
-      map_item = map_way_new(map, CANVAS_GROUP_POLYGONS, way, points,
+      way->map_item = map_way_new(map, CANVAS_GROUP_POLYGONS, way, points,
                              width, way->draw.color, way->draw.area.color);
     } else if(way->draw.flags & OSM_DRAW_FLAG_BG) {
-      map_item = map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points, width, way->draw.color);
+      way->map_item = map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points, width, way->draw.color);
 
       map_bg_modifier::add(map, way, map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
                                                  way->draw.bg.width * map->state.detail,
                                                  way->draw.bg.color));
     } else {
-      map_item = map_way_new(map, CANVAS_GROUP_WAYS, way, points,
+      way->map_item = map_way_new(map, CANVAS_GROUP_WAYS, way, points,
                              width, way->draw.color);
     }
   }
-
-  way->map_item_chain->i0 = map_item;
 }
 
 void map_t::draw(way_t *way) {
@@ -636,8 +593,8 @@ static void map_frisket_draw(map_t *map, const bounds_t &bounds) {
 }
 
 static void free_map_item_chain(std::pair<item_id_t, visible_item_t *> pair) {
-  delete pair.second->map_item_chain;
-  pair.second->map_item_chain = nullptr;
+  // just remove the reference, the canvas will take care for the rest
+  pair.second->map_item = nullptr;
 }
 
 template<bool b> void free_track_item_chain(track_seg_t &seg) {
@@ -707,9 +664,9 @@ void map_t::pen_down_item() {
   assert(pen_down.on_item->object.type == object_t::NODE || pen_down.on_item->object.type == object_t::WAY);
 
   visible_item_t * const vis = static_cast<visible_item_t *>(pen_down.on_item->object.obj);
-  if(vis->map_item_chain != nullptr && vis->map_item_chain->i0 != nullptr) {
+  if(vis->map_item != nullptr) {
     printf("  using parent item %s #" ITEM_ID_FORMAT "\n", vis->apiString(), vis->id);
-    pen_down.on_item = vis->map_item_chain->i0;
+    pen_down.on_item = vis->map_item;
   } else {
     printf("  no parent, working on highlight itself\n");
   }
@@ -1195,7 +1152,8 @@ void map_t::clear(clearLayers layers) {
     break;
   }
 
-  map_bg_modifier::clear(this);
+  // only clear the map, the items are deleted through the canvas
+  background_items.clear();
   map_free_map_item_chains(appdata);
 
   /* remove a possibly existing highlight */

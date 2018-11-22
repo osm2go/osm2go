@@ -638,7 +638,7 @@ void osm_t::node_free(node_t *node) {
   nodes.erase(node->id);
 
   /* there must not be anything left in this chain */
-  assert_null(node->map_item_chain);
+  assert_null(node->map_item);
 
   delete node;
 }
@@ -1941,7 +1941,7 @@ void way_t::cleanup() {
   tags.clear();
 
   /* there must not be anything left in this chain */
-  assert_null(map_item_chain);
+  assert_null(map_item);
 }
 
 bool way_t::merge(way_t *other, osm_t *osm, map_t *map, const std::vector<relation_t *> &rels)
