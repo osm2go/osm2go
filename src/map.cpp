@@ -392,7 +392,8 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
 
 static map_item_t *map_way_new(map_t *map, canvas_group_t group,
                                way_t *way, const std::vector<lpos_t> &points, unsigned int width,
-                               color_t color, color_t fill_color = color_t::transparent()) {
+                               color_t color, color_t fill_color)
+{
   map_item_t *map_item = new map_item_t(object_t(way));
 
   if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
@@ -427,10 +428,10 @@ struct map_way_draw_functor {
 void map_way_draw_functor::operator()(way_t *way)
 {
   /* don't draw a way that's not there anymore */
-  if(way->isDeleted())
+  if(unlikely(way->isDeleted()))
     return;
 
-  if(map->appdata.project->osm->wayIsHidden(way))
+  if(unlikely(map->appdata.project->osm->wayIsHidden(way)))
     return;
 
   /* attach map_item to ways map_item_chain */
@@ -459,20 +460,22 @@ void map_way_draw_functor::operator()(way_t *way)
   } else {
     /* draw way */
     float width = way->draw.width * map->state.detail;
+    color_t areacol = color_t::transparent();
+    canvas_group_t gr;
 
     if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
-      way->map_item = map_way_new(map, CANVAS_GROUP_POLYGONS, way, points,
-                             width, way->draw.color, way->draw.area.color);
+      gr = CANVAS_GROUP_POLYGONS;
+      areacol = way->draw.area.color;
     } else if(way->draw.flags & OSM_DRAW_FLAG_BG) {
-      way->map_item = map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points, width, way->draw.color);
-
+      gr = CANVAS_GROUP_WAYS_INT;
       map_bg_modifier::add(map, way, map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
                                                  way->draw.bg.width * map->state.detail,
-                                                 way->draw.bg.color));
+                                                 way->draw.bg.color, color_t::transparent()));
     } else {
-      way->map_item = map_way_new(map, CANVAS_GROUP_WAYS, way, points,
-                             width, way->draw.color);
+      gr = CANVAS_GROUP_WAYS;
     }
+
+    way->map_item = map_way_new(map, gr, way, points, width, way->draw.color, areacol);
   }
 }
 
