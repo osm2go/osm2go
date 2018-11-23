@@ -403,12 +403,14 @@ way_t *osm_t::mergeWays(way_t *first, way_t *second, bool &conflict, map_t *map)
   return first;
 }
 
-template<typename T> bool isDirty(const std::pair<item_id_t, T> &p)
+template<typename T>
+static bool isDirty(const std::pair<item_id_t, T> &p)
 {
   return p.second->isDirty();
 }
 
-template<typename T> bool map_is_clean(const std::map<item_id_t, T> &map)
+template<typename T>
+static bool map_is_clean(const std::map<item_id_t, T> &map)
 {
   const typename std::map<item_id_t, T>::const_iterator itEnd = map.end();
   return itEnd == std::find_if(map.begin(), itEnd, isDirty<T>);
@@ -508,7 +510,7 @@ struct tag_find_functor {
  * @retval false further checks have to be done
  */
 template<typename T>
-bool tag_list_compare_base(bool &result, const tag_list_t &list, const std::vector<tag_t> *contents,
+static bool tag_list_compare_base(bool &result, const tag_list_t &list, const std::vector<tag_t> *contents,
                            const T &other, std::vector<tag_t>::const_iterator &t1cit)
 {
   if(list.empty() && other.empty()) {
@@ -1781,7 +1783,8 @@ void tag_list_t::clear()
 
 #if __cplusplus < 201103L
 // workaround for the fact that the default constructor is unavailable
-template<> inline void shrink_to_fit(std::vector<tag_t> &v)
+template<>
+static inline void shrink_to_fit(std::vector<tag_t> &v)
 {
   size_t sz = v.size();
   if(v.capacity() == sz)

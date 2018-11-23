@@ -600,7 +600,9 @@ static void free_map_item_chain(std::pair<item_id_t, visible_item_t *> pair) {
   pair.second->map_item = nullptr;
 }
 
-template<bool b> void free_track_item_chain(track_seg_t &seg) {
+template<bool b>
+static void free_track_item_chain(track_seg_t &seg)
+{
   if(b)
     std::for_each(seg.item_chain.begin(), seg.item_chain.end(),
                   std::default_delete<canvas_item_t>());

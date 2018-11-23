@@ -27,7 +27,7 @@
 
 #if __cplusplus < 201402L
 namespace std {
-template<typename T> typename T::const_iterator cbegin(const T &c) {
+template<typename T> inline typename T::const_iterator cbegin(const T &c) {
 #if __cplusplus >= 201103L
   return c.cbegin();
 #else

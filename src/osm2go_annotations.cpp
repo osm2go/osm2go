@@ -66,7 +66,7 @@ nummsg(const char *amsg, const char *opmsg, const char *bmsg)
 }
 
 template<typename T>
-void hexmsg(T a)
+static void hexmsg(T a)
 {
   std::cerr << std::dec << a << " (0x" << std::hex << a << ")";
 }

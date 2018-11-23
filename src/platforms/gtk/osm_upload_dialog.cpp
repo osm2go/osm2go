@@ -145,7 +145,7 @@ static gboolean cb_focus_in(GtkTextView *view, GdkEventFocus *, GtkTextBuffer *b
 }
 
 template<typename T>
-void table_insert_count(GtkWidget *table, const osm_t::dirty_t::counter<T> &counter, const int row) {
+static void table_insert_count(GtkWidget *table, const osm_t::dirty_t::counter<T> &counter, const int row) {
   table_attach_int(table, counter.total,   1, 2, row, row + 1);
   table_attach_int(table, counter.added,   2, 3, row, row + 1);
   table_attach_int(table, counter.dirty,   3, 4, row, row + 1);
