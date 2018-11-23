@@ -34,8 +34,6 @@
 /* -------- all sizes are in meters ---------- */
 #define MAP_COLOR_NONE   0x0
 
-#define RGBA_COMBINE(a,b) (((a)&~0xff) | ((b)&0xff))
-
 #define ZOOM_FACTOR_MENU   (1.5)
 #define ZOOM_FACTOR_WHEEL  (1.1)
 #define ZOOM_FACTOR_BUTTON (1.5)

@@ -58,6 +58,11 @@ public:
   {
     return color_t(0);
   }
+
+  inline color_t combine_alpha(color_t other) const noexcept
+  {
+    return color_t((value & ~0xff) | (other.value & 0xff));
+  }
 } __attribute__ ((packed));
 
 static_assert(sizeof(color_t) == sizeof(unsigned int), "wrong size for color_t");

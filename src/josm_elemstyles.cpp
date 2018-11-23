@@ -679,8 +679,7 @@ void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const ele
 
     way->draw.width =  WIDTH_SCALE * style->area.border_width;
     /* apply area alpha */
-    way->draw.area.color =
-    RGBA_COMBINE(elemstyle->area.color, style->area.color);
+    way->draw.area.color = elemstyle->area.color.combine_alpha(style->area.color);
     if (elemstyle->zoom_max > 0)
       way->zoom_max = elemstyle->zoom_max;
     else
