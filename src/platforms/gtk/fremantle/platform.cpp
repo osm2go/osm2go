@@ -307,12 +307,12 @@ select_print_func_str(HildonTouchSelector *selector, gpointer data)
   GListGuard selected_rows(hildon_touch_selector_get_selected_rows(selector, 0));
   const char delimiter = *static_cast<const char *>(data);
 
+  std::string result;
   if(!selected_rows)
-    return std::string();
+    return result;
 
   GtkTreeModel *model = hildon_touch_selector_get_model(selector, 0);
 
-  std::string result;
   g_string guard;
 
   for (GList *item = selected_rows.get(); item != nullptr; item = g_list_next(item)) {
