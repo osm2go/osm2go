@@ -36,6 +36,9 @@ struct map_highlight_t {
   inline bool isEmpty() const noexcept
   { return items.empty(); }
 
+  /**
+   * @brief check if a highligh item exists that covers this object
+   */
   bool isHighlighted(const map_item_t &item) const;
 
   void clear();

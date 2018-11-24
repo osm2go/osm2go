@@ -74,7 +74,7 @@ bool map_highlight_t::isHighlighted(const map_item_t& item) const
 void map_highlight_t::circle_new(map_t *map, canvas_group_t group, node_t *node,
                                  unsigned int radius, color_t color)
 {
-  map_item_t *map_item = new map_item_t(object_t(node), true);
+  map_item_t *map_item = new map_item_t(object_t(node));
   map_item->item = map->canvas->circle_new(group, node->lpos.x, node->lpos.y, radius, 0, color);
   items.push_back(map_item->item);
 
@@ -83,7 +83,7 @@ void map_highlight_t::circle_new(map_t *map, canvas_group_t group, node_t *node,
 
 void map_highlight_t::polygon_new(map_t *map, canvas_group_t group, way_t *way,
                                   const std::vector<lpos_t> &points, color_t color) {
-  map_item_t *map_item = new map_item_t(object_t(way), true);
+  map_item_t *map_item = new map_item_t(object_t(way));
   map_item->item = map->canvas->polygon_new(group, points, 0, 0, color);
   items.push_back(map_item->item);
 
@@ -93,7 +93,7 @@ void map_highlight_t::polygon_new(map_t *map, canvas_group_t group, way_t *way,
 void map_highlight_t::polyline_new(map_t *map, canvas_group_t group, way_t *way,
                                    const std::vector<lpos_t> &points, color_t color)
 {
-  map_item_t *map_item = new map_item_t(object_t(way), true);
+  map_item_t *map_item = new map_item_t(object_t(way));
 
   unsigned int width = way->draw.flags & OSM_DRAW_FLAG_BG ? way->draw.bg.width : way->draw.width;
   width = (2 * map->style->highlight.width + width) * map->state.detail;

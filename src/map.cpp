@@ -100,7 +100,6 @@ static void map_object_select(map_t *map, node_t *node)
   assert(map->highlight.isEmpty());
 
   map_item->object = node;
-  map_item->highlight = false;
 
   /* node may not have any visible representation at all */
   if(node->map_item != nullptr)
@@ -229,7 +228,6 @@ void map_t::select_way(way_t *way) {
   assert(highlight.isEmpty());
 
   map_item->object = way;
-  map_item->highlight = false;
   map_item->item      = way->map_item != nullptr ? way->map_item->item : nullptr;
 
   map_statusbar(appdata.uicontrol, map_item->object, appdata.project->osm);
@@ -308,7 +306,6 @@ void map_t::select_relation(relation_t *relation) {
   assert(highlight.isEmpty());
 
   selected.object = relation;
-  selected.highlight = false;
   selected.item = nullptr;
 
   map_statusbar(appdata.uicontrol, selected.object, appdata.project->osm);
@@ -647,9 +644,6 @@ map_item_t *map_t::item_at(lpos_t pos) {
     return nullptr;
   }
 
-  if(map_item->highlight)
-    printf("  item is highlight\n");
-
   printf("  item is %s #" ITEM_ID_FORMAT "\n",
 	 map_item->object.type_string(),
 	 map_item->object.obj->id);
@@ -661,8 +655,7 @@ map_item_t *map_t::item_at(lpos_t pos) {
 void map_t::pen_down_item() {
   pen_down.on_item = item_at(canvas->window2world(pen_down.at));
 
-  /* no item or already a real one */
-  if(pen_down.on_item == nullptr || !pen_down.on_item->highlight)
+  if(pen_down.on_item == nullptr)
     return;
 
   /* get the item (parent) this item is the highlight of */
