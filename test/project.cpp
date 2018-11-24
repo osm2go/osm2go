@@ -14,6 +14,7 @@
 #include <project.h>
 #include <style.h>
 #include <uicontrol.h>
+#include <wms.h>
 
 #include <cassert>
 #include <cerrno>
@@ -64,6 +65,8 @@ static void testNoFiles(const std::string &tmpdir)
   assert(!track_restore(appdata));
   assert(!appdata.track.track);
 
+  wms_remove_file(*appdata.project);
+
   const std::string pfile = tmpdir + '/' + std::string(proj_name) + ".proj";
   assert(!project_read(pfile, appdata.project, std::string(), -1));
 
@@ -76,6 +79,8 @@ static void testNoFiles(const std::string &tmpdir)
   assert(empty.valid());
 
   assert(!project_read(pfile, appdata.project, std::string(), -1));
+
+  appdata.project.reset();
 
   unlink(pfile.c_str());
 }
@@ -95,6 +100,21 @@ static void testSave(const std::string &tmpdir, const char *empty_proj)
   assert(proj);
 
   assert_cmpmem(empty.data(), empty.length(), proj.data(), proj.length());
+
+  const std::array<const char *, 3> fext = { { "jpg", "gif", "png" } };
+  for (unsigned int i = 0; i < fext.size(); i++) {
+    const std::string fname = std::string("wms.") + fext.at(i);
+    int fd = openat(project->dirfd, fname.c_str(), O_WRONLY | O_CREAT | O_EXCL);
+    assert_cmpnum_op(fd, >=, 0);
+    close(fd);
+    struct stat st;
+    fd = fstatat(project->dirfd, fname.c_str(), &st, 0);
+    assert_cmpnum(fd, 0);
+    wms_remove_file(*project);
+    fd = fstatat(project->dirfd, fname.c_str(), &st, 0);
+    assert_cmpnum(fd, -1);
+    assert_cmpnum(errno, ENOENT);
+  }
 
   project_delete(project.release());
 }
