@@ -1011,15 +1011,16 @@ static void test_merge_nodes()
   o->node_attach(n1);
   o->node_attach(n2);
 
-  bool conflict = true;
   way_t *ways2join[2];
 
-  node_t *n = o->mergeNodes(n1, n2, conflict, ways2join);
-  assert(n == n1);
-  assert(n->lpos == newpos);
-  assert(!conflict);
+  {
+    osm_t::mergeResult<node_t> mergeRes = o->mergeNodes(n1, n2, ways2join);
+    assert(mergeRes.obj == n1);
+    assert(!mergeRes.conflict);
+  }
+  assert(n1->lpos == newpos);
   assert_cmpnum(o->nodes.size(), 1);
-  assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
+  assert_cmpnum(n1->flags, OSM_FLAG_DIRTY);
   assert_null(ways2join[0]);
   assert_null(ways2join[1]);
 
@@ -1030,13 +1031,14 @@ static void test_merge_nodes()
   n2->flags = 0;
   o->node_insert(n2);
 
-  conflict = true;
-  n = o->mergeNodes(n2, n1, conflict, ways2join);
-  assert(n == n2);
-  assert(n->lpos == newpos);
-  assert(!conflict);
+  {
+    osm_t::mergeResult<node_t> mergeRes = o->mergeNodes(n2, n1, ways2join);
+    assert(mergeRes.obj == n2);
+    assert(!mergeRes.conflict);
+  }
+  assert(n2->lpos == newpos);
   assert_cmpnum(o->nodes.size(), 1);
-  assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
+  assert_cmpnum(n2->flags, OSM_FLAG_DIRTY);
   assert_null(ways2join[0]);
   assert_null(ways2join[1]);
 
@@ -1047,18 +1049,19 @@ static void test_merge_nodes()
   n1 = o->node_new(oldpos);
   o->node_attach(n1);
 
-  conflict = true;
-  n = o->mergeNodes(n1, n2, conflict, ways2join);
-  assert(n == n2);
+  {
+    osm_t::mergeResult<node_t> mergeRes = o->mergeNodes(n1, n2, ways2join);
+    assert(mergeRes.obj == n2);
+    assert(!mergeRes.conflict);
+  }
   // order is important for the position, but nothing else
-  assert(n->lpos == newpos);
-  assert(!conflict);
+  assert(n2->lpos == newpos);
   assert_cmpnum(o->nodes.size(), 1);
-  assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
+  assert_cmpnum(n2->flags, OSM_FLAG_DIRTY);
   assert_null(ways2join[0]);
   assert_null(ways2join[1]);
 
-  o->node_free(n);
+  o->node_free(n2);
   assert_cmpnum(o->nodes.size(), 0);
 
   /// ==================
@@ -1068,19 +1071,19 @@ static void test_merge_nodes()
   o->node_attach(n1);
   o->node_attach(n2);
 
-  conflict = true;
-
   // attach one node to a way, that one should be preserved
   way_t *w = new way_t(0);
   o->way_attach(w);
   w->append_node(n2);
 
-  n = o->mergeNodes(n1, n2, conflict, ways2join);
-  assert(n == n2);
-  assert(n->lpos == newpos);
-  assert(!conflict);
+  {
+    osm_t::mergeResult<node_t> mergeRes = o->mergeNodes(n1, n2, ways2join);
+    assert(mergeRes.obj == n2);
+    assert(!mergeRes.conflict);
+  }
+  assert(n2->lpos == newpos);
   assert_cmpnum(o->nodes.size(), 1);
-  assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
+  assert_cmpnum(n2->flags, OSM_FLAG_DIRTY);
   assert_cmpnum(w->node_chain.size(), 1);
   assert(w->node_chain.front() == n2);
   assert_null(ways2join[0]);
@@ -1099,15 +1102,16 @@ static void test_merge_nodes()
   o->node_attach(n1);
   o->node_attach(n2);
 
-  conflict = true;
   r->members.push_back(member_t(object_t(n2)));
 
-  n = o->mergeNodes(n1, n2, conflict, ways2join);
-  assert(n == n2);
-  assert(n->lpos == newpos);
-  assert(!conflict);
+  {
+    osm_t::mergeResult<node_t> mergeRes = o->mergeNodes(n1, n2, ways2join);
+    assert(mergeRes.obj == n2);
+    assert(!mergeRes.conflict);
+  }
+  assert(n2->lpos == newpos);
   assert_cmpnum(o->nodes.size(), 1);
-  assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
+  assert_cmpnum(n2->flags, OSM_FLAG_DIRTY);
   assert_cmpnum(r->members.size(), 1);
   assert(r->members.front().object == n2);
   assert_null(ways2join[0]);
@@ -1179,13 +1183,14 @@ static void test_merge_nodes()
   assert(r->members.front().object == n2);
   assert_cmpnum(o->nodes.size(), 5);
 
-  conflict = true;
-  n = o->mergeNodes(n1, n2, conflict, ways2join);
-  assert(n == n1);
-  assert(n->lpos == newpos);
-  assert(!conflict);
+  {
+    osm_t::mergeResult<node_t> mergeRes = o->mergeNodes(n1, n2, ways2join);
+    assert(mergeRes.obj == n1);
+    assert(!mergeRes.conflict);
+  }
+  assert(n1->lpos == newpos);
   assert_cmpnum(o->nodes.size(), 4);
-  assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
+  assert_cmpnum(n1->flags, OSM_FLAG_DIRTY);
   assert_cmpnum(r->members.size(), 1);
   assert(ways.back()->first_node() == n1);
   assert(ways.back()->ends_with_node(n1));
@@ -1224,8 +1229,11 @@ static void test_merge_nodes()
   w->node_chain.front() = n2;
   n2->ways++;
 
-  n = o->mergeNodes(n1, n2, conflict, ways2join);
-  assert(n == n1);
+  {
+    osm_t::mergeResult<node_t> mergeRes = o->mergeNodes(n1, n2, ways2join);
+    assert(mergeRes.obj == n1);
+    assert(!mergeRes.conflict);
+  }
   assert(ways2join[0] == w || ways2join[1] == w);
   assert(ways2join[0] != ways2join[1]);
   assert(ways2join[0]->ends_with_node(n1));
@@ -1249,10 +1257,11 @@ static void test_merge_nodes()
   assert(w->ends_with_node(n1));
   assert(w->ends_with_node(n2));
 
-  conflict = true;
-  n = o->mergeNodes(n1, n2, conflict, ways2join);
-  assert(!conflict);
-  assert(n == n1);
+  {
+    osm_t::mergeResult<node_t> mergeRes = o->mergeNodes(n1, n2, ways2join);
+    assert(mergeRes.obj == n1);
+    assert(!mergeRes.conflict);
+  }
   assert(ways2join[0] == nullptr);
   assert(ways2join[1] == nullptr);
 
@@ -1270,10 +1279,11 @@ static void test_merge_nodes()
   }
   n2 = nn.back();
 
-  conflict = true;
-  n = o->mergeNodes(n1, n2, conflict, ways2join);
-  assert(!conflict);
-  assert(n == n1);
+  {
+    osm_t::mergeResult<node_t> mergeRes = o->mergeNodes(n1, n2, ways2join);
+    assert(mergeRes.obj == n1);
+    assert(!mergeRes.conflict);
+  }
   assert(ways2join[0] == nullptr);
   assert(ways2join[1] == nullptr);
 }
@@ -1401,23 +1411,25 @@ static void test_merge_ways()
     assert(expect == setup_ways_for_merge(nodes, o, w0, w1, i, 1));
 
     // check that merging with relation checking works
-    bool conflict = true;
-    way_t *r = o->mergeWays(w1, w0, conflict, nullptr);
-    assert(r == w1);
-    assert(!conflict);
+    {
+      osm_t::mergeResult<way_t> mergeRes = o->mergeWays(w1, w0, nullptr);
+      assert(mergeRes.obj == w1);
+      assert(!mergeRes.conflict);
+    }
 
-    verify_merged_way(r, o, nodes, expect, true);
+    verify_merged_way(w1, o, nodes, expect, true);
 
     // now put the other way into more relations
     assert(expect == setup_ways_for_merge(nodes, o, w0, w1, i, 2));
-    conflict = true;
 
     // check that the right way is picked
-    r = o->mergeWays(w0, w1, conflict, nullptr);
-    assert(r == w1);
-    assert(!conflict);
+    {
+      osm_t::mergeResult<way_t> mergeRes = o->mergeWays(w0, w1, nullptr);
+      assert(mergeRes.obj == w1);
+      assert(!mergeRes.conflict);
+    }
 
-    verify_merged_way(r, o, nodes, expect, true);
+    verify_merged_way(w1, o, nodes, expect, true);
   }
 }
 
@@ -1486,9 +1498,10 @@ static void test_way_merge_relation_neighbors()
   rel->members.push_back(member_t(object_t(w2), "rolem"));
   relcmp->members.push_back(member_t(object_t(w1), "rolem"));
 
-  bool conflict = true;
-  osm->mergeWays(w1, w2, conflict, nullptr);
-  assert(!conflict);
+  {
+    osm_t::mergeResult<way_t> mergeRes = osm->mergeWays(w1, w2, nullptr);
+    assert(!mergeRes.conflict);
+  }
 
   for (unsigned int i = 0; i < relcmp->members.size(); i++) {
     // first check individually to get better output in case of error

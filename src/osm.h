@@ -334,13 +334,19 @@ public:
    */
   bool checkObjectPersistence(const object_t &first, const object_t &second, std::vector<relation_t *> &rels) const;
 
+  template<typename T>
+  struct mergeResult {
+    inline mergeResult(T *o, bool c) : obj(o), conflict(c) {}
+    T * const obj;
+    const bool conflict;  ///< if any conflicts (e.g. incompatible tags) were detected
+  };
+
   /**
    * @brief merge 2 nodes
    * @param first first node
    * @param second second node
-   * @param conflict if any conflicts (e.g. incompatible tags) were detected
    * @param mergeways adjacent ways that can be merged
-   * @return the remaining node (may be any of first and second)
+   * @return the remaining node (may be any of first and second) and the conflict status
    *
    * This merges the nodes on the position of second, joining the tags together
    * and moving all way and relation memberships to the remaining node.
@@ -350,21 +356,20 @@ public:
    *
    * The victim node is deleted.
    */
-  node_t *mergeNodes(node_t *first, node_t *second, bool &conflict, way_t *(&mergeways)[2]);
+  mergeResult<node_t> mergeNodes(node_t *first, node_t *second, way_t *(&mergeways)[2]);
 
   /**
    * @brief merge 2 ways
    * @param first first way
    * @param second second way
-   * @param conflict if any conflicts (e.g. incompatible tags) were detected
-   * @return the remaining way (may be any of first and second)
+   * @return the remaining way (may be any of first and second) and the conflict status
    *
    * This merges the ways, assuming that they share one common end node, joining the
    * tags together and moving all relation memberships to the remaining way.
    *
    * The victim way is deleted.
    */
-  way_t *mergeWays(way_t *first, way_t *second, bool &conflict, map_t *map);
+  mergeResult<way_t> mergeWays(way_t *first, way_t *second, map_t *map);
 
   /**
    * @brief check if there are any modifications

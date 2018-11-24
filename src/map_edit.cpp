@@ -240,11 +240,11 @@ void map_t::way_add_ok() {
     /* way being connected to another way. This happens if you connect */
     /* two existing ways using a new way between them */
 
-    bool conflict;
-    action.way = osm->mergeWays(action.way, action.ends_on, conflict, this);
+    osm_t::mergeResult<way_t> mr = osm->mergeWays(action.way, action.ends_on, this);
+    action.way = mr.obj;
     action.ends_on = nullptr;
 
-    if(conflict)
+    if(mr.conflict)
       message_dlg(_("Way tag conflict"),
                   _("The resulting way contains some conflicting tags. Please solve these."));
   }
@@ -450,7 +450,6 @@ void map_t::node_move(map_item_t *map_item, const osm2go_platform::screenpos &p)
       /* the touchnode vanishes and is replaced by the node the */
       /* user dropped onto it */
       joined_with_touchnode = true;
-      bool conflict;
       unsigned int ways2join_cnt = 0;
 
       // only offer to join ways if they come from the different nodes, not
@@ -459,12 +458,12 @@ void map_t::node_move(map_item_t *map_item, const osm2go_platform::screenpos &p)
       if(node->ways > 0 && tn->ways > 0)
         ways2join_cnt = node->ways + tn->ways;
 
-      node = osm->mergeNodes(node, tn, conflict, ways2join);
+      osm_t::mergeResult<node_t> mr = osm->mergeNodes(node, tn, ways2join);
       // make sure the object marked as selected is the surviving node
-      selected.object = node;
+      selected.object = node = mr.obj;
 
       /* and open dialog to resolve tag collisions if necessary */
-      if(conflict)
+      if(mr.conflict)
         message_dlg(_("Node tag conflict"),
                     _("The resulting node contains some conflicting tags. Please solve these."));
 
@@ -482,8 +481,7 @@ void map_t::node_move(map_item_t *map_item, const osm2go_platform::screenpos &p)
         printf("  about to join ways #" ITEM_ID_FORMAT " and #" ITEM_ID_FORMAT "\n",
                ways2join[0]->id, ways2join[1]->id);
 
-        osm->mergeWays(ways2join[0], ways2join[1], conflict, this);
-        if(conflict)
+        if(osm->mergeWays(ways2join[0], ways2join[1], this).conflict)
           message_dlg(_("Way tag conflict"),
                       _("The resulting way contains some conflicting tags. Please solve these."));
       }

@@ -306,7 +306,7 @@ struct find_way_ends {
   }
 };
 
-node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict, way_t *(&mergeways)[2])
+osm_t::mergeResult<node_t> osm_t::mergeNodes(node_t *first, node_t *second, way_t *(&mergeways)[2])
 {
   node_t *keep = first, *remove = second;
 
@@ -378,7 +378,7 @@ node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict, way_t *
                 relation_object_replacer(object_t(remove), object_t(keep)));
 
   /* transfer tags from "remove" to "keep" */
-  conflict = keep->tags.merge(remove->tags);
+  bool conflict = keep->tags.merge(remove->tags);
 
   /* remove must not have any references to ways anymore */
   assert_cmpnum(remove->ways, 0);
@@ -387,10 +387,10 @@ node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict, way_t *
 
   keep->flags |= OSM_FLAG_DIRTY;
 
-  return keep;
+  return mergeResult<node_t>(keep, conflict);
 }
 
-way_t *osm_t::mergeWays(way_t *first, way_t *second, bool &conflict, map_t *map)
+osm_t::mergeResult<way_t> osm_t::mergeWays(way_t *first, way_t *second, map_t *map)
 {
   assert(first != second);
   std::vector<relation_t *> rels;
@@ -398,9 +398,8 @@ way_t *osm_t::mergeWays(way_t *first, way_t *second, bool &conflict, map_t *map)
     std::swap(first, second);
 
   /* ---------- transfer tags from second to first ----------- */
-  conflict = first->merge(second, this, map, rels);
 
-  return first;
+  return mergeResult<way_t>(first, first->merge(second, this, map, rels));
 }
 
 template<typename T>
