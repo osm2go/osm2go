@@ -37,6 +37,9 @@
 #include <cstring>
 #include <ctime>
 #include <numeric>
+#if __cplusplus >= 201703L
+#include <optional>
+#endif
 #include <string>
 #include <strings.h>
 #include <utility>
@@ -503,19 +506,17 @@ struct tag_find_functor {
 
 /**
  * @brief do the common check to compare a tag_list with another set of tags
- * @param result the result of the compare
- * @returns if the end result is fixed
+ * @returns if the end result is fixed and the result if it is
  * @retval true the compare has finished, result hold the decision
  * @retval false further checks have to be done
  */
 template<typename T>
-static bool tag_list_compare_base(bool &result, const tag_list_t &list, const std::vector<tag_t> *contents,
+static std::optional<bool> tag_list_compare_base(const tag_list_t &list, const std::vector<tag_t> *contents,
                            const T &other, std::vector<tag_t>::const_iterator &t1cit)
 {
-  if(list.empty() && other.empty()) {
-    result = false;
-    return true;
-  }
+  if(list.empty() && other.empty())
+    return false;
+
 
   // Special case for an empty list as contents is not set in this case and
   // must not be dereferenced. Check if t2 only consists of a creator tag, in
@@ -524,10 +525,8 @@ static bool tag_list_compare_base(bool &result, const tag_list_t &list, const st
   const typename T::const_iterator t2start = other.begin();
   const typename T::const_iterator t2End = other.end();
   bool t2HasCreator = (std::find_if(t2start, t2End, check_creator_tag()) != t2End);
-  if(list.empty()) {
-    result = t2HasCreator ? (other.size() != 1) : !other.empty();
-    return true;
-  }
+  if(list.empty())
+    return t2HasCreator ? (other.size() != 1) : !other.empty();
 
   /* first check list length, otherwise deleted tags are hard to detect */
   std::vector<tag_t>::size_type ocnt = contents->size();
@@ -541,19 +540,17 @@ static bool tag_list_compare_base(bool &result, const tag_list_t &list, const st
   if(t1cit != t1End)
     ocnt--;
 
-  if (other.size() != ocnt) {
-    result = true;
+  if (other.size() != ocnt)
     return true;
-  }
 
-  return false;
+  return std::optional<bool>();
 }
 
 bool tag_list_t::operator!=(const std::vector<tag_t> &t2) const {
-  bool result;
   std::vector<tag_t>::const_iterator t1cit;
-  if(tag_list_compare_base(result, *this, contents, t2, t1cit))
-    return result;
+  std::optional<bool> r = tag_list_compare_base(*this, contents, t2, t1cit);
+  if(r)
+    return *r;
 
   const std::vector<tag_t>::const_iterator t2End = t2.end();
   const std::vector<tag_t>::const_iterator t2start = t2.begin();
@@ -581,10 +578,10 @@ bool tag_list_t::operator!=(const std::vector<tag_t> &t2) const {
 }
 
 bool tag_list_t::operator!=(const osm_t::TagMap &t2) const {
-  bool result;
   std::vector<tag_t>::const_iterator t1cit;
-  if(tag_list_compare_base(result, *this, contents, t2, t1cit))
-    return result;
+  std::optional<bool> r = tag_list_compare_base(*this, contents, t2, t1cit);
+  if(r)
+    return *r;
 
   std::vector<tag_t>::const_iterator t1it = contents->begin();
   const std::vector<tag_t>::const_iterator t1End = contents->end();
