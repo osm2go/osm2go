@@ -103,7 +103,7 @@ void appdata_t::main_ui_enable() {
   bool osm_valid = (project && project->osm);
 
   if(unlikely(window == nullptr)) {
-    g_debug("%s: main window gone\n", __PRETTY_FUNCTION__);
+    g_debug("%s: main window gone", __PRETTY_FUNCTION__);
     return;
   }
 
@@ -269,10 +269,10 @@ static bool track_visibility_select(GtkWidget *parent) {
 
   bool ret = false;
   if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(dialog)) {
-    g_debug("user clicked cancel\n");
+    g_debug("user clicked cancel");
   } else {
     int index = osm2go_platform::combo_box_get_active(cbox);
-    g_debug("user clicked ok on %i\n", index);
+    g_debug("user clicked ok on %i", index);
 
     TrackVisibility tv = static_cast<TrackVisibility>(index);
     ret = (tv != settings->trackVisibility);
@@ -337,32 +337,32 @@ cb_menu_fullscreen(appdata_t *, GtkCheckMenuItem *item) {
 static void
 cb_menu_zoomin(map_t *map) {
   map->set_zoom(map->state.zoom * ZOOM_FACTOR_MENU, true);
-  g_debug("zoom is now %f\n", map->state.zoom);
+  g_debug("zoom is now %f", map->state.zoom);
 }
 
 static void
 cb_menu_zoomout(map_t *map) {
   map->set_zoom(map->state.zoom / ZOOM_FACTOR_MENU, true);
-  g_debug("zoom is now %f\n", map->state.zoom);
+  g_debug("zoom is now %f", map->state.zoom);
 }
 
 static void
 cb_menu_view_detail_inc(map_t *map) {
-  g_debug("detail level increase\n");
+  g_debug("detail level increase");
   map->detail_increase();
 }
 
 #ifndef FREMANTLE
 static void
 cb_menu_view_detail_normal(map_t *map) {
-  g_debug("detail level normal\n");
+  g_debug("detail level normal");
   map->detail_normal();
 }
 #endif
 
 static void
 cb_menu_view_detail_dec(map_t *map) {
-  g_debug("detail level decrease\n");
+  g_debug("detail level decrease");
   map->detail_decrease();
 }
 
@@ -460,7 +460,7 @@ cb_menu_track_export(appdata_t *appdata) {
            );
 
   settings_t::ref settings = settings_t::instance();
-  g_debug("set filename <%s>\n", settings->track_path.c_str());
+  g_debug("set filename <%s>", settings->track_path.c_str());
 
   if(!settings->track_path.empty()) {
     if(g_file_test(settings->track_path.c_str(), G_FILE_TEST_EXISTS) != TRUE) {
@@ -481,7 +481,7 @@ cb_menu_track_export(appdata_t *appdata) {
   if(gtk_dialog_run(dialog) == GTK_FM_OK) {
     g_string filename(gtk_file_chooser_get_filename(dialog));
     if(filename) {
-      g_debug("export to %s\n", filename.get());
+      g_debug("export to %s", filename.get());
 
       if(g_file_test(filename.get(), G_FILE_TEST_EXISTS) != TRUE ||
          osm2go_platform::yes_no(_("Overwrite existing file"),
@@ -1022,7 +1022,7 @@ appdata_t::~appdata_t() {
   /* let gtk clean up first */
   osm2go_platform::process_events();
 
-  g_debug(" ok\n");
+  g_debug(" ok");
 
   /* save project file */
   if(project)
@@ -1034,7 +1034,7 @@ void appdata_t::track_clear()
   if (!track.track)
     return;
 
-  g_debug("clearing track\n");
+  g_debug("clearing track");
 
   if(likely(map != nullptr))
     track.track->clear();
@@ -1061,7 +1061,7 @@ appdata_internal::~appdata_internal()
 }
 
 static void on_window_destroy() {
-  g_debug("main window destroy\n");
+  g_debug("main window destroy");
 
   gtk_main_quit();
   appdata_t::window = nullptr;
@@ -1239,7 +1239,7 @@ static int application_run(const char *proj)
   /* so the user sees something */
   osm2go_platform::process_events();
   if(unlikely(appdata_t::window == nullptr)) {
-    g_debug("shutdown while starting up (1)\n");
+    g_debug("shutdown while starting up (1)");
     return -1;
   }
 
@@ -1257,7 +1257,7 @@ static int application_run(const char *proj)
 
   // check if map widget was already destroyed
   if(unlikely(appdata.map == nullptr)) {
-    g_debug("shutdown while starting up (2)\n");
+    g_debug("shutdown while starting up (2)");
     return -1;
   }
   appdata.map->set_autosave(true);
@@ -1270,7 +1270,7 @@ static int application_run(const char *proj)
   /* again let the ui do its thing */
   osm2go_platform::process_events();
   if(unlikely(appdata_t::window == nullptr)) {
-    g_debug("shutdown while starting up (3)\n");
+    g_debug("shutdown while starting up (3)");
     return -1;
   }
 
@@ -1286,12 +1286,12 @@ static int application_run(const char *proj)
                   "into the OSM main database."
                   ));
 
-  g_debug("main up\n");
+  g_debug("main up");
 
   /* ------------ jump into main loop ---------------- */
   gtk_main();
 
-  g_debug("gtk_main() left\n");
+  g_debug("gtk_main() left");
 
   track_save(appdata.project, appdata.track.track.get());
   appdata.track_clear();

@@ -115,7 +115,7 @@ gpointer gps_thread(gpointer data) {
   while(!gps_state->terminate) {
     if(gps_state->enable) {
       if(!connected) {
-        g_debug("trying to connect\n");
+        g_debug("trying to connect");
 
         connected = gps_connect(gps);
         if(!connected)
@@ -136,7 +136,7 @@ gpointer gps_thread(gpointer data) {
       }
     } else {
       if(connected) {
-        g_debug("stopping GPS connection due to user request\n");
+        g_debug("stopping GPS connection due to user request");
         gps_stream(&gps, WATCH_DISABLE, nullptr);
         connected = false;
       } else
@@ -144,7 +144,7 @@ gpointer gps_thread(gpointer data) {
     }
   }
 
-  g_debug("GPS thread ended\n");
+  g_debug("GPS thread ended");
   return nullptr;
 }
 
@@ -158,7 +158,7 @@ gpsd_state_t::gpsd_state_t(GpsCallback cb, void *context)
   , enable(false)
   , terminate(false)
 {
-  g_debug("GPS init: Using gpsd\n");
+  g_debug("GPS init: Using gpsd");
 
   /* start a new thread to listen to gpsd */
 }
