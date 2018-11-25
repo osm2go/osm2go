@@ -377,11 +377,13 @@ public:
   ~presets_items_internal();
   std::vector<presets_item_t *> items;
   std::vector<presets_item_t *> chunks;
-  std::vector<presets_item_t *> lru;
+  std::vector<const presets_item_t *> lru;
 
   bool addFile(const std::string &filename, const std::string &basepath, int basefd);
 
   virtual std::set<std::string> roles(const relation_t *relation, const object_t &obj) const override;
+
+  void lru_update(const presets_item_t *item);
 };
 
 static inline unsigned int widget_rows(unsigned int init, const presets_element_t *w) {

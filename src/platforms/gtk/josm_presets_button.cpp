@@ -345,33 +345,13 @@ static void presets_item_dialog(const presets_item *item) {
     if(changed)
       tag_context->info_tags_replace(ntags);
 
-    std::vector<presets_item_t *> &lru = static_cast<presets_items_internal *>(presets_context_t::instance->presets)->lru;
-    const std::vector<presets_item_t *>::iterator litBegin = lru.begin();
-    const std::vector<presets_item_t *>::iterator litEnd = lru.end();
-    const std::vector<presets_item_t *>::iterator lit = std::find(litBegin, litEnd, item);
-    if(lit == litEnd) {
-      // drop the oldest ones if too many
-      if(lru.size() >= LRU_MAX)
-        lru.resize(LRU_MAX - 1);
-      lru.insert(litBegin, const_cast<presets_item *>(item));
-    // if it is already the first item in the list nothing is to do
-    } else if(lit != litBegin) {
-      // move to front
-      std::rotate(litBegin, lit, lit + 1);
-    }
+    static_cast<presets_items_internal *>(presets_context_t::instance->presets)->lru_update(item);
   }
 }
 
 /* ------------------- the item list (popup menu) -------------- */
 
 #ifndef PICKER_MENU
-static void
-cb_menu_item(presets_item *item) {
-  assert(item != nullptr);
-
-  presets_item_dialog(item);
-}
-
 static GtkWidget *create_menuitem(icon_t &icons, const presets_item_named *item)
 {
   GtkWidget *menu_item;
@@ -395,10 +375,12 @@ struct build_menu_functor {
   bool was_item;
   build_menu_functor(GtkWidget *m, GtkWidget **a)
     : menu(m), matches(a), was_separator(false), was_item(false) {}
-  void operator()(presets_item_t *item);
+  void operator()(const presets_item_t *item);
 };
 
-static GtkWidget *build_menu(std::vector<presets_item_t *> &items, GtkWidget **matches) {
+template<typename T>
+static GtkWidget *build_menu(const T &items, GtkWidget **matches)
+{
   build_menu_functor fc(gtk_menu_new(), matches);
 
   std::for_each(items.begin(), items.end(), fc);
@@ -406,7 +388,7 @@ static GtkWidget *build_menu(std::vector<presets_item_t *> &items, GtkWidget **m
   return fc.menu;
 }
 
-void build_menu_functor::operator()(presets_item_t *item)
+void build_menu_functor::operator()(const presets_item_t *item)
 {
   /* check if this presets entry is appropriate for the current item */
   if(item->type & presets_context_t::instance->presets_mask) {
@@ -420,24 +402,24 @@ void build_menu_functor::operator()(presets_item_t *item)
     was_separator = false;
 
     menu_item = create_menuitem(presets_context_t::instance->icons,
-                                static_cast<presets_item_named *>(item));
+                                static_cast<const presets_item_named *>(item));
 
     if(item->type & presets_item_t::TY_GROUP) {
       gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
-                                build_menu(static_cast<presets_item_group *>(item)->items,
+                                build_menu(static_cast<const presets_item_group *>(item)->items,
                                            matches));
     } else {
       g_signal_connect_swapped(menu_item, "activate",
-                               G_CALLBACK(cb_menu_item), item);
+                               G_CALLBACK(presets_item_dialog), const_cast<presets_item_t *>(item));
 
       if(matches && item->matches(presets_context_t::instance->tag_context->tags)) {
         if(!*matches)
           *matches = gtk_menu_new();
 
         GtkWidget *used_item = create_menuitem(presets_context_t::instance->icons,
-                                               static_cast<presets_item_named *>(item));
+                                               static_cast<const presets_item_named *>(item));
         g_signal_connect_swapped(used_item, "activate",
-                                 G_CALLBACK(cb_menu_item), item);
+                                 G_CALLBACK(presets_item_dialog), const_cast<presets_item_t *>(item));
         gtk_menu_shell_append(GTK_MENU_SHELL(*matches), used_item);
       }
     }
@@ -699,7 +681,7 @@ GtkWidget *presets_context_t::preset_picker_lru() {
   GtkTreeView *view;
   insert_recent_items<true> fc(this, presets_picker_store(&view));
 
-  const std::vector<presets_item_t *> &pitems = static_cast<const presets_items_internal *>(presets)->lru;
+  const std::vector<const presets_item_t *> &pitems = static_cast<const presets_items_internal *>(presets)->lru;
   std::for_each(pitems.begin(), pitems.end(), fc);
 
   return presets_picker_embed(view, fc.store, this);
@@ -775,7 +757,7 @@ presets_context_t::presets_picker(const std::vector<presets_item_t *> &items,
   picker_add_functor fc(this, store, subpix, top_level, show_recent);
 
   std::for_each(items.begin(), items.end(), fc);
-  const std::vector<presets_item_t *> &lru = static_cast<const presets_items_internal *>(presets)->lru;
+  const std::vector<const presets_item_t *> &lru = static_cast<const presets_items_internal *>(presets)->lru;
 
   if(top_level &&
      std::find_if(lru.begin(), lru.end(), matching_type_functor(presets_mask)) != lru.end())

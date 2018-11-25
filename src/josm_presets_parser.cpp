@@ -1056,6 +1056,23 @@ bool presets_items_internal::addFile(const std::string &filename, const std::str
   return true;
 }
 
+void presets_items_internal::lru_update(const presets_item_t *item)
+{
+  const std::vector<const presets_item_t *>::iterator litBegin = lru.begin();
+  const std::vector<const presets_item_t *>::iterator litEnd = lru.end();
+  const std::vector<const presets_item_t *>::iterator lit = std::find(litBegin, litEnd, item);
+  if(lit == litEnd) {
+    // drop the oldest ones if too many
+    if(lru.size() >= LRU_MAX)
+      lru.resize(LRU_MAX - 1);
+    lru.insert(litBegin, item);
+  // if it is already the first item in the list nothing is to do
+  } else if(lit != litBegin) {
+    // move to front
+    std::rotate(litBegin, lit, lit + 1);
+  }
+}
+
 presets_items *presets_items::load()
 {
   printf("Loading JOSM presets ...\n");
