@@ -90,7 +90,7 @@ static GtkWidget *license_page_new()
 
   const std::string &name = osm2go_platform::find_file("COPYING");
   bool found = false;
-  if(!name.empty()) {
+  if(likely(!name.empty())) {
     osm2go_platform::MappedFile licMap(name.c_str());
 
     if(licMap) {
