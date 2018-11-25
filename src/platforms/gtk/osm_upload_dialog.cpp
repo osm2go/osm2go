@@ -334,52 +334,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
   gtk_box_pack_start(dialog.vbox(), GTK_WIDGET(scrolled_window), TRUE, TRUE, 0);
   gtk_widget_show_all(dialog.get());
 
-  context.upload(dirty);
-
-  if(project->data_dirty) {
-    context.append_str(_("Server data has been modified.\nDownloading updated osm data ...\n"));
-
-    bool reload_map = osm_download(dialog.get(), project.get());
-    if(likely(reload_map)) {
-      context.append_str(_("Download successful!\nThe map will be reloaded.\n"));
-      project->data_dirty = false;
-    } else
-      context.append_str(_("Download failed!\n"));
-
-    project->save(dialog.get());
-
-    if(likely(reload_map)) {
-      /* this kind of rather brute force reload is useful as the moment */
-      /* after the upload is a nice moment to bring everything in sync again. */
-      /* we basically restart the entire map with fresh data from the server */
-      /* and the diff will hopefully be empty (if the upload was successful) */
-
-      context.append_str(_("Reloading map ...\n"));
-
-      if(unlikely(!project->osm->is_clean(false)))
-        context.append_str(_("*** DIFF IS NOT CLEAN ***\nSomething went wrong during "
-                             "upload,\nproceed with care!\n"), COLOR_ERR);
-
-      /* redraw the entire map by destroying all map items and redrawing them */
-      context.append_str(_("Cleaning up ...\n"));
-      project->diff_save();
-      appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
-
-      context.append_str(_("Loading OSM ...\n"));
-      if(project->parse_osm()) {
-        context.append_str(_("Applying diff ...\n"));
-        diff_restore(project, appdata.uicontrol.get());
-        context.append_str(_("Painting ...\n"));
-        appdata.map->paint();
-      } else {
-        context.append_str(_("OSM data is empty\n"), COLOR_ERR);
-      }
-      context.append_str(_("Done!\n"));
-    }
-  }
-
-  /* tell the user that he can stop waiting ... */
-  context.append_str(_("Process finished.\n"));
+  context.upload(dirty, dialog.get());
 
   gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_CLOSE, TRUE);
 

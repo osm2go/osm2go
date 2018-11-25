@@ -54,7 +54,7 @@ public:
   void append_str(const char *msg, const char *colorname = nullptr) __attribute__((nonnull(2)));
   void append(const trstring &msg, const char *colorname = nullptr);
 
-  void upload(const osm_t::dirty_t &dirty);
+  void upload(const osm_t::dirty_t &dirty, osm2go_platform::Widget *parent);
 };
 
 void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty);
