@@ -31,7 +31,7 @@ class presets_items;
 
 class tag_context_t {
 protected:
-  explicit tag_context_t(const object_t &o, const osm_t::TagMap &t);
+  tag_context_t(const object_t &o, const osm_t::TagMap &t, osm2go_platform::Widget *dlg);
 public:
 
   osm2go_platform::DialogGuard dialog;

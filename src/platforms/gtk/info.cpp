@@ -44,7 +44,7 @@ enum {
 
 class info_tag_context_t : public tag_context_t {
 public:
-  explicit info_tag_context_t(map_t *m, osm_t::ref os, presets_items *p, const object_t &o);
+  explicit info_tag_context_t(map_t *m, osm_t::ref os, presets_items *p, const object_t &o, GtkWidget *dlg);
 
   map_t * const map;
   osm_t::ref osm;
@@ -70,7 +70,7 @@ static void changed(GtkTreeSelection *, gpointer user_data) {
     // WARNING: for whatever reason, key CAN be NULL on N900
 
     /* you just cannot delete or edit the "created_by" tag */
-    if(key != nullptr && tag_t::is_creator_tag(key))
+    if(unlikely(key != nullptr && tag_t::is_creator_tag(key)))
       selected = false;
   }
 
@@ -593,10 +593,9 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *p
   assert(object.is_real());
 
   /* use implicit selection if not explicitely given */
-  info_tag_context_t context(map, osm, presets, object);
   const char *msgtpl;
 
-  switch(context.object.type) {
+  switch(object.type) {
   case object_t::NODE:
     msgtpl = _("Node #" ITEM_ID_FORMAT);
     break;
@@ -613,9 +612,10 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *p
     assert_unreachable();
   }
 
-  g_string str(g_strdup_printf(msgtpl, context.object.obj->id));
+  g_string str(g_strdup_printf(msgtpl, object.obj->id));
 
-  context.dialog.reset(gtk_dialog_new_with_buttons(str.get(), GTK_WINDOW(parent),
+  info_tag_context_t context(map, osm, presets, object,
+                             gtk_dialog_new_with_buttons(str.get(), GTK_WINDOW(parent),
                                                GTK_DIALOG_MODAL,
 #ifdef FREMANTLE
                                                _("More"), GTK_RESPONSE_HELP,
@@ -667,14 +667,15 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *p
   return ok;
 }
 
-tag_context_t::tag_context_t(const object_t &o, const osm_t::TagMap &t)
-  : object(o)
+tag_context_t::tag_context_t(const object_t &o, const osm_t::TagMap &t, osm2go_platform::Widget *dlg)
+  : dialog(dlg)
+  , object(o)
   , tags(t)
 {
 }
 
-info_tag_context_t::info_tag_context_t(map_t *m, osm_t::ref os, presets_items *p, const object_t &o)
-  : tag_context_t(o, m_tags)
+info_tag_context_t::info_tag_context_t(map_t *m, osm_t::ref os, presets_items *p, const object_t &o, GtkWidget *dlg)
+  : tag_context_t(o, m_tags, dlg)
   , map(m)
   , osm(os)
   , presets(p)
