@@ -1265,6 +1265,9 @@ presets_element_multiselect::presets_element_multiselect(const std::string &k, c
   , rows_height(rws == 0 ? std::min(8, static_cast<int>(values.size())) : rws)
 #endif
 {
+#ifdef FREMANTLE
+  (void)rws;
+#endif
 }
 
 presets_element_key::presets_element_key(const std::string &k, const std::string &val,
