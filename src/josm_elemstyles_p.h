@@ -149,7 +149,6 @@ struct elemstyle_icon_t {
 struct elemstyle_t {
   elemstyle_t()
     : type(ES_TYPE_NONE)
-    , line(nullptr)
     , zoom_max(0.0f)
   {
   }
@@ -160,7 +159,7 @@ struct elemstyle_t {
   unsigned int type; ///< combination of elemstyle_type_t
 
   elemstyle_line_mod_t line_mod;
-  elemstyle_line_t *line;
+  std::unique_ptr<elemstyle_line_t> line;
   elemstyle_area_t area;
 
   float zoom_max;

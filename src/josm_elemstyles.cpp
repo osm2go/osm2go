@@ -326,7 +326,8 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
     bool hasBgWidth = false, hasBgColor = false;
     /* these have to be present */
     bool hasColor = false, hasWidth = false;
-    elemstyle_line_t *line = elemstyle->line = new elemstyle_line_t();
+    elemstyle->line.reset(new elemstyle_line_t());
+    elemstyle_line_t *line = elemstyle->line.get();
 
     for(unsigned int i = 0; attrs[i] != nullptr; i += 2) {
       if(strcmp(attrs[i], "colour") == 0) {
@@ -749,7 +750,4 @@ void josm_elemstyles_colorize_world(style_t *styles, osm_t::ref osm) {
 elemstyle_t::~elemstyle_t()
 {
   std::for_each(conditions.begin(), conditions.end(), free_condition);
-
-  if(type & ES_TYPE_LINE)
-    delete line;
 }
