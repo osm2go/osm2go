@@ -160,6 +160,13 @@ static pos_float_t pos_dist_get(GtkWidget *widget, bool is_mil) {
 
 struct area_context_t {
   explicit area_context_t(area_edit_t &a, GtkWidget *dlg);
+  area_context_t() O2G_DELETED_FUNCTION;
+  area_context_t(const area_context_t &) O2G_DELETED_FUNCTION;
+  area_context_t &operator=(const area_context_t &) O2G_DELETED_FUNCTION;
+#if __cplusplus >= 201103L
+  area_context_t(area_context_t &&) = delete;
+  area_context_t &operator=(area_context_t &&) = delete;
+#endif
 
   osm2go_platform::DialogGuard dialog;
   GtkWidget * const notebook;

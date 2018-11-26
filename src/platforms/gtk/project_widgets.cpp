@@ -49,6 +49,13 @@
 
 struct project_context_t {
   explicit project_context_t(appdata_t &a, project_t *p, gboolean n, const std::vector<project_t *> &j, GtkWidget *dlg);
+  project_context_t() O2G_DELETED_FUNCTION;
+  project_context_t(const project_context_t &) O2G_DELETED_FUNCTION;
+  project_context_t &operator=(const project_context_t &) O2G_DELETED_FUNCTION;
+#if __cplusplus >= 201103L
+  project_context_t(project_context_t &&) = delete;
+  project_context_t &operator=(project_context_t &&) = delete;
+#endif
   ~project_context_t()
   { delete area_edit; }
 
@@ -126,6 +133,13 @@ project_context_t::project_context_t(appdata_t &a, project_t *p, gboolean n,
 
 struct select_context_t {
   select_context_t(appdata_t &a, GtkWidget *dial);
+  select_context_t() O2G_DELETED_FUNCTION;
+  select_context_t(const select_context_t &) O2G_DELETED_FUNCTION;
+  select_context_t &operator=(const select_context_t &) O2G_DELETED_FUNCTION;
+#if __cplusplus >= 201103L
+  select_context_t(select_context_t &&) = delete;
+  select_context_t &operator=(select_context_t &&) = delete;
+#endif
   ~select_context_t();
 
   appdata_t &appdata;
@@ -200,6 +214,13 @@ static project_t *project_get_selected(GtkWidget *list, GtkTreeIter &iter)
 
 struct name_callback_context_t {
   name_callback_context_t(GtkWidget *w, fdguard &f) : dialog(w), basefd(f) {}
+  name_callback_context_t() O2G_DELETED_FUNCTION;
+  name_callback_context_t(const name_callback_context_t &) O2G_DELETED_FUNCTION;
+  name_callback_context_t &operator=(const name_callback_context_t &) O2G_DELETED_FUNCTION;
+#if __cplusplus >= 201103L
+  name_callback_context_t(name_callback_context_t &&) = delete;
+  name_callback_context_t &operator=(name_callback_context_t &&) = delete;
+#endif
   GtkWidget *dialog;
   fdguard &basefd;
 };

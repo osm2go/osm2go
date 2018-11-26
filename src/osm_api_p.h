@@ -39,6 +39,13 @@ class trstring;
 class osm_upload_context_t {
 public:
   osm_upload_context_t(appdata_t &a, project_t::ref p, const char *c, const char *s);
+  osm_upload_context_t() O2G_DELETED_FUNCTION;
+  osm_upload_context_t(const osm_upload_context_t &) O2G_DELETED_FUNCTION;
+  osm_upload_context_t &operator=(const osm_upload_context_t &) O2G_DELETED_FUNCTION;
+#if __cplusplus >= 201103L
+  osm_upload_context_t(osm_upload_context_t &&) = delete;
+  osm_upload_context_t &operator=(osm_upload_context_t &&) = delete;
+#endif
 
   appdata_t &appdata;
   osm_t::ref osm;

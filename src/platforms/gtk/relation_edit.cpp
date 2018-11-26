@@ -41,6 +41,13 @@
 
 struct relitem_context_t {
   relitem_context_t(object_t &o, const presets_items *pr, osm_t::ref os);
+  relitem_context_t() O2G_DELETED_FUNCTION;
+  relitem_context_t(const relitem_context_t &) O2G_DELETED_FUNCTION;
+  relitem_context_t &operator=(const relitem_context_t &) O2G_DELETED_FUNCTION;
+#if __cplusplus >= 201103L
+  relitem_context_t(relitem_context_t &&) = delete;
+  relitem_context_t &operator=(relitem_context_t &&) = delete;
+#endif
 
   object_t &item;
   const presets_items * const presets;
@@ -78,6 +85,13 @@ struct entry_insert_text {
 struct relation_context_t {
   inline relation_context_t(map_t *m, osm_t::ref o, presets_items *p, GtkWidget *d)
     : map(m), osm(o), presets(p), dialog(d), list(nullptr) {}
+  relation_context_t() O2G_DELETED_FUNCTION;
+  relation_context_t(const relation_context_t &) O2G_DELETED_FUNCTION;
+  relation_context_t &operator=(const relation_context_t &) O2G_DELETED_FUNCTION;
+#if __cplusplus >= 201103L
+  relation_context_t(relation_context_t &&) = delete;
+  relation_context_t &operator=(relation_context_t &&) = delete;
+#endif
 
   map_t * const map;
   osm_t::ref osm;
@@ -423,6 +437,13 @@ relation_list_changed(GtkTreeSelection *selection, gpointer userdata) {
 struct member_context_t {
   member_context_t(const relation_t *r, osm_t::ref o, GtkWidget *d)
     : relation(r), dialog(d), osm(o) {}
+  member_context_t() O2G_DELETED_FUNCTION;
+  member_context_t(const member_context_t &) O2G_DELETED_FUNCTION;
+  member_context_t &operator=(const member_context_t &) O2G_DELETED_FUNCTION;
+#if __cplusplus >= 201103L
+  member_context_t(member_context_t &&) = delete;
+  member_context_t &operator=(member_context_t &&) = delete;
+#endif
   const relation_t * const relation;
   GtkWidget * const dialog;
   osm_t::ref osm;

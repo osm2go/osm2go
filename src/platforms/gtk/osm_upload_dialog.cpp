@@ -49,6 +49,13 @@
 class osm_upload_context_gtk : public osm_upload_context_t {
 public:
   osm_upload_context_gtk(appdata_t &a, project_t::ref p, const char *c, const char *s);
+  osm_upload_context_gtk() O2G_DELETED_FUNCTION;
+  osm_upload_context_gtk(const osm_upload_context_gtk &) O2G_DELETED_FUNCTION;
+  osm_upload_context_gtk &operator=(const osm_upload_context_gtk &) O2G_DELETED_FUNCTION;
+#if __cplusplus >= 201103L
+  osm_upload_context_gtk(osm_upload_context_gtk &&) = delete;
+  osm_upload_context_gtk &operator=(osm_upload_context_gtk &&) = delete;
+#endif
 
   GtkTextBuffer * const logbuffer;
   GtkTextView * const logview;

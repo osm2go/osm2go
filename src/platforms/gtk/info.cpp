@@ -45,6 +45,13 @@ enum {
 class info_tag_context_t : public tag_context_t {
 public:
   explicit info_tag_context_t(map_t *m, osm_t::ref os, presets_items *p, const object_t &o, GtkWidget *dlg);
+  info_tag_context_t() O2G_DELETED_FUNCTION;
+  info_tag_context_t(const info_tag_context_t &) O2G_DELETED_FUNCTION;
+  info_tag_context_t &operator=(const info_tag_context_t &) O2G_DELETED_FUNCTION;
+#if __cplusplus >= 201103L
+  info_tag_context_t(info_tag_context_t &&) = delete;
+  info_tag_context_t &operator=(info_tag_context_t &&) = delete;
+#endif
 
   map_t * const map;
   osm_t::ref osm;

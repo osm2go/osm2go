@@ -33,6 +33,13 @@ class tag_context_t {
 protected:
   tag_context_t(const object_t &o, const osm_t::TagMap &t, osm2go_platform::Widget *dlg);
 public:
+  tag_context_t() O2G_DELETED_FUNCTION;
+  tag_context_t(const tag_context_t &) O2G_DELETED_FUNCTION;
+  tag_context_t &operator=(const tag_context_t &) O2G_DELETED_FUNCTION;
+#if __cplusplus >= 201103L
+  tag_context_t(tag_context_t &&) = delete;
+  tag_context_t &operator=(tag_context_t &&) = delete;
+#endif
 
   osm2go_platform::DialogGuard dialog;
   object_t object;

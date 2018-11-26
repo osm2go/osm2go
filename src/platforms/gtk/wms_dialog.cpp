@@ -68,6 +68,14 @@ enum {
 struct wms_server_context_t {
   wms_server_context_t(appdata_t &a, wms_t *w, GtkWidget *d)
     : appdata(a), wms(w), dialog(d), list(nullptr) , server_label(nullptr) {}
+  wms_server_context_t() O2G_DELETED_FUNCTION;
+  wms_server_context_t(const wms_server_context_t &) O2G_DELETED_FUNCTION;
+  wms_server_context_t &operator=(const wms_server_context_t &) O2G_DELETED_FUNCTION;
+#if __cplusplus >= 201103L
+  wms_server_context_t(wms_server_context_t &&) = delete;
+  wms_server_context_t &operator=(wms_server_context_t &&) = delete;
+#endif
+
   appdata_t &appdata;
   wms_t * const wms;
   GtkWidget * const dialog, *list;

@@ -36,6 +36,13 @@
 class gpsd_state_t : public gps_state_t {
 public:
   gpsd_state_t(GpsCallback cb, void *context);
+  gpsd_state_t() O2G_DELETED_FUNCTION;
+  gpsd_state_t(const gpsd_state_t &) O2G_DELETED_FUNCTION;
+  gpsd_state_t &operator=(const gpsd_state_t &) O2G_DELETED_FUNCTION;
+#if __cplusplus >= 201103L
+  gpsd_state_t(gpsd_state_t &&) = delete;
+  gpsd_state_t &operator=(gpsd_state_t &&) = delete;
+#endif
   ~gpsd_state_t() override;
 
   virtual pos_t get_pos(float *alt) override;

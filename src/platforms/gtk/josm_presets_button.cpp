@@ -121,6 +121,13 @@ static gint table_expose_event(GtkWidget *widget, GdkEventExpose *,
 #endif
 
 struct presets_context_t {
+  presets_context_t() O2G_DELETED_FUNCTION;
+  presets_context_t(const presets_context_t &) O2G_DELETED_FUNCTION;
+  presets_context_t &operator=(const presets_context_t &) O2G_DELETED_FUNCTION;
+#if __cplusplus >= 201103L
+  presets_context_t(presets_context_t &&) = delete;
+  presets_context_t &operator=(presets_context_t &&) = delete;
+#endif
   explicit presets_context_t(presets_items *pr, tag_context_t *t);
   ~presets_context_t();
 

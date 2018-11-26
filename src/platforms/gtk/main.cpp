@@ -87,6 +87,13 @@
 
 struct appdata_internal : public appdata_t {
   explicit appdata_internal(map_state_t &mstate);
+  appdata_internal() O2G_DELETED_FUNCTION;
+  appdata_internal(const appdata_internal &) O2G_DELETED_FUNCTION;
+  appdata_internal &operator=(const appdata_internal &) O2G_DELETED_FUNCTION;
+#if __cplusplus >= 201103L
+  appdata_internal(appdata_internal &&) = delete;
+  appdata_internal &operator=(appdata_internal &&) = delete;
+#endif
   ~appdata_internal();
 
 #ifdef FREMANTLE
