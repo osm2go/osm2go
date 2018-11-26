@@ -29,7 +29,7 @@ public:
   MainUiDummy() : MainUi(), msg(nullptr) {}
   virtual void setActionEnable(menu_items, bool) override
   { abort(); }
-  virtual void showNotification(const char *message, unsigned int flags = NoFlags) override;
+  virtual void showNotification(const char *message, unsigned int flags) override;
   const char *msg;
 };
 
