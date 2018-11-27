@@ -273,7 +273,7 @@ const PresetSax::StateMap &PresetSax::preset_state_map() {
 # define VECTOR_ONE(a) std::vector<State>(1, (a))
 #endif
 
-    map.reserve(19);
+    map.reserve(20);
 
     map.push_back(StateMap::value_type("presets", TagPresets, VECTOR_ONE(DocStart)));
     map.push_back(StateMap::value_type("chunk", TagChunk, VECTOR_ONE(TagPresets)));
