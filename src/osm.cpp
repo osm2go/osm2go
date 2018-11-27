@@ -1746,7 +1746,7 @@ const tag_t *tag_list_t::singleTag() const noexcept
 
 struct key_match_functor {
   const char * const key;
-  explicit key_match_functor(const char *k) : key(k) {}
+  explicit inline key_match_functor(const char *k) : key(k) {}
   inline bool operator()(const tag_t &tag) const {
     return key == tag.key;
   }
@@ -1754,7 +1754,7 @@ struct key_match_functor {
 
 const char* tag_list_t::get_value(const char *key) const
 {
-  if(contents == nullptr)
+  if(empty())
     return nullptr;
 
   const char *cacheKey = value_cache.getValue(key);
