@@ -51,6 +51,22 @@
 #error "Tree not enabled in libxml"
 #endif
 
+// make use of the value cache which is NOT cleared on project switch, so
+// the elements inserted here will not get lost
+elemstyle_condition_t::elemstyle_condition_t(const char *k, const char *v)
+  : key(tag_t::mapToCache(k))
+  , value(tag_t::mapToCache(v))
+  , isBool(false)
+{
+}
+
+elemstyle_condition_t::elemstyle_condition_t(const char *k, bool b)
+  : key(tag_t::mapToCache(k))
+  , boolValue(b)
+  , isBool(true)
+{
+}
+
 typedef std::unordered_map<std::string, color_t> ColorMap;
 
 class StyleSax {
@@ -470,12 +486,6 @@ std::vector<elemstyle_t *> josm_elemstyles_load(const char *name) {
 
 /* ----------------------- cleaning up --------------------- */
 
-static void free_condition(elemstyle_condition_t &cond) {
-  free(cond.key);
-  if(!cond.isBool)
-    free(cond.value);
-}
-
 void josm_elemstyles_free(std::vector<elemstyle_t *> &elemstyles) {
   std::for_each(elemstyles.begin(), elemstyles.end(), std::default_delete<elemstyle_t>());
   elemstyles.clear();
@@ -494,7 +504,12 @@ bool elemstyle_condition_t::matches(const base_object_t &obj) const {
         return false;
       }
     } else {
-      if(v == nullptr || (value != nullptr && strcasecmp(v, value) != 0))
+      // The "v != value" term is a shortcut: when the case matches exact, which is the
+      // usual case, the pointers should be the same, as both come from the value cache.
+      // This compare is faster than the later term and helps avoiding the string compare
+      // often enough. If it fails it's just a single compare of 2 values already in the
+      // CPU registers, so it wont hurt much anyway.
+      if(v == nullptr || (value != nullptr && v != value && strcasecmp(v, value) != 0))
         return false;
     }
   }
@@ -745,9 +760,4 @@ void josm_elemstyles_colorize_world(style_t *styles, osm_t::ref osm) {
   /* icons */
   std::for_each(osm->nodes.begin(), osm->nodes.end(),
       josm_elemstyles_colorize_node_functor(styles));
-}
-
-elemstyle_t::~elemstyle_t()
-{
-  std::for_each(conditions.begin(), conditions.end(), free_condition);
 }

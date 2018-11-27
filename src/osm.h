@@ -390,9 +390,13 @@ public:
 xmlChar *osm_generate_xml_changeset(const std::string &comment, const std::string &src);
 
 class tag_t {
+  friend struct elemstyle_condition_t;
+
   tag_t() O2G_DELETED_FUNCTION;
   inline explicit tag_t(const char *k, const char *v, bool)
     : key(k), value(v) {}
+
+  static const char *mapToCache(const char *v);
 public:
   const char *key, *value;
   tag_t(const char *k, const char *v);

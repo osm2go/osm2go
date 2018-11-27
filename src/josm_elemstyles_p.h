@@ -30,17 +30,15 @@
 class base_object_t;
 
 struct elemstyle_condition_t {
-    elemstyle_condition_t(const char *k, const char *v)
-      : key(strdup(k)), value(v ? strdup(v) : nullptr), isBool(false) {}
-    elemstyle_condition_t(const char *k, bool b)
-      : key(strdup(k)), boolValue(b), isBool(true) {}
+    elemstyle_condition_t(const char *k, const char *v);
+    elemstyle_condition_t(const char *k, bool b);
 
-    char * const key;
+    const char * const key;
 #if __cplusplus < 201103L
     // a special version of the union, as the old compiler chokes
     // on the constness in the constructor
     union {
-      char *value;
+      const char *value;
       bool boolValue;
     };
 
@@ -51,7 +49,7 @@ struct elemstyle_condition_t {
     }
 #else
     union {
-      char * const value;
+      const char * const value;
       const bool boolValue;
     };
     elemstyle_condition_t &operator=(const elemstyle_condition_t &other) = default;
@@ -152,7 +150,6 @@ struct elemstyle_t {
     , zoom_max(0.0f)
   {
   }
-  ~elemstyle_t();
 
   std::vector<elemstyle_condition_t> conditions;
 

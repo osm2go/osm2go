@@ -146,8 +146,9 @@ int main(int argc, char **argv)
   assert_cmpnum(way->draw.width, 2);
 
   // apply way style (line, area style not matching)
+  // also check case insensitivity
   tags.clear();
-  tags.insert(osm_t::TagMap::value_type("highway", "platform"));
+  tags.insert(osm_t::TagMap::value_type("highway", "PLATFORM"));
   way->tags.replace(tags);
   style->colorize(way);
   assert_cmpnum(way->draw.color, 0x809bc0ff);

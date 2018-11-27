@@ -1667,9 +1667,14 @@ std::string object_t::get_name(const osm_t &osm) const {
   return ret;
 }
 
+const char *tag_t::mapToCache(const char *v)
+{
+  return value_cache.insert(v);
+}
+
 tag_t::tag_t(const char *k, const char *v)
-  : key(value_cache.insert(k))
-  , value(value_cache.insert(v))
+  : key(mapToCache(k))
+  , value(mapToCache(v))
 {
 }
 
