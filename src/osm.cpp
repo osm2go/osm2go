@@ -1080,9 +1080,6 @@ void osm_t::relation_delete(relation_t *relation) {
   }
 }
 
-static const char *DS_ONEWAY_FWD = "yes";
-static const char *DS_ONEWAY_REV = "-1";
-
 /* Reverse direction-sensitive tags like "oneway". Marks the way as dirty if
  * anything is changed, and returns the number of flipped tags. */
 
@@ -1115,6 +1112,10 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
 {
   static const char *oneway = value_cache.insert("oneway");
   static const char *sidewalk = value_cache.insert("sidewalk");
+  static const char *DS_ONEWAY_FWD = value_cache.insert("yes");
+  static const char *DS_ONEWAY_REV = value_cache.insert("-1");
+  static const char *left = value_cache.insert("left");
+  static const char *right = value_cache.insert("right");
 
   if (etag.key == oneway) {
     std::string lc_value = etag.value;
@@ -1131,11 +1132,11 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
       printf("warning: unknown oneway value: %s\n", etag.value);
     }
   } else if (etag.key == sidewalk) {
-    if (strcasecmp(etag.value, "right") == 0) {
-      etag = tag_t::uncached(sidewalk, "left");
+    if (strcasecmp(etag.value, right) == 0) {
+      etag = tag_t::uncached(sidewalk, left);
       n_tags_altered++;
-    } else if (strcasecmp(etag.value, "left") == 0) {
-      etag = tag_t::uncached(sidewalk, "right");
+    } else if (strcasecmp(etag.value, left) == 0) {
+      etag = tag_t::uncached(sidewalk, right);
       n_tags_altered++;
     }
   } else {
@@ -1166,9 +1167,6 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
  * Returns the number of roles flipped, and marks any relations changed as
  * dirty. */
 
-static const char *DS_ROUTE_FORWARD = "forward";
-static const char *DS_ROUTE_REVERSE = "backward";
-
 struct reverse_roles {
   const object_t way;
   unsigned int &n_roles_flipped;
@@ -1178,6 +1176,9 @@ struct reverse_roles {
 
 void reverse_roles::operator()(const std::pair<item_id_t, relation_t *> &pair)
 {
+  static const char *DS_ROUTE_FORWARD = value_cache.insert("forward");
+  static const char *DS_ROUTE_REVERSE = value_cache.insert("backward");
+
   relation_t * const relation = pair.second;
   const char *type = relation->tags.get_value("type");
 
@@ -1194,11 +1195,11 @@ void reverse_roles::operator()(const std::pair<item_id_t, relation_t *> &pair)
   // Then flip its role if it's one of the direction-sensitive ones
   if (member->role == nullptr) {
     printf("null role in route relation -> ignore\n");
-  } else if (strcasecmp(member->role, DS_ROUTE_FORWARD) == 0) {
+  } else if (member->role == DS_ROUTE_FORWARD || strcasecmp(member->role, DS_ROUTE_FORWARD) == 0) {
     member->role = DS_ROUTE_REVERSE;
     relation->flags |= OSM_FLAG_DIRTY;
     ++n_roles_flipped;
-  } else if (strcasecmp(member->role, DS_ROUTE_REVERSE) == 0) {
+  } else if (member->role == DS_ROUTE_REVERSE || strcasecmp(member->role, DS_ROUTE_REVERSE) == 0) {
     member->role = DS_ROUTE_FORWARD;
     relation->flags |= OSM_FLAG_DIRTY;
     ++n_roles_flipped;
@@ -2024,7 +2025,7 @@ bool member_t::operator==(const member_t &other) const noexcept
   if((role == nullptr) ^ (other.role == nullptr))
     return false;
 
-  return role == nullptr || strcmp(role, other.role) == 0;
+  return role == nullptr || role == other.role || strcmp(role, other.role) == 0;
 }
 
 relation_t::relation_t()
