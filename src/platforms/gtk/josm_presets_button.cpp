@@ -201,8 +201,8 @@ struct add_widget_functor {
 void add_widget_functor::operator()(const WidgetMap::key_type w)
 {
   if(w->type == WIDGET_TYPE_REFERENCE) {
-    const presets_element_reference * const r = static_cast<const presets_element_reference *>(w);
-    std::for_each(r->item->widgets.begin(), r->item->widgets.end(), *this);
+    const std::vector<presets_element_t *> &wd = static_cast<const presets_element_reference *>(w)->item->widgets;
+    std::for_each(wd.begin(), wd.end(), *this);
     return;
   }
 
