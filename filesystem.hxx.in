@@ -1,0 +1,26 @@
+#pragma once
+
+#cmakedefine CXX11_EXP_FILESYSTEM
+#cmakedefine CXX11_EXP_FILESYSTEM_LIBFS
+
+#if defined(CXX11_EXP_FILESYSTEM) || defined(CXX11_EXP_FILESYSTEM_LIBFS)
+#include <experimental/filesystem>
+namespace std {
+	namespace filesystem {
+		using experimental::filesystem::is_regular_file;
+	}
+}
+
+#else
+#include <sys/stat.h>
+namespace std {
+	namespace filesystem {
+		static bool is_regular_file(const std::string &f)
+		{
+			struct stat st;
+			return stat(f.c_str(), &st) == 0 && S_ISREG(st.st_mode);
+		}
+	}
+}
+
+#endif

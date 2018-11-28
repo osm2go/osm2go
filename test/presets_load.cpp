@@ -9,6 +9,7 @@
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <iostream>
 #include <libxml/parser.h>
 #include <set>
@@ -30,10 +31,8 @@ static std::set<std::string> missingIcons;
 
 bool check_icon::operator()(const std::string &dir)
 {
-  struct stat st;
-
   if(filename[0] == '/')
-    return (stat(filename.c_str(), &st) == 0 && S_ISREG(st.st_mode));
+    return std::filesystem::is_regular_file(filename);
 
   const std::array<const char *, 4> icon_exts = { { ".svg", ".gif", ".png", ".jpg" } };
   const std::string dirname = dir + "/icons";
@@ -44,6 +43,8 @@ bool check_icon::operator()(const std::string &dir)
   std::string name = filename;
 
   for(unsigned int i = 0; i < icon_exts.size(); i++) {
+    struct stat st;
+
     name += icon_exts[i];
 
     if(fstatat(dirfd, name.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode))

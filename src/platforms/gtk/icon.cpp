@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <filesystem>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <glib.h>
 #include <gtk/gtk.h>
@@ -72,8 +73,7 @@ icon_file_exists(const std::string &file) {
 
   // absolute filenames are not mangled
   if(file[0] == '/') {
-    struct stat st;
-    if(stat(file.c_str(), &st) == 0 && S_ISREG(st.st_mode))
+    if(likely(std::filesystem::is_regular_file(file)))
       return file;
     else
       return std::string();

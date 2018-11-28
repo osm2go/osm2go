@@ -11,6 +11,8 @@ endif ()
 
 project(osm2go VERSION 0.9.13 LANGUAGES C CXX)
 
+include(CMakePushCheckState)
+include(CheckCXXSourceCompiles)
 include(CheckFunctionExists)
 include(CMakePushCheckState)
 include(GNUInstallDirs)
@@ -81,6 +83,8 @@ find_package(PkgConfig REQUIRED)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wshadow -Wpointer-arith")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow -Wpointer-arith")
 set(CMAKE_CXX_STANDARD 11)
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/find_filesystem.cmake)
 
 set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 
@@ -226,6 +230,7 @@ target_link_libraries(osm2go_lib
 	PRIVATE
 		${MATH_LIBRARY}
 		osm2go_platform_lib_private
+		${CXX_FILESYSTEM_LIBS}
 	PUBLIC
 		${CURL_LIBRARIES}
 		OpenSSL::SSL

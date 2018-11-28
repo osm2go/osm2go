@@ -31,6 +31,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <fcntl.h>
+#include <filesystem>
 #include <gdk/gdk.h>
 #include <glib.h>
 #include <gtk/gtk.h>
@@ -345,10 +346,8 @@ std::string osm2go_platform::find_file(const std::string &n)
 {
   assert(!n.empty());
 
-  struct stat st;
-
   if(unlikely(n[0] == '/')) {
-    if(stat(n.c_str(), &st) == 0 && S_ISREG(st.st_mode))
+    if(std::filesystem::is_regular_file(n))
       return n;
     return std::string();
   }
@@ -357,6 +356,7 @@ std::string osm2go_platform::find_file(const std::string &n)
   const std::vector<dirguard>::const_iterator itEnd = paths.end();
 
   for(std::vector<dirguard>::const_iterator it = paths.begin(); it != itEnd; it++) {
+    struct stat st;
     if(fstatat(it->dirfd(), n.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode))
       return it->path() + n;
   }

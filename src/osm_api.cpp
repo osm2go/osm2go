@@ -37,6 +37,7 @@
 #include <cstring>
 #include <curl/curl.h>
 #include <curl/easy.h>
+#include <filesystem>
 #include <map>
 #include <memory>
 #include <sys/stat.h>
@@ -86,8 +87,7 @@ bool osm_download(osm2go_platform::Widget *parent, project_t *project)
   if(unlikely(!net_io_download_file(parent, url, update, project->name.c_str(), true)))
     return false;
 
-  struct stat st;
-  if(unlikely(stat(update.c_str(), &st) != 0 || !S_ISREG(st.st_mode)))
+  if(unlikely(!std::filesystem::is_regular_file(update)))
     return false;
 
   // if the project's gzip setting and the download one don't match change the project
