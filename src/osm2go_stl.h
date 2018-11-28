@@ -303,20 +303,3 @@ namespace std {
   inline T &move(T &a) { return a; }
 }
 #endif
-
-#if __cplusplus < 201703L
-namespace std {
-  template<typename T> class optional {
-    const bool match;
-    const T result;
-
-  public:
-    explicit inline optional() noexcept : match(false), result() {}
-    inline optional(T r) : match(true), result(r) {}
-    inline optional(const optional<T> &o) : match(o.match), result(o.result) {}
-
-    inline operator bool() const noexcept { return match; }
-    inline T operator *() const { return result; }
-  };
-}
-#endif

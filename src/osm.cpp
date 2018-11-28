@@ -37,9 +37,7 @@
 #include <cstring>
 #include <ctime>
 #include <numeric>
-#if __cplusplus >= 201703L
 #include <optional>
-#endif
 #include <string>
 #include <strings.h>
 #include <utility>

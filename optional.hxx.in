@@ -1,0 +1,28 @@
+#pragma once
+
+#cmakedefine CXX14_EXP_OPTIONAL
+
+#ifdef CXX14_EXP_OPTIONAL
+#include <experimental/optional>
+namespace std {
+	using experimental::optional;
+}
+
+#else
+#include <sys/stat.h>
+namespace std {
+	template<typename T> class optional {
+		const bool match;
+		const T result;
+
+	public:
+		explicit inline optional() noexcept : match(false), result() {}
+		inline optional(T r) : match(true), result(r) {}
+		inline optional(const optional<T> &o) : match(o.match), result(o.result) {}
+
+		inline operator bool() const noexcept { return match; }
+		inline T operator *() const { return result; }
+	};
+}
+
+#endif
