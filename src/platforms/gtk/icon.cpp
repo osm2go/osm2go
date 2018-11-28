@@ -71,12 +71,14 @@ icon_file_exists(const std::string &file) {
 #endif
                               ".png", ".gif", ".jpg" } };
 
+  std::string ret;
+
   // absolute filenames are not mangled
   if(file[0] == '/') {
     if(likely(std::filesystem::is_regular_file(file)))
-      return file;
-    else
-      return std::string();
+      ret = file;
+
+    return ret;
   }
 
   std::string iname = "icons/" + file + icon_exts.front();
@@ -87,12 +89,15 @@ icon_file_exists(const std::string &file) {
     std::string::size_type nlen = strlen(icon_exts.at(i));
     iname.replace(wpos, olen, icon_exts[i], nlen);
     olen = nlen;
-    const std::string &fullname = osm2go_platform::find_file(iname);
+    std::string fullname = osm2go_platform::find_file(iname);
 
-    if(!fullname.empty())
-      return fullname;
+    if(!fullname.empty()) {
+      fullname.swap(ret);
+      break;
+    }
   }
-  return std::string();
+
+  return ret;
 }
 
 icon_item *icon_t::load(const std::string &sname, int limit)
