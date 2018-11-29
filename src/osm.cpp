@@ -1087,14 +1087,21 @@ struct reverse_direction_sensitive_tags_functor {
   void operator()(tag_t &etag);
 };
 
-static std::vector<std::pair<std::string, std::string> > rtable_init()
-{
-  std::vector<std::pair<std::string, std::string> > rtable;
+#if __cplusplus >= 201703L
+#include <string_view>
+typedef std::vector<std::pair<std::string_view, std::string_view> > rtable_type;
+#else
+typedef std::vector<std::pair<std::string, std::string> > rtable_type;
+#endif
 
-  rtable.push_back(std::pair<std::string, std::string>("left", "right"));
-  rtable.push_back(std::pair<std::string, std::string>("right", "left"));
-  rtable.push_back(std::pair<std::string, std::string>("forward", "backward"));
-  rtable.push_back(std::pair<std::string, std::string>("backward", "forward"));
+static rtable_type rtable_init()
+{
+  rtable_type rtable(4);
+
+  rtable[0] = rtable_type::value_type("left", "right");
+  rtable[1] = rtable_type::value_type("right", "left");
+  rtable[2] = rtable_type::value_type("forward", "backward");
+  rtable[3] = rtable_type::value_type("backward", "forward");
 
   return rtable;
 }
@@ -1142,7 +1149,7 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
     const char *lastcolon = strrchr(etag.key, ':');
 
     if (lastcolon != nullptr) {
-      static std::vector<std::pair<std::string, std::string> > rtable = rtable_init();
+      static const rtable_type rtable = rtable_init();
 
       for (unsigned int i = 0; i < rtable.size(); i++) {
         if (rtable[i].first == (lastcolon + 1)) {
