@@ -48,7 +48,7 @@
 #include "osm2go_stl.h"
 
 struct project_context_t {
-  explicit project_context_t(appdata_t &a, project_t *p, gboolean n, const std::vector<project_t *> &j, GtkWidget *dlg);
+  explicit project_context_t(appdata_t &a, project_t *p, bool n, const std::vector<project_t *> &j, GtkWidget *dlg);
   project_context_t() O2G_DELETED_FUNCTION;
   project_context_t(const project_context_t &) O2G_DELETED_FUNCTION;
   project_context_t &operator=(const project_context_t &) O2G_DELETED_FUNCTION;
@@ -65,7 +65,7 @@ struct project_context_t {
   GtkWidget * const fsizehdr, * const fsize, * const diff_stat, * const diff_remove;
   GtkWidget * const desc, * const download;
   GtkWidget * const minlat, * const minlon, * const maxlat, * const maxlon;
-  const gboolean is_new;
+  const bool is_new;
 #ifdef SERVER_EDITABLE
   GtkWidget * const server;
 #endif
@@ -107,7 +107,7 @@ static GtkWidget *gtk_label_left_new(const char *str = nullptr) {
   return label;
 }
 
-project_context_t::project_context_t(appdata_t &a, project_t *p, gboolean n,
+project_context_t::project_context_t(appdata_t &a, project_t *p, bool n,
                                      const std::vector<project_t *> &j, GtkWidget *dlg)
   : project(p)
   , appdata(a)
@@ -641,7 +641,7 @@ static void project_filesize(project_context_t *context) {
 
     str = _("Not downloaded!");
 
-    en = context->is_new == TRUE ? FALSE : TRUE;
+    en = context->is_new ? FALSE : TRUE;
   } else {
     color = nullptr;
 
@@ -668,7 +668,7 @@ static void project_filesize(project_context_t *context) {
     } else
       str = _("Outdated, please download!");
 
-    en = (context->is_new != TRUE || !project->data_dirty) ? TRUE : FALSE;
+    en = (!context->is_new || !project->data_dirty) ? TRUE : FALSE;
   }
   gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, color);
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, en);
@@ -821,8 +821,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
   }
   osm2go_platform::dialog_size_hint(dialog, osm2go_platform::MISC_DIALOG_WIDE);
 
-  project_context_t context(scontext->appdata, project, is_new ? TRUE : FALSE,
-                            scontext->projects, dialog.get());
+  project_context_t context(scontext->appdata, project, is_new, scontext->projects, dialog.get());
 
   gtk_dialog_set_default_response(dialog, GTK_RESPONSE_ACCEPT);
 
