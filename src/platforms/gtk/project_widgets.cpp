@@ -631,7 +631,7 @@ static void project_filesize(project_context_t *context) {
 
   g_debug("Checking size of %s", project->osmFile.c_str());
 
-  gboolean en;
+  bool en = !context->is_new;
   struct stat st;
   bool stret = fstatat(project->dirfd, project->osmFile.c_str(), &st, 0) == 0 &&
                S_ISREG(st.st_mode);
@@ -640,8 +640,6 @@ static void project_filesize(project_context_t *context) {
     color = osm2go_platform::invalid_text_color();
 
     str = _("Not downloaded!");
-
-    en = context->is_new ? FALSE : TRUE;
   } else {
     color = nullptr;
 
@@ -651,16 +649,13 @@ static void project_filesize(project_context_t *context) {
         localtime_r(&st.st_mtim.tv_sec, &loctime);
         char time_str[32];
         strftime(time_str, sizeof(time_str), "%x %X", &loctime);
+        gstr.reset(g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present\nfrom %s"),
+                                    static_cast<goffset>(st.st_size), time_str));
 
-        if(project->osmFile.size() > 3 && strcmp(project->osmFile.c_str() + project->osmFile.size() - 3, ".gz") == 0) {
-          gstr.reset(g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present\nfrom %s"),
-                                     static_cast<goffset>(st.st_size), time_str));
+        if(project->osmFile.size() > 3 && project->osmFile.compare(project->osmFile.size() - 3, 3, ".gz") == 0)
           gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:\n(compressed)"));
-        } else {
-          gstr.reset(g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present\nfrom %s"),
-                                     static_cast<goffset>(st.st_size), time_str));
+        else
           gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:"));
-        }
         str = gstr.get();
       } else {
         str = _("Error testing data file");
@@ -668,10 +663,10 @@ static void project_filesize(project_context_t *context) {
     } else
       str = _("Outdated, please download!");
 
-    en = (!context->is_new || !project->data_dirty) ? TRUE : FALSE;
+    en = en || !project->data_dirty;
   }
   gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, color);
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, en);
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, en ? TRUE : FALSE);
 
   if(str != nullptr)
     gtk_label_set_text(GTK_LABEL(context->fsize), str);
