@@ -291,7 +291,7 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
   if(isMember) {
     gtk_tree_selection_select_iter(context.selection, &iter);
     /* check if this element is earlier by name in the list */
-    if(selname.empty() || strcmp(name.c_str(), selname.c_str()) < 0) {
+    if(selname.empty() || name.compare(selname) < 0) {
       selname.swap(name);
       sel_iter = iter;
     }

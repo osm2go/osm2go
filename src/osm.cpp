@@ -1145,7 +1145,7 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
       static std::vector<std::pair<std::string, std::string> > rtable = rtable_init();
 
       for (unsigned int i = 0; i < rtable.size(); i++) {
-        if (strcmp(lastcolon + 1, rtable[i].first.c_str()) == 0) {
+        if (rtable[i].first == (lastcolon + 1)) {
           /* length of key that will persist */
           size_t plen = lastcolon - etag.key;
           /* add length of new suffix */
