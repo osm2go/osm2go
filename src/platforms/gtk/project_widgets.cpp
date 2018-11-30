@@ -626,7 +626,7 @@ std::string project_select(appdata_t &appdata) {
 
 static void project_filesize(project_context_t *context) {
   const char *str = nullptr;
-  g_string gstr;
+  trstring gstr;
   const project_t * const project = context->project;
 
   g_debug("Checking size of %s", project->osmFile.c_str());
@@ -649,14 +649,13 @@ static void project_filesize(project_context_t *context) {
         localtime_r(&st.st_mtim.tv_sec, &loctime);
         char time_str[32];
         strftime(time_str, sizeof(time_str), "%x %X", &loctime);
-        gstr.reset(g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present\nfrom %s"),
-                                    static_cast<goffset>(st.st_size), time_str));
+        gstr = trstring("%1 bytes present\nfrom %2").arg(st.st_size).arg(time_str);
 
         if(project->osmFile.size() > 3 && project->osmFile.compare(project->osmFile.size() - 3, 3, ".gz") == 0)
           gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:\n(compressed)"));
         else
           gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:"));
-        str = gstr.get();
+        str = static_cast<const gchar *>(gstr);
       } else {
         str = _("Error testing data file");
       }
