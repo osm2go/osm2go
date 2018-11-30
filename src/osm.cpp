@@ -1557,14 +1557,10 @@ std::string object_t::get_name(const osm_t &osm) const {
         if(astreet != nullptr)
           street = astreet->tags.get_value("name");
       }
-      if(street != nullptr) {
-        ret = _("building ");
-        ret += street;
-        ret +=' ';
-      } else {
-        ret = _("building housenumber ");
-      }
-      ret += hn;
+      trstring dsc = street != nullptr ?
+                     trstring("building %1 %2").arg(street) :
+                     trstring("building housenumber %1");
+      ret = dsc.arg(hn).toStdString();
     } else {
       typestr = _("building");
       if(name == nullptr)
