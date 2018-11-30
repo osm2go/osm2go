@@ -287,8 +287,7 @@ static void presets_item_dialog(const presets_item *item) {
 
     /* special handling for the first label/separators */
     if(item->addEditName) {
-      g_string title(g_strdup_printf(_("Edit %s"), item->name.c_str()));
-      gtk_window_set_title(dialog, title.get());
+      gtk_window_set_title(dialog, static_cast<const gchar *>(trstring("Edit %1").arg(item->name)));
     } else {
       // use the first label as title
       const presets_element_t * const w = item->widgets.front();
@@ -1043,8 +1042,8 @@ static void item_link_clicked(presets_item *item) {
 presets_element_t::attach_key *presets_element_link::attach(preset_attach_context &attctx,
                                                             const std::string &) const
 {
-  g_string label(g_strdup_printf(_("[Preset] %s"), item->name.c_str()));
-  GtkWidget *button = osm2go_platform::button_new_with_label(label.get());
+  const trstring label = trstring("[Preset] %1").arg(item->name);
+  GtkWidget *button = osm2go_platform::button_new_with_label(static_cast<const gchar *>(label));
   GtkWidget *img = icon_t::instance().widget_load(item->icon, 16);
   if(img != nullptr) {
     gtk_button_set_image(GTK_BUTTON(button), img);

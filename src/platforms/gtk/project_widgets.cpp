@@ -752,8 +752,8 @@ static void on_rename_clicked(project_context_t *context)
   if(!project->rename(name, openProject, context->dialog))
     return;
 
-  g_string str(g_strdup_printf(_("Edit project - %s"), project->name.c_str()));
-  gtk_window_set_title(GTK_WINDOW(context->dialog), str.get());
+  gtk_window_set_title(GTK_WINDOW(context->dialog),
+                       static_cast<const gchar *>(trstring("Edit project - %1").arg(project->name)));
 
   if(!isOpen)
     return;
@@ -802,16 +802,17 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
   osm2go_platform::DialogGuard dialog;
   /* cancel is enabled for "new" projects only */
   if(is_new) {
-    g_string str(g_strdup_printf(_("New project - %s"), project->name.c_str()));
+    const trstring str = trstring("New project - %1").arg(project->name);
 
-    dialog.reset(gtk_dialog_new_with_buttons(str.get(), GTK_WINDOW(parent), GTK_DIALOG_MODAL,
-                             GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+    dialog.reset(gtk_dialog_new_with_buttons(static_cast<const gchar *>(str), GTK_WINDOW(parent),
+                                             GTK_DIALOG_MODAL, GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                              GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, nullptr));
   } else {
-    g_string str(g_strdup_printf(_("Edit project - %s"), project->name.c_str()));
+    const trstring str = trstring("Edit project - %1").arg(project->name);
 
-    dialog.reset(gtk_dialog_new_with_buttons(str.get(), GTK_WINDOW(parent), GTK_DIALOG_MODAL,
-                             GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT, nullptr));
+    dialog.reset(gtk_dialog_new_with_buttons(static_cast<const gchar *>(str), GTK_WINDOW(parent),
+                                             GTK_DIALOG_MODAL, GTK_STOCK_CLOSE,
+                                             GTK_RESPONSE_ACCEPT, nullptr));
   }
   osm2go_platform::dialog_size_hint(dialog, osm2go_platform::MISC_DIALOG_WIDE);
 

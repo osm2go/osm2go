@@ -272,9 +272,9 @@ static bool area_warning(area_context_t *context) {
 
   if(area > WARN_OVER) {
     g_string text(warn_text(area));
-    g_string msg(g_strdup_printf(_("%s\n\nDo you really want to continue?"), text.get()));
+    const trstring msg = trstring("%1\n\nDo you really want to continue?").arg(text.get());
     text.reset();
-    ret = osm2go_platform::yes_no(_("Area size warning!"), msg.get(),
+    ret = osm2go_platform::yes_no(_("Area size warning!"), msg,
                  MISC_AGAIN_ID_AREA_TOO_BIG | MISC_AGAIN_FLAG_DONT_SAVE_NO, context->dialog.get());
   }
 

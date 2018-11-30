@@ -506,9 +506,8 @@ static GtkWidget *details_widget(const info_tag_context_t &context, bool big) {
     localtime_r(&context.object.obj->time, &loctime);
     char time_str[32];
     strftime(time_str, sizeof(time_str), "%x %X", &loctime);
-    g_string dv_str(g_strdup_printf(_("%s (# %u)"), time_str,
-                                    static_cast<unsigned int>(context.object.obj->version)));
-    label = gtk_label_new(dv_str.get());
+    const trstring dv_str = trstring("%1 (# %2)").arg(time_str).arg(context.object.obj->version);
+    label = gtk_label_new(static_cast<const gchar *>(dv_str));
   } else {
     label = gtk_label_new(_("Not yet uploaded"));
   }
@@ -557,10 +556,9 @@ static GtkWidget *details_widget(const info_tag_context_t &context, bool big) {
     guint nodes = 0, ways = 0, relations = 0;
     context.object.relation->members_by_type(nodes, ways, relations);
 
-    g_string str(g_strdup_printf(_("Members: %u nodes, %u ways, %u relations"),
-                                 nodes, ways, relations));
+    const trstring str = trstring("Members: %1 nodes, %2 ways, %3 relations").arg(nodes).arg(ways).arg(relations);
 
-    GtkWidget *member_btn = osm2go_platform::button_new_with_label(str.get());
+    GtkWidget *member_btn = osm2go_platform::button_new_with_label(static_cast<const gchar *>(str));
     g_signal_connect(member_btn, "clicked", G_CALLBACK(on_relation_members),
                      const_cast<info_tag_context_t *>(&context));
 
