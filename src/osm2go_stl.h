@@ -258,8 +258,7 @@ namespace std {
     std::string operator()(T n, const char *fmt)
     {
       char buf[sizeof(n) * 4];
-      snprintf(buf, sizeof(buf), fmt, n);
-      return buf;
+      return std::string(buf, snprintf(buf, sizeof(buf), fmt, n));
     }
   };
 
