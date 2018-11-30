@@ -412,6 +412,28 @@ public:
   bool is_creator_tag() const noexcept;
 
   static bool is_creator_tag(const char *key) noexcept;
+
+  /**
+   * @brief compare if the keys are identical
+   *
+   * This is intended to compare to values already mapped to the value cache
+   * so a simple pointer compare is enough.
+   */
+  inline bool key_compare(const char *k) const noexcept
+  {
+    return key == k;
+  }
+
+  /**
+   * @brief compare if the values are identical
+   *
+   * This is intended to compare to values already mapped to the value cache
+   * so a simple pointer compare is enough.
+   */
+  inline bool value_compare(const char *k) const noexcept
+  {
+    return value == k;
+  }
 };
 
 class tag_list_t {

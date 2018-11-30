@@ -1106,13 +1106,6 @@ static rtable_type rtable_init()
   return rtable;
 }
 
-static char ascii_lower(char ch) {
-  if (ch >= 'A' && ch <= 'Z')
-    return ch - 'A' + 'a';
-  else
-    return ch;
-}
-
 void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
 {
   static const char *oneway = value_cache.insert("oneway");
@@ -1122,25 +1115,24 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
   static const char *left = value_cache.insert("left");
   static const char *right = value_cache.insert("right");
 
-  if (etag.key == oneway) {
-    std::string lc_value = etag.value;
-    std::transform(lc_value.begin(), lc_value.end(), lc_value.begin(), ascii_lower);
+  if (etag.key_compare(oneway)) {
     // oneway={yes/true/1/-1} is unusual.
     // Favour "yes" and "-1".
-    if (lc_value == DS_ONEWAY_FWD || lc_value == "true" || lc_value == "1") {
+    if (etag.value_compare(DS_ONEWAY_FWD) || strcasecmp("yes", etag.value) == 0 ||
+        strcasecmp("true", etag.value) == 0 || strcmp(etag.value, "1") == 0) {
       etag = tag_t::uncached(oneway, DS_ONEWAY_REV);
       n_tags_altered++;
-    } else if (lc_value == DS_ONEWAY_REV) {
+    } else if (etag.value_compare(DS_ONEWAY_REV)) {
       etag = tag_t::uncached(oneway, DS_ONEWAY_FWD);
       n_tags_altered++;
     } else {
       printf("warning: unknown oneway value: %s\n", etag.value);
     }
-  } else if (etag.key == sidewalk) {
-    if (strcasecmp(etag.value, right) == 0) {
+  } else if (etag.key_compare(sidewalk)) {
+    if (etag.value_compare(right) || strcasecmp(etag.value, "right") == 0) {
       etag = tag_t::uncached(sidewalk, left);
       n_tags_altered++;
-    } else if (strcasecmp(etag.value, left) == 0) {
+    } else if (etag.value_compare(left) || strcasecmp(etag.value, "left") == 0) {
       etag = tag_t::uncached(sidewalk, right);
       n_tags_altered++;
     }
@@ -1759,7 +1751,7 @@ struct key_match_functor {
   const char * const key;
   explicit inline key_match_functor(const char *k) : key(k) {}
   inline bool operator()(const tag_t &tag) const {
-    return key == tag.key;
+    return tag.key_compare(key);
   }
 };
 
