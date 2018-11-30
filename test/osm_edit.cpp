@@ -135,6 +135,10 @@ static void test_trivial() {
   std::vector<tag_t> notags;
   r->tags.replace(std::move(notags));
   assert_cmpstr(r->descriptive_name(), "<ID #-1>");
+  r->id = std::numeric_limits<typeof(r->id)>::max();
+  assert_cmpstr(r->descriptive_name(), "<ID #9223372036854775807>");
+  r->id = std::numeric_limits<typeof(r->id)>::min();
+  assert_cmpstr(r->descriptive_name(), "<ID #-9223372036854775808>");
 
   member_t mb(object_t::RELATION);
   assert_null(mb.role);

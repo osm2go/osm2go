@@ -119,11 +119,13 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
 
   const char *type = relation->tags.get_value("type");
 
-  g_string info_str(type != nullptr ?
-                    g_strdup_printf(_("In relation of type: %s"), type) :
-                    g_strdup_printf(_("In relation #" ITEM_ID_FORMAT), relation->id));
-  gtk_box_pack_start(dialog.vbox(), gtk_label_new(info_str.get()), TRUE, TRUE, 0);
-  info_str.reset();
+  { // scope to free info_str earlier
+    const trstring info_str = type != nullptr ?
+                      trstring("In relation of type: %1").arg(type) :
+                      trstring("In relation #%1").arg(relation->id);
+    gtk_box_pack_start(dialog.vbox(), gtk_label_new(static_cast<const gchar *>(info_str)),
+                       TRUE, TRUE, 0);
+  }
 
   const char *name = relation->tags.get_value("name");
   if(name != nullptr)
@@ -365,14 +367,14 @@ void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
                                 osm_t::ref osm, object_t &object) {
   relitem_context_t context(object, presets, osm);
 
-  g_string str(g_strdup_printf(_("Relation memberships of %s #" ITEM_ID_FORMAT),
-                               object.type_string(), object.get_id()));
+  { // scope to free str earlier
+    const trstring str = trstring("Relation memberships of %1 #%2").arg(object.type_string()).arg(object.get_id());
 
-  context.dialog.reset(gtk_dialog_new_with_buttons(str.get(), GTK_WINDOW(parent),
-                                               GTK_DIALOG_MODAL,
-                                               GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-                                               nullptr));
-  str.reset();
+    context.dialog.reset(gtk_dialog_new_with_buttons(static_cast<const gchar *>(str),
+                                                     GTK_WINDOW(parent), GTK_DIALOG_MODAL,
+                                                     GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                                     nullptr));
+  }
 
   osm2go_platform::dialog_size_hint(context.dialog, osm2go_platform::MISC_DIALOG_LARGE);
   gtk_dialog_set_default_response(context.dialog, GTK_RESPONSE_CLOSE);
@@ -435,8 +437,16 @@ relation_list_changed(GtkTreeSelection *selection, gpointer userdata) {
 }
 
 struct member_context_t {
-  member_context_t(const relation_t *r, osm_t::ref o, GtkWidget *d)
-    : relation(r), dialog(d), osm(o) {}
+  inline member_context_t(const relation_t *r, osm_t::ref o, GtkWidget *parent)
+    : relation(r)
+    , dialog(gtk_dialog_new_with_buttons(static_cast<const gchar *>(trstring("Members of relation \"%1\"").arg(relation->descriptive_name())),
+                                         GTK_WINDOW(parent), GTK_DIALOG_MODAL,
+                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                         nullptr))
+    , osm(o)
+  {
+  }
+
   member_context_t() O2G_DELETED_FUNCTION;
   member_context_t(const member_context_t &) O2G_DELETED_FUNCTION;
   member_context_t &operator=(const member_context_t &) O2G_DELETED_FUNCTION;
@@ -567,19 +577,7 @@ static GtkWidget *member_list_widget(member_context_t &context) {
 }
 
 void relation_show_members(GtkWidget *parent, const relation_t *relation, osm_t::ref osm) {
-  const char *str = relation->tags.get_value("name");
-  if(str == nullptr)
-    str = relation->tags.get_value("ref");
-
-  g_string nstr(str == nullptr ?
-                g_strdup_printf(_("Members of relation #" ITEM_ID_FORMAT), relation->id) :
-                g_strdup_printf(_("Members of relation \"%s\""), str));
-
-  member_context_t mcontext(relation, osm,
-                            gtk_dialog_new_with_buttons(nstr.get(), GTK_WINDOW(parent),
-                                                        GTK_DIALOG_MODAL,
-                                                        GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-                                                        nullptr));
+  member_context_t mcontext(relation, osm, parent);
 
   osm2go_platform::dialog_size_hint(GTK_WINDOW(mcontext.dialog), osm2go_platform::MISC_DIALOG_MEDIUM);
   gtk_dialog_set_default_response(GTK_DIALOG(mcontext.dialog),

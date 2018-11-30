@@ -593,44 +593,46 @@ static void info_more(const info_tag_context_t &context) {
 }
 #endif
 
-/* edit tags of currently selected node or way or of the relation */
-/* given */
-bool info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *presets, object_t &object) {
-
-  assert(object.is_real());
-
+static trstring objid(const object_t &object)
+{
   /* use implicit selection if not explicitely given */
-  const char *msgtpl;
+  trstring msgtpl;
 
   switch(object.type) {
   case object_t::NODE:
-    msgtpl = _("Node #" ITEM_ID_FORMAT);
+    msgtpl = trstring("Node #%1");
     break;
 
   case object_t::WAY:
-    msgtpl = _("Way #" ITEM_ID_FORMAT);
+    msgtpl = trstring("Way #%1");
     break;
 
   case object_t::RELATION:
-    msgtpl = _("Relation #" ITEM_ID_FORMAT);
+    msgtpl = trstring("Relation #%1");
     break;
 
   default:
     assert_unreachable();
   }
 
-  g_string str(g_strdup_printf(msgtpl, object.obj->id));
+  return msgtpl.arg(object.obj->id);
+}
+
+/* edit tags of currently selected node or way or of the relation */
+/* given */
+bool info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *presets, object_t &object) {
+
+  assert(object.is_real());
 
   info_tag_context_t context(map, osm, presets, object,
-                             gtk_dialog_new_with_buttons(str.get(), GTK_WINDOW(parent),
-                                               GTK_DIALOG_MODAL,
+                             gtk_dialog_new_with_buttons(static_cast<const gchar *>(objid(object)),
+                                                         GTK_WINDOW(parent), GTK_DIALOG_MODAL,
 #ifdef FREMANTLE
                                                _("More"), GTK_RESPONSE_HELP,
 #endif
                                                GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                                GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                                nullptr));
-  str.reset();
 
   osm2go_platform::dialog_size_hint(context.dialog, osm2go_platform::MISC_DIALOG_LARGE);
   gtk_dialog_set_default_response(context.dialog, GTK_RESPONSE_ACCEPT);

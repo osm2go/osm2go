@@ -750,9 +750,7 @@ std::string relation_t::descriptive_name() const {
       return name;
   }
 
-  char buf[32];
-  snprintf(buf, sizeof(buf), "<ID #" ITEM_ID_FORMAT ">", id);
-  return buf;
+  return trstring("<ID #%1>").arg(id).toStdString();
 }
 
 const char *osm_t::sanity_check() const {
