@@ -157,6 +157,30 @@ assert_cmpstr_struct::assert_cmpstr_struct(const trstring &a, const char *astr, 
     fail(static_cast<const gchar *>(a), astr, b, bstr, file, func, line);
 }
 
+assert_cmpstr_struct::assert_cmpstr_struct(const std::string &a, const char *astr, const std::string &b, const char *file, const char *func, int line)
+{
+  if(unlikely(a != b))
+    fail(a.c_str(), astr, b.c_str(), file, func, line);
+}
+
+assert_cmpstr_struct::assert_cmpstr_struct(const std::string &a, const char *astr, const std::string &b, const char *bstr, const char *file, const char *func, int line)
+{
+  if(unlikely(a != b))
+    fail(a.c_str(), astr, b.c_str(), bstr, file, func, line);
+}
+
+assert_cmpstr_struct::assert_cmpstr_struct(const std::string &a, const char *astr, const trstring &b, const char *file, const char *func, int line)
+{
+  if(unlikely(a != b.toStdString()))
+    fail(a.c_str(), astr, static_cast<const gchar *>(b), file, func, line);
+}
+
+assert_cmpstr_struct::assert_cmpstr_struct(const std::string &a, const char *astr, const trstring &b, const char *bstr, const char *file, const char *func, int line)
+{
+  if(unlikely(a != b.toStdString()))
+    fail(a.c_str(), astr, static_cast<const gchar *>(b), bstr, file, func, line);
+}
+
 void assert_cmpstr_struct::fail(const char *a, const char *astr, const char *b, const char *file, const char *func, int line) {
   assert_msg_fmt(file, line, func, "%s == \"%s\" failed: %s: '%s'", astr, b, astr, a);
 }

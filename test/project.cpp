@@ -160,8 +160,8 @@ static void testServer(const std::string &tmpdir)
   const std::string oldserver = "http://api.openstreetmap.org/api/0.5";
   project_t project(dummystate, proj_name, tmpdir);
 
-  assert_cmpstr(project.server(defaultserver), defaultserver.c_str());
-  assert_cmpstr(project.server(oldserver), oldserver.c_str());
+  assert_cmpstr(project.server(defaultserver), defaultserver);
+  assert_cmpstr(project.server(oldserver), oldserver);
   assert(project.rserver.empty());
 
   project.adjustServer(defaultserver.c_str(), defaultserver);
@@ -169,19 +169,19 @@ static void testServer(const std::string &tmpdir)
 
   project.adjustServer(oldserver.c_str(), defaultserver);
   assert(!project.rserver.empty());
-  assert_cmpstr(project.server(defaultserver), oldserver.c_str());
+  assert_cmpstr(project.server(defaultserver), oldserver);
 
   project.adjustServer(nullptr, defaultserver);
   assert(project.rserver.empty());
-  assert_cmpstr(project.server(defaultserver), defaultserver.c_str());
+  assert_cmpstr(project.server(defaultserver), defaultserver);
 
   project.adjustServer(oldserver.c_str(), defaultserver);
   assert(!project.rserver.empty());
-  assert_cmpstr(project.server(defaultserver), oldserver.c_str());
+  assert_cmpstr(project.server(defaultserver), oldserver);
 
   project.adjustServer("", defaultserver);
   assert(project.rserver.empty());
-  assert_cmpstr(project.server(defaultserver), defaultserver.c_str());
+  assert_cmpstr(project.server(defaultserver), defaultserver);
 }
 
 static void testLoad(const std::string &tmpdir, const char *osmfile)
