@@ -54,7 +54,7 @@ static cache_set value_cache; ///< the cache for key, value, and role strings
 bool object_t::operator==(const object_t &other) const noexcept
 {
   if (type != other.type) {
-    if ((type | _REF_FLAG) != (other.type | _REF_FLAG))
+    if ((type ^ _REF_FLAG) != other.type)
       return false;
     // we only handle the other case
     if(type & _REF_FLAG)
