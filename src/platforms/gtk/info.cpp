@@ -312,16 +312,14 @@ static void on_tag_edit(info_tag_context_t *context) {
     assert(matches.first != matches.second);
     osm_t::TagMap::iterator it = std::find_if(matches.first, matches.second, value_match_functor(oldv));
     assert(it != matches.second);
+    const unsigned int match_cnt = std::distance(matches.first, matches.second);
 
     if(it->first == k) {
       // only value was changed
       // collision flags only need to be updated if there is more than one entry with that key
-      osm_t::TagMap::iterator i = matches.first;
-      if(unlikely(++i != matches.second)) {
+      if(unlikely(match_cnt > 1)) {
         // check if the entry is now equal to another entry
-        i = std::find_if(matches.first, matches.second, value_match_functor(v));
-
-        if(i != matches.second) {
+        if(std::find_if(matches.first, matches.second, value_match_functor(v)) != matches.second) {
           // the item is now a duplicate, so it can be removed
           gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
           context->m_tags.erase(it);
@@ -334,10 +332,9 @@ static void on_tag_edit(info_tag_context_t *context) {
       }
       it->second = v;
     } else {
-      const bool was_collision = ++matches.first != matches.second;
       context->m_tags.erase(it);
-      // update collisions for the old entry if there was one
-      if(unlikely(was_collision))
+      // update collisions for the old entry if there was one and it is now gone
+      if(unlikely(match_cnt == 2))
         context->update_collisions(oldk);
 
       // There can't be collisions for the new entry as the Ok button is not enabled then
