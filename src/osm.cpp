@@ -900,8 +900,10 @@ void osm_t::node_attach(node_t *node) {
   attach(node);
 }
 
-void osm_t::way_attach(way_t *way) {
+way_t *osm_t::way_attach(way_t *way)
+{
   attach(way);
+  return way;
 }
 
 struct node_chain_delete_functor {
@@ -995,8 +997,10 @@ void osm_t::remove_from_relations(object_t obj) {
                 remove_member_functor(obj));
 }
 
-void osm_t::relation_attach(relation_t *relation) {
+relation_t *osm_t::relation_attach(relation_t *relation)
+{
   attach(relation);
+  return relation;
 }
 
 struct find_relation_members {
@@ -1354,7 +1358,7 @@ way_t *way_t::split(osm_t::ref osm, node_chain_t::iterator cut_at, bool cut_at_n
   }
 
   /* create a duplicate of the currently selected way */
-  way_t *neww = new way_t(0);
+  std::unique_ptr<way_t> neww(new way_t(0));
 
   /* attach remaining nodes to new way */
   neww->node_chain.insert(neww->node_chain.end(), cut_at, node_chain.end());
@@ -1373,16 +1377,11 @@ way_t *way_t::split(osm_t::ref osm, node_chain_t::iterator cut_at, bool cut_at_n
   // valid way so it is deleted
   if(neww->node_chain.size() < 2) {
     osm_unref_node(neww->node_chain.front());
-    delete neww;
     return nullptr;
   }
 
   /* ------------  copy all tags ------------- */
   neww->tags.copy(tags);
-
-  // now move the way itself into the main data structure
-  // do it before transferring the relation membership to get meaningful ids in debug output
-  osm->way_attach(neww);
 
   // keep the history with the longer way
   // this must be before the relation transfer, as that needs to know the
@@ -1390,10 +1389,14 @@ way_t *way_t::split(osm_t::ref osm, node_chain_t::iterator cut_at, bool cut_at_n
   if(node_chain.size() < neww->node_chain.size())
     node_chain.swap(neww->node_chain);
 
-  /* ---- transfer relation membership from way to new ----- */
-  std::for_each(osm->relations.begin(), osm->relations.end(), relation_transfer(neww, this));
+  // now move the way itself into the main data structure
+  // do it before transferring the relation membership to get meaningful ids in debug output
+  way_t *ret = osm->way_attach(neww.release());
 
-  return neww;
+  /* ---- transfer relation membership from way to new ----- */
+  std::for_each(osm->relations.begin(), osm->relations.end(), relation_transfer(ret, this));
+
+  return ret;
 }
 
 struct tag_map_functor {

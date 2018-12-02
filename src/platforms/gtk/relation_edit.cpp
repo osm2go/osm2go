@@ -623,25 +623,24 @@ static void on_relation_select(relation_context_t *context, GtkWidget *but) {
 static void on_relation_add(relation_context_t *context) {
   /* create a new relation */
 
-  relation_t *relation = new relation_t(0);
-  if(!relation_info_dialog(context, relation)) {
+  std::unique_ptr<relation_t> relation(new relation_t(0));
+  if(!relation_info_dialog(context, relation.get())) {
     g_debug("tag edit cancelled");
     relation->cleanup();
-    delete relation;
   } else {
-    context->osm->relation_attach(relation);
+    relation_t *r = context->osm->relation_attach(relation.release());
 
     /* append a row for the new data */
 
-    const std::string &name = relation->descriptive_name();
+    const std::string &name = r->descriptive_name();
 
     /* Append a row and fill in some data */
     GtkTreeIter iter;
     gtk_list_store_insert_with_values(context->store.get(), &iter, -1,
-                                      RELATION_COL_TYPE,    relation->tags.get_value("type"),
+                                      RELATION_COL_TYPE,    r->tags.get_value("type"),
                                       RELATION_COL_NAME,    name.c_str(),
-                                      RELATION_COL_MEMBERS, relation->members.size(),
-                                      RELATION_COL_DATA,    relation,
+                                      RELATION_COL_MEMBERS, r->members.size(),
+                                      RELATION_COL_DATA,    r,
                                       -1);
 
     gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);

@@ -239,8 +239,10 @@ public:
 
   /**
    * @brief insert a way and create a new temporary id
+   * @param way the new way
+   * @returns the way
    */
-  void way_attach(way_t *way);
+  way_t *way_attach(way_t *way);
 
   /**
    * @brief insert a node using the id already set
@@ -281,8 +283,10 @@ public:
   void relation_free(relation_t *relation);
   /**
    * @brief insert a relation and create a new temporary id
+   * @param relation the new relation
+   * @returns the relation
    */
-  void relation_attach(relation_t *relation);
+  relation_t *relation_attach(relation_t *relation);
 
   /**
    * @brief insert a relation using the id already set

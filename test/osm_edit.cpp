@@ -93,8 +93,7 @@ static void test_trivial() {
   assert(!osm->bounds.contains(lpos_t(-1, 0)));
   assert(!osm->bounds.contains(lpos_t(0, -1)));
 
-  way_t *w = new way_t();
-  osm->way_attach(w);;
+  way_t *w = osm->way_attach(new way_t());
   // must work even on empty way
   assert_null(w->first_node());
   assert_null(w->last_node());
@@ -111,8 +110,7 @@ static void test_trivial() {
   w->flags |= OSM_FLAG_DELETED;
   assert(!w->ends_with_node(n));
 
-  relation_t *r = new relation_t();
-  osm->relation_attach(r);
+  relation_t *r = osm->relation_attach(new relation_t());
   object_t robj(r);
   // check compare
   assert(robj == r);

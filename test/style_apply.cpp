@@ -109,8 +109,7 @@ int main(int argc, char **argv)
   assert(oldicon != style->node_icons[node->id]);
   assert_cmpnum_op(oldzoom * 1.9, <, node->zoom_max);
 
-  way_t * const way = new way_t(0);
-  osm->way_attach(way);
+  way_t * const way = osm->way_attach(new way_t(0));
 
   style->colorize_world(osm);
   // default values for all ways set in test1.style
