@@ -129,7 +129,7 @@ static void on_tag_remove(info_tag_context_t *context) {
   GtkTreeIter       iter;
 
   GtkTreeSelection *selection = list_get_selection(context->list);
-  if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
+  if(gtk_tree_selection_get_selected(selection, &model, &iter) == TRUE) {
     const gchar *kc = nullptr, *vc = nullptr;
     gtk_tree_model_get(model, &iter, TAG_COL_KEY, &kc, TAG_COL_VALUE, &vc, -1);
 
@@ -146,7 +146,7 @@ static void on_tag_remove(info_tag_context_t *context) {
 
     GtkTreeIter n = iter;
     // select the next entry if it exists
-    if(gtk_tree_model_iter_next(model, &n))
+    if(gtk_tree_model_iter_next(model, &n) == TRUE)
       gtk_tree_selection_select_iter(selection, &n);
     /* and remove from store */
     gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
