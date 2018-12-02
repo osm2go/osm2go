@@ -131,7 +131,11 @@ gpointer gps_thread(gpointer data) {
         /* update every second, wait here to make sure a complete */
         /* reply is received */
         if(gps_waiting(&gps, 1000000)) {
+#if GPSD_API_MAJOR_VERSION < 7
           int r = gps_read(&gps);
+#else
+          int r = gps_read(&gps, nullptr, 0);
+#endif
 
           std::lock_guard<std::mutex> lock(gps_state->mutex);
 
