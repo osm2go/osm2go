@@ -1148,6 +1148,8 @@ void map_t::clear(clearLayers layers) {
                   (1 << CANVAS_GROUP_NODES) |
                   (1 << CANVAS_GROUP_WAYS_DIR));
     break;
+  default:
+    assert_unreachable();
   }
 
   // only clear the map, the items are deleted through the canvas
@@ -1227,6 +1229,8 @@ void map_t::set_action(map_action_t act) {
   case MAP_ACTION_WAY_NODE_ADD:
     statusbar_text = _("Place node on selected way");
     break;
+  default:
+    assert_unreachable();
   }
 
   appdata.iconbar->map_cancel_ok(cancel_state, ok_state);
