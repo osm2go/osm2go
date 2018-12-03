@@ -308,6 +308,8 @@ static project_t *project_new(select_context_t *context) {
   if(!project->save(context->dialog) || !project_edit(context, project.get(), true)) {
     g_debug("creation of project '%s' cancelled, deleting", project->name.c_str());
     project_delete(project.release());
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, FALSE);
+    return nullptr;
   }
 
   /* enable/disable edit/remove buttons */
