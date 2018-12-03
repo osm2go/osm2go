@@ -197,14 +197,17 @@ changed(GtkTreeSelection *selection, gpointer userdata) {
  *
  * This assumes there is a selection and a project associated to it.
  */
-static project_t *project_get_selected(GtkWidget *list, GtkTreeIter &iter)
+static project_t *project_get_selected(GtkWidget *list, GtkTreeModelFilter *filter, GtkTreeIter *iter)
 {
   project_t *project = nullptr;
-  GtkTreeModel     *model;
+  GtkTreeModel *model;
+  GtkTreeIter fiter;
 
-  bool b = list_get_selected(list, &model, &iter);
+  bool b = list_get_selected(list, &model, &fiter);
   assert(b);
-  gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
+  gtk_tree_model_get(model, &fiter, PROJECT_COL_DATA, &project, -1);
+  if(iter != nullptr)
+    gtk_tree_model_filter_convert_iter_to_child_iter(filter, iter, &fiter);
 
   assert(project != nullptr);
   return project;
@@ -363,7 +366,7 @@ static void on_project_new(select_context_t *context) {
 
 static void on_project_delete(select_context_t *context) {
   GtkTreeIter iter;
-  project_t *project = project_get_selected(context->list, iter);
+  project_t *project = project_get_selected(context->list, context->filter, &iter);
 
   if(!osm2go_platform::yes_no(_("Delete project?"),
              trstring("Do you really want to delete the project \"%1\"?").arg(project->name),
@@ -397,15 +400,13 @@ static void on_project_delete(select_context_t *context) {
 }
 
 static void on_project_edit(select_context_t *context) {
-  GtkTreeIter fiter;
-  project_t *project = project_get_selected(context->list, fiter);
+  GtkTreeIter iter;
+  project_t *project = project_get_selected(context->list, context->filter, &iter);
 
   if(project_edit(context, project, false)) {
     /* description etc. may have changed, so update list */
     appdata_t &appdata = context->appdata;
     const gchar *status_stock_id = project_get_status_icon_stock_id(appdata.project, project);
-    GtkTreeIter iter;
-    gtk_tree_model_filter_convert_iter_to_child_iter(context->filter, &iter, &fiter);
     gtk_list_store_set(GTK_LIST_STORE(context->store.get()), &iter,
                        PROJECT_COL_NAME, project->name.c_str(),
                        PROJECT_COL_STATUS, status_stock_id,
@@ -616,10 +617,8 @@ std::string project_select(appdata_t &appdata) {
                                     GTK_RESPONSE_ACCEPT, has_sel ? TRUE : FALSE);
 
   gtk_widget_show_all(context.dialog);
-  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog))) {
-    GtkTreeIter dummy;
-    return project_get_selected(context.list, dummy)->name;
-  }
+  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog)))
+    return project_get_selected(context.list, nullptr, nullptr)->name;
 
   return std::string();
 }
