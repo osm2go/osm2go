@@ -782,21 +782,18 @@ bool osm_t::hasHiddenWays() const noexcept
 
 void osm_t::node_insert(node_t *node)
 {
-  size_t cnt = nodes.size();
-  nodes[node->id] = node;
-  assert_cmpnum(nodes.size(), cnt + 1);
+  bool b = nodes.insert(std::pair<item_id_t, node_t *>(node->id, node)).second;
+  assert(b);
 }
 
 void osm_t::way_insert(way_t *way)
 {
-  size_t cnt = ways.size();
-  ways[way->id] = way;
-  assert_cmpnum(ways.size(), cnt + 1);
+  bool b = ways.insert(std::pair<item_id_t, way_t *>(way->id, way)).second;
+  assert(b);
 }
 
 void osm_t::relation_insert(relation_t *relation)
 {
-  size_t cnt = relations.size();
-  relations[relation->id] = relation;
-  assert_cmpnum(relations.size(), cnt + 1);
+  bool b = relations.insert(std::pair<item_id_t, relation_t *>(relation->id, relation)).second;
+  assert(b);
 }
