@@ -274,15 +274,11 @@ void map_t::way_node_add(lpos_t pos) {
     /* convert mouse position to canvas (world) position */
     const int insert_after = canvas->get_item_segment(item->item, pos);
     if(insert_after >= 0) {
-      /* create new node */
-      node_t* node = appdata.project->osm->node_new(pos);
-      appdata.project->osm->node_attach(node);
-
       /* insert it into ways chain of nodes */
       way_t *way = item->object.way;
 
-      /* search correct position */
-      way->node_chain.insert(way->node_chain.begin() + insert_after + 1, node);
+      /* create new node */
+      node_t* node = way->insert_node(appdata.project->osm, insert_after + 1, pos);
 
       /* clear selection */
       item_deselect();
@@ -290,14 +286,8 @@ void map_t::way_node_add(lpos_t pos) {
       /* draw the updated way */
       draw(way);
 
-      /* remember that this node is contained in one way */
-      node->ways=1;
-
       /* and now draw the node */
       draw(node);
-
-      /* and that the way needs to be uploaded */
-      way->flags |= OSM_FLAG_DIRTY;
 
       /* put gui into idle state */
       set_action(MAP_ACTION_IDLE);

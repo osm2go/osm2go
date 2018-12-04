@@ -1830,6 +1830,32 @@ static void test_relation_members()
   assert_cmpnum(r->members.size(), 1);
 }
 
+static void test_way_insert()
+{
+  std::unique_ptr<osm_t> osm(new osm_t());
+  set_bounds(osm);
+
+  node_t * const n0 = osm->node_new(lpos_t(10, 10));
+  osm->node_attach(n0);
+  node_t * const n1 = osm->node_new(lpos_t(20, 20));
+  osm->node_attach(n1);
+  way_t * const w = osm->way_attach(new way_t());
+  w->append_node(n0);
+  w->append_node(n1);
+
+  node_t * const in = w->insert_node(osm, 1, lpos_t(15, 16));
+  assert(in != nullptr);
+  assert(in != n0);
+  assert(in != n1);
+  assert(w->ends_with_node(n0));
+  assert(w->ends_with_node(n1));
+  assert(!w->ends_with_node(in));
+  assert_cmpnum(w->node_chain.size(), 3);
+  assert(w->node_chain.at(0) == n0);
+  assert(w->node_chain.at(1) == in);
+  assert(w->node_chain.at(2) == n1);
+}
+
 int main()
 {
   xmlInitParser();
@@ -1849,6 +1875,7 @@ int main()
   test_api_adjust();
   test_description();
   test_relation_members();
+  test_way_insert();
 
   xmlCleanupParser();
 

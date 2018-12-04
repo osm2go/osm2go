@@ -1943,6 +1943,23 @@ void way_t::cleanup() {
   assert_null(map_item);
 }
 
+node_t *way_t::insert_node(osm_t::ref osm, int position, lpos_t coords)
+{
+  node_t *node = osm->node_new(coords);
+  osm->node_attach(node);
+
+  /* search correct position */
+  node_chain.insert(node_chain.begin() + position, node);
+
+  /* remember that this node is contained in one way */
+  node->ways = 1;
+
+  /* and that the way needs to be uploaded */
+  flags |= OSM_FLAG_DIRTY;
+
+  return node;
+}
+
 bool way_t::merge(way_t *other, osm_t *osm, map_t *map, const std::vector<relation_t *> &rels)
 {
   printf("  request to extend way #" ITEM_ID_FORMAT "\n", other->id);

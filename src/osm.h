@@ -642,7 +642,7 @@ typedef std::vector<node_t *> node_chain_t;
 #define OSM_DRAW_FLAG_AREA  (1<<0)
 #define OSM_DRAW_FLAG_BG    (1<<1)
 
-class way_t: public visible_item_t {
+class way_t : public visible_item_t {
   friend class osm_t;
 public:
   explicit way_t();
@@ -710,6 +710,18 @@ public:
   }
 
   /**
+   * @brief create a node and insert it into this way
+   * @param osm the OSM object database
+   * @param position the index in the node chain to insert the node
+   * @param coords the coordinates of the new node
+   * @returns the new node, already attached to osm
+   */
+  node_t *insert_node(osm_t::ref osm, int position, lpos_t coords);
+
+private:
+  bool merge(way_t *other, osm_t *osm, map_t *map, const std::vector<relation_t *> &rels = std::vector<relation_t *>());
+public:
+  /**
    * @brief merge this way with the other one
    * @param other the way to take the nodes from
    * @param osm map database
@@ -718,9 +730,6 @@ public:
    *
    * @other will be removed.
    */
-private:
-  bool merge(way_t *other, osm_t *osm, map_t *map, const std::vector<relation_t *> &rels = std::vector<relation_t *>());
-public:
   inline bool merge(way_t *other, osm_t::ref osm, map_t *map, const std::vector<relation_t *> &rels = std::vector<relation_t *>())
   { return merge(other, osm.get(), map, rels); }
 
