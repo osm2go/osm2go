@@ -348,7 +348,7 @@ static void on_project_new(select_context_t *context) {
   if(project != nullptr) {
     context->projects.push_back(project);
 
-    GtkTreeIter iter;
+    GtkTreeIter iter, fiter;
     const gchar *status_stock_id = project_get_status_icon_stock_id(context->appdata.project,
                                                                     project);
     gtk_list_store_insert_with_values(GTK_LIST_STORE(context->store.get()), &iter,
@@ -360,7 +360,8 @@ static void on_project_new(select_context_t *context) {
                                       -1);
 
     GtkTreeSelection *selection = list_get_selection(context->list);
-    gtk_tree_selection_select_iter(selection, &iter);
+    if(gtk_tree_model_filter_convert_child_iter_to_iter(context->filter, &fiter, &iter) == TRUE)
+      gtk_tree_selection_select_iter(selection, &fiter);
   }
 }
 
@@ -579,8 +580,11 @@ static GtkWidget *project_list_widget(select_context_t &context, bool &has_sel) 
   gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context.store.get()),
                                        PROJECT_COL_NAME, GTK_SORT_ASCENDING);
 
-  if(has_sel)
-    list_scroll(context.list, &seliter);
+  if(has_sel) {
+    GtkTreeIter fiter;
+    if(gtk_tree_model_filter_convert_child_iter_to_iter(context.filter, &fiter, &seliter) == TRUE)
+      list_scroll(context.list, &fiter);
+  }
 
   GtkWidget *entry = osm2go_platform::entry_new(osm2go_platform::EntryFlagsNoAutoCap);
   gtk_box_pack_start(GTK_BOX(context.list), entry, FALSE, FALSE, 0);
