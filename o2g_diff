@@ -1,0 +1,36 @@
+#!/bin/bash
+
+PROJECT_NAME=
+PROJECT_DIR=
+
+# set -ex
+
+if [ $# -eq 1 ]; then
+	if [ -d "${1}" ]; then
+		PROJECT_NAME=$(basename "${1}")
+		PROJECT_DIR="${1}"
+	else
+		echo "'${1}' should be a project directory" >&2
+		exit 1
+	fi
+else
+	PROJECT_NAME=$(basename $(pwd))
+	PROJECT_DIR=.
+fi
+
+(
+	echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+	echo "<diff name=\"${PROJECT_NAME}\">"
+	egrep -o '<[a-z]+ id="[0-9]+"( hidden="true"/>)?' "${PROJECT_DIR}/${PROJECT_NAME}.diff" | while read a; do
+		if [[ "${a}" = *hidden=\"true\"/\> ]]; then
+			echo " ${a}"
+			continue
+		fi
+		zgrep -A 30 "^[[:space:]]*${a}" ${PROJECT_DIR}/${PROJECT_NAME}.osm.gz | while read b; do
+			echo " ${b}"; if [[ "${b}" = *\</* ]]; then
+				break
+			fi
+		done
+	done
+	echo "</diff>"
+) | git diff -b --word-diff --no-index -- - "${PROJECT_DIR}/${PROJECT_NAME}.diff"
