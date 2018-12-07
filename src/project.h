@@ -36,7 +36,15 @@ class osm_t;
 struct project_t {
   typedef const std::unique_ptr<project_t> &ref;
 
+  /**
+   * @constructor
+   */
   project_t(map_state_t &ms, const std::string &n, const std::string &base_path);
+
+  /**
+   * @brief sort-of move constructor
+   */
+  project_t(map_state_t &ms, project_t &other);
 
   inline const std::string &server(const std::string &def) const noexcept
   { return rserver.empty() ? def : rserver; }
@@ -131,4 +139,6 @@ struct project_t {
 };
 
 bool project_load(appdata_t &appdata, const std::string &name);
-std::string project_select(appdata_t &appdata);
+bool project_load(appdata_t &appdata, std::unique_ptr<project_t> &project);
+
+project_t *project_select(appdata_t &appdata);

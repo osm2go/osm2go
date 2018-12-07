@@ -178,9 +178,9 @@ void appdata_t::set_title()
 
 static void
 cb_menu_project_open(appdata_t *appdata) {
-  const std::string &proj_name = project_select(*appdata);
-  if(!proj_name.empty())
-    project_load(*appdata, proj_name);
+  std::unique_ptr<project_t> project(project_select(*appdata));
+  if(project)
+    project_load(*appdata, project);
   appdata->main_ui_enable();
 }
 

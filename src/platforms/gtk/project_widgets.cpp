@@ -597,7 +597,8 @@ static GtkWidget *project_list_widget(select_context_t &context, bool &has_sel) 
   return context.list;
 }
 
-std::string project_select(appdata_t &appdata) {
+project_t *project_select(appdata_t &appdata)
+{
   select_context_t context(appdata,
                     gtk_dialog_new_with_buttons(_("Project selection"),
                                     GTK_WINDOW(appdata_t::window), GTK_DIALOG_MODAL,
@@ -621,10 +622,13 @@ std::string project_select(appdata_t &appdata) {
                                     GTK_RESPONSE_ACCEPT, has_sel ? TRUE : FALSE);
 
   gtk_widget_show_all(context.dialog);
-  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog)))
-    return project_get_selected(context.list, nullptr, nullptr)->name;
+  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog))) {
+    project_t *pr = project_get_selected(context.list, nullptr, nullptr);
 
-  return std::string();
+    return new project_t(appdata.map_state, *pr);
+  }
+
+  return nullptr;
 }
 
 /* ---------------------------------------------------- */

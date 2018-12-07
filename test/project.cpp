@@ -190,7 +190,9 @@ static void testLoad(const std::string &tmpdir, const char *osmfile)
   appdata_t appdata(dummystate);
 
   // 3 attempts of loading, the first will fail because of missing OSM data
-  for (size_t i = 3; i > 0; i--) {
+  const size_t loopcnt = 3;
+  for (size_t i = loopcnt * 2; i > 0; i--) {
+    fflush(stdout); // output readability
     // create dummy project
     std::unique_ptr<project_t> project(new project_t(dummystate, proj_name, tmpdir));
     project->bounds.min.lat = 0.5;
@@ -198,14 +200,13 @@ static void testLoad(const std::string &tmpdir, const char *osmfile)
     project->bounds.max.lat = 0.6;
     project->bounds.max.lon = 0.6;
 
-    size_t msgs = i;
-    switch (i) {
+    size_t msgs = (i + 1) / 2;
+    switch (msgs) {
     case 3:
       msgs = 2;
       break;
     case 2:
       // let it fail because of invalid bounds
-      msgs = 2;
       project->bounds.min.lat = 2;
       // fallthrough
     case 1: {
@@ -222,10 +223,26 @@ static void testLoad(const std::string &tmpdir, const char *osmfile)
 
     assert(project->save());
     const std::string fn = project_filename(*project);
-    project.reset();
+    fflush(stdout); // output readability
+
+    bool b;
+    if(i > loopcnt) {
+      // project_read() would have set this, so fill it here, too
+      project->osmFile = std::string(proj_name) + ".osm";
+      b = project_load(appdata, project);
+    } else {
+      project.reset();
+      b = project_load(appdata, fn);
+    }
+
+    // either was empty before or was swapped to appdata
+    assert(!project);
 
     // loading will fail because window is nullptr (and map also)
-    assert(!project_load(appdata, fn));
+    assert(!b);
+
+    // if cleared at the beginning, and again if loading failed
+    assert(!appdata.project);
 
     MainUiDummy *uid = static_cast<MainUiDummy *>(appdata.uicontrol.get());
     assert_cmpnum(uid->messages.size(), msgs);

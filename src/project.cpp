@@ -62,6 +62,11 @@ std::string project_filename(const project_t &project) {
   return project.path + project.name + ".proj";
 }
 
+/**
+ * @brief parse the contents of the given project file
+ *
+ * Not marked static so it can be accessed by the testcases.
+ */
 bool project_read(const std::string &project_file, project_t::ref project,
                   const std::string &defaultserver, int basefd) {
   fdguard projectfd(basefd, project_file.c_str(), O_RDONLY);
@@ -436,7 +441,8 @@ bool project_t::osm_file_exists() const noexcept
   return fstatat(dirfd, osmFile.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode);
 }
 
-static bool project_open(appdata_t &appdata, const std::string &name) {
+static project_t *project_open(appdata_t &appdata, const std::string &name)
+{
   std::unique_ptr<project_t> project;
   std::string project_file;
 
@@ -463,38 +469,25 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
   printf("project file = %s\n", project_file.c_str());
   if(unlikely(!project_read(project_file, project, settings->server, settings->base_path_fd))) {
     printf("error reading project file\n");
-    return false;
+    return nullptr;
   }
+
+  return project.release();
+}
+
+static bool project_load_inner(appdata_t &appdata, std::unique_ptr<project_t> &project)
+{
+  std::swap(appdata.project, project);
 
   /* --------- project structure ok: load its OSM file --------- */
 
-  printf("project_open: loading osm %s\n", project->osmFile.c_str());
-  bool b = project->parse_osm();
-  std::swap(appdata.project, project);
-
-  return b;
-}
-
-static bool project_load_inner(appdata_t &appdata, const std::string &name) {
-  appdata.uicontrol->showNotification(trstring("Loading %1").arg(name), MainUi::Busy);
-
-  /* close current project */
-  osm2go_platform::process_events();
-
-  if(appdata.project)
-    project_close(appdata);
-
-  /* open project itself */
-  osm2go_platform::process_events();
-
-  if(unlikely(!project_open(appdata, name))) {
-    appdata.uicontrol->showNotification(trstring("Error opening %1").arg(name), MainUi::Brief);
-
+  if(!appdata.project->parse_osm()) {
+    appdata.uicontrol->showNotification(trstring("Error opening %1").arg(appdata.project->osmFile), MainUi::Brief);
     return false;
   }
 
   if(unlikely(!appdata.project->bounds.valid())) {
-    appdata.uicontrol->showNotification(trstring("Invalid project bounds in %1").arg(name), MainUi::Brief);
+    appdata.uicontrol->showNotification(trstring("Invalid project bounds in %1").arg(appdata.project->name), MainUi::Brief);
 
     return false;
   }
@@ -550,13 +543,47 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
   return true;
 }
 
-bool project_load(appdata_t &appdata, const std::string &name) {
-  bool ret = project_load_inner(appdata, name);
-  if(unlikely(!ret)) {
-    printf("project loading interrupted by user\n");
+static void project_replace_start(appdata_t &appdata, const std::string &name)
+{
+  appdata.uicontrol->showNotification(trstring("Loading %1").arg(name), MainUi::Busy);
 
-    appdata.project.reset();
+  /* close current project */
+  osm2go_platform::process_events();
+
+  if(appdata.project)
+    project_close(appdata);
+
+  osm2go_platform::process_events();
+}
+
+bool project_load(appdata_t &appdata, const std::string &name)
+{
+  project_replace_start(appdata, name);
+
+  /* open project itself */
+  std::unique_ptr<project_t> project(project_open(appdata, name));
+
+  if(unlikely(!project)) {
+    appdata.uicontrol->showNotification(trstring("Error opening %1").arg(name), MainUi::Brief);
+
+    return false;
   }
+
+  bool ret = project_load_inner(appdata, project);
+  if(unlikely(!ret))
+    appdata.project.reset();
+
+  return ret;
+}
+
+bool project_load(appdata_t &appdata, std::unique_ptr<project_t> &project)
+{
+  project_replace_start(appdata, project->name);
+
+  bool ret = project_load_inner(appdata, project);
+  if(unlikely(!ret))
+    appdata.project.reset();
+
   return ret;
 }
 
@@ -575,6 +602,19 @@ project_t::project_t(map_state_t &ms, const std::string &n, const std::string &b
   , dirfd(path.c_str())
 {
   memset(&wms_offset, 0, sizeof(wms_offset));
+}
+
+project_t::project_t(map_state_t &ms, project_t &other)
+  : wms_offset(other.wms_offset)
+  , map_state(ms)
+  , bounds(other.bounds)
+  , data_dirty(other.data_dirty)
+  , isDemo(other.isDemo)
+  , dirfd(-1)
+{
+  map_state = other.map_state;
+
+  swap_project(this, &other);
 }
 
 void project_t::adjustServer(const char *nserver, const std::string &def)
