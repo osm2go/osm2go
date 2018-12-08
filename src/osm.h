@@ -570,7 +570,7 @@ public:
   std::string id_string() const;
 
   inline bool isNew() const noexcept
-  { return id < 0; }
+  { return id <= ID_ILLEGAL; }
 
   inline bool isDirty() const noexcept
   { return flags != 0; }
