@@ -59,79 +59,76 @@ void map_t::way_add_segment(lpos_t pos) {
   /* the last node placed is less than 5 pixels from the current */
   /* position */
   const node_t *lnode = action.way->last_node();
-  if(lnode != nullptr && (state.zoom * std::sqrt((lnode->lpos.x - pos.x) * (lnode->lpos.x - pos.x) +
-                                                 (lnode->lpos.y - pos.y) * (lnode->lpos.y - pos.y))) < 5) {
+  if(lnode != nullptr) {
+    const lpos_t lnpos = lnode->lpos;
+
+    if(state.zoom * std::sqrt((lnpos.x - pos.x) * (lnpos.x - pos.x) +
+                              (lnpos.y - pos.y) * (lnpos.y - pos.y)) < 5) {
 #if 0
-    printf("detected double click -> simulate ok click\n");
-    touchnode_clear();
-    action_ok();
+      printf("detected double click -> simulate ok click\n");
+      touchnode_clear();
+      action_ok();
 #else
-    printf("detected double click -> ignore it as accidential\n");
+      printf("detected double click -> ignore it as accidential\n");
 #endif
-  } else {
-
-    /* use the existing node if one was touched */
-    node_t *node = touchnode_get_node();
-    osm_t::ref osm = appdata.project->osm;
-    if(node != nullptr) {
-      printf("  re-using node #" ITEM_ID_FORMAT "\n", node->id);
-
-      assert(action.way != nullptr);
-
-      /* check whether this node is first or last one of a different way */
-      way_t *touch_way = nullptr;
-      touch_way = osm->find_way(check_first_last_node(node));
-
-      /* remeber this way as this may be the last node placed */
-      /* and we might want to join this with this other way */
-      action.ends_on = touch_way;
-
-      /* is this the first node the user places? */
-      if(action.way->node_chain.empty()) {
-        action.extending = touch_way;
-
-        if(action.extending != nullptr) {
-          if(!osm2go_platform::yes_no(_("Extend way?"),
-                                      _("Do you want to extend the way present at this location?"),
-                                      MISC_AGAIN_ID_EXTEND_WAY))
-            action.extending = nullptr;
-          else
-            /* there are immediately enough nodes for a valid way */
-            appdata.iconbar->map_cancel_ok(true, true);
-        }
-      }
-
-    } else {
-      /* the current way doesn't end on another way if we are just placing */
-      /* a new node */
-      action.ends_on = nullptr;
-
-      if(!osm->bounds.contains(pos))
-        map_t::outside_error();
-      else
-        node = osm->node_new(pos);
-    }
-
-    if(node != nullptr) {
-      assert(action.way != nullptr);
-      action.way->append_node(node);
-
-      switch(action.way->node_chain.size()) {
-      case 1:
-        /* replace "place first node..." message */
-        appdata.uicontrol->showNotification(_("Place next node of way"));
-        break;
-      case 2:
-        /* two nodes are enough for a valid way */
-        appdata.iconbar->map_cancel_ok(true, true);
-        break;
-      }
-
-      /* draw current way */
-      style->colorize(action.way);
-      draw(action.way);
+      return;
     }
   }
+
+  /* use the existing node if one was touched */
+  node_t *node = touchnode_get_node();
+  osm_t::ref osm = appdata.project->osm;
+  if(node != nullptr) {
+    printf("  re-using node #" ITEM_ID_FORMAT "\n", node->id);
+
+    assert(action.way != nullptr);
+
+    /* check whether this node is first or last one of a different way */
+    way_t *touch_way = osm->find_way(check_first_last_node(node));
+
+    /* remember this way as this may be the last node placed */
+    /* and we might want to join this with this other way */
+    action.ends_on = touch_way;
+
+    /* is this the first node the user places? */
+    if(action.way->node_chain.empty() && touch_way != nullptr &&
+       osm2go_platform::yes_no(_("Extend way?"),
+                               _("Do you want to extend the way present at this location?"),
+                               MISC_AGAIN_ID_EXTEND_WAY)) {
+      /* there are immediately enough nodes for a valid way */
+      action.extending = touch_way;
+      appdata.iconbar->map_cancel_ok(true, true);
+    }
+  } else {
+    /* the current way doesn't end on another way if we are just placing */
+    /* a new node */
+    action.ends_on = nullptr;
+
+    if(!osm->bounds.contains(pos)) {
+      map_t::outside_error();
+      return;
+    }
+    node = osm->node_new(pos);
+  }
+
+  assert(node != nullptr);
+  assert(action.way != nullptr);
+  action.way->append_node(node);
+
+  switch(action.way->node_chain.size()) {
+  case 1:
+    /* replace "place first node..." message */
+    appdata.uicontrol->showNotification(_("Place next node of way"));
+    break;
+  case 2:
+    /* two nodes are enough for a valid way */
+    appdata.iconbar->map_cancel_ok(true, true);
+    break;
+  }
+
+  /* draw current way */
+  style->colorize(action.way);
+  draw(action.way);
 }
 
 struct map_unref_ways {
