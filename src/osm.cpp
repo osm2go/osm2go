@@ -1039,17 +1039,21 @@ void osm_unref_way_free::operator()(node_t* node)
   }
 }
 
-void osm_t::way_delete(way_t *way, map_t *map)
+void osm_t::way_delete(way_t *way, map_t *map, void (*unref)(node_t *))
 {
-  remove_from_relations(object_t(way));
+  if(likely(way->id != ID_ILLEGAL))
+    remove_from_relations(object_t(way));
 
   /* remove it visually from the screen */
   way->item_chain_destroy(map);
 
   /* delete all nodes that aren't in other use now */
-  std::for_each(way->node_chain.begin(), way->node_chain.end(),
-                osm_unref_way_free(this, way));
-  way->node_chain.clear();
+  node_chain_t &chain = way->node_chain;
+  if(unref == nullptr)
+    std::for_each(chain.begin(), chain.end(), osm_unref_way_free(this, way));
+  else
+    std::for_each(chain.begin(), chain.end(), unref);
+  chain.clear();
 
   if(!way->isNew()) {
     printf("mark way #" ITEM_ID_FORMAT " as deleted\n", way->id);

@@ -230,12 +230,15 @@ public:
    * @brief mark a way as deleted
    * @param way the way to get rid of
    * @param map the map to delete the visual items
+   * @param unref callback function for each node
    *
    * map is only used to delete possibly existing additional map items.
+   * If unref is nullptr the way count will be decremented and the node will be deleted
+   * if it is not used anymore and has no useful tags.
    *
    * @see visible_item_t::item_chain_destroy
    */
-  void way_delete(way_t *way, map_t *map);
+  void way_delete(way_t *way, map_t *map, void (*unref)(node_t *) = nullptr);
 
   /**
    * @brief insert a way and create a new temporary id

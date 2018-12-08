@@ -131,13 +131,7 @@ void map_t::way_add_segment(lpos_t pos) {
   draw(action.way);
 }
 
-struct map_unref_ways {
-  osm_t::ref osm;
-  explicit map_unref_ways(osm_t::ref o) : osm(o) {}
-  void operator()(node_t *node);
-};
-
-void map_unref_ways::operator()(node_t *node)
+static void map_unref_ways(node_t *node)
 {
   printf("    node #" ITEM_ID_FORMAT " (used by %u)\n",
          node->id, node->ways);
@@ -151,22 +145,10 @@ void map_unref_ways::operator()(node_t *node)
 }
 
 void map_t::way_add_cancel() {
-  osm_t::ref osm = appdata.project->osm;
-  assert(osm);
-
   printf("  removing temporary way\n");
   assert(action.way != nullptr);
 
-  /* remove all nodes that have been created for this way */
-  /* (their way count will be 0 after removing the way) */
-  node_chain_t &chain = action.way->node_chain;
-  std::for_each(chain.begin(), chain.end(), map_unref_ways(osm));
-  chain.clear();
-
-  /* Remove ways visual representation. There is no background item yet. */
-  action.way->item_chain_destroy(nullptr);
-
-  osm->way_free(action.way);
+  appdata.project->osm->way_delete(action.way, nullptr, map_unref_ways);
   action.way = nullptr;
 }
 
