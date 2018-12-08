@@ -223,9 +223,7 @@ void map_t::way_add_ok() {
   if(action.ends_on == action.way) {
     printf("  the new way ends on itself -> don't join itself\n");
     action.ends_on = nullptr;
-  }
-
-  if(action.ends_on != nullptr && osm2go_platform::yes_no(_("Join way?"),
+  } else if(action.ends_on != nullptr && osm2go_platform::yes_no(_("Join way?"),
                                            _("Do you want to join the way present at this location?"),
                                                           MISC_AGAIN_ID_EXTEND_WAY_END)) {
     printf("  this new way ends on another way\n");
