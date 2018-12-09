@@ -966,7 +966,6 @@ way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
 
 struct remove_member_functor {
   const object_t obj;
-  // the second argument is to distinguish the constructor from operator()
   explicit inline remove_member_functor(object_t o) : obj(o) {}
   void operator()(std::pair<item_id_t, relation_t *> pair);
 };
