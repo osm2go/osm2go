@@ -796,6 +796,12 @@ static void test_reverse()
   assert(w->tags == tags);
 }
 
+static unsigned int nn_cnt;
+static void node_noop(node_t *)
+{
+  nn_cnt++;
+}
+
 static void test_way_delete()
 {
   std::unique_ptr<osm_t> o(new osm_t());
@@ -899,6 +905,34 @@ static void test_way_delete()
   assert(o->node_by_id(n3->id) == n3);
   assert(o->node_by_id(n4->id) == n4);
   assert_cmpnum(r->members.size(), 1);
+
+  // once again, with a custom unref function
+  w = new way_t(0);
+  // not attached here as map_edit also keeps separate
+  w->append_node(n3);
+  w->append_node(n4);
+
+  assert_cmpnum(nn_cnt, 0);
+  o->way_delete(w, nullptr, node_noop);
+  assert_cmpnum(nn_cnt, 2);
+  // they have not been unrefed in the custom function
+  assert_cmpnum(n3->ways, 2);
+  n3->ways--;
+  assert_cmpnum(n4->ways, 2);
+  n4->ways--;
+
+  // once more, but this time pretend this is not a new way
+  w = new way_t(1, 42);
+  o->way_insert(w);
+  w->append_node(n3);
+  w->append_node(n4);
+
+  o->way_delete(w, nullptr);
+  assert_cmpnum(n3->ways, 1);
+  assert_cmpnum(n4->ways, 1);
+  assert_cmpnum(w->node_chain.size(), 0);
+  assert(w->flags & OSM_FLAG_DELETED);
+  assert(w->tags.empty());
 }
 
 static void test_member_delete()
