@@ -154,7 +154,7 @@ void map_t::way_add_cancel() {
 
 struct map_draw_nodes {
   map_t * const map;
-  explicit map_draw_nodes(map_t *m) : map(m) {}
+  explicit inline map_draw_nodes(map_t *m) : map(m) {}
   void operator()(node_t *node);
 };
 
