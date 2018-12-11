@@ -1629,15 +1629,15 @@ void map_t::set_bg_color_from_style()
 
 bool map_t::set_bg_image(const std::string &filename)
 {
-  const bounds_t &bounds = appdata.project->osm->bounds;
+  const lpos_t min = appdata.project->osm->bounds.min;
 
   remove_bg_image();
 
   if(!canvas->set_background(filename))
     return false;
 
-  int x = bounds.min.x + bg_offset.x();
-  int y = bounds.min.y + bg_offset.y();
+  int x = min.x + bg_offset.x();
+  int y = min.y + bg_offset.y();
   canvas->move_background(x, y);
 
   return true;
