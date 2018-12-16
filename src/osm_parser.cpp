@@ -113,22 +113,27 @@ time_t __attribute__((nonnull(1))) convert_iso8601(const char *str) {
 
 /* -------------------- tag handling ----------------------- */
 
-bool osm_t::parse_tag(xmlNode *a_node, TagMap &tags) {
+void osm_t::parse_tag(xmlNode *a_node, TagMap &tags)
+{
   xmlString key(xmlGetProp(a_node, BAD_CAST "k"));
   xmlString value(xmlGetProp(a_node, BAD_CAST "v"));
 
-  if(unlikely(key.empty() || value.empty()))
-    return false;
+  if(unlikely(key.empty() || value.empty())) {
+    printf("empty attribute for tag: k='%s' v='%s'\n", static_cast<const char *>(key),
+           static_cast<const char *>(value));
+    return;
+  }
 
   const std::string k = reinterpret_cast<char *>(key.get());
   const std::string v = reinterpret_cast<char *>(value.get());
 
-  if(unlikely(tags.findTag(k, v) != tags.end()))
-    return false;
+  if(unlikely(tags.findTag(k, v) != tags.end())) {
+    printf("duplicate tag: k='%s' v='%s'\n", static_cast<const char *>(key),
+           static_cast<const char *>(value));
+    return;
+  }
 
   tags.insert(TagMap::value_type(k, v));
-
-  return true;
 }
 
 /* ------------------- way handling ------------------- */

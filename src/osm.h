@@ -310,9 +310,8 @@ public:
    * @brief parse the XML node for tag values
    * @param a_node the XML node to parse
    * @param tags the tag vector the new node is added to
-   * @returns if a new tag was added
    */
-  static bool parse_tag(xmlNode* a_node, TagMap &tags);
+  static void parse_tag(xmlNode* a_node, TagMap &tags);
 
   bool parse_relation_member(const xmlString &tp, const xmlString &refstr, const xmlString &role, std::vector<member_t> &members);
   void parse_relation_member(xmlNode *a_node, std::vector<member_t> &members);
