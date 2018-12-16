@@ -391,10 +391,10 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t::ref osm) {
   for(xmlNode *nd_node = node_way->children; nd_node != nullptr; nd_node = nd_node->next) {
     if(nd_node->type == XML_ELEMENT_NODE) {
       if(likely(strcmp(reinterpret_cast<const char *>(nd_node->name), "nd") == 0)) {
-	/* attach node to node_chain */
-	node_t *tmp = osm->parse_way_nd(nd_node);
-        if(tmp != nullptr)
-	  new_chain.push_back(tmp);
+        /* attach node to node_chain */
+        node_t *tmp = osm->parse_way_nd(nd_node);
+        if(likely(tmp != nullptr))
+          new_chain.push_back(tmp);
       }
     }
   }
