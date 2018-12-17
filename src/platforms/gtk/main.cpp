@@ -513,6 +513,11 @@ static void track_clear_cb(appdata_t *appdata) {
   appdata->track_clear();
 }
 
+static void track_clear_current_cb(appdata_t *appdata)
+{
+  appdata->track_clear_current();
+}
+
 static void about_box(MainUi *uicontrol)
 {
   uicontrol->about_box();
@@ -744,6 +749,10 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
     appdata, submenu, G_CALLBACK(track_clear_cb), MainUi::MENU_ITEM_TRACK_CLEAR,
     "<OSM2Go-Main>/Track/Clear");
 
+  menu_append_new_item(
+    appdata, submenu, G_CALLBACK(track_clear_current_cb), MainUi::MENU_ITEM_TRACK_CLEAR_CURRENT,
+    "<OSM2Go-Main>/Track/ClearCurrent");
+
   const settings_t::ref settings = settings_t::instance();
   item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_track_enable_gps), MainUi::MENU_ITEM_TRACK_ENABLE_GPS,
@@ -973,13 +982,14 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
   } };
 
   /* -- the track submenu -- */
-  const std::array<menu_entry_t, 6> sm_track_entries = { {
-    menu_entry_t(MainUi::MENU_ITEM_TRACK_IMPORT,     G_CALLBACK(cb_menu_track_import)),
-    menu_entry_t(MainUi::MENU_ITEM_TRACK_EXPORT,     G_CALLBACK(cb_menu_track_export)),
-    menu_entry_t(MainUi::MENU_ITEM_TRACK_CLEAR,      G_CALLBACK(track_clear_cb)),
-    menu_entry_t(MainUi::MENU_ITEM_TRACK_ENABLE_GPS, G_CALLBACK(cb_menu_track_enable_gps),
+  const std::array<menu_entry_t, 7> sm_track_entries = { {
+    menu_entry_t(MainUi::MENU_ITEM_TRACK_IMPORT,        G_CALLBACK(cb_menu_track_import)),
+    menu_entry_t(MainUi::MENU_ITEM_TRACK_EXPORT,        G_CALLBACK(cb_menu_track_export)),
+    menu_entry_t(MainUi::MENU_ITEM_TRACK_CLEAR,         G_CALLBACK(track_clear_cb)),
+    menu_entry_t(MainUi::MENU_ITEM_TRACK_CLEAR_CURRENT, G_CALLBACK(track_clear_current_cb)),
+    menu_entry_t(MainUi::MENU_ITEM_TRACK_ENABLE_GPS,    G_CALLBACK(cb_menu_track_enable_gps),
                  enable_gps_get_toggle),
-    menu_entry_t(MainUi::MENU_ITEM_TRACK_FOLLOW_GPS, G_CALLBACK(cb_menu_track_follow_gps),
+    menu_entry_t(MainUi::MENU_ITEM_TRACK_FOLLOW_GPS,    G_CALLBACK(cb_menu_track_follow_gps),
                  follow_gps_get_toggle),
     menu_entry_t(_("Track visibility")),
   } };
@@ -1049,6 +1059,19 @@ void appdata_t::track_clear()
     track.track->clear();
 
   track.track.reset();
+  track_menu_set(*this);
+}
+
+void appdata_t::track_clear_current()
+{
+  if (!track.track || !track.track->active)
+    return;
+
+  g_debug("clearing current track segment");
+
+  if(likely(map != nullptr))
+    track.track->clear();
+
   track_menu_set(*this);
 }
 

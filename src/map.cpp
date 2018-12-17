@@ -1565,6 +1565,12 @@ void track_t::clear() {
   std::for_each(segments.begin(), segments.end(), free_track_item_chain<true>);
 }
 
+void track_t::clear_current()
+{
+  assert(!segments.empty());
+  free_track_item_chain<true>(segments.back());
+}
+
 /**
  * @brief show the marker item for the current GPS position
  */

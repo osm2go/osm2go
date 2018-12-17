@@ -112,6 +112,7 @@ MainUiGtk::MainUiGtk()
   menuitems[SUBMENU_VIEW] = create_submenu_item(_("_View"));
   menuitems[MENU_ITEM_TRACK_EXPORT] = createMenuItem(_("_Export"));
   menuitems[MENU_ITEM_TRACK_CLEAR] = createMenuItem(_("_Clear"), "edit-clear");
+  menuitems[MENU_ITEM_TRACK_CLEAR_CURRENT] = createMenuItem(_("Clear c_urrent segment"), "edit-clear");
   menuitems[MENU_ITEM_TRACK_ENABLE_GPS] = create_checkbox_item(_("_GPS enable"));
   menuitems[MENU_ITEM_TRACK_FOLLOW_GPS] = create_checkbox_item(_("GPS follow"));
 #ifdef FREMANTLE

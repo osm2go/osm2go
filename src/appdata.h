@@ -60,6 +60,7 @@ struct appdata_t {
   const std::unique_ptr<gps_state_t> gps_state;
 
   void track_clear();
+  void track_clear_current();
   void main_ui_enable();
 
   /**
