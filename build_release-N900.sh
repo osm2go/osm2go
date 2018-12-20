@@ -1,9 +1,12 @@
 #!/bin/bash
 
-if [ $# -gt 1 ]; then
-	echo "Usage: $(basename ${0}) [icons.tar]" >&2
+if [ $# -gt 2 -o $# -lt 1 ]; then
+	echo "Usage: $(basename ${0}) [curl_version] [icons.tar]" >&2
 	exit 1
 fi
+
+CURL_VERSION=${1}
+shift
 
 set -ex
 
@@ -21,6 +24,9 @@ if [ $# -eq 1 ]; then
 fi
 
 pushd ${TMPDIR}/osm2go-${VERSION}
+
+tar xf ~/curl-${CURL_VERSION}.tar*
+mv curl-${CURL_VERSION} curl
 
 # run CMake so the debian/control is generated
 cmake -D CMAKE_BUILD_TYPE=Release .
