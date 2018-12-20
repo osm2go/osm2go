@@ -24,7 +24,7 @@ configure: configure-stamp
 configure-stamp:
 	# Add here commands to configure the package.
 	dh_testdir
-	cmake -D CMAKE_INSTALL_PREFIX=/usr -D CMAKE_TOOLCHAIN_FILE=/opt/scratchbox.cmake .
+	# cmake -D CMAKE_INSTALL_PREFIX=/usr -DCMAKE_TOOLCHAIN_FILE=/opt/scratchbox.cmake -D CMAKE_BUILD_WITH_INSTALL_RPATH=On .
 	#--exec-prefix=/usr
 	#XXX dh_auto_configure
 	touch "$@"
@@ -45,7 +45,7 @@ clean: configure-stamp
 	dh_testdir
 	dh_testroot
 	#XXX dh_auto_clean
-	$(MAKE) clean
+	# $(MAKE) clean
 	rm -f build-stamp configure-stamp
 	dh_clean 
 
