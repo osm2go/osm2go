@@ -1,8 +1,15 @@
 osm2go (1:0.9.14-maemo1) karmic; urgency=low
 
   * fix random version number shown on modified objects after upload (broken in 0.9.11)
+  * use more specific object description "way" or "area" if possible
+  * implement renaming projects
+  * do not draw nodes that are part of a way and only have "source" tags
+  * use a better sized bollard image in Mapnik style
+  * allow filtering in project selection
+  * prevent that duplicate tags are entered at all
+  * allow clearing of only the current track segment
 
- -- Rolf Eike Beer <eike@sf-mail.de>  Sun, 24 Jun 2018 12:05:21 +0200
+ -- Rolf Eike Beer <eike@sf-mail.de>  Thu, 20 Dec 2018 12:46:49 +0100
 
 osm2go (1:0.9.13-maemo1) karmic; urgency=low
 
