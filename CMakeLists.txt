@@ -66,6 +66,7 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/curl/CMakeLists.txt")
 
 	# tested on N900, so newer versions should be fine, too
 	set(HAVE_POLL_FINE_EXITCODE 0 CACHE INTERNAL "exit code of poll test program")
+	set(HAVE_POLL_FINE_EXITCODE__TRYRUN_OUTPUT "" CACHE INTERNAL "Output of poll test program")
 
 	if (MAEMO_FOUND)
 		set(CURL_CA_PATH "/etc/certs/common-ca/" CACHE INTERNAL "Location of default CA path.")
