@@ -321,7 +321,7 @@ cb_menu_undo_changes(appdata_t *appdata) {
 
   project->diff_remove_file();
   bool b = project->parse_osm();
-  assert(b); // data has been opened before
+  assert(b); (void)b; // data has been opened before
   appdata->map->paint();
 
   appdata->uicontrol->showNotification(_("Undo all changes"), MainUi::Brief);

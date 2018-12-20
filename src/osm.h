@@ -794,17 +794,17 @@ bool osm_t::hasHiddenWays() const noexcept
 void osm_t::node_insert(node_t *node)
 {
   bool b = nodes.insert(std::pair<item_id_t, node_t *>(node->id, node)).second;
-  assert(b);
+  assert(b); (void)b;
 }
 
 void osm_t::way_insert(way_t *way)
 {
   bool b = ways.insert(std::pair<item_id_t, way_t *>(way->id, way)).second;
-  assert(b);
+  assert(b); (void)b;
 }
 
 void osm_t::relation_insert(relation_t *relation)
 {
   bool b = relations.insert(std::pair<item_id_t, relation_t *>(relation->id, relation)).second;
-  assert(b);
+  assert(b); (void)b;
 }

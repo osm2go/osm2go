@@ -204,7 +204,7 @@ static project_t *project_get_selected(GtkWidget *list, GtkTreeModelFilter *filt
   GtkTreeIter fiter;
 
   bool b = list_get_selected(list, &model, &fiter);
-  assert(b);
+  assert(b); (void)b;
   gtk_tree_model_get(model, &fiter, PROJECT_COL_DATA, &project, -1);
   if(iter != nullptr)
     gtk_tree_model_filter_convert_iter_to_child_iter(filter, iter, &fiter);
