@@ -24,7 +24,7 @@ configure: configure-stamp
 configure-stamp:
 	# Add here commands to configure the package.
 	dh_testdir
-	cmake -D CMAKE_INSTALL_PREFIX=/usr .
+	cmake -D CMAKE_INSTALL_PREFIX=/usr -D CMAKE_TOOLCHAIN_FILE=/opt/scratchbox.cmake .
 	#--exec-prefix=/usr
 	#XXX dh_auto_configure
 	touch "$@"
