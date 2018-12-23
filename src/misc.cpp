@@ -57,3 +57,17 @@ void format_float_int(int val, unsigned int decimals, char *str)
   // to avoid needless searching
   remove_trailing_zeroes(str + l - decimals - 1);
 }
+
+void remove_trailing_zeroes(char *str)
+{
+  char *delim = str;
+  while(*delim >= '0' && *delim <= '9')
+    delim++;
+  if(*delim == '\0')
+    return;
+  char *p = delim + strlen(delim) - 1;
+  while(*p == '0')
+    *p-- = '\0';
+  if(p == delim)
+    *p = '\0';
+}

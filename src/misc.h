@@ -90,3 +90,13 @@ void format_float(T val, unsigned int decimals, char *str)
     val *= 10;
   format_float_int(round(val), decimals, str);
 }
+
+/**
+ * @brief remove trailing zeroes from a number string
+ * @param str the buffer to modify
+ *
+ * This will remove all trailing zeroes if the buffer contains a delimiter
+ * (i.e. any character outside [0..9]. If the last character would be that
+ * delimiter it will also be removed.
+ */
+void remove_trailing_zeroes(char *str);
