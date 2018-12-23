@@ -173,31 +173,8 @@ void track_save_segs::save_point::operator()(const track_point_t &point)
   point.pos.toXmlProperties(node_point);
 
   if(!std::isnan(point.altitude)) {
-    // The whole purpose of this is to avoid using Glib, which would provide
-    // g_ascii_formatd(). One can't simply use snprintf() or friends, as the
-    // decimal separator is locale dependent and changing the locale is expensive
-    // and not thread safe. At the end this code is twice as fast as the Glib
-    // code, likely because it is much less general and uses less floating point
-    // operations.
-    int alt = round(point.altitude * 100);
     char str[16]; // int needs at most 10 digits, '-', '.', '\0' -> 13
-    unsigned int off = 0;
-    // handle the sign explicitely so it does not count in the minimum
-    // output length, could result in "-.42" otherwise
-    if(alt < 0) {
-      str[0] = '-';
-      off++;
-    }
-    // make sure there are at least 3 characters in the output
-    int l = snprintf(str + off, sizeof(str) - 1, "%03u", abs(alt)) + off;
-    // move the last 2 digits and \0 one position to the right
-    memmove(str + l - 1, str + l - 2, 3);
-    // insert dot
-    str[l - 2] = '.';
-    // remove any trailing zeroes, use the knowledge about the string length
-    // to avoid needless searching
-    remove_trailing_zeroes(str + l - 3);
-
+    format_float(point.altitude, 2, str);
     xmlNewTextChild(node_point, nullptr, BAD_CAST "ele", BAD_CAST str);
   }
 

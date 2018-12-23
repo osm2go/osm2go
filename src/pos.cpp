@@ -29,7 +29,6 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
-#include <glib.h>
 
 bool pos_t::valid() const noexcept
 {
@@ -66,16 +65,10 @@ lpos_t pos_t::toLpos(const bounds_t &bounds) const {
   return lpos;
 }
 
-static void print_coord(pos_float_t val, char *buf)
-{
-  g_ascii_formatd(buf, G_ASCII_DTOSTR_BUF_SIZE, "%.07f", val);
-  remove_trailing_zeroes(buf);
-}
-
 static void xml_add_prop_coord(xmlNodePtr node, const char *key, pos_float_t val)
 {
-  char str[G_ASCII_DTOSTR_BUF_SIZE];
-  print_coord(val, str);
+  char str[16];
+  format_float(val, 7, str);
   xmlNewProp(node, BAD_CAST key, BAD_CAST str);
 }
 
@@ -165,11 +158,11 @@ bool pos_area::valid() const noexcept
 std::string pos_area::print() const
 {
   std::array<pos_float_t, 4> pos = { { min.lon, min.lat, max.lon, max.lat } };
-  char buf[G_ASCII_DTOSTR_BUF_SIZE * pos.size() + pos.size()];
+  char buf[16 * pos.size() + pos.size()];
 
   size_t p = 0;
   for(unsigned int i = 0; i < pos.size(); i++) {
-    print_coord(pos.at(i), buf + p);
+    format_float(pos.at(i), 7, buf + p);
     p += strlen(buf + p);
     buf[p++] = ',';
   }

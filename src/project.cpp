@@ -39,7 +39,6 @@
 #include <cstring>
 #include <dirent.h>
 #include <fcntl.h>
-#include <glib.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <memory>
@@ -173,7 +172,7 @@ bool project_read(const std::string &project_file, project_t::ref project,
 }
 
 bool project_t::save(osm2go_platform::Widget *parent) {
-  char str[32];
+  char str[16];
   const std::string &project_file = project_filename(*this);
 
   printf("saving project to %s\n", project_file.c_str());
@@ -220,9 +219,9 @@ bool project_t::save(osm2go_platform::Widget *parent) {
   bounds.max.toXmlProperties(node);
 
   node = xmlNewChild(root_node, nullptr, BAD_CAST "map", nullptr);
-  g_ascii_formatd(str, sizeof(str), "%.04f", map_state.zoom);
+  format_float(map_state.zoom, 4, str);
   xmlNewProp(node, BAD_CAST "zoom", BAD_CAST str);
-  g_ascii_formatd(str, sizeof(str), "%.04f", map_state.detail);
+  format_float(map_state.detail, 4, str);
   xmlNewProp(node, BAD_CAST "detail", BAD_CAST str);
   snprintf(str, sizeof(str), "%d", map_state.scroll_offset.x);
   xmlNewProp(node, BAD_CAST "scroll-offset-x", BAD_CAST str);

@@ -61,3 +61,32 @@ static inline double xml_parse_float(const xmlChar *str)
 }
 inline double xml_parse_float(const xmlString &str)
 { return xml_parse_float(str.get()); }
+
+void format_float_int(int val, unsigned int decimals, char *str);
+
+/**
+ * @brief convert a floating point number to a integer representation
+ * @param val the floating point value
+ * @param decimals the maximum number of decimals behind the separator
+ * @param str the buffer to print the number to, must be big enough
+ *
+ * This assumes that a "base 10 shift left by decimals" can still be
+ * represented as an integer. Trailing zeroes are chopped.
+ *
+ * 16 as length of str is enough for every possible value: int needs at most
+ * 10 digits, '-', '.', '\0' -> 13
+ *
+ * The whole purpose of this is to avoid using Glib, which would provide
+ * g_ascii_formatd(). One can't simply use snprintf() or friends, as the
+ * decimal separator is locale dependent and changing the locale is expensive
+ * and not thread safe. At the end this code is twice as fast as the Glib
+ * code, likely because it is much less general and uses less floating point
+ * operations.
+ */
+template<typename T>
+void format_float(T val, unsigned int decimals, char *str)
+{
+  for (unsigned int k = decimals; k > 0; k--)
+    val *= 10;
+  format_float_int(round(val), decimals, str);
+}
