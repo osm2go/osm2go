@@ -22,8 +22,8 @@
 
 #include "josm_elemstyles.h"
 #include "map.h"
+#include "misc.h"
 #include "settings.h"
-#include "xml_helpers.h"
 
 #include <algorithm>
 #include <cassert>

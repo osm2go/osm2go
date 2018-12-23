@@ -17,7 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "xml_helpers.h"
+#include "misc.h"
 
 #include "pos.h"
 

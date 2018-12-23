@@ -28,8 +28,8 @@
 #include "icon.h"
 #include "josm_presets.h"
 #include "map.h"
+#include "misc.h"
 #include "style.h"
-#include "xml_helpers.h"
 
 #include <algorithm>
 #include <cassert>

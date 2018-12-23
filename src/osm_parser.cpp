@@ -24,8 +24,8 @@
 
 #include "osm.h"
 
+#include "misc.h"
 #include "pos.h"
-#include "xml_helpers.h"
 
 #include <algorithm>
 #include <cassert>

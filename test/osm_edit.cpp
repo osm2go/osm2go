@@ -1,7 +1,7 @@
 #include <icon.h>
+#include <misc.h>
 #include <osm.h>
 #include <settings.h>
-#include <xml_helpers.h>
 
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>

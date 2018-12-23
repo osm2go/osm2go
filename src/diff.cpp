@@ -24,11 +24,11 @@
 #include "diff.h"
 
 #include "fdguard.h"
+#include "misc.h"
 #include "notifications.h"
 #include "osm.h"
 #include "project.h"
 #include "uicontrol.h"
-#include "xml_helpers.h"
 
 #include <algorithm>
 #include <cassert>

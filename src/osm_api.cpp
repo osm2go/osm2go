@@ -23,6 +23,7 @@
 #include "appdata.h"
 #include "diff.h"
 #include "map.h"
+#include "misc.h"
 #include "net_io.h"
 #include "notifications.h"
 #include "osm.h"
@@ -30,7 +31,6 @@
 #include "project.h"
 #include "settings.h"
 #include "uicontrol.h"
-#include "xml_helpers.h"
 
 #include <algorithm>
 #include <cassert>

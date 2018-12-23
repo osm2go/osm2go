@@ -25,8 +25,8 @@
 #include "osm.h"
 
 #include "cache_set.h"
+#include "misc.h"
 #include "pos.h"
-#include "xml_helpers.h"
 
 #include <algorithm>
 #include <array>

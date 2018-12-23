@@ -24,6 +24,7 @@
 #include "area_edit.h"
 #include "diff.h"
 #include "map.h"
+#include "misc.h"
 #include "net_io.h"
 #include "notifications.h"
 #include "osm2go_platform.h"
@@ -31,7 +32,6 @@
 #include "track.h"
 #include "uicontrol.h"
 #include "wms.h"
-#include "xml_helpers.h"
 
 #include <algorithm>
 #include <cassert>

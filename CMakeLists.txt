@@ -163,6 +163,7 @@ add_library(osm2go_lib STATIC
 	src/map_hl.cpp
 	src/map_hl.h
 	src/misc.cpp
+	src/misc.h
 	src/notifications.h
 	src/net_io.cpp
 	src/net_io.h
