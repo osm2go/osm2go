@@ -1569,6 +1569,7 @@ void track_t::clear_current()
 {
   assert(!segments.empty());
   free_track_item_chain<true>(segments.back());
+  segments.back().track_points.clear();
 }
 
 /**
