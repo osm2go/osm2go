@@ -110,6 +110,7 @@ void gpsd_state_t::setEnable(bool en)
     timer.stop();
   else if(en && !timer.isActive())
     timer.restart(1, gps_callback, this);
+  enable = en;
 }
 
 gpointer gps_thread(gpointer data) {
