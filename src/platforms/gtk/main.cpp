@@ -1070,7 +1070,7 @@ void appdata_t::track_clear_current()
   g_debug("clearing current track segment");
 
   if(likely(map != nullptr))
-    track.track->clear();
+    track.track->clear_current();
 
   track_menu_set(*this);
 }
