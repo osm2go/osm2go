@@ -104,9 +104,8 @@ static bool store_value(const presets_element_t *widget, osm_t::TagMap &tags,
 }
 
 #ifdef FREMANTLE
-static gint table_expose_event(GtkWidget *widget, GdkEventExpose *,
-			 gboolean *first) {
-
+static gboolean table_expose_event(GtkWidget *widget, GdkEventExpose *, bool *first)
+{
   if(*first) {
     guint border_width =
       gtk_container_get_border_width(GTK_CONTAINER(widget->parent));
@@ -114,7 +113,7 @@ static gint table_expose_event(GtkWidget *widget, GdkEventExpose *,
 
     gtk_widget_set_size_request(GTK_WIDGET(widget->parent), -1,
 				widget->allocation.height +  2*border_width);
-    *first = FALSE;
+    *first = false;
   }
   return FALSE;
 }
@@ -320,7 +319,7 @@ static void presets_item_dialog(const presets_item *item) {
     mwidget = hildon_pannable_area_new();
     hildon_pannable_area_add_with_viewport(HILDON_PANNABLE_AREA(mwidget), table);
 
-    gboolean first = TRUE;
+    bool first = true;
     g_signal_connect(table, "expose_event", G_CALLBACK(table_expose_event), &first);
 #endif
     gtk_box_pack_start(dialog.vbox(), mwidget, TRUE, TRUE, 0);
