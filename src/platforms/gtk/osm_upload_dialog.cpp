@@ -88,7 +88,7 @@ void osm_upload_context_t::append_str(const char *msg, const char *colorname) {
   } else
     gtk_text_buffer_insert(logbuffer, &end, msg, -1);
 
-  gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(logview), &end, 0.0, FALSE, 0, 0);
+  gtk_text_view_scroll_to_iter(logview, &end, 0.0, FALSE, 0, 0);
 
   osm2go_platform::process_events();
 }
