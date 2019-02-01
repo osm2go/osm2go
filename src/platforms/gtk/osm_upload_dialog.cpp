@@ -43,9 +43,6 @@
 #include "osm2go_platform_gtk.h"
 #include <osm2go_stl.h>
 
-#define COLOR_ERR  "red"
-#define COLOR_OK   "darkgreen"
-
 class osm_upload_context_gtk : public osm_upload_context_t {
 public:
   osm_upload_context_gtk(appdata_t &a, project_t::ref p, const char *c, const char *s);
