@@ -215,7 +215,7 @@ static void testLoad(const std::string &tmpdir, const char *osmfile)
       // copy the OSM data
       osm2go_platform::MappedFile osm(osmfile);
       assert(static_cast<bool>(osm));
-      fdguard osmfd(open((tmpdir + proj_name + "/" + proj_name + ".osm").c_str(), O_CREAT | O_WRONLY, 0644));
+      fdguard osmfd(open((tmpdir + proj_name + '/' + proj_name + ".osm").c_str(), O_CREAT | O_WRONLY, 0644));
       assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
       assert_cmpnum(write(osmfd, osm.data(), osm.length()), osm.length());
       }

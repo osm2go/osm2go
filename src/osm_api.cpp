@@ -494,7 +494,7 @@ void osm_upload_context_t::upload(const osm_t::dirty_t &dirty, osm2go_platform::
   append(trstring("Uploading to %1\n").arg(project->server(settings->server)));
 
   /* get a curl handle */
-  curl.reset(curl_custom_setup(settings->username + ":" + settings->password));
+  curl.reset(curl_custom_setup(settings->username + ':' + settings->password));
 
   if(unlikely(!curl)) {
     append_str(_("CURL init error\n"));

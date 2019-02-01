@@ -82,7 +82,7 @@ static void download_fine()
   const std::string osmname = project->path + project->osmFile;
   assert_cmpnum(unlink(osmname.c_str()), 0);
   // the project file has been saved as it was modified (".gz" was added for OSM)
-  const std::string projectfile = project_dir + "/" + projectName + ".proj";
+  const std::string projectfile = project_dir + '/' + projectName + ".proj";
   assert_cmpnum(unlink(projectfile.c_str()), 0);
 
   assert_cmpnum(rmdir(project_dir.c_str()), 0);
