@@ -452,7 +452,7 @@ static GtkWidget *wms_layer_widget(project_t::ref project, const wms_layer_t::li
                 fitting_layers_functor(store.get(), project));
 
   GtkWidget *widget = osm2go_platform::select_widget(GTK_TREE_MODEL(store.get()),
-                                                     osm2go_platform::AllowMultiSelection, ",");
+                                                     osm2go_platform::AllowMultiSelection, ',');
 
 #ifdef FREMANTLE
   g_signal_connect_swapped(widget,

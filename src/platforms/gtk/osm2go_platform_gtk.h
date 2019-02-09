@@ -91,7 +91,7 @@ namespace osm2go_platform {
    * The widget takes a reference on the model. Only the first character of delimiter
    * is used, so it may be a pointer to a single char.
    */
-  GtkWidget *select_widget(GtkTreeModel *model, unsigned int flags = NoSelectionFlags, const char *delimiter = ";") __attribute__((nonnull(1)));
+  GtkWidget *select_widget(GtkTreeModel *model, unsigned int flags = NoSelectionFlags, char delimiter = ';') __attribute__((nonnull(1)));
 
   /**
    * @brief create a widget that let's the user do a selection
@@ -110,7 +110,7 @@ namespace osm2go_platform {
    * This puts the select_widget() behind a picker button on Fremantle. It just
    * returns the select_widget() on desktop systems.
    */
-  GtkWidget *select_widget_wrapped(const char *title, GtkTreeModel *model, unsigned int flags = NoSelectionFlags, const char *delimiter = ";") __attribute__((nonnull(1, 2)));
+  GtkWidget *select_widget_wrapped(const char *title, GtkTreeModel *model, unsigned int flags = NoSelectionFlags, char delimiter = ';') __attribute__((nonnull(1, 2)));
 
   /**
    * @brief return the value selected with the select widget

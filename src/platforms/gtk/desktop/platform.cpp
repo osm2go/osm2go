@@ -184,7 +184,7 @@ bool osm2go_platform::isComboBoxEntryWidget(GtkWidget *widget)
   return isCombo(widget, TRUE);
 }
 
-GtkWidget *osm2go_platform::select_widget(GtkTreeModel *model, unsigned int flags, const char *delimiter)
+GtkWidget *osm2go_platform::select_widget(GtkTreeModel *model, unsigned int flags, char delimiter)
 {
   GtkWidget *ret;
   GtkCellRenderer *rnd = gtk_cell_renderer_text_new();
@@ -201,7 +201,7 @@ GtkWidget *osm2go_platform::select_widget(GtkTreeModel *model, unsigned int flag
     GtkTreeView *tree = GTK_TREE_VIEW(gtk_tree_view_new_with_model(model));
     gtk_tree_selection_set_mode(gtk_tree_view_get_selection(tree), GTK_SELECTION_MULTIPLE);
     gtk_tree_view_set_headers_visible(tree, FALSE);
-    uintptr_t ch = *delimiter;
+    intptr_t ch = delimiter;
     g_object_set_data(G_OBJECT(tree), "user delimiter", reinterpret_cast<gpointer>(ch));
     GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(nullptr, rnd,
                                                                          "text", 0,
@@ -222,7 +222,7 @@ GtkWidget *osm2go_platform::select_widget(GtkTreeModel *model, unsigned int flag
   return ret;
 }
 
-GtkWidget *osm2go_platform::select_widget_wrapped(const char *, GtkTreeModel *model, unsigned int flags, const char *delimiter)
+GtkWidget *osm2go_platform::select_widget_wrapped(const char *, GtkTreeModel *model, unsigned int flags, char delimiter)
 {
   return select_widget(model, flags, delimiter);
 }
@@ -259,7 +259,7 @@ std::string osm2go_platform::select_widget_value(GtkWidget *widget)
     GList *selected_rows = gtk_tree_selection_get_selected_rows(selection, &model);
 
     gpointer p = g_object_get_data(G_OBJECT(tree), "user delimiter");
-    char delimiter = reinterpret_cast<uintptr_t>(p);
+    const char delimiter = reinterpret_cast<intptr_t>(p);
 
     for (GList *item = selected_rows; item != nullptr; item = g_list_next(item)) {
       GtkTreeIter iter;

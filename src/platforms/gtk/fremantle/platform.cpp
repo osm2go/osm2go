@@ -305,7 +305,7 @@ static std::string
 select_print_func_str(HildonTouchSelector *selector, gpointer data)
 {
   GListGuard selected_rows(hildon_touch_selector_get_selected_rows(selector, 0));
-  const char delimiter = *static_cast<const char *>(data);
+  const char delimiter = reinterpret_cast<intptr_t>(data);
 
   std::string result;
   if(!selected_rows)
@@ -343,7 +343,7 @@ select_print_func(HildonTouchSelector *selector, gpointer data)
   return g_strdup(select_print_func_str(selector, data).c_str());
 }
 
-GtkWidget *osm2go_platform::select_widget(GtkTreeModel *model, unsigned int flags, const char *delimiter)
+GtkWidget *osm2go_platform::select_widget(GtkTreeModel *model, unsigned int flags, char delimiter)
 {
   HildonTouchSelector *selector;
 
@@ -358,9 +358,9 @@ GtkWidget *osm2go_platform::select_widget(GtkTreeModel *model, unsigned int flag
     break;
   case AllowMultiSelection: {
     selector = HILDON_TOUCH_SELECTOR(hildon_touch_selector_new_text());
-    hildon_touch_selector_set_print_func_full(selector, select_print_func, const_cast<char *>(delimiter), nullptr);
+    intptr_t ch = delimiter;
+    hildon_touch_selector_set_print_func_full(selector, select_print_func, reinterpret_cast<gpointer>(ch), nullptr);
     hildon_touch_selector_set_column_selection_mode(selector, HILDON_TOUCH_SELECTOR_SELECTION_MODE_MULTIPLE);
-    uintptr_t ch = *delimiter;
     g_object_set_data(G_OBJECT(selector), "user delimiter", reinterpret_cast<gpointer>(ch));
     break;
   }
@@ -473,7 +473,7 @@ multiselect_button_callback(GtkWidget *widget)
   }
 }
 
-GtkWidget *osm2go_platform::select_widget_wrapped(const char *title, GtkTreeModel *model, unsigned int flags, const char *delimiter)
+GtkWidget *osm2go_platform::select_widget_wrapped(const char *title, GtkTreeModel *model, unsigned int flags, char delimiter)
 {
   GtkWidget *ret = picker_button(title, select_widget(model, flags, delimiter));
   if(flags & AllowMultiSelection)
@@ -504,8 +504,7 @@ std::string osm2go_platform::select_widget_value(GtkWidget *widget)
       // the fastest way to repeat the check if this is a wrapped widget or not
       if(reinterpret_cast<GtkWidget *>(selector) == widget) {
         gpointer p = g_object_get_data(G_OBJECT(selector), "user delimiter");
-        char ch = reinterpret_cast<uintptr_t>(p);
-        ret = select_print_func_str(selector, &ch);
+        ret = select_print_func_str(selector, p);
       } else
       // the button has already the properly formatted result
         ret = hildon_button_get_value(HILDON_BUTTON(widget));

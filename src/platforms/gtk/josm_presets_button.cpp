@@ -982,7 +982,7 @@ presets_element_t::attach_key *presets_element_multiselect::attach(preset_attach
   std::unique_ptr<GtkListStore, g_object_deleter> store(selectorModel(values, display_values));
   GtkWidget *ret = osm2go_platform::select_widget_wrapped(text.c_str(), GTK_TREE_MODEL(store.get()),
                                                           osm2go_platform::AllowMultiSelection,
-                                                          &delimiter);
+                                                          delimiter);
 
   const std::vector<unsigned int> &indexes = matchedIndexes(pr);
 
