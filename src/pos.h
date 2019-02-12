@@ -49,7 +49,7 @@ struct bounds_t;
 struct lpos_t;
 
 /* global position */
-typedef struct pos_t {
+struct pos_t {
   pos_float_t lat, lon;
 #ifdef __cplusplus
   inline pos_t() noexcept {}
@@ -80,7 +80,7 @@ typedef struct pos_t {
   static pos_t fromXmlProperties(xmlTextReaderPtr reader,
                                  const char *latName = "lat", const char *lonName = "lon");
 #endif
-} pos_t;
+};
 
 #ifdef __cplusplus
 
@@ -119,7 +119,7 @@ struct pos_area {
 };
 
 /* local position */
-typedef struct lpos_t {
+struct lpos_t {
   lpos_t() noexcept {}
   lpos_t(int px, int py) noexcept
     : x(px) , y(py) {}
@@ -131,7 +131,7 @@ typedef struct lpos_t {
    */
   pos_t toPos(const bounds_t &bounds) const;
   int x, y;
-} lpos_t;
+};
 
 struct bounds_t {
   pos_area ll;

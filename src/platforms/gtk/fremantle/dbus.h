@@ -25,7 +25,7 @@
 #include <libosso.h>
 
 typedef struct {
-  pos_t pos;
+  struct pos_t pos;
   int zoom;
   gboolean valid;
 } dbus_mm_pos_t;
