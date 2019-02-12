@@ -50,7 +50,6 @@
 #include <osm2go_cpp.h>
 #include "osm2go_platform_gtk.h"
 #include "osm2go_stl.h"
-#include "osm2go_platform_gtk.h"
 
 struct canvas_points_deleter {
   void operator()(void *ptr) {
