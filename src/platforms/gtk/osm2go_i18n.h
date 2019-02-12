@@ -31,7 +31,7 @@ typedef char gchar;
 
 class trstring : private std::string {
   explicit inline trstring(const std::string &s) : std::string(s) {}
-  std::string argn(const std::string &spattern, const std::string &a, std::string::size_type pos) const;
+  std::string argn(const char spattern[3], const std::string &a, std::string::size_type pos) const;
 public:
   explicit inline trstring() : std::string() {}
   explicit inline trstring(const char *s) : std::string(gettext(s)) {}

@@ -176,13 +176,13 @@ double osm2go_platform::string_to_double(const char *str)
     return NAN;
 }
 
-std::string trstring::argn(const std::string &spattern, const std::string &a, std::string::size_type pos) const
+std::string trstring::argn(const char spattern[3], const std::string &a, std::string::size_type pos) const
 {
   std::string smsg = *this;
 
   while (pos != std::string::npos) {
-    smsg.replace(pos, spattern.size(), a);
-    pos = smsg.find(spattern, pos + a.size());
+    smsg.replace(pos, 2, a);
+    pos = smsg.find(spattern, pos + a.size(), 2);
   }
 
   return trstring(smsg);
@@ -191,11 +191,11 @@ std::string trstring::argn(const std::string &spattern, const std::string &a, st
 trstring trstring::arg(const std::string &a) const
 {
   // increase as needed
-  std::string spattern = "%1";
-  std::string::size_type pos = find(spattern);
-  for (int i = 1; i < 5 && pos == std::string::npos; i++) {
-    spattern = '%' + std::to_string(i);
-    pos = find(spattern);
+  char spattern[3] = "%1";
+  std::string::size_type pos = find(spattern, 0, 2);
+  for (int i = 2; i < 5 && pos == std::string::npos; i++) {
+    spattern[1] = '0' + i;
+    pos = find(spattern, 0, 2);
   }
 
   if(unlikely(pos == std::string::npos))
