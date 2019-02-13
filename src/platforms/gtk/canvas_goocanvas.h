@@ -38,7 +38,8 @@ public:
 
   std::array<GooCanvasItem *, CANVAS_GROUPS> group;
 
-  struct {
+  struct canvas_bounds {
+    inline canvas_bounds() : min(lpos_t(0, 0)), max(lpos_t(0, 0)) {}
     lpos_t min, max;
   } bounds;
 

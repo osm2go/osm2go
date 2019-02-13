@@ -112,9 +112,6 @@ canvas_goocanvas::canvas_goocanvas()
                         GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
                         GDK_SCROLL_MASK | GDK_POINTER_MOTION_MASK |
                         GDK_POINTER_MOTION_HINT_MASK);
-
-  bounds.min = lpos_t(0, 0);
-  bounds.max = lpos_t(0, 0);
 }
 
 /* ------------------------ accessing the canvas ---------------------- */
