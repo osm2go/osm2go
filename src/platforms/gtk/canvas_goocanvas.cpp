@@ -139,16 +139,16 @@ bool canvas_t::set_background(const std::string &filename)
   if(!gcanvas->bg.pix)
     return false;
 
-  int width = gdk_pixbuf_get_width(gcanvas->bg.pix.get());
-  int height = gdk_pixbuf_get_height(gcanvas->bg.pix.get());
+  float width = gdk_pixbuf_get_width(gcanvas->bg.pix.get());
+  float height = gdk_pixbuf_get_height(gcanvas->bg.pix.get());
 
   /* calculate required scale factor */
-  gcanvas->bg.scale.x = static_cast<float>(gcanvas->bounds.max.x - gcanvas->bounds.min.x) / width;
-  gcanvas->bg.scale.y = static_cast<float>(gcanvas->bounds.max.y - gcanvas->bounds.min.y) / height;
+  gcanvas->bg.scale.x = (gcanvas->bounds.max.x - gcanvas->bounds.min.x) / width;
+  gcanvas->bg.scale.y = (gcanvas->bounds.max.y - gcanvas->bounds.min.y) / height;
 
   GooCanvasItem *bg = goo_canvas_image_new(gr, gcanvas->bg.pix.get(),
-                                          gcanvas->bounds.min.x / gcanvas->bg.scale.x - width / 2,
-                                          gcanvas->bounds.min.y / gcanvas->bg.scale.y - height / 2,
+                                          gcanvas->bounds.min.x / gcanvas->bg.scale.x - width / 2.0f,
+                                          gcanvas->bounds.min.y / gcanvas->bg.scale.y - height / 2.0f,
                                           nullptr);
   goo_canvas_item_scale(bg, gcanvas->bg.scale.x, gcanvas->bg.scale.y);
 
