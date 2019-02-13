@@ -34,17 +34,15 @@
  * https://www.visibone.com/inpoly/
  */
 
-#include "canvas.h"
-#include "canvas_p.h"
+#include "canvas_goocanvas.h"
 
+#include <canvas_p.h>
 #include "map.h"
 
 #include <algorithm>
-#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstring>
-#include <goocanvas.h>
 
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
@@ -81,25 +79,9 @@ struct canvas_dimensions {
 struct _GooCanvasItem : public canvas_item_t {
 };
 
-struct canvas_goocanvas : public canvas_t {
-  canvas_goocanvas();
-
-  std::array<GooCanvasItem *, CANVAS_GROUPS> group;
-
-  struct {
-    lpos_t min, max;
-  } bounds;
-
-  struct {
-    struct { float x, y; } scale;
-    std::unique_ptr<GdkPixbuf, g_object_deleter> pix;
-  } bg;
-
-  canvas_dimensions get_viewport_dimensions() const;
-  bool isVisible(const lpos_t lpos) const;
-};
-
-canvas_t *canvas_t::create() {
+// only for usage in tests
+canvas_t *canvas_t_create()
+{
   return new canvas_goocanvas();
 }
 

@@ -130,8 +130,6 @@ protected:
   explicit canvas_t(osm2go_platform::Widget *w);
 
 public:
-  static canvas_t *create();
-
   osm2go_platform::Widget * const widget;
   typedef std::unordered_map<canvas_item_t *, canvas_item_info_t *> item_mapping_t;
   item_mapping_t item_mapping;

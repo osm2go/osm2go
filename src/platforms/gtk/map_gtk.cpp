@@ -19,16 +19,17 @@
 
 #include "map_gtk.h"
 
-#include "appdata.h"
-#include "canvas.h"
-#include "diff.h"
-#include "iconbar.h"
-#include "info.h"
+#include <appdata.h>
+#include <canvas.h>
+#include "canvas_goocanvas.h"
+#include <diff.h>
+#include <iconbar.h>
+#include <info.h>
 #include "osm2go_platform.h"
-#include "project.h"
-#include "style.h"
-#include "track.h"
-#include "uicontrol.h"
+#include <project.h>
+#include <style.h>
+#include <track.h>
+#include <uicontrol.h>
 
 #include <algorithm>
 #include <cassert>
@@ -210,7 +211,7 @@ static gboolean map_autosave(gpointer data) {
 }
 
 map_gtk::map_gtk(appdata_t &a)
-  : map_t(a, canvas_t::create())
+  : map_t(a, new canvas_goocanvas())
 {
   g_signal_connect_swapped(canvas->widget, "button_press_event",
                            G_CALLBACK(map_button_event), this);

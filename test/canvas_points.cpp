@@ -1,11 +1,12 @@
 #include <canvas.h>
 
-
 #include <cassert>
 #include <memory>
 
 #include <osm2go_annotations.h>
 #include <osm2go_stl.h>
+
+extern canvas_t *canvas_t_create();
 
 void testSegment()
 {
@@ -13,7 +14,7 @@ void testSegment()
   for (unsigned int i = 0; i < 8; i += 2)
     points.push_back(lpos_t(1 << i, 2 << i));
 
-  std::unique_ptr<canvas_t> canvas(canvas_t::create());
+  std::unique_ptr<canvas_t> canvas(canvas_t_create());
   assert(canvas);
 
   std::unique_ptr<canvas_item_t> line(canvas->polyline_new(CANVAS_GROUP_WAYS, points, 1, 0));
@@ -25,7 +26,7 @@ void testSegment()
 
 void testInObject()
 {
-  std::unique_ptr<canvas_t> canvas(canvas_t::create());
+  std::unique_ptr<canvas_t> canvas(canvas_t_create());
   assert(canvas);
 
   // a circle that should have nothing to do with the initial search
