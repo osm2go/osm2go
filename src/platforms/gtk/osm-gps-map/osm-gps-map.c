@@ -331,6 +331,7 @@ replace_string(const gchar *src, const gchar *from, const gchar *to)
     return value;
 }
 
+#if defined(URI_MARKER_Q) || defined(URI_MARKER_Q0)
 static void
 map_convert_coords_to_quadtree_string(gint x, gint y, gint zoomlevel,
                                       gchar *buffer, const gchar initial,
@@ -351,7 +352,7 @@ map_convert_coords_to_quadtree_string(gint x, gint y, gint zoomlevel,
 
     *ptr++ = '\0';
 }
-
+#endif
 
 static void
 inspect_map_uri(OsmGpsMap *map)
@@ -371,20 +372,30 @@ inspect_map_uri(OsmGpsMap *map)
     if (g_strrstr(priv->repo_uri, URI_MARKER_Z))
         priv->uri_format |= URI_HAS_Z;
 
+#ifdef URI_MARKER_S
     if (g_strrstr(priv->repo_uri, URI_MARKER_S))
         priv->uri_format |= URI_HAS_S;
+#endif
 
+#ifdef URI_MARKER_Q
     if (g_strrstr(priv->repo_uri, URI_MARKER_Q))
         priv->uri_format |= URI_HAS_Q;
+#endif
 
+#ifdef URI_MARKER_Q0
     if (g_strrstr(priv->repo_uri, URI_MARKER_Q0))
         priv->uri_format |= URI_HAS_Q0;
+#endif
 
+#ifdef URI_MARKER_YS
     if (g_strrstr(priv->repo_uri, URI_MARKER_YS))
         priv->uri_format |= URI_HAS_YS;
+#endif
 
+#ifdef URI_MARKER_R
     if (g_strrstr(priv->repo_uri, URI_MARKER_R))
         priv->uri_format |= URI_HAS_R;
+#endif
 
 #ifdef DISABLED_MAPS
     if (g_strrstr(priv->repo_uri, "google.com"))
@@ -400,7 +411,9 @@ replace_map_uri(OsmGpsMap *map, const gchar *uri, int zoom, int x, int y)
     OsmGpsMapPrivate *priv = map->priv;
     char *url;
     unsigned int i;
+#if defined(URI_MARKER_Q) || defined(URI_MARKER_Q0)
     char location[22];
+#endif
 
     i = 1;
     url = g_strdup(uri);
@@ -427,23 +440,30 @@ replace_map_uri(OsmGpsMap *map, const gchar *uri, int zoom, int x, int y)
                 url = replace_string(url, URI_MARKER_Z, s);
                 //g_debug("FOUND " URI_MARKER_Z);
                 break;
+#ifdef URI_MARKER_S
             case URI_HAS_S:
                 s = g_strdup_printf("%d", priv->max_zoom-zoom);
                 url = replace_string(url, URI_MARKER_S, s);
                 //g_debug("FOUND " URI_MARKER_S);
                 break;
+#endif
+#ifdef URI_MARKER_Q
             case URI_HAS_Q:
                 map_convert_coords_to_quadtree_string(x,y,zoom,location,'t',"qrts");
                 s = g_strdup(location);
                 url = replace_string(url, URI_MARKER_Q, s);
                 //g_debug("FOUND " URI_MARKER_Q);
                 break;
+#endif
+#ifdef URI_MARKER_Q0
             case URI_HAS_Q0:
                 map_convert_coords_to_quadtree_string(x,y,zoom,location,'\0', "0123");
                 s = g_strdup(location);
                 url = replace_string(url, URI_MARKER_Q0, s);
                 //g_debug("FOUND " URI_MARKER_Q0);
                 break;
+#endif
+#ifdef URI_MARKER_YS
             case URI_HAS_YS:
                 //              s = g_strdup_printf("%d", y);
                 //              url = replace_string(url, URI_MARKER_YS, s);
@@ -453,11 +473,14 @@ replace_map_uri(OsmGpsMap *map, const gchar *uri, int zoom, int x, int y)
                 //                    (1 << (MAX_ZOOM - zoom)) - tiley - 1,
                 //                    zoom - (MAX_ZOOM - 17));
                 break;
+#endif
+#ifdef URI_MARKER_R
             case URI_HAS_R:
                 s = g_strdup_printf("%d", g_random_int_range(0,4));
                 url = replace_string(url, URI_MARKER_R, s);
                 //g_debug("FOUND " URI_MARKER_R);
                 break;
+#endif
             default:
                 s = NULL;
                 break;
