@@ -2366,34 +2366,62 @@ osm_gps_map_source_get_friendly_name(OsmGpsMapSource_t source)
             return "None";
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
             return "OpenStreetMap I";
+#ifdef OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER:
             return "OpenStreetMap II";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_OPENCYCLEMAP
         case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
             return "OpenCycleMap";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT
         case OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT:
             return "Public Transport";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_OSMC_TRAILS
         case OSM_GPS_MAP_SOURCE_OSMC_TRAILS:
             return "OSMC Trails";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE
         case OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE:
             return "Maps-For-Free";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_GOOGLE_STREET
         case OSM_GPS_MAP_SOURCE_GOOGLE_STREET:
             return "Google Maps";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE
         case OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE:
             return "Google Satellite";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID
         case OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID:
             return "Google Hybrid";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_STREET
         case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_STREET:
             return "Virtual Earth";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_SATELLITE
         case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_SATELLITE:
             return "Virtual Earth Satellite";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID
         case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID:
             return "Virtual Earth Hybrid";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_YAHOO_STREET
         case OSM_GPS_MAP_SOURCE_YAHOO_STREET:
             return "Yahoo Maps";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_YAHOO_SATELLITE
         case OSM_GPS_MAP_SOURCE_YAHOO_SATELLITE:
             return "Yahoo Satellite";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_YAHOO_HYBRID
         case OSM_GPS_MAP_SOURCE_YAHOO_HYBRID:
             return "Yahoo Hybrid";
+#endif
         default:
             return NULL;
     }
@@ -2413,28 +2441,51 @@ osm_gps_map_source_get_repo_uri(OsmGpsMapSource_t source)
             return "none://";
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
             return OSM_REPO_URI;
+#ifdef OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER:
             return NULL; /* no longer working "http://tah.openstreetmap.org/Tiles/tile/#Z/#X/#Y.png" */
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_OPENCYCLEMAP
         case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
             return "http://c.andy.sandbox.cloudmade.com/tiles/cycle/#Z/#X/#Y.png";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT
         case OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT:
             return "http://tile.xn--pnvkarte-m4a.de/tilegen/#Z/#X/#Y.png";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_OSMC_TRAILS
         case OSM_GPS_MAP_SOURCE_OSMC_TRAILS:
             return "http://topo.geofabrik.de/trails/#Z/#X/#Y.png";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE
         case OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE:
             return "http://maps-for-free.com/layer/relief/z#Z/row#Y/#Z_#X-#Y.jpg";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_GOOGLE_STREET
         case OSM_GPS_MAP_SOURCE_GOOGLE_STREET:
             return "http://mt#R.google.com/vt/v=w2.97&x=#X&y=#Y&z=#Z";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE
         case OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE:
             return "http://khm#R.google.com/kh?n=404&v=3&t=#Q";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID
         case OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID:
             return NULL; /* No longer working  "http://mt#R.google.com/mt?n=404&v=w2t.99&x=#X&y=#Y&zoom=#S" */
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_STREET
         case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_STREET:
             return "http://a#R.ortho.tiles.virtualearth.net/tiles/r#W.jpeg?g=50";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_SATELLITE
         case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_SATELLITE:
             return "http://a#R.ortho.tiles.virtualearth.net/tiles/a#W.jpeg?g=50";
+#endif
+#ifdef OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID
         case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID:
             return "http://a#R.ortho.tiles.virtualearth.net/tiles/h#W.jpeg?g=50";
+#endif
+#if 0
         case OSM_GPS_MAP_SOURCE_YAHOO_STREET:
         case OSM_GPS_MAP_SOURCE_YAHOO_SATELLITE:
         case OSM_GPS_MAP_SOURCE_YAHOO_HYBRID:
@@ -2445,6 +2496,7 @@ osm_gps_map_source_get_repo_uri(OsmGpsMapSource_t source)
              *  z = zoom - (MAX_ZOOM - 17));
              */
             return NULL;
+#endif
         default:
             return NULL;
     }
@@ -2457,11 +2509,14 @@ osm_gps_map_source_get_image_format(OsmGpsMapSource_t source)
     switch(source) {
         case OSM_GPS_MAP_SOURCE_NULL:
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
+#ifdef DISABLED_MAPS
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER:
         case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
         case OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT:
         case OSM_GPS_MAP_SOURCE_OSMC_TRAILS:
+#endif
             return "png";
+#ifdef DISABLED_MAPS
         case OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE:
         case OSM_GPS_MAP_SOURCE_GOOGLE_STREET:
         case OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE:
@@ -2473,6 +2528,7 @@ osm_gps_map_source_get_image_format(OsmGpsMapSource_t source)
         case OSM_GPS_MAP_SOURCE_YAHOO_SATELLITE:
         case OSM_GPS_MAP_SOURCE_YAHOO_HYBRID:
             return "jpg";
+#endif
         default:
             return "bin";
     }
@@ -2493,9 +2549,12 @@ osm_gps_map_source_get_max_zoom(OsmGpsMapSource_t source)
         case OSM_GPS_MAP_SOURCE_NULL:
             return 18;
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
+#ifdef DISABLED_MAPS
         case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
         case OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT:
+#endif
             return OSM_MAX_ZOOM;
+#ifdef DISABLED_MAPS
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER:
         case OSM_GPS_MAP_SOURCE_GOOGLE_STREET:
         case OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID:
@@ -2512,6 +2571,7 @@ osm_gps_map_source_get_max_zoom(OsmGpsMapSource_t source)
             return 11;
         case OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE:
             return 18;
+#endif
         default:
             return 17;
     }

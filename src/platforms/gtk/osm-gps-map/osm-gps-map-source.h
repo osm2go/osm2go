@@ -31,7 +31,8 @@ G_BEGIN_DECLS
 
 typedef enum {
     OSM_GPS_MAP_SOURCE_NULL = 0,
-    OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
+    OSM_GPS_MAP_SOURCE_OPENSTREETMAP
+#ifdef DISABLED_MAPS
     OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER,
     OSM_GPS_MAP_SOURCE_OPENCYCLEMAP,
     OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT,
@@ -40,17 +41,20 @@ typedef enum {
     OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_STREET,
     OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_SATELLITE,
     OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID,
+#endif
 
     /* entries below are currently unusable */
+#ifdef DISABLED_MAPS
     OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE,    /* not enough details */
     OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID,    /* disabled by google */
     OSM_GPS_MAP_SOURCE_YAHOO_STREET,     /* not implemented yet */
     OSM_GPS_MAP_SOURCE_YAHOO_SATELLITE,  /* not implemented yet */
     OSM_GPS_MAP_SOURCE_YAHOO_HYBRID,     /* not implemented yet */
     OSM_GPS_MAP_SOURCE_OSMC_TRAILS       /* only for germany */
+#endif
 } OsmGpsMapSource_t;
 
-#define OSM_GPS_MAP_SOURCE_LAST  (OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID)
+#define OSM_GPS_MAP_SOURCE_LAST  (OSM_GPS_MAP_SOURCE_OPENSTREETMAP)
 
 const char* osm_gps_map_source_get_friendly_name (OsmGpsMapSource_t source);
 const char* osm_gps_map_source_get_repo_uri (OsmGpsMapSource_t source);
