@@ -122,8 +122,10 @@ struct _OsmGpsMapPrivate
     char *repo_uri;
     char *image_format;
     int uri_format;
+#ifdef DISABLED_MAPS
     //flag indicating if the map source is located on the google
     gboolean the_google;
+#endif
 
     //gps tracking state
     gboolean record_trip_history;
@@ -356,7 +358,9 @@ inspect_map_uri(OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
     priv->uri_format = 0;
+#ifdef DISABLED_MAPS
     priv->the_google = FALSE;
+#endif
 
     if (g_strrstr(priv->repo_uri, URI_MARKER_X))
         priv->uri_format |= URI_HAS_X;
@@ -382,11 +386,12 @@ inspect_map_uri(OsmGpsMap *map)
     if (g_strrstr(priv->repo_uri, URI_MARKER_R))
         priv->uri_format |= URI_HAS_R;
 
+#ifdef DISABLED_MAPS
     if (g_strrstr(priv->repo_uri, "google.com"))
         priv->the_google = TRUE;
 
     g_debug("URI Format: 0x%X (google: %X)", priv->uri_format, priv->the_google);
-
+#endif
 }
 
 static gchar *
@@ -883,6 +888,7 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redr
 
         msg = soup_message_new (SOUP_METHOD_GET, dl->uri);
         if (msg) {
+#ifdef DISABLED_MAPS
             if (priv->the_google) {
                 //Set maps.google.com as the referrer
                 g_debug("Setting Google Referrer");
@@ -896,6 +902,7 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redr
                     }
                 }
             }
+#endif
 
             g_hash_table_insert (priv->tile_queue, dl->uri, msg);
             soup_session_queue_message (priv->soup_session, msg, osm_gps_map_tile_download_complete, dl);
@@ -1470,7 +1477,9 @@ osm_gps_map_init (OsmGpsMap *object)
     priv->drag_start_mouse_y = 0;
 
     priv->uri_format = 0;
+#ifdef DISABLED_MAPS
     priv->the_google = FALSE;
+#endif
 
     priv->map_source = OSM_GPS_MAP_SOURCE_NULL;
 
