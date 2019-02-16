@@ -38,7 +38,7 @@
 #define OSM_REPO_URI        "https://tile.openstreetmap.org/#Z/#X/#Y.png"
 #endif
 #define OSM_MIN_ZOOM        1
-#define OSM_MAX_ZOOM        18
+#define OSM_MAX_ZOOM        19
 #define OSM_IMAGE_FORMAT    "png"
 
 #define URI_MARKER_X    "#X"
