@@ -1,7 +1,4 @@
-include(CMakeDependentOption)
-
-cmake_dependent_option(NETWORK_TESTS "Enable tests that require network access" Off
-		"ENABLE_TESTS" Off)
+option(NETWORK_TESTS "Enable tests that require network access" Off)
 
 function(osm_test BASENAME)
 	add_executable(${BASENAME} ${BASENAME}.cpp)

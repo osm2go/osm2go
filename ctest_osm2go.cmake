@@ -131,7 +131,6 @@ ctest_start(${dashboard_model})
 
 ctest_update()
 
-list(APPEND CONF_OPTIONS "-DENABLE_TESTS=On")
 # get coverage: debug build
 list(APPEND CONF_OPTIONS "-DCMAKE_BUILD_TYPE=Debug")
 

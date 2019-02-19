@@ -31,7 +31,7 @@ script:
   - sed 's#}/usr#}#' -i /tmp/fix-pc/libgps.pc
   - export PKG_CONFIG_PATH=/tmp/fix-pc:${PKG_CONFIG_PATH}
 
-  - if [ ! -s ${VALGRIND_SUPP_DIR}/valgrind-auto.supp ]; then mkdir -p ${OSM2GO_BUILD_DIR} ${VALGRIND_SUPP_DIR}; pushd ${OSM2GO_BUILD_DIR}; cmake -D CMAKE_BUILD_TYPE=Debug -D ENABLE_TESTS=On ${TRAVIS_BUILD_DIR}; make suppression-dummy; valgrind --leak-check=full --gen-suppressions=all --show-leak-kinds=all ./test/suppression-dummy 2>&1 | grep -v '^=' > ${VALGRIND_SUPP_DIR}/valgrind-auto.supp; popd; fi
+  - if [ ! -s ${VALGRIND_SUPP_DIR}/valgrind-auto.supp ]; then mkdir -p ${OSM2GO_BUILD_DIR} ${VALGRIND_SUPP_DIR}; pushd ${OSM2GO_BUILD_DIR}; cmake -D CMAKE_BUILD_TYPE=Debug ${TRAVIS_BUILD_DIR}; make suppression-dummy; valgrind --leak-check=full --gen-suppressions=all --show-leak-kinds=all ./test/suppression-dummy 2>&1 | grep -v '^=' > ${VALGRIND_SUPP_DIR}/valgrind-auto.supp; popd; fi
 
   - if [ -n "${CURL_VERSION}" ]; then wget -O - https://curl.haxx.se/download/curl-${CURL_VERSION}.tar.xz | tar xJ; mv curl-${CURL_VERSION} curl; sed '/^message(WARNING "the curl cmake build system is poorly maintained. Be aware")$/d' -i curl/CMakeLists.txt; fi
 
