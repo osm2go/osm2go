@@ -890,14 +890,14 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redr
         g_free(dl->uri);
         g_free(dl);
     } else {
-        dl->folder = g_strdup_printf("%s%c%d%c%d%c",
-                            priv->cache_dir, G_DIR_SEPARATOR,
-                            zoom, G_DIR_SEPARATOR,
-                            x, G_DIR_SEPARATOR);
-        dl->filename = g_strdup_printf("%s%c%d%c%d%c%d.%s",
-                            priv->cache_dir, G_DIR_SEPARATOR,
-                            zoom, G_DIR_SEPARATOR,
-                            x, G_DIR_SEPARATOR,
+        dl->folder = g_strdup_printf("%s" G_DIR_SEPARATOR_S
+                                     "%d" G_DIR_SEPARATOR_S
+                                     "%d" G_DIR_SEPARATOR_S,
+                            priv->cache_dir,
+                            zoom,
+                            x);
+        dl->filename = g_strdup_printf("%s%d.%s",
+                            dl->folder,
                             y,
                             priv->image_format);
         dl->map = map;
