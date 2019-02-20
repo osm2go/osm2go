@@ -4,7 +4,8 @@
 int main()
 {
   xmlInitParser();
-  curl_global_init(CURL_GLOBAL_ALL);
+  if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK)
+    return 1;
 
   curl_global_cleanup();
   xmlCleanupParser();

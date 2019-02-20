@@ -1345,7 +1345,8 @@ int main(int argc, char *argv[]) {
   textdomain(PACKAGE);
 
   /* Must initialize libcurl before any threads are started */
-  curl_global_init(CURL_GLOBAL_ALL);
+  if (unlikely(curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK))
+    return 1;
 
   /* Same for libxml2 */
   xmlInitParser();

@@ -70,11 +70,12 @@ int main(int argc, char **argv)
   if(argc != 2)
     return EINVAL;
 
+  if (unlikely(curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK))
+    return ENOMEM;
+
   osm2go_platform::MappedFile lic(argv[1]);
 
   assert(lic);
-
-  curl_global_init(CURL_GLOBAL_ALL);
 
   do_mem(lic);
   do_mem_fail();

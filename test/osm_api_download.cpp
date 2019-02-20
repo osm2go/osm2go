@@ -190,7 +190,8 @@ int main(int argc, char **argv)
   assert(mkdtemp(tmpdir) != nullptr);
   strcat(tmpdir, "/");
 
-  curl_global_init(CURL_GLOBAL_ALL);
+  if (unlikely(curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK))
+    return 1;
   xmlInitParser();
 
   download_fine();
