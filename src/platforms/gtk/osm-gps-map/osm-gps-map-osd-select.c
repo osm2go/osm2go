@@ -322,7 +322,6 @@ osm_gps_map_osd_select_init(OsmGpsMap *map)
 {
     osd_priv_t *priv = osd_select.priv = g_new0(osd_priv_t, 1);
 
-    osd_select.priv = priv;
     priv->select_toggle.state = TRUE;
 
     osm_gps_map_register_osd(map, &osd_select);
