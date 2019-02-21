@@ -8,7 +8,7 @@
 
 extern canvas_t *canvas_t_create();
 
-void testSegment()
+static void testSegment()
 {
   std::vector<lpos_t> points;
   for (unsigned int i = 0; i < 8; i += 2)
@@ -24,7 +24,7 @@ void testSegment()
   assert_cmpnum(segnum, 1);
 }
 
-void testInObject()
+static void testInObject()
 {
   std::unique_ptr<canvas_t> canvas(canvas_t_create());
   assert(canvas);
@@ -57,10 +57,54 @@ void testInObject()
   assert(circle.get() == search);
 }
 
+static void testToBottom()
+{
+  std::vector<lpos_t> points;
+  for (unsigned int i = 0; i < 3; i += 2)
+    points.push_back(lpos_t(1 << i, 2 << i));
+
+  std::unique_ptr<canvas_t> canvas(canvas_t_create());
+  assert(canvas);
+
+  // just to be sure that this does no harm
+  assert_null(canvas->get_item_at(lpos_t(3, 6)));
+
+  // 2 polygons that overlap
+  std::unique_ptr<canvas_item_t> line(canvas->polyline_new(CANVAS_GROUP_WAYS, points, 1, 0));
+  assert(line);
+
+  for (unsigned int i = 0; i < points.size(); i += 2) {
+    lpos_t p = points[i];
+    p.x *= 2;
+    p.y *= 2;
+    points[i] = p;
+  }
+
+  std::unique_ptr<canvas_item_t> line2(canvas->polyline_new(CANVAS_GROUP_WAYS, points, 1, 0));
+  assert(line2);
+
+  canvas_item_t *search1 = canvas->get_item_at(lpos_t(3, 6));
+  // must be one of the items, it's exactly on them
+  assert(search1 == line.get() || search1 == line2.get());
+
+  // now the other one must be on top
+  canvas->item_to_bottom(search1);
+  canvas_item_t *search2 = canvas->get_item_at(lpos_t(3, 6));
+  assert(search2 == line.get() || search2 == line2.get());
+  assert(search1 != search2);
+
+  // and back to the first
+  canvas->item_to_bottom(search2);
+  canvas_item_t *search3 = canvas->get_item_at(lpos_t(3, 6));
+
+  assert(search1 == search3);
+}
+
 int main()
 {
   testSegment();
   testInObject();
+  testToBottom();
 
   return 0;
 }
