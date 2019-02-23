@@ -371,55 +371,6 @@ static bool inpoly(const canvas_item_info_poly *poly, int x, int y) {
   return inside;
 }
 
-/* get the polygon/polyway segment a certain coordinate is over */
-static int canvas_item_info_get_segment(const canvas_item_info_poly *item,
-                                        int x, int y, int fuzziness) {
-  int retval = -1;
-  float mindist = static_cast<float>(item->width) / 2 + fuzziness;
-  for(unsigned int i = 0; i < item->num_points - 1; i++) {
-
-#define AX (item->points[i].x)
-#define AY (item->points[i].y)
-#define BX (item->points[i+1].x)
-#define BY (item->points[i+1].y)
-#define CX static_cast<double>(x)
-#define CY static_cast<double>(y)
-
-    float len = pow(BY-AY,2)+pow(BX-AX,2);
-    float m = ((CX-AX)*(BX-AX)+(CY-AY)*(BY-AY)) / len;
-
-    /* this is a possible candidate */
-    if((m >= 0.0) && (m <= 1.0)) {
-
-      float n;
-      if(abs(BX-AX) > abs(BY-AY))
-        n = fabs(sqrtf(len) * (AY+m*(BY-AY)-CY)/(BX-AX));
-      else
-        n = fabs(sqrtf(len) * -(AX+m*(BX-AX)-CX)/(BY-AY));
-
-      /* check if this is actually on the line and closer than anything */
-      /* we found so far */
-      if(n < mindist) {
-        retval = i;
-        mindist = n;
-      }
-    }
- }
-#undef AX
-#undef AY
-#undef BX
-#undef BY
-#undef CX
-#undef CY
-
-  /* the last and first point are identical for polygons in osm2go. */
-  /* goocanvas doesn't need that, but that's how OSM works and it saves */
-  /* us from having to check the last->first connection for polygons */
-  /* seperately */
-
-  return retval;
-}
-
 struct item_at_functor {
   const int x;
   const int y;
@@ -443,7 +394,7 @@ bool item_at_functor::operator()(const canvas_item_info_t *item) const
 
   case CANVAS_ITEM_POLY: {
     const canvas_item_info_poly *poly = static_cast<const canvas_item_info_poly *>(item);
-    int on_segment = canvas_item_info_get_segment(poly, x, y, fuzziness);
+    int on_segment = poly->get_segment(x, y, fuzziness);
     return ((on_segment >= 0) || (poly->is_polygon && inpoly(poly, x, y)));
   }
   }
@@ -667,14 +618,6 @@ static void canvas_item_weak_notify(gpointer data, GObject *obj)
 void canvas_item_t::destroy_connect(canvas_item_destroyer *d)
 {
   g_object_weak_ref(G_OBJECT(this), canvas_item_weak_notify, d);
-}
-
-int canvas_t::get_item_segment(const canvas_item_t *item, lpos_t pos) const {
-  const item_mapping_t::const_iterator it = item_mapping.find(const_cast<canvas_item_t *>(item));
-  assert(it != item_mapping.end());
-
-  return canvas_item_info_get_segment(static_cast<const canvas_item_info_poly *>(it->second),
-                                      pos.x, pos.y, 0);
 }
 
 bool canvas_goocanvas::isVisible(const lpos_t lpos) const

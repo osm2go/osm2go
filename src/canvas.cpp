@@ -40,6 +40,14 @@ canvas_t::canvas_t(osm2go_platform::Widget *w)
 {
 }
 
+int canvas_t::get_item_segment(const canvas_item_t *item, lpos_t pos) const
+{
+  const item_mapping_t::const_iterator it = item_mapping.find(const_cast<canvas_item_t *>(item));
+  assert(it != item_mapping.end());
+
+  return static_cast<const canvas_item_info_poly *>(it->second)->get_segment(pos.x, pos.y);
+}
+
 /* remove item_info from chain as its visual representation */
 /* has been destroyed */
 template<typename T> class item_info_destroyer : public canvas_item_destroyer {
@@ -86,6 +94,46 @@ canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_item_t* it,
   // data() is a C++11 extension, but gcc has it since at least 4.2
   memcpy(points.get(), p.data(), p.size() * sizeof(points[0]));
 }
+
+int canvas_item_info_poly::get_segment(int x, int y, unsigned int fuzziness) const
+{
+  int retval = -1;
+  float mindist = static_cast<float>(width) / 2 + fuzziness;
+  for(unsigned int i = 0; i < num_points - 1; i++) {
+    const lpos_t pos = points[i];
+    const lpos_t posnext = points[i + 1];
+
+    const int dx = posnext.x - pos.x;
+    const int dy = posnext.y - pos.y;
+    float len = pow(dy, 2) + pow(dx, 2);
+    float m = (static_cast<float>(x - pos.x) * dx + static_cast<float>(y - pos.y) * dy) / len;
+
+    /* this is a possible candidate */
+    if((m >= 0.0) && (m <= 1.0)) {
+
+      float n;
+      if(abs(dx) > abs(dy))
+        n = fabs(sqrtf(len) * (pos.y + m * dy - y) / dx);
+      else
+        n = fabs(sqrtf(len) * -(pos.x + m * dx - x) / dy);
+
+      /* check if this is actually on the line and closer than anything */
+      /* we found so far */
+      if(n < mindist) {
+        retval = i;
+        mindist = n;
+      }
+    }
+ }
+
+  /* the last and first point are identical for polygons in osm2go. */
+  /* goocanvas doesn't need that, but that's how OSM works and it saves */
+  /* us from having to check the last->first connection for polygons */
+  /* seperately */
+
+  return retval;
+}
+
 
 void map_item_destroyer::run(canvas_item_t *)
 {
