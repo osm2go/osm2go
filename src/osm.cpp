@@ -1533,8 +1533,10 @@ std::string object_t::get_name(const osm_t &osm) const {
   assert(is_real());
 
   /* worst case: we have no tags at all. return techincal info then */
-  if(!obj->tags.hasRealTags())
-    return unspecified_name(*this, osm).toStdString();
+  if(!obj->tags.hasRealTags()) {
+    ret.swap(unspecified_name(*this, osm).toStdString());
+    return ret;
+  }
 
   /* try to figure out _what_ this is */
   const std::array<const char *, 5> name_tags = { { "name", "ref", "note", "fix" "me", "sport" } };
@@ -1566,7 +1568,7 @@ std::string object_t::get_name(const osm_t &osm) const {
       trstring dsc = street != nullptr ?
                      trstring("building %1 %2").arg(street) :
                      trstring("building housenumber %1");
-      ret = dsc.arg(hn).toStdString();
+      ret.swap(dsc.arg(hn).toStdString());
     } else {
       typestr = _("building");
       if(name == nullptr)
@@ -1609,7 +1611,7 @@ std::string object_t::get_name(const osm_t &osm) const {
           typestr = _("road/street under construction");
         } else {
           typestr = nullptr;
-          ret = trstring("%1 road under construction").arg(cstr).toStdString();
+          ret.swap(trstring("%1 road under construction").arg(cstr).toStdString());
         }
       }
 
@@ -1652,9 +1654,11 @@ std::string object_t::get_name(const osm_t &osm) const {
     } else {
       // last chance
       const char *bp = obj->tags.get_value("building:part");
-      if(bp != nullptr && strcmp(bp, "yes") == 0)
-        return _("building part");
-      ret = unspecified_name(*this, osm).toStdString();
+      if(bp != nullptr && strcmp(bp, "yes") == 0) {
+        ret = _("building part");
+        return ret;
+      }
+      ret.swap(unspecified_name(*this, osm).toStdString());
     }
   }
 
