@@ -21,8 +21,6 @@
 #include "style_p.h"
 
 #include "appdata.h"
-#include "map.h"
-#include <notifications.h>
 #include "settings.h"
 #include "style.h"
 
@@ -66,32 +64,6 @@ static GtkWidget *style_select_widget(const std::string &currentstyle,
   GtkWidget *ret = osm2go_platform::select_widget_wrapped(_("Style"), GTK_TREE_MODEL(store.get()));
   osm2go_platform::combo_box_set_active(ret, match);
   return ret;
-}
-
-static void style_change(appdata_t &appdata, const std::string &style_path) {
-  const std::string &new_style = style_basename(style_path);
-  /* check if style has really been changed */
-  if(settings_t::instance()->style == new_style)
-    return;
-
-  style_t *nstyle = style_load_fname(style_path);
-  if (nstyle == nullptr) {
-    error_dlg(trstring("Error loading style %1").arg(style_path));
-    return;
-  }
-
-  settings_t::instance()->style = new_style;
-
-  appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
-  /* let gtk clean up first */
-  osm2go_platform::process_events();
-
-  appdata.style.reset(nstyle);
-
-  /* canvas background may have changed */
-  appdata.map->set_bg_color_from_style();
-
-  appdata.map->paint();
 }
 
 #ifndef FREMANTLE

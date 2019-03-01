@@ -20,9 +20,11 @@
 #include "style.h"
 #include "style_p.h"
 
+#include "appdata.h"
 #include "josm_elemstyles.h"
 #include "map.h"
 #include "misc.h"
+#include "notifications.h"
 #include "settings.h"
 
 #include <algorithm>
@@ -39,6 +41,7 @@
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
+#include <osm2go_i18n.h>
 #include "osm2go_stl.h"
 
 #if !defined(LIBXML_TREE_ENABLED) || !defined(LIBXML_OUTPUT_ENABLED)
@@ -334,4 +337,30 @@ void style_t::colorize(way_t *w) const
 void style_t::colorize_world(osm_t::ref osm)
 {
   josm_elemstyles_colorize_world(this, osm);
+}
+
+void style_change(appdata_t &appdata, const std::string &style_path)
+{
+  const std::string &new_style = style_basename(style_path);
+  /* check if style has really been changed */
+  if(settings_t::instance()->style == new_style)
+    return;
+
+  style_t *nstyle = style_load_fname(style_path);
+  if (nstyle == nullptr) {
+    error_dlg(trstring("Error loading style %1").arg(style_path));
+    return;
+  }
+
+  settings_t::instance()->style = new_style;
+
+  appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
+  osm2go_platform::process_events();
+
+  appdata.style.reset(nstyle);
+
+  /* canvas background may have changed */
+  appdata.map->set_bg_color_from_style();
+
+  appdata.map->paint();
 }

@@ -28,3 +28,4 @@ struct style_t;
 style_t *style_load_fname(const std::string &filename);
 std::map<std::string, std::string> style_scan();
 std::string style_basename(const std::string &name);
+void style_change(appdata_t &appdata, const std::string &style_path);
