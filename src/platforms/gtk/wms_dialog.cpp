@@ -345,10 +345,11 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
   return context->list;
 }
 
-static bool wms_server_dialog(appdata_t &appdata, wms_t *wms) {
+bool wms_server_dialog(appdata_t &appdata, wms_t &wms)
+{
   bool ok = false;
 
-  wms_server_context_t context(appdata, wms,
+  wms_server_context_t context(appdata, &wms,
                                gtk_dialog_new_with_buttons(_("WMS Server Selection"),
                                                            GTK_WINDOW(appdata_t::window),
                                                            GTK_DIALOG_MODAL,
@@ -391,10 +392,10 @@ static bool wms_server_dialog(appdata_t &appdata, wms_t *wms) {
     if(server != nullptr) {
       /* fetch parameters from selected entry */
       g_debug("WMS: using %s", server->name.c_str());
-      wms->server = server->server;
+      wms.server = server->server;
       ok = true;
     } else {
-      ok = !wms->server.empty();
+      ok = !wms.server.empty();
     }
   }
 
@@ -464,7 +465,7 @@ static GtkWidget *wms_layer_widget(project_t::ref project, const wms_layer_t::li
   return widget;
 }
 
-static std::string wms_layer_dialog(project_t::ref project, const wms_layer_t::list &layers)
+std::string wms_layer_dialog(project_t::ref project, const wms_layer_t::list &layers)
 {
   GtkWidget *sel_widget = wms_layer_widget(project, layers);
   osm2go_platform::DialogGuard dialog(
@@ -493,33 +494,4 @@ static std::string wms_layer_dialog(project_t::ref project, const wms_layer_t::l
     return std::string();
 
   return osm2go_platform::select_widget_value(sel_widget);
-}
-
-void wms_import(appdata_t &appdata) {
-  assert(appdata.project);
-
-  /* this cancels any wms adjustment in progress */
-  if(appdata.map->action.type == MAP_ACTION_BG_ADJUST)
-    appdata.map->action_cancel();
-
-  wms_t wms(appdata.project->wms_server);
-
-  /* reset any background adjustments in the project ... */
-  appdata.project->wms_offset.x = 0;
-  appdata.project->wms_offset.y = 0;
-
-  /* ... as well as in the map */
-  appdata.map->bg_offset = osm2go_platform::screenpos(0, 0);
-
-  /* get server from dialog */
-  if(!wms_server_dialog(appdata, &wms))
-    return;
-
-  const wms_layer_t::list layers = wms_get_layers(appdata.project, wms);
-  if(layers.empty())
-    return;
-
-  const std::string &l = wms_layer_dialog(appdata.project, layers);
-  if(!l.empty())
-    wms_get_selected_layer(appdata, wms, l, layers.front().srs);
 }

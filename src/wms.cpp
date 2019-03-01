@@ -557,3 +557,33 @@ std::vector<wms_server_t *> wms_server_get_default()
 
   return servers;
 }
+
+void wms_import(appdata_t &appdata)
+{
+  assert(appdata.project);
+
+  /* this cancels any wms adjustment in progress */
+  if(appdata.map->action.type == MAP_ACTION_BG_ADJUST)
+    appdata.map->action_cancel();
+
+  wms_t wms(appdata.project->wms_server);
+
+  /* reset any background adjustments in the project ... */
+  appdata.project->wms_offset.x = 0;
+  appdata.project->wms_offset.y = 0;
+
+  /* ... as well as in the map */
+  appdata.map->bg_offset = osm2go_platform::screenpos(0, 0);
+
+  /* get server from dialog */
+  if(!wms_server_dialog(appdata, wms))
+    return;
+
+  const wms_layer_t::list layers = wms_get_layers(appdata.project, wms);
+  if(layers.empty())
+    return;
+
+  const std::string &l = wms_layer_dialog(appdata.project, layers);
+  if(!l.empty())
+    wms_get_selected_layer(appdata, wms, l, layers.front().srs);
+}
