@@ -131,7 +131,7 @@ protected:
 
 public:
   osm2go_platform::Widget * const widget;
-  typedef std::unordered_map<canvas_item_t *, canvas_item_info_t *> item_mapping_t;
+  typedef std::unordered_map<const canvas_item_t *, canvas_item_info_t *> item_mapping_t;
   item_mapping_t item_mapping;
 
   lpos_t window2world(const osm2go_platform::screenpos &p) const;

@@ -42,7 +42,7 @@ canvas_t::canvas_t(osm2go_platform::Widget *w)
 
 int canvas_t::get_item_segment(const canvas_item_t *item, lpos_t pos) const
 {
-  const item_mapping_t::const_iterator it = item_mapping.find(const_cast<canvas_item_t *>(item));
+  const item_mapping_t::const_iterator it = item_mapping.find(item);
   assert(it != item_mapping.end());
 
   return static_cast<const canvas_item_info_poly *>(it->second)->get_segment(pos.x, pos.y);

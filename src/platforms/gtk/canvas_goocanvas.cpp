@@ -406,7 +406,7 @@ static gint item_at_compare(gconstpointer i, gconstpointer f)
   const item_at_functor &fc = *static_cast<const item_at_functor *>(f);
   const canvas_item_t * const citem = static_cast<const canvas_item_t *>(i);
 
-  const canvas_t::item_mapping_t::const_iterator it = fc.canvas->item_mapping.find(const_cast<canvas_item_t *>(citem));
+  const canvas_t::item_mapping_t::const_iterator it = fc.canvas->item_mapping.find(citem);
   if(it == fc.canvas->item_mapping.end()) {
     g_debug("item %p not in canvas map", citem);
     return -1;
