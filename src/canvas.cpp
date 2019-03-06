@@ -124,7 +124,7 @@ int canvas_item_info_poly::get_segment(int x, int y, unsigned int fuzziness) con
         mindist = n;
       }
     }
- }
+  }
 
   /* the last and first point are identical for polygons in osm2go. */
   /* goocanvas doesn't need that, but that's how OSM works and it saves */
@@ -133,7 +133,6 @@ int canvas_item_info_poly::get_segment(int x, int y, unsigned int fuzziness) con
 
   return retval;
 }
-
 
 void map_item_destroyer::run(canvas_item_t *)
 {
