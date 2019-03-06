@@ -855,11 +855,8 @@ xmlChar *osm_generate_xml_changeset(const std::string &comment,
   tag_to_xml fc(cs_node, true);
   fc(tag_creator);
   fc(tag_comment);
-  if(!src.empty()) {
-    tag_t tag_source(const_cast<char *>("source"),
-                    const_cast<char *>(src.c_str()));
-    fc(tag_source);
-  }
+  if(!src.empty())
+    fc(tag_t::uncached("source", src.c_str()));
 
   xmlDocDumpFormatMemoryEnc(doc.get(), &result, &len, "UTF-8", 1);
 
