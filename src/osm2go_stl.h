@@ -300,5 +300,28 @@ namespace std {
 
   template<typename T>
   inline T &move(T &a) { return a; }
+
+  template<typename _InputIterator>
+    inline _InputIterator
+    next(_InputIterator __x, typename
+    iterator_traits<_InputIterator>::difference_type __n = 1)
+    {
+      // concept requirements
+      __glibcxx_function_requires(_InputIteratorConcept<_InputIterator>)
+      std::advance(__x, __n);
+      return __x;
+    }
+
+  template<typename _BidirectionalIterator>
+    inline _BidirectionalIterator
+    prev(_BidirectionalIterator __x, typename
+    iterator_traits<_BidirectionalIterator>::difference_type __n = 1)
+    {
+      // concept requirements
+      __glibcxx_function_requires(_BidirectionalIteratorConcept<_BidirectionalIterator>)
+      std::advance(__x, -__n);
+      return __x;
+    }
+
 }
 #endif

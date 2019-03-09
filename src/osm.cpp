@@ -217,7 +217,7 @@ void relation_object_replacer::operator()(relation_t *r)
     it->object = replace;
 
     // check if this member now is the same as the next or previous one
-    if((it != itBegin && *(it - 1) == *it) || (it + 1 != itEnd && *it == *(it + 1))) {
+    if((it != itBegin && *std::prev(it) == *it) || (std::next(it) != itEnd && *it == *std::next(it))) {
       it = r->members.erase(it);
       // this is now the next element, go one back so this is actually checked
       // as the for loop increments the iterator again
@@ -345,7 +345,7 @@ osm_t::mergeResult<node_t> osm_t::mergeNodes(node_t *first, node_t *second, way_
       printf("  found node in way #" ITEM_ID_FORMAT "\n", way->id);
 
       // check if this node is the same as the neighbor
-      if((it != itBegin && *(it - 1) == keep) || (it +1 != itEnd && *(it + 1) == keep)) {
+      if((it != itBegin && *std::prev(it) == keep) || (std::next(it) != itEnd && *std::next(it) == keep)) {
         // this node would now be twice in the way at adjacent positions
         it = way->node_chain.erase(it);
         itEnd = way->node_chain.end();
@@ -621,8 +621,8 @@ bool tag_list_t::hasTagCollisions() const
 
   const std::vector<tag_t>::const_iterator itEnd = contents->end();
   for(std::vector<tag_t>::const_iterator it = contents->begin();
-      it + 1 != itEnd; it++) {
-    if (std::find_if(it + 1, itEnd, collision_functor(*it)) != itEnd)
+      std::next(it) != itEnd; it++) {
+    if (std::find_if(std::next(it), itEnd, collision_functor(*it)) != itEnd)
       return true;
   }
   return false;
@@ -1305,16 +1305,16 @@ void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pai
     // find out if the relation members are ordered ways, so the split parts should
     // be inserted in a sensible order to keep the relation intact
     bool insertBefore = false;
-    if(it != itBegin && (it - 1)->object.type == object_t::WAY) {
-      std::vector<member_t>::iterator prev = it - 1;
+    if(it != itBegin && std::prev(it)->object.type == object_t::WAY) {
+      const way_t *prev_way = std::prev(it)->object.way;
 
-      insertBefore = prev->object.way->ends_with_node(dst->node_chain.front()) ||
-                     prev->object.way->ends_with_node(dst->node_chain.back());
-    } else if (it + 1 < itEnd && (it + 1)->object.type == object_t::WAY) {
-      std::vector<member_t>::iterator next = it + 1;
+      insertBefore = prev_way->ends_with_node(dst->node_chain.front()) ||
+                     prev_way->ends_with_node(dst->node_chain.back());
+    } else if (std::next(it) != itEnd && std::next(it)->object.type == object_t::WAY) {
+      const way_t *next_way = std::next(it)->object.way;
 
-      insertBefore = next->object.way->ends_with_node(src->node_chain.front()) ||
-                     next->object.way->ends_with_node(src->node_chain.back());
+      insertBefore = next_way->ends_with_node(src->node_chain.front()) ||
+                     next_way->ends_with_node(src->node_chain.back());
     } // if this is both itEnd and itBegin it is the only member, so the ordering is irrelevant
 
     // make dst member of the same relation
@@ -1741,9 +1741,8 @@ const tag_t *tag_list_t::singleTag() const noexcept
   const std::vector<tag_t>::const_iterator it = firstRealTag(*contents);
   if(unlikely(it == itEnd))
     return nullptr;
-  for(std::vector<tag_t>::const_iterator itn = it + 1; itn != itEnd; itn++)
-    if(isRealTag(*itn))
-      return nullptr;
+  if (std::find_if(std::next(it), itEnd, isRealTag) != itEnd)
+    return nullptr;
 
   return &(*it);
 }
@@ -1953,7 +1952,7 @@ node_t *way_t::insert_node(osm_t::ref osm, int position, lpos_t coords)
   osm->node_attach(node);
 
   /* search correct position */
-  node_chain.insert(node_chain.begin() + position, node);
+  node_chain.insert(std::next(node_chain.begin(), position), node);
 
   /* remember that this node is contained in one way */
   node->ways = 1;
@@ -1987,22 +1986,22 @@ bool way_t::merge(way_t *other, osm_t *osm, map_t *map, const std::vector<relati
 
   if(other->node_chain.front() == node_chain.front()) {
     printf("  need to prepend\n");
-    node_chain.insert(node_chain.begin(), other->node_chain.rbegin(), --other->node_chain.rend());
+    node_chain.insert(node_chain.begin(), other->node_chain.rbegin(), std::prev(other->node_chain.rend()));
 
     other->node_chain.resize(1);
   } else if(other->node_chain.back() == node_chain.front()) {
     printf("  need to prepend\n");
-    node_chain.insert(node_chain.begin(), other->node_chain.begin(), --other->node_chain.end());
+    node_chain.insert(node_chain.begin(), other->node_chain.begin(), std::prev(other->node_chain.end()));
 
     other->node_chain.erase(other->node_chain.begin(), other->node_chain.end() - 1);
   } else if(other->node_chain.back() == node_chain.back()) {
     printf("  need to append\n");
-    node_chain.insert(node_chain.end(), ++other->node_chain.rbegin(), other->node_chain.rend());
+    node_chain.insert(node_chain.end(), std::next(other->node_chain.rbegin()), other->node_chain.rend());
 
     other->node_chain.erase(other->node_chain.begin(), other->node_chain.end() - 1);
   } else {
     printf("  need to append\n");
-    node_chain.insert(node_chain.end(), ++other->node_chain.begin(), other->node_chain.end());
+    node_chain.insert(node_chain.end(), std::next(other->node_chain.begin()), other->node_chain.end());
 
     other->node_chain.resize(1);
   }

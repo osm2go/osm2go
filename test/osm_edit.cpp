@@ -258,9 +258,9 @@ static void test_taglist() {
   tags.replace(std::move(ntags));
   ntags = ab_with_creator();
   assert(tags == ntags);
-  std::rotate(ntags.begin(), ntags.begin() + 1, ntags.end());
+  std::rotate(ntags.begin(), std::next(ntags.begin()), ntags.end());
   assert(tags == ntags);
-  std::rotate(ntags.begin(), ntags.begin() + 1, ntags.end());
+  std::rotate(ntags.begin(), std::next(ntags.begin()), ntags.end());
   assert(tags == ntags);
 
   ntags.clear();
@@ -407,7 +407,7 @@ static void test_split()
   }
 
   assert_cmpnum(o->ways.size(), 2);
-  way_t *neww = w->split(o, w->node_chain.begin() + 2, false);
+  way_t *neww = w->split(o, std::next(w->node_chain.begin(), 2), false);
   assert(neww != nullptr);
   assert_cmpnum(o->ways.size(), 3);
   assert(w->flags & OSM_FLAG_DIRTY);
@@ -434,7 +434,7 @@ static void test_split()
   assert_cmpnum(dirty0.ways.deleted.size(), 0);
 
   // now split the remaining way at a node
-  way_t *neww2 = w->split(o, w->node_chain.begin() + 2, true);
+  way_t *neww2 = w->split(o, std::next(w->node_chain.begin(), 2), true);
   assert(neww2 != nullptr);
   assert_cmpnum(o->ways.size(), 4);
   assert(w->flags & OSM_FLAG_DIRTY);
@@ -468,7 +468,7 @@ static void test_split()
 
   // just split the last node out of the way
   w->flags = 0;
-  assert_null(w->split(o, w->node_chain.begin() + 2, false));
+  assert_null(w->split(o, std::next(w->node_chain.begin(), 2), false));
   assert_cmpnum(o->ways.size(), 4);
   assert(w->flags & OSM_FLAG_DIRTY);
   for(unsigned int i = 0; i < nodes.size(); i++)
@@ -510,7 +510,7 @@ static void test_split()
 
   // close the way again
   area->append_node(const_cast<node_t *>(area->first_node()));
-  assert_null(area->split(o, area->node_chain.begin() + 1, false));
+  assert_null(area->split(o, std::next(area->node_chain.begin()), false));
   assert_cmpnum(area->node_chain.size(), nodes.size());
   for(unsigned int i = 0; i < nodes.size(); i++) {
     assert(area->node_chain[i] == nodes[(i + 1) % nodes.size()]);
@@ -519,7 +519,7 @@ static void test_split()
 
   // recreate old layout
   area->append_node(const_cast<node_t *>(area->first_node()));
-  assert_null(area->split(o, --area->node_chain.end(), true));
+  assert_null(area->split(o, std::prev(area->node_chain.end()), true));
   assert_cmpnum(area->node_chain.size(), nodes.size());
   for(unsigned int i = 0; i < nodes.size(); i++) {
     assert(area->node_chain[i] == nodes[(i + 1) % nodes.size()]);
@@ -599,10 +599,9 @@ static void test_split_order()
     way_t *w = new way_t();
     o->way_attach(w);
     splitw.push_back(w);
-    const std::vector<node_t *>::const_iterator itEnd = --nodes.end();
-    std::vector<node_t *>::const_iterator it = ++nodes.begin();
+    const std::vector<node_t *>::const_iterator itEnd = std::prev(nodes.end());
 
-    for(; it != itEnd; it++)
+    for(std::vector<node_t *>::const_iterator it = std::next(nodes.begin()); it != itEnd; it++)
       w->append_node(*it);
   }
 
@@ -638,7 +637,7 @@ static void test_split_order()
     std::random_shuffle(tmpseq.begin(), tmpseq.end(), intrnd);
     sequences.push_back(tmpseq);
     sequences.push_back(tmpseq);
-    tmpseq.erase(tmpseq.begin() + intrnd(tmpseq.size()));
+    tmpseq.erase(std::next(tmpseq.begin(), intrnd(tmpseq.size())));
   }
 
   // split the ways in several orders
@@ -1196,7 +1195,7 @@ static void test_merge_nodes()
   w->append_node(n2);
   w->flags = 0;
 
-  std::vector<way_t *>::iterator wit = ++ways.begin();
+  std::vector<way_t *>::iterator wit = std::next(ways.begin());
   w = *wit;
   // put both nodes here, only one instance should remain
   w->append_node(n1);

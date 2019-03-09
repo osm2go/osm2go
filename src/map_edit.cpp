@@ -333,7 +333,7 @@ void map_t::way_cut(lpos_t pos) {
       return;
     way = item->object.way;
     // add one since to denote the end of the segment
-    cut_at = way->node_chain.begin() + c + 1;
+    cut_at = std::next(way->node_chain.begin(), c + 1);
   }
 
   assert(way != nullptr);

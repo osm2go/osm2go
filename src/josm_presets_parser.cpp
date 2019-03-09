@@ -310,7 +310,7 @@ void PresetSax::dumpState(const char *before, const char *after0, const char *af
     printf("%s ", before);
   const StateMap &tags = preset_state_map();
   std::vector<State>::const_iterator itEnd = state.end();
-  for(std::vector<State>::const_iterator it = state.begin() + 1; it != itEnd; it++) {
+  for(std::vector<State>::const_iterator it = std::next(state.begin()); it != itEnd; it++) {
     if(*it == UnknownTag || *it == IntermediateTag) {
       printf("*/");
     } else {
@@ -529,7 +529,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
   State oldState = state.back();
   if(oldState == IntermediateTag) {
     const std::vector<State>::const_reverse_iterator ritEnd = state.rend();
-    for(std::vector<State>::const_reverse_iterator rit = state.rbegin() + 1; rit != ritEnd; rit++)
+    for(std::vector<State>::const_reverse_iterator rit = std::next(state.rbegin()); rit != ritEnd; rit++)
       if(*rit != IntermediateTag) {
         oldState = *rit;
         break;
