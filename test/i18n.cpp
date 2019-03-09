@@ -25,8 +25,8 @@ int main()
   foo = trstring("abc %1 def %2 ghi %3").arg(3).arg("nkw");
   assert_cmpstr(foo, "abc 3 def nkw ghi %3");
 
-  foo = trstring("%1%n%2", nullptr, 2).arg("a").arg("b");
-  assert_cmpstr(foo, "a2b");
+  foo = trstring("%1 %n %2", nullptr, 2).arg("a").arg("b");
+  assert_cmpstr(foo, "a 2 b");
 
   item_id_t id = 0x100000011LL;
   foo = trstring("id: %1#").arg(id);
