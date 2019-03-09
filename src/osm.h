@@ -415,9 +415,12 @@ public:
     return tag_t(k, v, true);
   }
 
-  bool is_creator_tag() const noexcept;
+  inline bool is_creator_tag() const noexcept
+  { return is_creator_tag(key); }
 
   static bool is_creator_tag(const char *key) noexcept;
+  static inline bool is_no_creator(const tag_t &tag) noexcept
+  { return !is_creator_tag(tag.key); }
 
   /**
    * @brief compare if the keys are identical

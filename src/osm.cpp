@@ -1677,11 +1677,7 @@ tag_t::tag_t(const char *k, const char *v)
 {
 }
 
-bool tag_t::is_creator_tag() const noexcept {
-  return is_creator_tag(key);
-}
-
-bool tag_t::is_creator_tag(const char* key) noexcept
+bool tag_t::is_creator_tag(const char *key) noexcept
 {
   return (strcasecmp(key, "created_by") == 0);
 }
@@ -1702,11 +1698,7 @@ bool tag_list_t::hasNonCreatorTags() const noexcept
     return false;
 
   const std::vector<tag_t>::const_iterator itEnd = contents->end();
-  std::vector<tag_t>::const_iterator it = contents->begin();
-  while(it != itEnd && it->is_creator_tag())
-    it++;
-
-  return it != itEnd;
+  return std::find_if(std::cbegin(*contents), itEnd, tag_t::is_no_creator) != itEnd;
 }
 
 static bool isRealTag(const tag_t &tag)
@@ -1714,22 +1706,13 @@ static bool isRealTag(const tag_t &tag)
   return !tag.is_creator_tag() && strcmp(tag.key, "source") != 0;
 }
 
-static std::vector<tag_t>::const_iterator firstRealTag(const std::vector<tag_t> &contents)
-{
-  const std::vector<tag_t>::const_iterator itEnd = contents.end();
-  std::vector<tag_t>::const_iterator it = contents.begin();
-  while(it != itEnd && !isRealTag(*it))
-    it++;
-
-  return it;
-}
-
 bool tag_list_t::hasRealTags() const noexcept
 {
   if(empty())
     return false;
 
-  return firstRealTag(*contents) != contents->end();
+  const std::vector<tag_t>::const_iterator itEnd = contents->end();
+  return std::find_if(std::cbegin(*contents), itEnd, isRealTag) != itEnd;
 }
 
 const tag_t *tag_list_t::singleTag() const noexcept
@@ -1738,7 +1721,7 @@ const tag_t *tag_list_t::singleTag() const noexcept
     return nullptr;
 
   const std::vector<tag_t>::const_iterator itEnd = contents->end();
-  const std::vector<tag_t>::const_iterator it = firstRealTag(*contents);
+  const std::vector<tag_t>::const_iterator it = std::find_if(std::cbegin(*contents), itEnd, isRealTag);
   if(unlikely(it == itEnd))
     return nullptr;
   if (std::find_if(std::next(it), itEnd, isRealTag) != itEnd)
