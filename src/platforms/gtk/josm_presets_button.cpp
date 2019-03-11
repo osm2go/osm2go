@@ -27,8 +27,8 @@
 #include <algorithm>
 #include <cassert>
 #include <cstring>
-#include <map>
 #include <numeric>
+#include <unordered_map>
 
 #ifdef FREMANTLE
 #include <hildon/hildon-pannable-area.h>
@@ -187,7 +187,7 @@ presets_context_t::~presets_context_t()
   instance = nullptr;
 }
 
-typedef std::map<const presets_element_t *, presets_element_t::attach_key *> WidgetMap;
+typedef std::unordered_map<const presets_element_t *, presets_element_t::attach_key *> WidgetMap;
 
 struct add_widget_functor {
   preset_attach_context attctx;
