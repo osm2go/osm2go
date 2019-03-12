@@ -1190,7 +1190,7 @@ void map_t::set_action(map_action_t act) {
   bool ok_state = false;
   bool cancel_state = true;
 
-  const char *statusbar_text;
+  trstring::native_type statusbar_text;
   bool idle = false;
 
   switch(act) {
@@ -1217,7 +1217,6 @@ void map_t::set_action(map_action_t act) {
     break;
 
   case MAP_ACTION_IDLE:
-    statusbar_text = nullptr;
     cancel_state = false;
     idle = true;
     break;
@@ -1686,7 +1685,7 @@ void map_t::show_all() {
   appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_MAP_SHOW_ALL, false);
 }
 
-void map_t::detail_change(float detail, const char *banner_msg)
+void map_t::detail_change(float detail, trstring::native_type_arg banner_msg)
 {
   appdata.uicontrol->showNotification(banner_msg, MainUi::Busy);
   /* deselecting anything allows us not to care about automatic deselection */

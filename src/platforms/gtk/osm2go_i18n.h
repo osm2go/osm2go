@@ -33,6 +33,22 @@ class trstring : private std::string {
   explicit inline trstring(const std::string &s) : std::string(s) {}
   std::string argn(const char spattern[3], const std::string &a, std::string::size_type pos) const;
 public:
+  class native_type {
+    const char *value;
+  public:
+#if __cplusplus >= 201103L
+    // catch if one passes a constant nullptr as argument
+    native_type(std::nullptr_t) = delete;
+#endif
+    inline native_type(const char *v = nullptr) : value(v) {}
+    inline bool isEmpty() const { return value == nullptr; }
+    inline void clear() { value = nullptr; }
+    inline operator const char *() const { return value; }
+    inline std::string toStdString() const { return isEmpty() ? std::string() : value; }
+  };
+  typedef native_type native_type_arg;
+#undef TRSTRING_NATIVE_TYPE_IS_TRSTRING
+
   explicit inline trstring() : std::string() {}
   explicit inline trstring(const char *s) : std::string(gettext(s)) {}
 #if __cplusplus >= 201103L
@@ -51,6 +67,8 @@ public:
   { return arg(std::string(a)); }
   inline trstring arg(const trstring &a) const
   { return arg(static_cast<std::string>(a)); }
+  inline trstring arg(native_type a) const
+  { return arg(static_cast<const char *>(a)); }
   template<typename T> inline trstring arg(T l) const
   { return arg(std::to_string(l)); }
 
@@ -67,3 +85,5 @@ public:
 #endif
   operator const gchar *() const { return c_str(); }
 };
+
+static_assert(sizeof(trstring::native_type) <= sizeof(char*), "trstring::native_type is too big");

@@ -145,18 +145,6 @@ template<> assert_num_tpl<const float_t>::assert_num_tpl(float_t a, float_t b,
   abort();
 }
 
-assert_cmpstr_struct::assert_cmpstr_struct(const trstring &a, const char *astr, const char *b, const char *file, const char *func, int line)
-{
-  if(unlikely(a.toStdString() != b))
-    fail(static_cast<const gchar *>(a), astr, b, file, func, line);
-}
-
-assert_cmpstr_struct::assert_cmpstr_struct(const trstring &a, const char *astr, const char *b, const char *bstr, const char *file, const char *func, int line)
-{
-  if(unlikely(a.toStdString() != b))
-    fail(static_cast<const gchar *>(a), astr, b, bstr, file, func, line);
-}
-
 assert_cmpstr_struct::assert_cmpstr_struct(const std::string &a, const char *astr, const std::string &b, const char *file, const char *func, int line)
 {
   if(unlikely(a != b))

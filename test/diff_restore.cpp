@@ -150,7 +150,7 @@ int main(int argc, char **argv)
   assert(osm);
 
   assert_cmpnum(osm->uploadPolicy, osm_t::Upload_Blocked);
-  assert_null(osm->sanity_check());
+  assert(osm->sanity_check().isEmpty());
 
   const relation_t * const r255 = osm->relation_by_id(296255);
   assert(r255 != nullptr);

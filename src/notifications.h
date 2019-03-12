@@ -19,13 +19,15 @@
 
 #pragma once
 
+#include <osm2go_i18n.h>
 #include <osm2go_platform.h>
 
-class trstring;
+#ifndef TRSTRING_NATIVE_TYPE_IS_TRSTRING
+void error_dlg(trstring::native_type_arg msg, osm2go_platform::Widget *parent = nullptr);
+void warning_dlg(trstring::native_type_arg msg, osm2go_platform::Widget *parent = nullptr);
+void message_dlg(trstring::native_type_arg title, const trstring &msg, osm2go_platform::Widget *parent);
+#endif
 
-void error_dlg(const char *msg, osm2go_platform::Widget *parent = nullptr) __attribute__((nonnull(1)));
 void error_dlg(const trstring &msg, osm2go_platform::Widget *parent = nullptr);
-void warning_dlg(const char *msg, osm2go_platform::Widget *parent = nullptr) __attribute__((nonnull(1)));
 void warning_dlg(const trstring &msg, osm2go_platform::Widget *parent = nullptr);
-void message_dlg(const char *title, const char *msg, osm2go_platform::Widget *parent = nullptr) __attribute__((nonnull(1,2)));
-void message_dlg(const char *title, const trstring &msg, GtkWidget *parent) __attribute__((nonnull(1)));
+void message_dlg(trstring::native_type_arg title, trstring::native_type_arg msg, osm2go_platform::Widget *parent = nullptr);

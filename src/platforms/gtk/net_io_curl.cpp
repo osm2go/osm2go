@@ -72,7 +72,8 @@ static void on_cancel(bool *data) {
 
 /* create the dialog box shown while worker is running */
 static GtkWidget *busy_dialog(osm2go_platform::Widget *parent, GtkProgressBar *&pbar,
-                              bool *cancel_ind, const char *title) {
+                              bool *cancel_ind, const std::string &title)
+{
 #ifdef GTK_DIALOG_NO_SEPARATOR
   GtkWidget *dialog = gtk_dialog_new_with_buttons(nullptr, nullptr, GTK_DIALOG_NO_SEPARATOR);
 #else
@@ -227,7 +228,8 @@ static void *worker_thread(void *ptr) {
  * rq will be freed, regardless of the outcome of the function.
  */
 static bool net_io_do(osm2go_platform::Widget *parent, net_io_request_t *rq,
-                      const char *title) {
+                      const std::string &title)
+{
   /* the request structure is shared between master and worker thread. */
   /* typically the master thread will do some waiting until the worker */
   /* thread returns. But the master may very well stop waiting since e.g. */
@@ -310,7 +312,8 @@ static bool net_io_do(osm2go_platform::Widget *parent, net_io_request_t *rq,
 
 bool net_io_download_file(osm2go_platform::Widget *parent,
                           const std::string &url, const std::string &filename,
-                          const char *title, bool compress) {
+                          const std::string &title, bool compress)
+{
   net_io_request_t *request = new net_io_request_t(url, filename, compress);
 
   printf("net_io: download %s to file %s\n", url.c_str(), filename.c_str());
@@ -334,13 +337,21 @@ bool net_io_download_file(osm2go_platform::Widget *parent,
   return result;
 }
 
+bool net_io_download_file(osm2go_platform::Widget *parent,
+                          const std::string &url, const std::string &filename,
+                          trstring::native_type title, bool compress)
+{
+  return net_io_download_file(parent, url, filename, title.toStdString(), compress);
+}
+
 bool net_io_download_mem(osm2go_platform::Widget *parent, const std::string &url,
-                         std::string &data, const char *title) {
+                         std::string &data, trstring::native_type title)
+{
   net_io_request_t *request = new net_io_request_t(url, &data);
 
   printf("net_io: download %s to memory\n", url.c_str());
 
-  bool result = net_io_do(parent, request, title);
+  bool result = net_io_do(parent, request, title.toStdString());
   if(unlikely(!result))
     data.clear();
 

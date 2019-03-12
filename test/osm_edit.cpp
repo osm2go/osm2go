@@ -85,9 +85,9 @@ static void test_trivial() {
   std::unique_ptr<osm_t> osm(new osm_t());
   osm->bounds.min = lpos_t(0, 0);
   osm->bounds.max = lpos_t(0, 0);
-  assert_cmpstr(osm->sanity_check(), _("Invalid data in OSM file:\nBoundary box invalid!"));
+  assert_cmpstr(osm->sanity_check(), trstring::native_type(_("Invalid data in OSM file:\nBoundary box invalid!")));
   set_bounds(osm);
-  assert_cmpstr(osm->sanity_check(), _("Invalid data in OSM file:\nNo drawable content found!"));
+  assert_cmpstr(osm->sanity_check(), trstring::native_type(_("Invalid data in OSM file:\nNo drawable content found!")));
 
   assert(osm->bounds.contains(lpos_t(0, 0)));
   assert(!osm->bounds.contains(lpos_t(-1, 0)));
@@ -102,7 +102,7 @@ static void test_trivial() {
   node_t *n = osm->node_new(l);
   osm->node_attach(n);
   // the sanity check look on the node map which now isn't empty anymore
-  assert_null(osm->sanity_check());
+  assert(osm->sanity_check().isEmpty());
 
   w->append_node(n);
   assert(w->ends_with_node(n));
@@ -1667,11 +1667,11 @@ static void test_description()
   assert_cmpstr(o.get_name(*osm), _("road/street under construction"));
   tags.insert(osm_t::TagMap::value_type("construction", "foo"));
   w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), trstring("%1 road under construction").arg("foo"));
+  assert_cmpstr(o.get_name(*osm), trstring("%1 road under construction").arg("foo").toStdString());
   // construction:highway is the proper namespaced tag, so prefer that one
   tags.insert(osm_t::TagMap::value_type("construction:highway", "bar"));
   w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), trstring("%1 road under construction").arg("bar"));
+  assert_cmpstr(o.get_name(*osm), trstring("%1 road under construction").arg("bar").toStdString());
   tags.insert(osm_t::TagMap::value_type("name", "baz"));
   w->tags.replace(tags);
   assert_cmpstr(o.get_name(*osm), trstring("%1 road under construction").arg("bar").toStdString() + ": \"baz\"");

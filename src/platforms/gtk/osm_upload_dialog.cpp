@@ -68,8 +68,9 @@ osm_upload_context_t::osm_upload_context_t(appdata_t &a, project_t::ref p, const
 {
 }
 
-void osm_upload_context_t::append_str(const char *msg, const char *colorname) {
-  g_debug("%s", msg);
+void osm_upload_context_t::append_str(trstring::native_type msg, const char *colorname)
+{
+  g_debug("%s", msg.toStdString().c_str());
 
   osm_upload_context_gtk * const gtk_this = static_cast<osm_upload_context_gtk *>(this);
   GtkTextBuffer * const logbuffer = gtk_this->logbuffer;

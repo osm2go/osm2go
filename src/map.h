@@ -28,6 +28,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include <osm2go_i18n.h>
 #include <osm2go_platform.h>
 #include <osm2go_stl.h>
 
@@ -185,7 +186,7 @@ public:
   void set_zoom(double zoom, bool update_scroll_offsets);
 
 private:
-  void detail_change(float detail, const char *banner_msg) __attribute__((nonnull(3)));
+  void detail_change(float detail, trstring::native_type_arg banner_msg);
 public:
   void detail_increase();
   void detail_decrease();

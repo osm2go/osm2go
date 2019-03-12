@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Rolf Eike Beer <eike@sf-mail.de>.
+ * Copyright (C) 2017-2019 Rolf Eike Beer <eike@sf-mail.de>.
  *
  * This file is part of OSM2Go.
  *
@@ -80,10 +80,6 @@ namespace osm2go_platform {
    * @brief a dialog asking for yes or no
    * @retval true the user clicked yes
    */
-  bool yes_no(const char *title, const char *msg,
-              unsigned int again_flags = 0,Widget *parent = nullptr);
-  bool yes_no(const char *title, const trstring &msg,
-              unsigned int again_flags = 0, Widget *parent = nullptr);
   bool yes_no(const trstring &title, const trstring &msg,
               unsigned int again_flags = 0, Widget *parent = nullptr);
 

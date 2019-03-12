@@ -20,6 +20,7 @@
 #pragma once
 
 #include <osm2go_cpp.h>
+#include <osm2go_i18n.h>
 #include <osm2go_stl.h>
 
 #include <cassert>
@@ -49,8 +50,6 @@
 #define ATTRIBUTE_COLD
 #endif
 #endif
-
-class trstring;
 
 void __attribute__((format (printf, 4, 5))) __attribute__((noreturn)) ATTRIBUTE_COLD
 assert_msg_fmt(const char *file, const int line, const char *func, const char *fmt, ...);
@@ -113,8 +112,8 @@ public:
       fail(a, astr, b, bstr, file, func, line);
   }
   // not inline, should happen only in test code
-  assert_cmpstr_struct(const trstring &a, const char *astr, const char *b, const char *file, const char *func, int line);
-  assert_cmpstr_struct(const trstring &a, const char *astr, const char *b, const char *bstr, const char *file, const char *func, int line);
+  assert_cmpstr_struct(trstring::native_type_arg a, const char *astr, trstring::native_type_arg b, const char *file, const char *func, int line);
+  assert_cmpstr_struct(trstring::native_type_arg a, const char *astr, trstring::native_type_arg b, const char *bstr, const char *file, const char *func, int line);
   assert_cmpstr_struct(const std::string &a, const char *astr, const std::string &b, const char *file, const char *func, int line);
   assert_cmpstr_struct(const std::string &a, const char *astr, const std::string &b, const char *bstr, const char *file, const char *func, int line);
   assert_cmpstr_struct(const std::string &a, const char *astr, const trstring &b, const char *file, const char *func, int line);

@@ -15,7 +15,7 @@
 static void do_mem(osm2go_platform::MappedFile &lic)
 {
   std::string mem;
-  assert(net_io_download_mem(nullptr, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/COPYING", mem, "dummy"));
+  assert(net_io_download_mem(nullptr, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/COPYING", mem, _("dummy")));
 
   assert_cmpmem(lic.data(), lic.length(), mem.c_str(), mem.size());
 }
@@ -23,7 +23,7 @@ static void do_mem(osm2go_platform::MappedFile &lic)
 static void do_mem_fail()
 {
   std::string mem;
-  assert(!net_io_download_mem(nullptr, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/this_file_does_not_exist", mem, "dummy"));
+  assert(!net_io_download_mem(nullptr, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/this_file_does_not_exist", mem, _("dummy")));
 }
 
 static void do_file(osm2go_platform::MappedFile &lic)
@@ -34,7 +34,7 @@ static void do_file(osm2go_platform::MappedFile &lic)
 
   std::string fname = tmpdir;
   fname += "/lic";
-  assert(net_io_download_file(nullptr, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/COPYING", fname, nullptr, false));
+  assert(net_io_download_file(nullptr, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/COPYING", fname, trstring::native_type(), false));
 
   osm2go_platform::MappedFile download(fname.c_str());
   assert(download);
@@ -44,7 +44,7 @@ static void do_file(osm2go_platform::MappedFile &lic)
   download.reset();
 
   fname += ".gz";
-  assert(net_io_download_file(nullptr, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/COPYING", fname, nullptr, true));
+  assert(net_io_download_file(nullptr, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/COPYING", fname, trstring::native_type(), true));
   osm2go_platform::MappedFile downloadgz(fname.c_str());
 
   assert(check_gzip(downloadgz.data(), downloadgz.length()));
@@ -61,7 +61,7 @@ static void do_file_fail()
 
   std::string fname = tmpdir;
   fname += "/empty";
-  assert(!net_io_download_file(nullptr, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/this_file_does_not_exist", fname, nullptr, false));
+  assert(!net_io_download_file(nullptr, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/this_file_does_not_exist", fname, trstring::native_type(), false));
   assert_cmpnum(rmdir(tmpdir), 0);
 }
 

@@ -496,10 +496,10 @@ static bool project_load_inner(appdata_t &appdata, std::unique_ptr<project_t> &p
 
   /* check if OSM data is valid */
   osm2go_platform::process_events();
-  const char *errmsg = appdata.project->osm->sanity_check();
+  trstring::native_type errmsg = appdata.project->osm->sanity_check();
   if(unlikely(errmsg != nullptr)) {
     error_dlg(errmsg);
-    printf("project/osm sanity checks failed (%s), unloading project\n", errmsg);
+    printf("project/osm sanity checks failed (%s), unloading project\n", errmsg.toStdString().c_str());
 
     return false;
   }

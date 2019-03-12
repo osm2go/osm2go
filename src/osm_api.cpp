@@ -84,7 +84,7 @@ bool osm_download(osm2go_platform::Widget *parent, project_t *project)
   const std::string update = project->path + updatefn;
   unlinkat(project->dirfd, updatefn, 0);
 
-  if(unlikely(!net_io_download_file(parent, url, update, project->name.c_str(), true)))
+  if(unlikely(!net_io_download_file(parent, url, update, project->name, true)))
     return false;
 
   if(unlikely(!std::filesystem::is_regular_file(update)))

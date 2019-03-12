@@ -35,6 +35,7 @@
 
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
+#include <osm2go_i18n.h>
 #include "osm2go_stl.h"
 
 #include <libxml/parser.h>
@@ -304,7 +305,7 @@ public:
    *
    * The error string is a static one and must not be freed by the caller.
    */
-  const char *sanity_check() const;
+  trstring::native_type sanity_check() const;
 
   /**
    * @brief parse the XML node for tag values

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Rolf Eike Beer <eike@sf-mail.de>.
+ * Copyright (C) 2017-2019 Rolf Eike Beer <eike@sf-mail.de>.
  *
  * This file is part of OSM2Go.
  *
@@ -226,7 +226,7 @@ static void on_toggled(GtkWidget *button, const int *flags)
     gtk_dialog_set_response_sensitive(dialog, RESPONSE_YES, not_active);
 }
 
-bool osm2go_platform::yes_no(const char *title, const char *msg, unsigned int again_flags,
+static bool yes_no(const char *title, const char *msg, unsigned int again_flags,
                              osm2go_platform::Widget *parent)
 {
   /* flags used to prevent re-appearence of dialogs */
@@ -287,10 +287,16 @@ bool osm2go_platform::yes_no(const char *title, const char *msg, unsigned int ag
   return yes;
 }
 
-bool osm2go_platform::yes_no(const char *title, const trstring &msg, unsigned int again_flags,
+bool osm2go_platform::yes_no(trstring::native_type title, trstring::native_type msg, unsigned int again_flags,
                              osm2go_platform::Widget *parent)
 {
-  return yes_no(title, static_cast<const gchar *>(msg), again_flags, parent);
+  return yes_no(static_cast<const char *>(title), static_cast<const char *>(msg), again_flags, parent);
+}
+
+bool osm2go_platform::yes_no(trstring::native_type title, const trstring &msg, unsigned int again_flags,
+                             osm2go_platform::Widget *parent)
+{
+  return yes_no(static_cast<const char *>(title), static_cast<const gchar *>(msg), again_flags, parent);
 }
 
 bool osm2go_platform::yes_no(const trstring &title, const trstring &msg, unsigned int again_flags,
@@ -376,4 +382,16 @@ dirguard osm2go_platform::userdatapath()
 bool osm2go_platform::create_directories(const std::string &path)
 {
   return g_mkdir_with_parents(path.c_str(), S_IRWXU) == 0;
+}
+
+assert_cmpstr_struct::assert_cmpstr_struct(trstring::native_type_arg a, const char *astr, trstring::native_type_arg b, const char *file, const char *func, int line)
+{
+  if(unlikely(a.toStdString() != b.toStdString()))
+    fail(static_cast<const gchar *>(a), astr, static_cast<const gchar *>(b), file, func, line);
+}
+
+assert_cmpstr_struct::assert_cmpstr_struct(trstring::native_type_arg a, const char *astr, trstring::native_type_arg b, const char *bstr, const char *file, const char *func, int line)
+{
+  if(unlikely(a.toStdString() != b.toStdString()))
+    fail(static_cast<const gchar *>(a), astr, static_cast<const gchar *>(b), bstr, file, func, line);
 }

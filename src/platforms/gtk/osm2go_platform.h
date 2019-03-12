@@ -22,6 +22,7 @@
 #include <memory>
 
 #include <osm2go_cpp.h>
+#include <osm2go_i18n.h>
 #include <osm2go_stl.h>
 
 typedef struct _GMappedFile GMappedFile;
@@ -88,6 +89,11 @@ namespace osm2go_platform {
     value_type m_x, m_y;
 
   };
+
+  bool yes_no(trstring::native_type title, trstring::native_type msg,
+              unsigned int again_flags = 0,Widget *parent = nullptr);
+  bool yes_no(trstring::native_type title, const trstring &msg,
+              unsigned int again_flags = 0, Widget *parent = nullptr);
 };
 
 #include "../osm2go_platform_common.h"

@@ -22,6 +22,7 @@
 #include <curl/curl.h>
 #include <string>
 
+#include <osm2go_i18n.h>
 #include <osm2go_platform.h>
 
 /**
@@ -36,7 +37,15 @@
  */
 bool net_io_download_file(osm2go_platform::Widget *parent,
                           const std::string &url, const std::string &filename,
-                          const char *title, bool compress = false);
+                          const std::string &title, bool compress = false);
+
+/**
+ * @overload
+ */
+bool net_io_download_file(osm2go_platform::Widget *parent,
+                          const std::string &url, const std::string &filename,
+                          trstring::native_type_arg title, bool compress = false);
+
 /**
  * @brief download from the given URL to memory
  * @param parent widget for status messages
@@ -47,7 +56,7 @@ bool net_io_download_file(osm2go_platform::Widget *parent,
  * The data is possibly gzip encoded.
  */
 bool net_io_download_mem(osm2go_platform::Widget *parent, const std::string &url,
-                         std::string &data, const char *title);
+                         std::string &data, trstring::native_type_arg title);
 
 /**
  * @brief translate HTTP status code to string

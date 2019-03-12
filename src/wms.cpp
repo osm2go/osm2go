@@ -469,7 +469,8 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
   /* remove any existing image before */
   wms_remove(appdata);
 
-  if(!net_io_download_file(appdata_t::window, url, filename, _("WMS layer")))
+  trstring::native_type wtitle = _("WMS layer");
+  if(!net_io_download_file(appdata_t::window, url, filename, wtitle))
     return;
 
   /* there should be a matching file on disk now */
