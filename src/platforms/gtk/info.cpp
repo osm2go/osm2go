@@ -51,6 +51,7 @@ public:
 #if __cplusplus >= 201103L
   info_tag_context_t(info_tag_context_t &&) = delete;
   info_tag_context_t &operator=(info_tag_context_t &&) = delete;
+  ~info_tag_context_t() = default;
 #endif
 
   map_t * const map;

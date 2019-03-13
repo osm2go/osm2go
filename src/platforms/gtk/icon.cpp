@@ -50,6 +50,13 @@ public:
 
 class icon_buffer : public icon_t {
 public:
+  icon_buffer() {}
+  icon_buffer(const icon_buffer &) O2G_DELETED_FUNCTION;
+  icon_buffer &operator=(const icon_buffer &) O2G_DELETED_FUNCTION;
+#if __cplusplus >= 201103L
+  icon_buffer(icon_buffer &&) = delete;
+  icon_buffer &operator=(icon_buffer &&) = delete;
+#endif
   ~icon_buffer();
 
   typedef std::unordered_map<std::string, icon_buffer_item *> BufferMap;

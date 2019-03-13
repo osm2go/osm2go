@@ -47,6 +47,7 @@ struct relitem_context_t {
 #if __cplusplus >= 201103L
   relitem_context_t(relitem_context_t &&) = delete;
   relitem_context_t &operator=(relitem_context_t &&) = delete;
+  ~relitem_context_t() = default;
 #endif
 
   object_t &item;
@@ -91,6 +92,7 @@ struct relation_context_t {
 #if __cplusplus >= 201103L
   relation_context_t(relation_context_t &&) = delete;
   relation_context_t &operator=(relation_context_t &&) = delete;
+  ~relation_context_t() = default;
 #endif
 
   map_t * const map;

@@ -167,6 +167,7 @@ struct area_context_t {
 #if __cplusplus >= 201103L
   area_context_t(area_context_t &&) = delete;
   area_context_t &operator=(area_context_t &&) = delete;
+  ~area_context_t() = default;
 #endif
 
   osm2go_platform::DialogGuard dialog;
