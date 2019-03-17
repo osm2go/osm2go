@@ -150,11 +150,11 @@ static track_t *track_read(const char *filename, bool dirty) {
 /* ----------------------  saving track --------------------------- */
 
 struct track_save_segs {
-  xmlNodePtr const node;
+  xmlNode * const node;
   explicit track_save_segs(xmlNodePtr n) : node(n) {}
 
   struct save_point {
-    xmlNodePtr const node;
+    xmlNode * const node;
     explicit save_point(xmlNodePtr n) : node(n) {}
     void operator()(const track_point_t &point);
   };

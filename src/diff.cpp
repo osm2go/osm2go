@@ -73,7 +73,7 @@ static std::string project_diff_name(const project_t *project)
 }
 
 struct diff_save_tags_functor {
-  xmlNodePtr const node;
+  xmlNode * const node;
   explicit diff_save_tags_functor(xmlNodePtr n) : node(n) {}
   void operator()(const tag_t &tag) {
     xmlNodePtr tag_node = xmlNewChild(node, nullptr,
@@ -113,7 +113,7 @@ static xmlNodePtr diff_save_state_n_id(xmlNodePtr root_node, const base_object_t
 
 template<typename T>
 class diff_save_objects {
-  xmlNodePtr const root_node;
+  xmlNode * const root_node;
   inline void save_additional_info(const T *m, xmlNodePtr xmlnode) const;
 public:
   explicit inline diff_save_objects(xmlNodePtr r) : root_node(r) {}
@@ -140,7 +140,7 @@ void diff_save_objects<node_t>::save_additional_info(const node_t *m, xmlNodePtr
 }
 
 struct diff_save_ways {
-  xmlNodePtr const root_node;
+  xmlNode * const root_node;
   osm_t::ref osm;
   explicit inline diff_save_ways(xmlNodePtr r, osm_t::ref o) : root_node(r), osm(o) { }
   void operator()(const std::pair<item_id_t, way_t *> &pair);
@@ -643,7 +643,7 @@ xmlDocPtr osmchange_init()
 }
 
 struct osmchange_delete_functor {
-  xmlNodePtr const xml_node; ///< <delete> node
+  xmlNode * const xml_node; ///< <delete> node
   const char * const changeset; ///< changeset string
   osmchange_delete_functor(xmlNodePtr delnode, const char *cs) : xml_node(delnode), changeset(cs) {}
   void operator()(const base_object_t *obj) {
