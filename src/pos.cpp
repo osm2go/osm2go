@@ -128,7 +128,7 @@ bool bounds_t::init(const pos_area &area)
     return false;
 
   // calculate map zone which will be used as a reference for all drawing/projection later on
-  pos_t c = ll.center();
+  const pos_t c = ll.center();
 
   center = c.toLpos();
 
