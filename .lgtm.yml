@@ -3,7 +3,7 @@ path_classifiers:
       - "test/*"
 
 extraction:
-    c:
+    cpp:
         prepare:
                 packages:
                  - libgoocanvas-2.0-dev
