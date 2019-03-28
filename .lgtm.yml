@@ -1,9 +1,0 @@
-path_classifiers:
-    test:
-      - "test/*"
-
-extraction:
-    cpp:
-        prepare:
-                packages:
-                 - libgoocanvas-2.0-dev
