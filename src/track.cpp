@@ -606,7 +606,7 @@ void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
   case TagTrkSeg:
     track->segments.push_back(track_seg_t());
     break;
-  case TagTrkPt: {
+  case TagTrkPt:
     track->segments.back().track_points.push_back(track_point_t());
     points++;
     curPoint = &track->segments.back().track_points.back();
@@ -616,7 +616,7 @@ void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
       else if(likely(strcmp(reinterpret_cast<const char *>(attrs[i]), "lon") == 0))
         curPoint->pos.lon = xml_parse_float(attrs[i + 1]);
     }
-  }
+    break;
   default:
     break;
   }
