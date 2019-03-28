@@ -90,7 +90,7 @@ class TrackSax {
   struct tag_find {
     const char * const name;
     explicit tag_find(const xmlChar *n) : name(reinterpret_cast<const char *>(n)) {}
-    bool operator()(const StateMap::value_type &p) {
+    inline bool operator()(const StateMap::value_type &p) const {
       return (strcmp(p.name, name) == 0);
     }
   };
@@ -159,7 +159,7 @@ struct track_save_segs {
     void operator()(const track_point_t &point);
   };
 
-  void operator()(const track_seg_t &seg) {
+  inline void operator()(const track_seg_t &seg) {
     xmlNodePtr node_seg = xmlNewChild(node, nullptr, BAD_CAST "trkseg", nullptr);
     std::for_each(seg.track_points.begin(), seg.track_points.end(),
                   save_point(node_seg));
