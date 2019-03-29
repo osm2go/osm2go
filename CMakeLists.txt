@@ -19,6 +19,8 @@ include(CTest)
 include(GNUInstallDirs)
 include(WriteCompilerDetectionHeader)
 
+set(CMAKE_C_STANDARD 99)
+
 find_package(OpenSSL 1 REQUIRED)
 pkg_check_modules(MAEMO maemo-version)
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/curl/CMakeLists.txt")

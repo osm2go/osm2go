@@ -141,8 +141,7 @@ osd_render_toggle(osm_gps_map_osd_t *osd) {
     cairo_set_source_rgb(cr, bright, bright, bright);
 
     cairo_set_dash(cr, NULL, 0, 0.0);
-    int i;
-    for(i = 0; i < 4; i++)
+    for(int i = 0; i < 4; i++)
       render_arrow(cr, i);
 
     cairo_destroy(cr);

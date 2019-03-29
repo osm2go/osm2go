@@ -92,11 +92,10 @@ gboolean dbus_mm_set_position(dbus_mm_pos_t *mmp) {
 }
 
 gboolean dbus_register(osso_context_t *ctx) {
-  DBusConnection *bus;
   DBusError error;
 
   dbus_error_init (&error);
-  bus = dbus_bus_get(DBUS_BUS_SESSION, &error);
+  DBusConnection *bus = dbus_bus_get(DBUS_BUS_SESSION, &error);
   if(!bus) {
     g_warning("Failed to connect to the D-BUS daemon: %s", error.message);
     dbus_error_free(&error);

@@ -282,7 +282,6 @@ replace_string(const gchar *src, const gchar *from, const gchar *to)
             const gchar *match = g_strstr_len(src, size, from);
             if ( match != NULL )
             {
-                gchar *temp;
                 /* Find out how many characters to copy up to the 'match'. */
                 size_t count = match - src;
 
@@ -291,7 +290,7 @@ replace_string(const gchar *src, const gchar *from, const gchar *to)
                  * replacement is performed. */
                 size += tolen - fromlen;
 
-                temp = g_realloc(value, size);
+                gchar *temp = g_realloc(value, size);
 
                 /* we'll want to return 'value' eventually, so let's point it
                  * to the memory that we are now working with.
@@ -338,12 +337,11 @@ map_convert_coords_to_quadtree_string(gint x, gint y, gint zoomlevel,
                                       const gchar *const quadrant)
 {
     gchar *ptr = buffer;
-    gint n;
 
     if (initial)
         *ptr++ = initial;
 
-    for(n = zoomlevel-1; n >= 0; n--)
+    for(gint n = zoomlevel-1; n >= 0; n--)
     {
         gint xbit = (x >> n) & 1;
         gint ybit = (y >> n) & 1;
@@ -409,20 +407,16 @@ static gchar *
 replace_map_uri(OsmGpsMap *map, const gchar *uri, int zoom, int x, int y)
 {
     OsmGpsMapPrivate *priv = map->priv;
-    char *url;
-    unsigned int i;
+    gchar *url = g_strdup(uri);
 #if defined(URI_MARKER_Q) || defined(URI_MARKER_Q0)
     char location[22];
 #endif
 
-    i = 1;
-    url = g_strdup(uri);
-    while (i < URI_FLAG_END)
+    for (unsigned int i = 1; i < URI_FLAG_END; i = i << 1)
     {
         char s[16];
-        char *old;
+        char *old = url;
 
-        old = url;
         switch(i & priv->uri_format)
         {
             case URI_HAS_X:
@@ -486,9 +480,6 @@ replace_map_uri(OsmGpsMap *map, const gchar *uri, int zoom, int x, int y)
         if (old != url) {
             g_free(old);
         }
-
-        i = (i << 1);
-
     }
 
     return url;
@@ -576,29 +567,26 @@ osm_gps_map_free_images (OsmGpsMap *map)
 static void
 osm_gps_map_print_images (OsmGpsMap *map)
 {
-    GSList *list;
-    int x,y,pixel_x,pixel_y;
     int min_x = 0,min_y = 0,max_x = 0,max_y = 0;
-    int map_x0, map_y0;
     OsmGpsMapPrivate *priv = map->priv;
 
-    map_x0 = priv->map_x - EXTRA_BORDER;
-    map_y0 = priv->map_y - EXTRA_BORDER;
-    for(list = priv->images; list != NULL; list = list->next)
+    int map_x0 = priv->map_x - EXTRA_BORDER;
+    int map_y0 = priv->map_y - EXTRA_BORDER;
+    for(GSList *list = priv->images; list != NULL; list = list->next)
     {
         image_t *im = list->data;
 
         // pixel_x,y, offsets
-        pixel_x = lon2pixel(priv->map_zoom, im->pt.rlon);
-        pixel_y = lat2pixel(priv->map_zoom, im->pt.rlat);
+        int pixel_x = lon2pixel(priv->map_zoom, im->pt.rlon);
+        int pixel_y = lat2pixel(priv->map_zoom, im->pt.rlat);
 
         g_debug("Image %dx%d @: %f,%f (%d,%d)",
                 im->w, im->h,
                 im->pt.rlat, im->pt.rlon,
                 pixel_x, pixel_y);
 
-        x = pixel_x - map_x0;
-        y = pixel_y - map_y0;
+        int x = pixel_x - map_x0;
+        int y = pixel_y - map_y0;
 
         gdk_draw_pixbuf (
                          priv->pixmap,
@@ -629,26 +617,18 @@ osm_gps_map_draw_gps_point (OsmGpsMap *map)
 
     //incase we get called before we have got a gps point
     if (priv->gps_valid) {
-        int map_x0, map_y0;
         int x, y;
         int r = priv->ui_gps_point_inner_radius;
         int r2 = priv->ui_gps_point_outer_radius;
         int mr = MAX(3*r,r2);
 
-        map_x0 = priv->map_x - EXTRA_BORDER;
-        map_y0 = priv->map_y - EXTRA_BORDER;
+        int map_x0 = priv->map_x - EXTRA_BORDER;
+        int map_y0 = priv->map_y - EXTRA_BORDER;
         x = lon2pixel(priv->map_zoom, priv->gps->rlon) - map_x0;
         y = lat2pixel(priv->map_zoom, priv->gps->rlat) - map_y0;
-#ifdef USE_CAIRO
-        cairo_t *cr;
-        cairo_pattern_t *pat;
-#else
-        GdkColor color;
-        GdkGC *marker;
-#endif
 
 #ifdef USE_CAIRO
-        cr = gdk_cairo_create(priv->pixmap);
+        cairo_t *cr = gdk_cairo_create(priv->pixmap);
 
         // draw transparent area
         if (r2 > 0) {
@@ -680,7 +660,7 @@ osm_gps_map_draw_gps_point (OsmGpsMap *map)
                 cairo_stroke(cr);
             }
 
-            pat = cairo_pattern_create_radial (x-(r/5), y-(r/5), (r/5), x,  y, r);
+            cairo_pattern_t *pat = cairo_pattern_create_radial (x-(r/5), y-(r/5), (r/5), x,  y, r);
             cairo_pattern_add_color_stop_rgba (pat, 0, 1, 1, 1, 1.0);
             cairo_pattern_add_color_stop_rgba (pat, 1, 0, 0, 1, 1.0);
             cairo_set_source (cr, pat);
@@ -701,7 +681,8 @@ osm_gps_map_draw_gps_point (OsmGpsMap *map)
                                     mr*2,
                                     mr*2);
 #else
-        marker = gdk_gc_new(priv->pixmap);
+        GdkGC *marker = gdk_gc_new(priv->pixmap);
+        GdkColor color;
         color.red = 5000;
         color.green = 5000;
         color.blue = 55000;
@@ -755,20 +736,20 @@ osm_gps_map_blit_tile(OsmGpsMap *map, GdkPixbuf *pixbuf, int offset_x, int offse
 static void
 osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpointer user_data)
 {
-    FILE *file;
     tile_download_t *dl = (tile_download_t *)user_data;
     OsmGpsMap *map = OSM_GPS_MAP(dl->map);
     OsmGpsMapPrivate *priv = map->priv;
-    gboolean file_saved = FALSE;
 
     if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code))
     {
+        gboolean file_saved = FALSE;
+
         /* save tile into cachedir if one has been specified */
         if (priv->cache_dir)
         {
             if (g_mkdir_with_parents(dl->folder,0700) == 0)
             {
-                file = g_fopen(dl->filename, "wb");
+                FILE *file = g_fopen(dl->filename, "wb");
                 if (file != NULL)
                 {
                     fwrite(msg->response_body->data, 1, msg->response_body->length, file);
@@ -801,13 +782,12 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
             }
             else
             {
-                GdkPixbufLoader *loader;
-                char *extension = strrchr (dl->filename, '.');
+                const char *extension = strrchr (dl->filename, '.');
 
                 /* parse file directly from memory */
                 if (extension)
                 {
-                    loader = gdk_pixbuf_loader_new_with_type (extension+1, NULL);
+                    GdkPixbufLoader *loader = gdk_pixbuf_loader_new_with_type (extension+1, NULL);
                     if (!gdk_pixbuf_loader_write (loader, (unsigned char*)msg->response_body->data, msg->response_body->length, NULL))
                     {
                         g_warning("Error: Decoding of image failed");
@@ -874,7 +854,6 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
 static void
 osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redraw)
 {
-    SoupMessage *msg;
     OsmGpsMapPrivate *priv = map->priv;
     tile_download_t *dl = g_new0(tile_download_t,1);
 
@@ -905,7 +884,7 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redr
 
         g_debug("Download tile: %d,%d z:%d\n\t%s --> %s", x, y, zoom, dl->uri, dl->filename);
 
-        msg = soup_message_new (SOUP_METHOD_GET, dl->uri);
+        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, dl->uri);
         if (msg) {
 #ifdef DISABLED_MAPS
             if (priv->the_google) {
@@ -939,18 +918,16 @@ static GdkPixbuf *
 osm_gps_map_load_cached_tile (OsmGpsMap *map, int zoom, int x, int y)
 {
     OsmGpsMapPrivate *priv = map->priv;
-    gchar *filename;
     GdkPixbuf *pixbuf = NULL;
-    OsmCachedTile *tile;
 
-    filename = g_strdup_printf("%s%c%d%c%d%c%d.%s",
+    gchar *filename = g_strdup_printf("%s%c%d%c%d%c%d.%s",
                 priv->cache_dir, G_DIR_SEPARATOR,
                 zoom, G_DIR_SEPARATOR,
                 x, G_DIR_SEPARATOR,
                 y,
                 priv->image_format);
 
-    tile = g_hash_table_lookup (priv->tile_cache, filename);
+    OsmCachedTile *tile = g_hash_table_lookup (priv->tile_cache, filename);
     if (tile)
     {
         g_free (filename);
@@ -984,14 +961,12 @@ static GdkPixbuf *
 osm_gps_map_find_bigger_tile (OsmGpsMap *map, int zoom, int x, int y,
                               int *zoom_found)
 {
-    GdkPixbuf *pixbuf;
-    int next_zoom, next_x, next_y;
-
     if (zoom == 0) return NULL;
-    next_zoom = zoom - 1;
-    next_x = x / 2;
-    next_y = y / 2;
-    pixbuf = osm_gps_map_load_cached_tile (map, next_zoom, next_x, next_y);
+
+    int next_zoom = zoom - 1;
+    int next_x = x / 2;
+    int next_y = y / 2;
+    GdkPixbuf *pixbuf = osm_gps_map_load_cached_tile (map, next_zoom, next_x, next_y);
     if (pixbuf)
         *zoom_found = next_zoom;
     else
@@ -1004,25 +979,23 @@ static GdkPixbuf *
 osm_gps_map_render_missing_tile_upscaled (OsmGpsMap *map, int zoom,
                                           int x, int y)
 {
-    GdkPixbuf *pixbuf, *big, *area;
-    int zoom_big, zoom_diff, area_size, area_x, area_y;
-    int modulo;
+    int zoom_big;
 
-    big = osm_gps_map_find_bigger_tile (map, zoom, x, y, &zoom_big);
+    GdkPixbuf *big = osm_gps_map_find_bigger_tile (map, zoom, x, y, &zoom_big);
     if (!big) return NULL;
 
     g_debug ("Found bigger tile (zoom = %d, wanted = %d)", zoom_big, zoom);
 
     /* get a Pixbuf for the area to magnify */
-    zoom_diff = zoom - zoom_big;
-    area_size = TILESIZE >> zoom_diff;
-    modulo = 1 << zoom_diff;
-    area_x = (x % modulo) * area_size;
-    area_y = (y % modulo) * area_size;
-    area = gdk_pixbuf_new_subpixbuf (big, area_x, area_y,
+    int zoom_diff = zoom - zoom_big;
+    int area_size = TILESIZE >> zoom_diff;
+    int modulo = 1 << zoom_diff;
+    int area_x = (x % modulo) * area_size;
+    int area_y = (y % modulo) * area_size;
+    GdkPixbuf *area = gdk_pixbuf_new_subpixbuf (big, area_x, area_y,
                                      area_size, area_size);
     g_object_unref (big);
-    pixbuf = gdk_pixbuf_scale_simple (area, TILESIZE, TILESIZE,
+    GdkPixbuf *pixbuf = gdk_pixbuf_scale_simple (area, TILESIZE, TILESIZE,
                                       GDK_INTERP_NEAREST);
     g_object_unref (area);
     return pixbuf;
@@ -1039,7 +1012,6 @@ static void
 osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int offset_y)
 {
     OsmGpsMapPrivate *priv = map->priv;
-    gchar *filename;
     GdkPixbuf *pixbuf;
 
     g_debug("Load tile %d,%d (%d,%d) z:%d", x, y, offset_x, offset_y, zoom);
@@ -1049,7 +1021,7 @@ osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int
         return;
     }
 
-    filename = g_strdup_printf("%s%c%d%c%d%c%d.%s",
+    gchar *filename = g_strdup_printf("%s%c%d%c%d%c%d.%s",
                 priv->cache_dir, G_DIR_SEPARATOR,
                 zoom, G_DIR_SEPARATOR,
                 x, G_DIR_SEPARATOR,
@@ -1100,35 +1072,30 @@ static void
 osm_gps_map_fill_tiles_pixel (OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
-    int i,j, width, height, tile_x0, tile_y0, tiles_nx, tiles_ny;
-    int offset_xn = 0;
-    int offset_yn = 0;
-    int offset_x;
-    int offset_y;
 
     g_debug("Fill tiles: %d,%d z:%d", priv->map_x, priv->map_y, priv->map_zoom);
 
-    offset_x = - priv->map_x % TILESIZE;
-    offset_y = - priv->map_y % TILESIZE;
+    int offset_x = - priv->map_x % TILESIZE;
+    int offset_y = - priv->map_y % TILESIZE;
     if (offset_x > 0) offset_x -= TILESIZE;
     if (offset_y > 0) offset_y -= TILESIZE;
 
-    offset_xn = offset_x + EXTRA_BORDER;
-    offset_yn = offset_y + EXTRA_BORDER;
+    int offset_xn = offset_x + EXTRA_BORDER;
+    int offset_yn = offset_y + EXTRA_BORDER;
 
-    width  = GTK_WIDGET(map)->allocation.width;
-    height = GTK_WIDGET(map)->allocation.height;
+    int width  = GTK_WIDGET(map)->allocation.width;
+    int height = GTK_WIDGET(map)->allocation.height;
 
-    tiles_nx = (width  - offset_x) / TILESIZE + 1;
-    tiles_ny = (height - offset_y) / TILESIZE + 1;
+    int tiles_nx = (width  - offset_x) / TILESIZE + 1;
+    int tiles_ny = (height - offset_y) / TILESIZE + 1;
 
-    tile_x0 =  floorf((float)priv->map_x / (float)TILESIZE);
-    tile_y0 =  floorf((float)priv->map_y / (float)TILESIZE);
+    int tile_x0 =  floorf((float)priv->map_x / (float)TILESIZE);
+    int tile_y0 =  floorf((float)priv->map_y / (float)TILESIZE);
 
     //TODO: implement wrap around
-    for (i=tile_x0; i<(tile_x0+tiles_nx);i++)
+    for (int i=tile_x0; i<(tile_x0+tiles_nx);i++)
     {
-        for (j=tile_y0;  j<(tile_y0+tiles_ny); j++)
+        for (int j=tile_y0;  j<(tile_y0+tiles_ny); j++)
         {
             if( j<0 || i<0 || i>=exp(priv->map_zoom * M_LN2) || j>=exp(priv->map_zoom * M_LN2))
             {
@@ -1159,26 +1126,18 @@ osm_gps_map_print_track(OsmGpsMap *map, GSList *trackpoint_list,
 {
     OsmGpsMapPrivate *priv = map->priv;
 
-    GSList *list;
-    int x,y;
     int min_x = 0,min_y = 0,max_x = 0,max_y = 0;
-    int map_x0, map_y0;
-#ifdef USE_CAIRO
-    cairo_t *cr;
-#else
-    int last_x = 0, last_y = 0;
-    GdkColor color;
-    GdkGC *gc;
-#endif
 
 #ifdef USE_CAIRO
-    cr = gdk_cairo_create(priv->pixmap);
+    cairo_t *cr = gdk_cairo_create(priv->pixmap);
     cairo_set_line_width (cr, lw);
     cairo_set_source_rgba (cr, r/65535.0, g/65535.0, b/65535.0, 0.6);
     cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
     cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
 #else
-    gc = gdk_gc_new(priv->pixmap);
+    int last_x = 0, last_y = 0;
+    GdkGC *gc = gdk_gc_new(priv->pixmap);
+    GdkColor color;
     color.green = b;
     color.blue = g;
     color.red = r;
@@ -1186,14 +1145,14 @@ osm_gps_map_print_track(OsmGpsMap *map, GSList *trackpoint_list,
     gdk_gc_set_line_attributes(gc, lw, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
 #endif
 
-    map_x0 = priv->map_x - EXTRA_BORDER;
-    map_y0 = priv->map_y - EXTRA_BORDER;
-    for(list = trackpoint_list; list != NULL; list = list->next)
+    int map_x0 = priv->map_x - EXTRA_BORDER;
+    int map_y0 = priv->map_y - EXTRA_BORDER;
+    for(const GSList *list = trackpoint_list; list != NULL; list = list->next)
     {
-        OsmGpsMapPoint *tp = list->data;
+        const OsmGpsMapPoint *tp = list->data;
 
-        x = lon2pixel(priv->map_zoom, tp->rlon) - map_x0;
-        y = lat2pixel(priv->map_zoom, tp->rlat) - map_y0;
+        int x = lon2pixel(priv->map_zoom, tp->rlon) - map_x0;
+        int y = lat2pixel(priv->map_zoom, tp->rlat) - map_y0;
 
         // first time through loop
         if (list == trackpoint_list) {
@@ -1540,10 +1499,8 @@ osm_gps_map_init (OsmGpsMap *object)
 
 static void
 osm_gps_map_setup(OsmGpsMapPrivate *priv) {
-    const char *uri;
-
     //user can specify a map source ID, or a repo URI as the map source
-    uri = osm_gps_map_source_get_repo_uri(OSM_GPS_MAP_SOURCE_NULL);
+    const char *uri = osm_gps_map_source_get_repo_uri(OSM_GPS_MAP_SOURCE_NULL);
     if ( (priv->map_source == OSM_GPS_MAP_SOURCE_NULL) || (g_strcmp0(priv->repo_uri, uri) == 0) ) {
         g_debug("Using null source");
         priv->map_source = OSM_GPS_MAP_SOURCE_NULL;
@@ -2612,28 +2569,23 @@ osm_gps_map_download_maps (OsmGpsMap *map, OsmGpsMapPoint *pt1, OsmGpsMapPoint *
         OsmGpsMapPrivate *priv = map->priv;
         gchar *filename;
         int num_tiles = 0;
-        int zoom;
 
         zoom_end = CLAMP(zoom_end, priv->min_zoom, priv->max_zoom);
         g_debug("Download maps: z:%d->%d",zoom_start, zoom_end);
 
-        for(zoom=zoom_start; zoom<=zoom_end; zoom++)
+        for(int zoom=zoom_start; zoom<=zoom_end; zoom++)
         {
-            int x_1, y_1, x_2, y_2;
-            int i;
+            int x_1 = floorf((float)lon2pixel(zoom, pt1->rlon) / (float)TILESIZE);
+            int y_1 = floorf((float)lat2pixel(zoom, pt1->rlat) / (float)TILESIZE);
 
-            x_1 = floorf((float)lon2pixel(zoom, pt1->rlon) / (float)TILESIZE);
-            y_1 = floorf((float)lat2pixel(zoom, pt1->rlat) / (float)TILESIZE);
-
-            x_2 = floorf((float)lon2pixel(zoom, pt2->rlon) / (float)TILESIZE);
-            y_2 = floorf((float)lat2pixel(zoom, pt2->rlat) / (float)TILESIZE);
+            int x_2 = floorf((float)lon2pixel(zoom, pt2->rlon) / (float)TILESIZE);
+            int y_2 = floorf((float)lat2pixel(zoom, pt2->rlat) / (float)TILESIZE);
 
             // loop x1-x2
-            for(i=x_1; i<=x_2; i++)
+            for(int i=x_1; i<=x_2; i++)
             {
                 // loop y1 - y2
-                int j;
-                for(j=y_1; j<=y_2; j++)
+                for(int j=y_1; j<=y_2; j++)
                 {
                     // x = i, y = j
                     filename = g_strdup_printf("%s%c%d%c%d%c%d.%s",
@@ -2680,18 +2632,15 @@ osm_gps_map_set_center_and_zoom (OsmGpsMap *map, float latitude, float longitude
 void
 osm_gps_map_set_center (OsmGpsMap *map, float latitude, float longitude)
 {
-    int pixel_x, pixel_y;
-    OsmGpsMapPrivate *priv;
-
     g_return_if_fail (OSM_IS_GPS_MAP (map));
-    priv = map->priv;
+    OsmGpsMapPrivate *priv = map->priv;
 
     priv->center_rlat = deg2rad(latitude);
     priv->center_rlon = deg2rad(longitude);
 
     // pixel_x,y, offsets
-    pixel_x = lon2pixel(priv->map_zoom, priv->center_rlon);
-    pixel_y = lat2pixel(priv->map_zoom, priv->center_rlat);
+    int pixel_x = lon2pixel(priv->map_zoom, priv->center_rlon);
+    int pixel_y = lat2pixel(priv->map_zoom, priv->center_rlat);
 
     priv->map_x = pixel_x - GTK_WIDGET(map)->allocation.width/2;
     priv->map_y = pixel_y - GTK_WIDGET(map)->allocation.height/2;
@@ -2702,28 +2651,23 @@ osm_gps_map_set_center (OsmGpsMap *map, float latitude, float longitude)
 int
 osm_gps_map_set_zoom (OsmGpsMap *map, int zoom)
 {
-    int zoom_old;
-    double factor = 0.0;
-    int width_center, height_center;
-    OsmGpsMapPrivate *priv;
-
     g_return_val_if_fail (OSM_IS_GPS_MAP (map), 0);
-    priv = map->priv;
+    OsmGpsMapPrivate *priv = map->priv;
 
     if (zoom != priv->map_zoom)
     {
-        width_center  = GTK_WIDGET(map)->allocation.width / 2;
-        height_center = GTK_WIDGET(map)->allocation.height / 2;
+        int width_center  = GTK_WIDGET(map)->allocation.width / 2;
+        int height_center = GTK_WIDGET(map)->allocation.height / 2;
 
-        zoom_old = priv->map_zoom;
+        int zoom_old = priv->map_zoom;
         //constrain zoom min_zoom -> max_zoom
         priv->map_zoom = CLAMP(zoom, priv->min_zoom, priv->max_zoom);
 
         priv->map_x = lon2pixel(priv->map_zoom, priv->center_rlon) - width_center;
         priv->map_y = lat2pixel(priv->map_zoom, priv->center_rlat) - height_center;
 
-        g_debug("Zoom changed from %d to %d factor:%f x:%d",
-                zoom_old, priv->map_zoom, factor, priv->map_x);
+        g_debug("Zoom changed from %d to %d x:%d",
+                zoom_old, priv->map_zoom, priv->map_x);
 
 #ifdef ENABLE_OSD
         /* OSD may contain a scale, so we may have to re-render it */
@@ -2739,10 +2683,8 @@ osm_gps_map_set_zoom (OsmGpsMap *map, int zoom)
 void
 osm_gps_map_add_track (OsmGpsMap *map, GSList *track)
 {
-    OsmGpsMapPrivate *priv;
-
     g_return_if_fail (OSM_IS_GPS_MAP (map));
-    priv = map->priv;
+    OsmGpsMapPrivate *priv = map->priv;
 
     if (track) {
         priv->tracks = g_slist_append(priv->tracks, track);
@@ -2753,10 +2695,8 @@ osm_gps_map_add_track (OsmGpsMap *map, GSList *track)
 void
 osm_gps_map_add_bounds(OsmGpsMap *map, GSList *bounds)
 {
-    OsmGpsMapPrivate *priv;
-
     g_return_if_fail (OSM_IS_GPS_MAP (map));
-    priv = map->priv;
+    OsmGpsMapPrivate *priv = map->priv;
 
     if (bounds) {
         priv->bounds = g_slist_append(priv->bounds, bounds);
@@ -2776,11 +2716,8 @@ osm_gps_map_track_remove_all (OsmGpsMap *map)
 void
 osm_gps_map_gps_add (OsmGpsMap *map, float latitude, float longitude, float heading)
 {
-    int pixel_x, pixel_y;
-    OsmGpsMapPrivate *priv;
-
     g_return_if_fail (OSM_IS_GPS_MAP (map));
-    priv = map->priv;
+    OsmGpsMapPrivate *priv = map->priv;
 
     priv->gps->rlat = deg2rad(latitude);
     priv->gps->rlon = deg2rad(longitude);
@@ -2788,8 +2725,8 @@ osm_gps_map_gps_add (OsmGpsMap *map, float latitude, float longitude, float head
     priv->gps_heading = deg2rad(heading);
 
     // pixel_x,y, offsets
-    pixel_x = lon2pixel(priv->map_zoom, priv->gps->rlon);
-    pixel_y = lat2pixel(priv->map_zoom, priv->gps->rlat);
+    int pixel_x = lon2pixel(priv->map_zoom, priv->gps->rlon);
+    int pixel_y = lat2pixel(priv->map_zoom, priv->gps->rlat);
 
     //If trip marker add to list of gps points.
     if (priv->record_trip_history) {
@@ -2847,10 +2784,8 @@ osm_gps_map_convert_screen_to_geographic(OsmGpsMap *map, gint pixel_x, gint pixe
 void
 osm_gps_map_scroll (OsmGpsMap *map, gint dx, gint dy)
 {
-    OsmGpsMapPrivate *priv;
-
     g_return_if_fail (OSM_IS_GPS_MAP (map));
-    priv = map->priv;
+    OsmGpsMapPrivate *priv = map->priv;
 
     priv->map_x += dx;
     priv->map_y += dy;
@@ -2868,10 +2803,8 @@ osm_gps_map_scroll (OsmGpsMap *map, gint dx, gint dy)
 float
 osm_gps_map_get_scale(OsmGpsMap *map)
 {
-    OsmGpsMapPrivate *priv;
-
     g_return_val_if_fail (OSM_IS_GPS_MAP (map), OSM_GPS_MAP_INVALID);
-    priv = map->priv;
+    OsmGpsMapPrivate *priv = map->priv;
 
     return osm_gps_map_get_scale_at_point(priv->map_zoom, priv->center_rlat, priv->center_rlon);
 }
@@ -2894,11 +2827,9 @@ osm_gps_map_osd_get(OsmGpsMap *map)
 void
 osm_gps_map_register_osd(OsmGpsMap *map, osm_gps_map_osd_t *osd)
 {
-    OsmGpsMapPrivate *priv;
-
     g_return_if_fail (OSM_IS_GPS_MAP (map));
 
-    priv = map->priv;
+    OsmGpsMapPrivate *priv = map->priv;
     g_return_if_fail (!priv->osd);
 
     priv->osd = osd;
