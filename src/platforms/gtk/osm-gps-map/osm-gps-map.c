@@ -214,7 +214,11 @@ enum
     PROP_IMAGE_FORMAT
 };
 
+#if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_TYPE (OsmGpsMap, osm_gps_map, GTK_TYPE_DRAWING_AREA);
+#else
+G_DEFINE_TYPE_WITH_PRIVATE (OsmGpsMap, osm_gps_map, GTK_TYPE_DRAWING_AREA);
+#endif
 
 typedef struct {
     /* The details of the tile to download */
@@ -1426,7 +1430,12 @@ osm_gps_map_init (OsmGpsMap *object)
 {
     OsmGpsMapPrivate *priv;
 
+#if !GLIB_CHECK_VERSION(2,38,0)
     priv = G_TYPE_INSTANCE_GET_PRIVATE (object, OSM_TYPE_GPS_MAP, OsmGpsMapPrivate);
+#else
+    priv = osm_gps_map_get_instance_private(object);
+#endif
+
     object->priv = priv;
 
     priv->pixmap = NULL;
@@ -2142,7 +2151,9 @@ osm_gps_map_class_init (OsmGpsMapClass *klass)
     GObjectClass* object_class = G_OBJECT_CLASS (klass);
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
 
+#if !GLIB_CHECK_VERSION(2,38,0)
     g_type_class_add_private (klass, sizeof (OsmGpsMapPrivate));
+#endif
 
     object_class->dispose = osm_gps_map_dispose;
     object_class->finalize = osm_gps_map_finalize;
