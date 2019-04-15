@@ -191,7 +191,7 @@ void map_t::way_add_ok() {
     // this is triggered when the user started with extending an existing way
     // since the merged way is a temporary one there are no relation memberships
     // and no background item
-    assert(background_items.find(action.extending) == background_items.end());
+    assert(background_items.find(action.way) == background_items.end());
     action.extending->merge(action.way, osm, this);
 
     action.way = action.extending;
