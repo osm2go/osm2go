@@ -103,25 +103,24 @@ osm_upload_context_gtk::osm_upload_context_gtk(appdata_t &a, project_t::ref p, c
 {
 }
 
-static GtkWidget *table_attach_label_c(GtkWidget *table, const char *str,
-                                       int x1, int x2, int y1, int y2) {
+static GtkWidget *table_attach_label_c(GtkWidget *table, const char *str, int x, int y)
+{
   GtkWidget *label =  gtk_label_new(str);
-  gtk_table_attach_defaults(GTK_TABLE(table), label, x1, x2, y1, y2);
+  gtk_table_attach_defaults(GTK_TABLE(table), label, x, x + 1, y, y + 1);
   return label;
 }
 
-static GtkWidget *table_attach_label_l(GtkWidget *table, char *str,
-                                       int x1, int x2, int y1, int y2) {
-  GtkWidget *label = table_attach_label_c(table, str, x1, x2, y1, y2);
+static void table_attach_label_l(GtkWidget *table, int y, const char *str)
+{
+  GtkWidget *label = table_attach_label_c(table, str, 0, y);
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
-  return label;
 }
 
-static GtkWidget *table_attach_int(GtkWidget *table, int num,
-                                   int x1, int x2, int y1, int y2) {
+static void table_attach_int(GtkWidget *table, int x, int y, unsigned int num)
+{
   char str[G_ASCII_DTOSTR_BUF_SIZE];
-  snprintf(str, sizeof(str), "%d", num);
-  return table_attach_label_c(table, str, x1, x2, y1, y2);
+  snprintf(str, sizeof(str), "%u", num);
+  table_attach_label_c(table, str, x, y);
 }
 
 /* comment buffer has been edited, allow upload if the buffer is not empty */
@@ -150,30 +149,31 @@ static gboolean cb_focus_in(GtkTextView *view, GdkEventFocus *, GtkTextBuffer *b
 }
 
 template<typename T>
-static void table_insert_count(GtkWidget *table, const osm_t::dirty_t::counter<T> &counter, const int row) {
-  table_attach_int(table, counter.total,   1, 2, row, row + 1);
-  table_attach_int(table, counter.added,   2, 3, row, row + 1);
-  table_attach_int(table, counter.dirty,   3, 4, row, row + 1);
-  table_attach_int(table, counter.deleted.size(), 4, 5, row, row + 1);
+static void table_insert_count(GtkWidget *table, const osm_t::dirty_t::counter<T> &counter, int row)
+{
+  table_attach_int(table, 1, row, counter.total);
+  table_attach_int(table, 2, row, counter.added);
+  table_attach_int(table, 3, row, counter.dirty);
+  table_attach_int(table, 4, row, counter.deleted.size());
 }
 
 static void details_table(osm2go_platform::DialogGuard &dialog, const osm_t::dirty_t &dirty)
 {
   GtkWidget *table = gtk_table_new(4, 5, TRUE);
 
-  table_attach_label_c(table, _("Total"),          1, 2, 0, 1);
-  table_attach_label_c(table, _("New"),            2, 3, 0, 1);
-  table_attach_label_c(table, _("Modified"),       3, 4, 0, 1);
-  table_attach_label_c(table, _("Deleted"),        4, 5, 0, 1);
+  table_attach_label_c(table, _("Total"),    1, 0);
+  table_attach_label_c(table, _("New"),      2, 0);
+  table_attach_label_c(table, _("Modified"), 3, 0);
+  table_attach_label_c(table, _("Deleted"),  4, 0);
 
   int row = 1;
-  table_attach_label_l(table, _("Nodes:"),         0, 1, row, row + 1);
+  table_attach_label_l(table, row, _("Nodes:"));
   table_insert_count(table, dirty.nodes, row++);
 
-  table_attach_label_l(table, _("Ways:"),          0, 1, row, row + 1);
+  table_attach_label_l(table, row, _("Ways:"));
   table_insert_count(table, dirty.ways, row++);
 
-  table_attach_label_l(table, _("Relations:"),     0, 1, row, row + 1);
+  table_attach_label_l(table, row, _("Relations:"));
   table_insert_count(table, dirty.relations, row++);
 
   gtk_box_pack_start(dialog.vbox(), table, FALSE, FALSE, 0);
@@ -221,7 +221,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
   /* ------- add username and password entries ------------ */
 
   GtkWidget *table = gtk_table_new(2, 2, FALSE);
-  table_attach_label_l(table, _("Username:"), 0, 1, 0, 1);
+  table_attach_label_l(table, 0, _("Username:"));
   GtkWidget *uentry = osm2go_platform::entry_new(osm2go_platform::EntryFlagsNoAutoCap);
 
   settings_t::ref settings = settings_t::instance();
@@ -229,7 +229,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
                                 _("<your osm username>"));
 
   gtk_table_attach_defaults(GTK_TABLE(table),  uentry, 1, 2, 0, 1);
-  table_attach_label_l(table, _("Password:"), 0, 1, 1, 2);
+  table_attach_label_l(table, 1, _("Password:"));
   GtkWidget *pentry = osm2go_platform::entry_new(osm2go_platform::EntryFlagsNoAutoCap);
   if(!settings->password.empty())
     gtk_entry_set_text(GTK_ENTRY(pentry), settings->password.c_str());
@@ -237,7 +237,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
   gtk_table_attach_defaults(GTK_TABLE(table),  pentry, 1, 2, 1, 2);
   gtk_box_pack_start(dialog.vbox(), table, FALSE, FALSE, 0);
 
-  table_attach_label_l(table, _("Source:"), 0, 1, 2, 3);
+  table_attach_label_l(table, 2, _("Source:"));
   GtkWidget *sentry = osm2go_platform::entry_new(osm2go_platform::EntryFlagsNoAutoCap);
   gtk_table_attach_defaults(GTK_TABLE(table),  sentry, 1, 2, 2, 3);
   gtk_box_pack_start(dialog.vbox(), table, FALSE, FALSE, 0);
