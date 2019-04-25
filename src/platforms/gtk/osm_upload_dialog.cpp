@@ -152,8 +152,8 @@ template<typename T>
 static void table_insert_count(GtkWidget *table, const osm_t::dirty_t::counter<T> &counter, int row)
 {
   table_attach_int(table, 1, row, counter.total);
-  table_attach_int(table, 2, row, counter.added);
-  table_attach_int(table, 3, row, counter.dirty);
+  table_attach_int(table, 2, row, counter.added.size());
+  table_attach_int(table, 3, row, counter.changed.size());
   table_attach_int(table, 4, row, counter.deleted.size());
 }
 

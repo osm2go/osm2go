@@ -2188,22 +2188,17 @@ template<typename T>
 void osm_t::dirty_t::counter<T>::object_counter::operator()(std::pair<item_id_t, T *> pair)
 {
   T * const obj = pair.second;
-  if(obj->isDeleted()) {
+  if(obj->isDeleted())
     dirty.deleted.push_back(obj);
-  } else if(obj->isNew()) {
-    dirty.added++;
-    dirty.modified.push_back(obj);
-  } else if(obj->flags & OSM_FLAG_DIRTY) {
-    dirty.dirty++;
-    dirty.modified.push_back(obj);
-  }
+  else if(obj->isNew())
+    dirty.added.push_back(obj);
+  else if(obj->flags & OSM_FLAG_DIRTY)
+    dirty.changed.push_back(obj);
 }
 
 template<typename T>
 osm_t::dirty_t::counter<T>::counter(const std::map<item_id_t, T *> &map)
   : total(map.size())
-  , added(0)
-  , dirty(0)
 {
   std::for_each(map.begin(), map.end(), object_counter(*this));
 }

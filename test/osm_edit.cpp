@@ -424,13 +424,11 @@ static void test_split()
   assert_cmpnum(r3->members.size(), 1);
 
   osm_t::dirty_t dirty0 = o->modified();
-  assert_cmpnum(dirty0.nodes.dirty, 0);
-  assert_cmpnum(dirty0.nodes.added, 6);
-  assert_cmpnum(dirty0.nodes.modified.size(), dirty0.nodes.added);
+  assert_cmpnum(dirty0.nodes.added.size(), 6);
+  assert_cmpnum(dirty0.nodes.changed.size(), 0);
   assert_cmpnum(dirty0.nodes.deleted.size(), 0);
-  assert_cmpnum(dirty0.ways.dirty, 0);
-  assert_cmpnum(dirty0.ways.added, 3);
-  assert_cmpnum(dirty0.ways.modified.size(), dirty0.ways.added);
+  assert_cmpnum(dirty0.ways.added.size(), 3);
+  assert_cmpnum(dirty0.ways.changed.size(), 0);
   assert_cmpnum(dirty0.ways.deleted.size(), 0);
 
   // now split the remaining way at a node
@@ -445,13 +443,11 @@ static void test_split()
       assert_cmpnum(nodes[i]->ways, 2);
 
   osm_t::dirty_t dirty1 = o->modified();
-  assert_cmpnum(dirty1.nodes.dirty, 0);
-  assert_cmpnum(dirty1.nodes.added, 6);
-  assert_cmpnum(dirty1.nodes.modified.size(), dirty1.nodes.added);
+  assert_cmpnum(dirty1.nodes.changed.size(), 0);
+  assert_cmpnum(dirty1.nodes.added.size(), 6);
   assert_cmpnum(dirty1.nodes.deleted.size(), 0);
-  assert_cmpnum(dirty1.ways.dirty, 0);
-  assert_cmpnum(dirty1.ways.added, 4);
-  assert_cmpnum(dirty1.ways.modified.size(), dirty1.ways.added);
+  assert_cmpnum(dirty1.ways.changed.size(), 0);
+  assert_cmpnum(dirty1.ways.added.size(), 4);
   assert_cmpnum(dirty1.ways.deleted.size(), 0);
 
   assert(w->contains_node(nodes[4]));
@@ -967,17 +963,14 @@ static void test_member_delete()
 
   osm_t::dirty_t dirty0 = o->modified();
   assert_cmpnum(dirty0.nodes.total, 3);
-  assert_cmpnum(dirty0.nodes.dirty, 0);
-  assert_cmpnum(dirty0.nodes.added, 2);
-  assert_cmpnum(dirty0.nodes.modified.size(), dirty0.nodes.added);
+  assert_cmpnum(dirty0.nodes.changed.size(), 0);
+  assert_cmpnum(dirty0.nodes.added.size(), 2);
   assert_cmpnum(dirty0.nodes.deleted.size(), 0);
-  assert_cmpnum(dirty0.ways.dirty, 0);
-  assert_cmpnum(dirty0.ways.added, 1);
-  assert_cmpnum(dirty0.ways.modified.size(), dirty0.ways.added);
+  assert_cmpnum(dirty0.ways.changed.size(), 0);
+  assert_cmpnum(dirty0.ways.added.size(), 1);
   assert_cmpnum(dirty0.ways.deleted.size(), 0);
-  assert_cmpnum(dirty0.relations.dirty, 0);
-  assert_cmpnum(dirty0.relations.added, 1);
-  assert_cmpnum(dirty0.relations.modified.size(), dirty0.relations.added);
+  assert_cmpnum(dirty0.relations.changed.size(), 0);
+  assert_cmpnum(dirty0.relations.added.size(), 1);
   assert_cmpnum(dirty0.relations.deleted.size(), 0);
 
   unsigned int nodes = 0, ways = 0, relations = 0;
@@ -999,17 +992,14 @@ static void test_member_delete()
 
   osm_t::dirty_t dirty1 = o->modified();
   assert_cmpnum(dirty1.nodes.total, 3);
-  assert_cmpnum(dirty1.nodes.dirty, 0);
-  assert_cmpnum(dirty1.nodes.added, 2);
-  assert_cmpnum(dirty1.nodes.modified.size(), dirty1.nodes.added);
+  assert_cmpnum(dirty1.nodes.changed.size(), 0);
+  assert_cmpnum(dirty1.nodes.added.size(), 2);
   assert_cmpnum(dirty1.nodes.deleted.size(), 1);
-  assert_cmpnum(dirty1.ways.dirty, 0);
-  assert_cmpnum(dirty1.ways.added, 1);
-  assert_cmpnum(dirty1.ways.modified.size(), dirty1.ways.added);
+  assert_cmpnum(dirty1.ways.changed.size(), 0);
+  assert_cmpnum(dirty1.ways.added.size(), 1);
   assert_cmpnum(dirty1.ways.deleted.size(), 0);
-  assert_cmpnum(dirty1.relations.dirty, 0);
-  assert_cmpnum(dirty1.relations.added, 1);
-  assert_cmpnum(dirty1.relations.modified.size(), dirty1.relations.added);
+  assert_cmpnum(dirty1.relations.changed.size(), 0);
+  assert_cmpnum(dirty1.relations.added.size(), 1);
   assert_cmpnum(dirty1.relations.deleted.size(), 0);
 
   nodes = 0;

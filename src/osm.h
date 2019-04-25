@@ -177,17 +177,17 @@ public:
     public:
       explicit counter(const std::map<item_id_t, T *> &map);
       const unsigned int total;
-      unsigned int added, dirty;
-      std::vector<T *> modified;
+      std::vector<T *> added;
+      std::vector<T *> changed;
       std::vector<T *> deleted;
 
       inline bool empty() const
-      { return modified.empty() && deleted.empty(); }
+      { return added.empty() && changed.empty() && deleted.empty(); }
 
       inline void debug(const char *prefix) const
       {
         printf("%s new %2zu, dirty %2zu, deleted %2zu", prefix,
-               added, dirty, deleted.size());
+               added.size(), changed.size(), deleted.size());
       }
     };
 

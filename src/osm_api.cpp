@@ -336,7 +336,8 @@ static bool osm_post_xml(osm_upload_context_t &context, const xmlString &xml_str
 /**
  * @brief upload one object to the OSM server
  */
-static void upload_object(osm_upload_context_t &context, base_object_t *obj) {
+static void upload_object(osm_upload_context_t &context, base_object_t *obj, bool is_new)
+{
   /* make sure gui gets updated */
   osm2go_platform::process_events();
 
@@ -344,7 +345,7 @@ static void upload_object(osm_upload_context_t &context, base_object_t *obj) {
 
   std::string url = context.urlbasestr + obj->apiString() + '/';
 
-  if(obj->isNew()) {
+  if(is_new) {
     url += "create";
     context.append(trstring("New %1 ").arg(obj->apiString()));
   } else {
@@ -358,11 +359,9 @@ static void upload_object(osm_upload_context_t &context, base_object_t *obj) {
     printf("uploading %s " ITEM_ID_FORMAT " to %s\n", obj->apiString(), obj->id, url.c_str());
 
     item_id_t tmp;
-    if(osm_update_item(context, xml_str.get(), url.c_str(), &tmp)) {
-      if(!obj->isNew())
+    if(osm_update_item(context, xml_str.get(), url.c_str(), is_new ? &obj->id : &tmp)) {
+      if(!is_new)
         obj->version = tmp;
-      else
-        obj->id = tmp;
       obj->flags ^= OSM_FLAG_DIRTY;
       context.project->data_dirty = true;
     }
@@ -373,8 +372,9 @@ template<typename T>
 struct upload_objects {
   osm_upload_context_t &context;
   std::map<item_id_t, T *> &map;
-  upload_objects(osm_upload_context_t &co, std::map<item_id_t, T*> &m)
-    : context(co), map(m) {}
+  const bool is_new;
+  upload_objects(osm_upload_context_t &co, std::map<item_id_t, T*> &m, bool n)
+    : context(co), map(m), is_new(n) {}
   void operator()(T *obj);
 };
 
@@ -382,7 +382,7 @@ template<typename T>
 void upload_objects<T>::operator()(T *obj)
 {
   item_id_t oldid = obj->id;
-  upload_object(context, obj);
+  upload_object(context, obj, is_new);
   if(oldid != obj->id) {
     map.erase(oldid);
     map[obj->id] = obj;
@@ -393,12 +393,14 @@ template<typename T>
 static void upload_modified(osm_upload_context_t &co, trstring::native_type_arg header,
                             std::map<item_id_t, T*> &m, const osm_t::dirty_t::counter<T> &counter)
 {
-  if(counter.modified.empty())
+  if(counter.changed.empty() && counter.added.empty())
     return;
 
   co.append_str(header);
-  std::for_each(counter.modified.begin(), counter.modified.end(),
-                upload_objects<T>(co, m));
+  std::for_each(counter.added.begin(), counter.added.end(),
+                upload_objects<T>(co, m, true));
+  std::for_each(counter.changed.begin(), counter.changed.end(),
+                upload_objects<T>(co, m, false));
 }
 
 static void log_deletion(osm_upload_context_t &context, const base_object_t *obj) {
