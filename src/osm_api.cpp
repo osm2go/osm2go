@@ -603,17 +603,14 @@ void osm_upload(appdata_t &appdata)
   /* count objects */
   const osm_t::dirty_t &dirty = project->osm->modified();
 
-  printf("nodes:     new %2u, dirty %2u, deleted %2zu",
-         dirty.nodes.added, dirty.nodes.dirty, dirty.nodes.deleted.size());
-  printf("ways:      new %2u, dirty %2u, deleted %2zu",
-         dirty.ways.added, dirty.ways.dirty, dirty.ways.deleted.size());
-  printf("relations: new %2u, dirty %2u, deleted %2zu",
-         dirty.relations.added, dirty.relations.dirty, dirty.relations.deleted.size());
-
   if(dirty.empty()) {
     appdata.uicontrol->showNotification(_("No changes present"), MainUi::Brief);
     return;
   }
+
+  dirty.nodes.debug    ("nodes:    ");
+  dirty.ways.debug     ("ways:     ");
+  dirty.relations.debug("relations:");
 
   osm_upload_dialog(appdata, dirty);
 }

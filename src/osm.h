@@ -183,6 +183,12 @@ public:
 
       inline bool empty() const
       { return modified.empty() && deleted.empty(); }
+
+      inline void debug(const char *prefix) const
+      {
+        printf("%s new %2zu, dirty %2zu, deleted %2zu", prefix,
+               added, dirty, deleted.size());
+      }
     };
 
     counter<node_t> nodes;
