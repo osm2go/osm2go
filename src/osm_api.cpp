@@ -389,6 +389,18 @@ void upload_objects<T>::operator()(T *obj)
   }
 }
 
+template<typename T>
+static void upload_modified(osm_upload_context_t &co, trstring::native_type_arg header,
+                            std::map<item_id_t, T*> &m, const osm_t::dirty_t::counter<T> &counter)
+{
+  if(counter.modified.empty())
+    return;
+
+  co.append_str(header);
+  std::for_each(counter.modified.begin(), counter.modified.end(),
+                upload_objects<T>(co, m));
+}
+
 static void log_deletion(osm_upload_context_t &context, const base_object_t *obj) {
   assert(obj->isDeleted());
 
@@ -500,21 +512,9 @@ void osm_upload_context_t::upload(const osm_t::dirty_t &dirty, osm2go_platform::
     append_str(_("CURL init error\n"));
   } else if(likely(osm_create_changeset(*this))) {
     /* check for dirty entries */
-    if(!dirty.nodes.modified.empty()) {
-      append_str(_("Uploading nodes:\n"));
-      std::for_each(dirty.nodes.modified.begin(), dirty.nodes.modified.end(),
-                    upload_objects<node_t>(*this, osm->nodes));
-    }
-    if(!dirty.ways.modified.empty()) {
-      append_str(_("Uploading ways:\n"));
-      std::for_each(dirty.ways.modified.begin(), dirty.ways.modified.end(),
-                    upload_objects<way_t>(*this, osm->ways));
-    }
-    if(!dirty.relations.modified.empty()) {
-      append_str(_("Uploading relations:\n"));
-      std::for_each(dirty.relations.modified.begin(), dirty.relations.modified.end(),
-                    upload_objects<relation_t>(*this, osm->relations));
-    }
+    upload_modified(*this, _("Uploading nodes:\n"), osm->nodes, dirty.nodes);
+    upload_modified(*this, _("Uploading ways:\n"), osm->ways, dirty.ways);
+    upload_modified(*this, _("Uploading relations:\n"), osm->relations, dirty.relations);
     if(!dirty.relations.deleted.empty() || !dirty.ways.deleted.empty() || !dirty.nodes.deleted.empty()) {
       append_str(_("Deleting objects:\n"));
       xmlDocGuard doc(osmchange_init());
