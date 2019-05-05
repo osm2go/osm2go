@@ -57,12 +57,12 @@ class trstring_or_key {
 #endif
   const char *kval;
 public:
-  trstring_or_key(const char *k = nullptr) : kval(k) {}
+  explicit trstring_or_key(const char *k = nullptr) : kval(k) {}
 
 #ifdef TRSTRING_NATIVE_TYPE_IS_TRSTRING
   inline trstring_or_key &operator=(trstring::native_type n)
   {
-    tval = n;
+    tval = std::move(n);
     kval = nullptr;
     return *this;
   }
@@ -1556,7 +1556,7 @@ static trstring unspecified_name(const object_t &obj, const osm_t &osm)
     if(best->second->is_multipolygon() && member_t::has_role(*bmit)) {
       return trstring("%1: '%2' of multipolygon '%3'").arg(obj.type_string()).arg(bmit->role).arg(bname);
     } else {
-      trstring_or_key reltype = best->second->tags.get_value("type");
+      trstring_or_key reltype(best->second->tags.get_value("type"));
       if(unlikely(!reltype))
         reltype = _("relation");
       if(member_t::has_role(*bmit))
