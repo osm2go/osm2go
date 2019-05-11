@@ -718,13 +718,21 @@ void PresetSax::startElement(const char *name, const char **attrs)
     assert(!items.empty());
     assert(items.top()->isItem());
     presets_item * const item = static_cast<presets_item *>(items.top());
-    const char *href = findAttribute(attrs, "href");
-    if(unlikely(href == nullptr)) {
-      dumpState("ignoring", "link without href");
+    std::array<const char *, 2> names = { { "wiki", "href" } };
+    const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 2);
+    const AttrMap::const_iterator aitEnd = a.end();
+
+    const std::string &href = NULL_OR_MAP_STR(a.find("href"));
+    const std::string &wiki = NULL_OR_MAP_STR(a.find("wiki"));
+    if(unlikely(href.empty() && wiki.empty())) {
+      dumpState("ignoring", "link without href and wiki");
     } else {
-      if(likely(item->link.empty()))
-       item->link = href;
-      else {
+      if(likely(item->link.empty())) {
+        if(!wiki.empty())
+          item->link = "https://wiki.openstreetmap.org/wiki/" + wiki;
+        else
+          item->link = href;
+      } else {
         dumpState("found surplus", "link");
       }
     }
