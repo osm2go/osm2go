@@ -1,4 +1,5 @@
 #include <icon.h>
+#include <map.h>
 #include <misc.h>
 #include <osm.h>
 #include <settings.h>
@@ -921,6 +922,9 @@ static void test_way_delete()
   o->way_insert(w);
   w->append_node(n3);
   w->append_node(n4);
+  // keep it here, it ill only be reset, but not freed as that is done through the map
+  std::unique_ptr<map_item_t> mi(new map_item_t(object_t(w), nullptr));
+  w->map_item = mi.get();
 
   o->way_delete(w, nullptr);
   assert_cmpnum(n3->ways, 1);
@@ -978,6 +982,10 @@ static void test_member_delete()
   assert_cmpnum(nodes, 1);
   assert_cmpnum(ways, 1);
   assert_cmpnum(relations, 0);
+
+  // keep it here, it ill only be reset, but not freed as that is done through the map
+  std::unique_ptr<map_item_t> mi(new map_item_t(object_t(w), nullptr));
+  n2->map_item = mi.get();
 
   // now delete the node that is member of both other objects
   o->node_delete(n2, true);
