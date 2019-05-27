@@ -15,6 +15,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test1.trk.in" "${CMAKE_CURRENT_BINAR
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/diff_restore/diff_restore.osmchange.in" "${CMAKE_CURRENT_BINARY_DIR}/diff_restore.osmchange" @ONLY)
 
 osm_test(track_load_save "${CMAKE_CURRENT_BINARY_DIR}/" "test1" "${CMAKE_CURRENT_BINARY_DIR}/export.gpx")
+osm_test(map_items)
 osm_test(osm_edit)
 osm_test(presets_classes)
 osm_test(presets_load "${CMAKE_CURRENT_BINARY_DIR}/../data" "${CMAKE_CURRENT_SOURCE_DIR}/../data")
