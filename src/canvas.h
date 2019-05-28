@@ -103,7 +103,7 @@ public:
   map_item_t * const mi;
   explicit inline map_item_destroyer(map_item_t *m) : canvas_item_destroyer(), mi(m) {}
 
-  virtual void run(canvas_item_t *) override;
+  void run(canvas_item_t *) override;
 };
 
 struct canvas_item_circle : public canvas_item_t {

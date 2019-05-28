@@ -50,10 +50,10 @@ public:
    */
   void brief(const char *msg, bool timeout);
 
-  virtual void set(const char *msg, bool highlight) override;
-  virtual void banner_show_info(const char *text) override;
-  virtual void banner_busy_start(const char *text) override;
-  virtual void banner_busy_stop() override;
+  void set(const char *msg, bool highlight) override;
+  void banner_show_info(const char *text) override;
+  void banner_busy_start(const char *text) override;
+  void banner_busy_stop() override;
 };
 
 /*

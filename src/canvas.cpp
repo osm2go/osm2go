@@ -57,7 +57,7 @@ public:
   explicit inline item_info_destroyer(T *i, canvas_t *cv)
     : canvas_item_destroyer(), info(i), canvas(cv) {}
 
-  virtual void run(canvas_item_t *item) override
+  void run(canvas_item_t *item) override
   {
     const canvas_t::item_mapping_t::iterator it = canvas->item_mapping.find(item);
     assert(it != canvas->item_mapping.end());

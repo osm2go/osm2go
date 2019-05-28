@@ -45,8 +45,8 @@ public:
 #endif
   ~gpsd_state_t() override;
 
-  virtual pos_t get_pos(float *alt) override;
-  virtual void setEnable(bool en) override;
+  pos_t get_pos(float *alt) override;
+  void setEnable(bool en) override;
 
   bool runCallback()
   {

@@ -53,7 +53,7 @@ public:
   inline MenuBar *menuBar()
   { return menubar; }
 
-  virtual void setActionEnable(menu_items item, bool en) override;
+  void setActionEnable(menu_items item, bool en) override;
 
   /**
    * @brief create a new submenu entry in the global menu bar

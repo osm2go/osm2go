@@ -28,9 +28,9 @@
 class map_gtk : public map_t {
 public:
   explicit map_gtk(appdata_t &a);
-  virtual ~map_gtk() override {}
+  ~map_gtk() override {}
 
-  virtual void set_autosave(bool enable) override;
+  void set_autosave(bool enable) override;
   gboolean key_press_event(unsigned int keyval);
 
 private:

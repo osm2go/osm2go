@@ -35,8 +35,8 @@ public:
   gps_liblocation_state_t(GpsCallback cb, void *context);
   virtual ~gps_liblocation_state_t();
 
-  virtual pos_t get_pos(float *alt = nullptr) override;
-  virtual void setEnable(bool) override;
+  pos_t get_pos(float *alt = nullptr) override;
+  void setEnable(bool) override;
 
   void updateCallback();
 

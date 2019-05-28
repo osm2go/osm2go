@@ -646,7 +646,7 @@ public:
     return "node";
   }
 protected:
-  virtual void generate_xml_custom(xmlNodePtr xml_node) const override;
+  void generate_xml_custom(xmlNodePtr xml_node) const override;
 };
 
 typedef std::vector<node_t *> node_chain_t;
@@ -746,7 +746,7 @@ public:
   { return merge(other, osm.get(), map, rels); }
 
 protected:
-  virtual void generate_xml_custom(xmlNodePtr xml_node) const override {
+  void generate_xml_custom(xmlNodePtr xml_node) const override {
     write_node_chain(xml_node);
   }
 };
@@ -779,7 +779,7 @@ public:
   }
   void remove_member(std::vector<member_t>::iterator it);
 protected:
-  virtual void generate_xml_custom(xmlNodePtr xml_node) const override {
+  void generate_xml_custom(xmlNodePtr xml_node) const override {
     generate_member_xml(xml_node);
   }
 };
