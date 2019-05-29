@@ -72,8 +72,12 @@ public:
   template<typename T> inline trstring arg(T l) const
   { return arg(std::to_string(l)); }
 
-  std::string &toStdString() { return *this; }
   const std::string &toStdString() const { return *this; }
+
+  inline void swap(std::string &other)
+  {
+    std::string::swap(other);
+  }
 
   inline bool isEmpty() const
   { return empty(); }
