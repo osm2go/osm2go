@@ -38,6 +38,6 @@ public:
   virtual std::set<std::string> roles(const relation_t *relation, const object_t &obj) const = 0;
 };
 
-std::string josm_icon_name_adjust(const char *name);
+std::string josm_icon_name_adjust(const char *name) __attribute__((nonnull(1)));
 
 osm2go_platform::Widget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_context);

@@ -50,9 +50,6 @@ typedef std::unordered_map<std::string, presets_item *> ChunkMap;
 /* --------------------- presets.xml parsing ----------------------- */
 
 std::string josm_icon_name_adjust(const char *name) {
-  if(unlikely(name == nullptr))
-    return std::string();
-
   size_t len = strlen(name);
 
   if(likely(len > 4)) {
