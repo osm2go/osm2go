@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <memory>
+#include <unistd.h>
 
 class MainUiDummy : public MainUi {
 public:
@@ -58,6 +59,30 @@ static void test_map_delete()
   map_state_t ms;
   appdata_t a(ms);
   std::unique_ptr<map_t> m(new test_map(a));
+}
+
+static void test_map_delete_items()
+{
+  map_state_t ms;
+  appdata_t a(ms);
+  std::unique_ptr<map_t> m(new test_map(a));
+  std::unique_ptr<osm_t> o(new osm_t());
+  set_bounds(o);
+
+  way_t *w = o->way_attach(new way_t(1));
+
+  // keep it here, it ill only be reset, but not freed as that is done through the map
+  std::unique_ptr<map_item_t> mi(new map_item_t(object_t(w), nullptr));
+  w->map_item = mi.get();
+
+  o->way_delete(w, m.get());
+
+  lpos_t p(10, 10);
+  node_t *n = o->node_new(p);
+  o->node_attach(n);
+  n->map_item = mi.get();
+
+  o->node_delete(n);
 }
 
 static void test_draw_deleted()
@@ -116,8 +141,11 @@ int main()
   osm_path += '/';
 
   test_map_delete();
+  test_map_delete_items();
   test_draw_deleted();
   test_way_add_cancel(osm_path);
+
+  assert_cmpnum(rmdir(tmpdir), 0);
 
   return 0;
 }
