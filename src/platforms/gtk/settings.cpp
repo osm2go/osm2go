@@ -75,7 +75,7 @@ template<typename T, typename U, U GETTER(const GConfValue *)> struct load_funct
   std::string &key; ///< reference to avoid most reallocations
   GConfClient * const client;
   const GConfValueType type;
-  load_functor(std::string &k, std::unique_ptr<GConfClient, g_object_deleter> &c, GConfValueType t)
+  inline load_functor(std::string &k, std::unique_ptr<GConfClient, g_object_deleter> &c, GConfValueType t)
     : key(k), client(c.get()), type(t) {}
   void operator()(const std::pair<const char *, T *> &p);
 };

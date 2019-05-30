@@ -376,7 +376,7 @@ struct item_at_functor {
   const int y;
   const int fuzziness;
   const canvas_t * const canvas;
-  item_at_functor(const lpos_t pos, int f, const canvas_t *cv)
+  inline item_at_functor(const lpos_t pos, int f, const canvas_t *cv)
     : x(pos.x), y(pos.y), fuzziness(f), canvas(cv) {}
   bool operator()(const canvas_item_info_t *item) const;
 };

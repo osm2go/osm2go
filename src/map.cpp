@@ -172,7 +172,7 @@ struct draw_selected_way_functor {
   const float arrow_width;
   map_t * const map;
   way_t * const way;
-  draw_selected_way_functor(float a, map_t *m, way_t *w)
+  inline draw_selected_way_functor(float a, map_t *m, way_t *w)
     : last(nullptr), arrow_width(a), map(m), way(w) {}
   void operator()(node_t *node);
 };
@@ -253,7 +253,7 @@ void map_t::select_way(way_t *way) {
 
 struct relation_select_functor {
   map_t * const map;
-  explicit relation_select_functor(map_t *m) : map(m) {}
+  inline explicit relation_select_functor(map_t *m) : map(m) {}
   void operator()(member_t &member);
 };
 
@@ -415,7 +415,7 @@ static map_item_t *map_way_new(map_t *map, canvas_group_t group,
 
 struct map_way_draw_functor {
   map_t * const map;
-  explicit map_way_draw_functor(map_t *m) : map(m) {}
+  explicit inline map_way_draw_functor(map_t *m) : map(m) {}
   void operator()(way_t *way);
   void operator()(std::pair<item_id_t, way_t *> pair) {
     operator()(pair.second);
@@ -483,7 +483,7 @@ void map_t::draw(way_t *way) {
 
 struct map_node_draw_functor {
   map_t * const map;
-  explicit map_node_draw_functor(map_t *m) : map(m) {}
+  explicit inline map_node_draw_functor(map_t *m) : map(m) {}
   void operator()(node_t *node);
   void operator()(std::pair<item_id_t, node_t *> pair) {
     operator()(pair.second);
@@ -1528,7 +1528,7 @@ void map_t::track_update_seg(track_seg_t &seg) {
 
 struct map_track_seg_draw_functor {
   map_t * const map;
-  explicit map_track_seg_draw_functor(map_t *m) : map(m) {}
+  explicit inline map_track_seg_draw_functor(map_t *m) : map(m) {}
   void operator()(track_seg_t &seg) {
     map->track_draw_seg(seg);
   }
@@ -1669,7 +1669,7 @@ void map_t::hide_selected() {
 
 struct map_show_all_functor {
   map_t * const map;
-  explicit map_show_all_functor(map_t *m) : map(m) {}
+  explicit inline map_show_all_functor(map_t *m) : map(m) {}
   inline void operator()(way_t *way) const {
     map->draw(way);
   }

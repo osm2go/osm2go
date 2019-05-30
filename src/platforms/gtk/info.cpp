@@ -119,7 +119,7 @@ void info_tag_context_t::update_collisions(const std::string &k)
 
 struct value_match_functor {
   const std::string &value;
-  explicit value_match_functor(const std::string &v) : value(v) {}
+  explicit inline value_match_functor(const std::string &v) : value(v) {}
   bool operator()(const osm_t::TagMap::value_type &pair) {
     return pair.second == value;
   }
@@ -406,7 +406,7 @@ static void on_tag_add(info_tag_context_t *context) {
 struct tag_replace_functor {
   GtkListStore * const store;
   const osm_t::TagMap &tags;
-  tag_replace_functor(GtkListStore *s, const osm_t::TagMap &t) : store(s), tags(t) {}
+  inline tag_replace_functor(GtkListStore *s, const osm_t::TagMap &t) : store(s), tags(t) {}
   void operator()(const osm_t::TagMap::value_type &pair) {
     store_append(store, pair.first, pair.second, tags.count(pair.first) > 1);
   }

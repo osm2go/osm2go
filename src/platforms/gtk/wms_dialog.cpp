@@ -53,7 +53,7 @@
 
 struct find_wms_functor {
   const char *name;
-  explicit find_wms_functor(const char *n) : name(n) {}
+  explicit inline find_wms_functor(const char *n) : name(n) {}
   bool operator()(const wms_server_t *srv) {
     return srv->name == name;
   }
@@ -282,7 +282,7 @@ static void on_server_edit(wms_server_context_t *context) {
 
 struct store_fill_functor {
   GtkListStore * const store;
-  explicit store_fill_functor(GtkListStore *s) : store(s) {}
+  explicit inline store_fill_functor(GtkListStore *s) : store(s) {}
   GtkTreeIter operator()(const wms_server_t *srv);
 };
 
@@ -428,7 +428,7 @@ static void layer_changed(GtkWidget *widget)
 struct fitting_layers_functor {
   GtkListStore * const store;
   project_t::ref project;
-  fitting_layers_functor(GtkListStore *s, project_t::ref p)
+  inline fitting_layers_functor(GtkListStore *s, project_t::ref p)
     : store(s), project(p) {}
   void operator()(const wms_layer_t &layer);
 };

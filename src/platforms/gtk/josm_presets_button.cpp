@@ -192,7 +192,7 @@ typedef std::unordered_map<const presets_element_t *, presets_element_t::attach_
 struct add_widget_functor {
   preset_attach_context attctx;
   WidgetMap &gtk_widgets;
-  add_widget_functor(WidgetMap &g, GtkWidget *t, guint &r)
+  inline add_widget_functor(WidgetMap &g, GtkWidget *t, guint &r)
     : attctx(GTK_TABLE(t), r), gtk_widgets(g) {}
   void operator()(WidgetMap::key_type w);
 };
@@ -223,7 +223,7 @@ struct get_widget_functor {
   osm_t::TagMap &tags;
   const WidgetMap &gtk_widgets;
   const WidgetMap::const_iterator hintEnd;
-  get_widget_functor(bool &c, osm_t::TagMap &t, const WidgetMap &g)
+  inline get_widget_functor(bool &c, osm_t::TagMap &t, const WidgetMap &g)
     : changed(c), tags(t), gtk_widgets(g), hintEnd(g.end()) {}
   void operator()(const presets_element_t *w);
 };
@@ -378,7 +378,7 @@ struct build_menu_functor {
   GtkWidget ** const matches;
   bool was_separator;
   bool was_item;
-  build_menu_functor(GtkWidget *m, GtkWidget **a)
+  inline build_menu_functor(GtkWidget *m, GtkWidget **a)
     : menu(m), matches(a), was_separator(false), was_item(false) {}
   void operator()(const presets_item_t *item);
 };
@@ -698,7 +698,7 @@ struct picker_add_functor {
   GdkPixbuf * const subicon;
   bool &show_recent;
   bool scan_for_recent;
-  picker_add_functor(presets_context_t *c, GtkListStore *s, GdkPixbuf *i, bool r, bool &w)
+  inline picker_add_functor(presets_context_t *c, GtkListStore *s, GdkPixbuf *i, bool r, bool &w)
     : context(c), store(s), subicon(i), show_recent(w)
     , scan_for_recent(r) {}
   void operator()(const presets_item_t *item);
@@ -735,7 +735,7 @@ void picker_add_functor::operator()(const presets_item_t *item)
 
 struct matching_type_functor {
   const unsigned int type; ///< the type to match
-  explicit matching_type_functor(unsigned int t) : type(t) {}
+  explicit inline matching_type_functor(unsigned int t) : type(t) {}
   bool operator()(const presets_item_t *item) {
     return item->type & type;
   }

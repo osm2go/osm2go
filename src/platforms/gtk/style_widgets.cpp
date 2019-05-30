@@ -39,7 +39,7 @@ struct selector_model_functor {
   int cnt;
   int &match;
   const std::string &currentstyle;
-  selector_model_functor(GtkListStore *s, int &m, const std::string &current)
+  inline selector_model_functor(GtkListStore *s, int &m, const std::string &current)
     : store(s), cnt(0), match(m), currentstyle(current) { }
   inline void operator()(const std::pair<std::string, std::string> &pair) {
     gtk_list_store_insert_with_values(store, nullptr, -1, 0, pair.first.c_str(), 1, pair.second.c_str(), -1);

@@ -271,7 +271,7 @@ struct child_layer_functor {
   const wms_llbbox_t * const llbbox;
   const std::string &srs;
   wms_layer_t::list &clayers;
-  child_layer_functor(bool e, const wms_llbbox_t *x, const std::string &s,
+  inline child_layer_functor(bool e, const wms_llbbox_t *x, const std::string &s,
                       wms_layer_t::list &c)
     : epsg4326(e), llbbox(x), srs(s), clayers(c) {}
   void operator()(const wms_layer_t &layer);
@@ -302,7 +302,7 @@ void child_layer_functor::operator()(const wms_layer_t &layer)
 
 struct requestable_layers_functor {
   wms_layer_t::list &c_layer;
-  explicit requestable_layers_functor(wms_layer_t::list &c) : c_layer(c) {}
+  explicit inline requestable_layers_functor(wms_layer_t::list &c) : c_layer(c) {}
   void operator()(const wms_layer_t &layer);
 };
 
@@ -336,7 +336,7 @@ static inline bool layer_is_usable(const wms_layer_t &layer) {
 
 struct find_format_reverse_functor {
   const unsigned int mask;
-  explicit find_format_reverse_functor(unsigned int m) : mask(m) {}
+  explicit inline find_format_reverse_functor(unsigned int m) : mask(m) {}
   bool operator()(const std::pair<const char *, WmsImageFormat> &p) {
     return p.second & mask;
   }

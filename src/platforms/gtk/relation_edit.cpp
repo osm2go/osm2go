@@ -263,7 +263,7 @@ struct relation_list_insert_functor {
   relitem_context_t &context;
   GtkTreeIter &sel_iter;
   std::string &selname; /* name of sel_iter */
-  relation_list_insert_functor(relitem_context_t &c, std::string &sn, GtkTreeIter &it)
+  inline relation_list_insert_functor(relitem_context_t &c, std::string &sn, GtkTreeIter &it)
     : context(c), sel_iter(it), selname(sn) {}
   void operator()(std::pair<item_id_t, relation_t *> pair);
 };
@@ -491,7 +491,7 @@ member_list_selection_func(GtkTreeSelection *, GtkTreeModel *model,
 struct members_list_functor {
   GtkListStore * const store;
   osm_t::ref osm;
-  explicit members_list_functor(GtkListStore *s, osm_t::ref o) : store(s), osm(o) {}
+  explicit inline members_list_functor(GtkListStore *s, osm_t::ref o) : store(s), osm(o) {}
   void operator()(const member_t &member);
 };
 
@@ -724,7 +724,7 @@ static void on_relation_remove(relation_context_t *context) {
 
 struct relation_list_widget_functor {
   GtkListStore * const store;
-  explicit relation_list_widget_functor(GtkListStore *s) : store(s) {}
+  explicit inline relation_list_widget_functor(GtkListStore *s) : store(s) {}
   void operator()(const relation_t *rel);
   inline void operator()(std::pair<item_id_t, relation_t *> pair) {
     operator()(pair.second);

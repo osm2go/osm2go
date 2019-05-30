@@ -214,7 +214,7 @@ template<> const std::map<item_id_t, relation_t *> &osm_t::objects() const
 
 struct map_value_match_functor {
   const std::string &value;
-  explicit map_value_match_functor(const std::string &v) : value(v) {}
+  explicit inline map_value_match_functor(const std::string &v) : value(v) {}
   bool operator()(const osm_t::TagMap::value_type &pair) {
     return pair.second == value;
   }
@@ -281,7 +281,7 @@ void relation_object_replacer::operator()(relation_t *r)
 struct relation_membership_functor {
   std::vector<relation_t *> &arels, &brels;
   const object_t &a, &b;
-  explicit relation_membership_functor(const object_t &first, const object_t &second,
+  explicit inline relation_membership_functor(const object_t &first, const object_t &second,
                                        std::vector<relation_t *> &firstRels,
                                        std::vector<relation_t *> &secondRels)
     : arels(firstRels), brels(secondRels), a(first), b(second) {}
@@ -488,7 +488,7 @@ bool osm_t::is_clean(bool honor_hidden_flags) const
 struct tag_match_functor {
   const tag_t &other;
   const bool same_values;
-  tag_match_functor(const tag_t &o, bool s) : other(o), same_values(s) {}
+  inline tag_match_functor(const tag_t &o, bool s) : other(o), same_values(s) {}
   bool operator()(const tag_t &tag) {
     return (strcasecmp(other.key, tag.key) == 0) &&
            ((strcasecmp(other.value, tag.value) == 0) == same_values);
@@ -542,7 +542,7 @@ struct check_creator_tag {
 
 struct tag_find_functor {
   const char * const needle;
-  explicit tag_find_functor(const char *n) : needle(n) {}
+  explicit inline tag_find_functor(const char *n) : needle(n) {}
   bool operator()(const tag_t &tag) {
     return (strcmp(needle, tag.key) == 0);
   }
@@ -654,7 +654,7 @@ bool tag_list_t::operator!=(const osm_t::TagMap &t2) const {
 
 struct collision_functor {
   const tag_t &tag;
-  explicit collision_functor(const tag_t &t) : tag(t) { }
+  explicit inline collision_functor(const tag_t &t) : tag(t) { }
   bool operator()(const tag_t &t) {
     return (strcasecmp(t.key, tag.key) == 0);
   }
@@ -738,7 +738,7 @@ void relation_t::remove_member(std::vector<member_t>::iterator it)
 
 struct gen_xml_relation_functor {
   xmlNodePtr const xml_node;
-  explicit gen_xml_relation_functor(xmlNodePtr n) : xml_node(n) {}
+  explicit inline gen_xml_relation_functor(xmlNodePtr n) : xml_node(n) {}
   void operator()(const member_t &member);
 };
 
@@ -954,7 +954,7 @@ struct node_chain_delete_functor {
   const node_t * const node;
   way_chain_t &way_chain;
   const bool affect_ways;
-  node_chain_delete_functor(const node_t *n, way_chain_t &w, bool a) : node(n), way_chain(w), affect_ways(a) {}
+  inline node_chain_delete_functor(const node_t *n, way_chain_t &w, bool a) : node(n), way_chain(w), affect_ways(a) {}
   void operator()(std::pair<item_id_t, way_t *> p);
 };
 
@@ -1132,7 +1132,7 @@ void osm_t::relation_delete(relation_t *relation) {
 
 struct reverse_direction_sensitive_tags_functor {
   unsigned int &n_tags_altered;
-  explicit reverse_direction_sensitive_tags_functor(unsigned int &c) : n_tags_altered(c) {}
+  explicit inline reverse_direction_sensitive_tags_functor(unsigned int &c) : n_tags_altered(c) {}
   void operator()(tag_t &etag);
 };
 
@@ -1328,7 +1328,7 @@ struct relation_transfer {
 
 struct find_member_object_functor {
   const object_t &object;
-  explicit find_member_object_functor(const object_t &o) : object(o) {}
+  explicit inline find_member_object_functor(const object_t &o) : object(o) {}
   bool operator()(const member_t &member) {
     return member.object == object;
   }
@@ -1448,8 +1448,8 @@ way_t *way_t::split(osm_t::ref osm, node_chain_t::iterator cut_at, bool cut_at_n
 
 struct tag_map_functor {
   osm_t::TagMap &tags;
-  explicit tag_map_functor(osm_t::TagMap &t) : tags(t) {}
-  void operator()(const tag_t &otag) {
+  explicit inline tag_map_functor(osm_t::TagMap &t) : tags(t) {}
+  inline void operator()(const tag_t &otag) {
     tags.insert(osm_t::TagMap::value_type(otag.key, otag.value));
   }
 };
@@ -1466,7 +1466,7 @@ osm_t::TagMap tag_list_t::asMap() const
 
 struct tag_vector_copy_functor {
   std::vector<tag_t> &tags;
-  explicit tag_vector_copy_functor(std::vector<tag_t> &t) : tags(t) {}
+  explicit inline tag_vector_copy_functor(std::vector<tag_t> &t) : tags(t) {}
   void operator()(const tag_t &otag) {
     if(unlikely(otag.is_creator_tag()))
       return;
@@ -1491,7 +1491,7 @@ void tag_list_t::copy(const tag_list_t &other)
 struct any_relation_member_functor {
   const object_t &member;
   std::vector<member_t>::const_iterator &mit;
-  any_relation_member_functor(const object_t &o, std::vector<member_t>::const_iterator &mi)
+  inline any_relation_member_functor(const object_t &o, std::vector<member_t>::const_iterator &mi)
     : member(o), mit(mi) {}
   bool operator()(const std::pair<item_id_t, relation_t *> &it) const
   {
@@ -1503,7 +1503,7 @@ struct any_relation_member_functor {
 struct typed_relation_member_functor {
   const member_t member;
   const char * const type;
-  typed_relation_member_functor(const char *t, const char *r, const object_t &o)
+  inline typed_relation_member_functor(const char *t, const char *r, const object_t &o)
     : member(o, r), type(value_cache.insert(t)) {}
   bool operator()(const std::pair<item_id_t, relation_t *> &it) const
   { return it.second->tags.get_value("type") == type &&
@@ -1514,7 +1514,7 @@ struct pt_relation_member_functor {
   const member_t member;
   const char * const type;
   const char * const stop_area;
-  pt_relation_member_functor(const char *r, const object_t &o)
+  inline pt_relation_member_functor(const char *r, const object_t &o)
     : member(o, r), type(value_cache.insert("public_transport"))
     , stop_area(value_cache.insert("stop_area")) {}
   bool operator()(const std::pair<item_id_t, relation_t *> &it) const
@@ -1854,7 +1854,7 @@ void tag_list_t::replace(std::vector<tag_t> &&ntags)
 
 struct tag_fill_functor {
   std::vector<tag_t> &tags;
-  explicit tag_fill_functor(std::vector<tag_t> &t) : tags(t) {}
+  inline explicit tag_fill_functor(std::vector<tag_t> &t) : tags(t) {}
   void operator()(const osm_t::TagMap::value_type &p) {
     if(unlikely(tag_t::is_creator_tag(p.first.c_str())))
       return;
@@ -1921,7 +1921,7 @@ void base_object_t::markDeleted()
 
 struct value_match_functor {
   const char * const value;
-  explicit value_match_functor(const char *v) : value(v) {}
+  explicit inline value_match_functor(const char *v) : value(v) {}
   bool operator()(const tag_t *tag) {
     return tag->value != nullptr && (strcasecmp(tag->value, value) == 0);
   }

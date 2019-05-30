@@ -70,7 +70,7 @@ struct used_preset_functor {
   const osm_t::TagMap &tags;
   bool &is_interactive;
   bool &hasPositive;   ///< set if a positive match is found at all
-  used_preset_functor(const osm_t::TagMap &t, bool &i, bool &m)
+  inline used_preset_functor(const osm_t::TagMap &t, bool &i, bool &m)
     : tags(t), is_interactive(i), hasPositive(m) {}
   bool operator()(const presets_element_t *w);
 };
@@ -107,7 +107,7 @@ struct relation_preset_functor {
   const unsigned int typemask;
   const osm_t::TagMap tags;
   const presets_item **result;
-  relation_preset_functor(const relation_t *rl, const presets_item **rs)
+  inline relation_preset_functor(const relation_t *rl, const presets_item **rs)
     : relation(rl)
     , typemask(presets_item_t::TY_RELATION | (rl->is_multipolygon() ? presets_item_t::TY_MULTIPOLYGON : 0))
     , tags(rl->tags.asMap())
@@ -142,7 +142,7 @@ struct role_collect_functor {
   typedef std::unordered_map<std::string, unsigned int> RoleCountMap;
   const RoleCountMap &existing;
   const unsigned int typemask;
-  role_collect_functor(std::set<std::string> &r, RoleCountMap &e, unsigned int m)
+  inline role_collect_functor(std::set<std::string> &r, RoleCountMap &e, unsigned int m)
     : result(r), existing(e), typemask(m) {}
   void operator()(const presets_item::role &role);
 };

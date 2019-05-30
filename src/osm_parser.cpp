@@ -546,7 +546,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
 
 struct relation_ref_functor {
   osm_t::ref osm;
-  explicit relation_ref_functor(osm_t::ref o) : osm(o) {}
+  explicit inline relation_ref_functor(osm_t::ref o) : osm(o) {}
   void operator()(std::pair<item_id_t, relation_t *> p) {
     std::for_each(p.second->members.begin(), p.second->members.end(), *this);
   }

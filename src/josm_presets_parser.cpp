@@ -1042,7 +1042,7 @@ void PresetSax::endElement(const xmlChar *name)
 
 struct move_chunks_functor {
   std::vector<presets_item_t *> &chunks;
-  explicit move_chunks_functor(std::vector<presets_item_t *> &c) : chunks(c) {}
+  explicit inline move_chunks_functor(std::vector<presets_item_t *> &c) : chunks(c) {}
   void operator()(const ChunkMap::value_type &p) {
     chunks.push_back(p.second);
   }

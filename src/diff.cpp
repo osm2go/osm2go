@@ -74,7 +74,7 @@ static std::string project_diff_name(const project_t *project)
 
 struct diff_save_tags_functor {
   xmlNode * const node;
-  explicit diff_save_tags_functor(xmlNodePtr n) : node(n) {}
+  explicit inline diff_save_tags_functor(xmlNodePtr n) : node(n) {}
   void operator()(const tag_t &tag) {
     xmlNodePtr tag_node = xmlNewChild(node, nullptr,
                                       BAD_CAST "tag", nullptr);
@@ -645,7 +645,8 @@ xmlDocPtr osmchange_init()
 struct osmchange_delete_functor {
   xmlNode * const xml_node; ///< <delete> node
   const char * const changeset; ///< changeset string
-  osmchange_delete_functor(xmlNodePtr delnode, const char *cs) : xml_node(delnode), changeset(cs) {}
+  inline osmchange_delete_functor(xmlNodePtr delnode, const char *cs)
+    : xml_node(delnode), changeset(cs) {}
   void operator()(const base_object_t *obj) {
     obj->osmchange_delete(xml_node, changeset);
   }
