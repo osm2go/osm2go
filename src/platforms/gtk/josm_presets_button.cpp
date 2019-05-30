@@ -194,10 +194,10 @@ struct add_widget_functor {
   WidgetMap &gtk_widgets;
   add_widget_functor(WidgetMap &g, GtkWidget *t, guint &r)
     : attctx(GTK_TABLE(t), r), gtk_widgets(g) {}
-  void operator()(const WidgetMap::key_type w);
+  void operator()(WidgetMap::key_type w);
 };
 
-void add_widget_functor::operator()(const WidgetMap::key_type w)
+void add_widget_functor::operator()(WidgetMap::key_type w)
 {
   if(w->type == WIDGET_TYPE_REFERENCE) {
     const std::vector<presets_element_t *> &wd = static_cast<const presets_element_reference *>(w)->item->widgets;
