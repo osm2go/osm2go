@@ -283,8 +283,8 @@ void track_save(project_t::ref project, track_t *track)
     return;
   }
 
-  /* check if there already is such a diff file and make it a backup */
-  /* in case new diff saving fails */
+  /* check if there already is such a track file and make it a backup */
+  /* in case saving new track fails */
   const char *backupfn = "backup.trk";
   xmlDocPtr doc = nullptr;
 
