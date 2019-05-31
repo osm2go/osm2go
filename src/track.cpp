@@ -130,19 +130,17 @@ void track_menu_set(appdata_t &appdata) {
   appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_TRACK_EXPORT, present);
 }
 
-static track_t *track_read(const char *filename, bool dirty) {
-  printf("============================================================\n");
-  printf("loading track %s\n", filename);
-
+static track_t *track_read(const char *filename, bool dirty)
+{
   TrackSax sx;
   if(unlikely(!sx.parse(filename))) {
-    printf("track was empty/invalid track\n");
+    printf("track %s was empty/invalid track\n", filename);
     return nullptr;
   }
 
   sx.track->dirty = dirty;
-  printf("Track is %sdirty.\n", dirty?"":"not ");
-  printf("%zu points in %zu segments\n", sx.points, sx.track->segments.size());
+  printf("Track %s is %sdirty, %zu points in %zu segments\n", filename, dirty ? "" : "not ",
+    sx.points, sx.track->segments.size());
 
   return sx.track.release();
 }
