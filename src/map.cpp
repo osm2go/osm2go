@@ -190,14 +190,13 @@ void draw_selected_way_functor::operator()(node_t *node)
 
     /* only draw arrow if there's sufficient space */
     /* TODO: what if there's not enough space anywhere? */
-    float len = std::sqrt(std::pow(diff.x, 2) + std::pow(diff.y, 2));
-    if(len > map->style->highlight.arrow_limit * arrow_width) {
+    float len = std::sqrt(std::pow(diff.x, 2) + std::pow(diff.y, 2)) / arrow_width;
+    if(len > map->style->highlight.arrow_limit) {
       struct { float x, y; } center;
       center.x = (last->lpos.x + node->lpos.x) / 2.0;
       center.y = (last->lpos.y + node->lpos.y) / 2.0;
 
       /* create a new map item for every arrow */
-      len /= arrow_width;
       diff.x /= len;
       diff.y /= len;
 
