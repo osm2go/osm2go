@@ -484,7 +484,7 @@ struct map_node_draw_functor {
   map_t * const map;
   explicit inline map_node_draw_functor(map_t *m) : map(m) {}
   void operator()(node_t *node);
-  void operator()(std::pair<item_id_t, node_t *> pair) {
+  inline void operator()(std::pair<item_id_t, node_t *> pair) {
     operator()(pair.second);
   }
 };

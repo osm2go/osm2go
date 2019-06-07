@@ -602,7 +602,7 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
 struct josm_elemstyles_colorize_node_functor {
   style_t * const style;
   explicit inline josm_elemstyles_colorize_node_functor(style_t *s) : style(s) {}
-  void operator()(std::pair<item_id_t, node_t *> pair) {
+  inline void operator()(std::pair<item_id_t, node_t *> pair) {
     josm_elemstyles_colorize_node(style, pair.second);
   }
 };
@@ -628,7 +628,7 @@ struct josm_elemstyles_colorize_way_functor {
   const style_t * const style;
   explicit inline josm_elemstyles_colorize_way_functor(const style_t *s) : style(s) {}
   void operator()(way_t *way);
-  void operator()(std::pair<item_id_t, way_t *> pair) {
+  inline void operator()(std::pair<item_id_t, way_t *> pair) {
     operator()(pair.second);
   }
 
