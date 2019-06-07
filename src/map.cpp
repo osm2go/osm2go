@@ -492,7 +492,7 @@ struct map_node_draw_functor {
 void map_node_draw_functor::operator()(node_t *node)
 {
   /* don't draw a node that's not there anymore */
-  if(node->isDeleted())
+  if(unlikely(node->isDeleted()))
     return;
 
   int width;
