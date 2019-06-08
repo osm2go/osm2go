@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
 foreach(p IN ITEMS CMP0071 CMP0073 CMP0074 CMP0075 CMP0076 CMP0077 CMP0079)
 	if (POLICY ${p})
@@ -237,13 +237,11 @@ endif ()
 target_link_libraries(osm2go_lib
 	PRIVATE
 		${MATH_LIBRARY}
-		osm2go_platform_lib_private
 		${CXX_FILESYSTEM_LIBS}
 	PUBLIC
 		${CURL_LIBRARIES}
 		OpenSSL::SSL
 		${LIBXML2_LIBRARIES}
-		osm2go_platform_lib
 )
 
 # curl can't be added here as that would end up in the search list

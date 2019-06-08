@@ -1,8 +1,5 @@
-add_library(osm2go_platform_lib INTERFACE)
-add_library(osm2go_platform_lib_private INTERFACE)
-
-target_include_directories(osm2go_platform_lib
-		INTERFACE
+target_include_directories(osm2go_lib
+		PUBLIC
 			${CMAKE_CURRENT_SOURCE_DIR})
 
 target_sources(osm2go_lib PRIVATE
@@ -117,17 +114,17 @@ pkg_check_modules(GooCanvas REQUIRED IMPORTED_TARGET goocanvas)
 target_sources(osm2go_lib PRIVATE
 	src/platforms/gtk/canvas_goocanvas.cpp
 )
-target_link_libraries(osm2go_platform_lib_private INTERFACE PkgConfig::GooCanvas)
+target_link_libraries(osm2go_lib PRIVATE PkgConfig::GooCanvas)
 
 pkg_check_modules(GConf2 REQUIRED IMPORTED_TARGET gconf-2.0)
-target_link_libraries(osm2go_platform_lib_private INTERFACE PkgConfig::GConf2)
+target_link_libraries(osm2go_lib PRIVATE PkgConfig::GConf2)
 
 if (MAEMO_FOUND)
 	pkg_check_modules(Hildon REQUIRED IMPORTED_TARGET hildon-1)
 	pkg_check_modules(Osso REQUIRED IMPORTED_TARGET libosso)
 	pkg_check_modules(libLocation REQUIRED IMPORTED_TARGET liblocation)
 
-	target_link_libraries(osm2go_platform_lib INTERFACE
+	target_link_libraries(osm2go_lib PUBLIC
 			PkgConfig::Hildon
 			PkgConfig::libLocation
 			PkgConfig::Osso
@@ -146,9 +143,9 @@ else ()
 	find_package(GTK2 2.24 REQUIRED)
 
 	pkg_check_modules(LibGPS REQUIRED IMPORTED_TARGET libgps)
-	target_link_libraries(osm2go_platform_lib_private INTERFACE PkgConfig::LibGPS)
+	target_link_libraries(osm2go_lib PRIVATE PkgConfig::LibGPS)
 
-	target_link_libraries(osm2go_platform_lib INTERFACE
+	target_link_libraries(osm2go_lib PUBLIC
 			${GTK2_TARGETS}
 	)
 
@@ -156,10 +153,10 @@ else ()
 
 	set(USE_SVG_ICONS_DEFAULT On PARENT_SCOPE)
 endif ()
-target_compile_definitions(osm2go_platform_lib INTERFACE GTK_DISABLE_DEPRECATED)
+target_compile_definitions(osm2go_lib PUBLIC GTK_DISABLE_DEPRECATED)
 
 add_subdirectory(osm-gps-map)
-target_link_libraries(osm2go_platform_lib_private INTERFACE osm-gps-map)
+target_link_libraries(osm2go_lib PRIVATE osm-gps-map)
 
 add_executable(osm2go
 	main.cpp
