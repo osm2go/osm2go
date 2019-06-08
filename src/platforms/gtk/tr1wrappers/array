@@ -2,5 +2,5 @@
 
 #include <tr1/array>
 namespace std {
-  using tr1::array;
+  using namespace tr1;
 }
