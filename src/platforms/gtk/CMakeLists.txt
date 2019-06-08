@@ -34,13 +34,83 @@ target_sources(osm2go_lib PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/wms_dialog.cpp
 )
 
+set(TR1_DIR_ADDED FALSE)
+function(add_compat_header hdr)
+	# yes, NOT: it will add this only on the first call, afterwards the
+	# directory exists so we know that the include has been added
+	if (NOT TR1_DIR_ADDED)
+		target_include_directories(osm2go_lib PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/tr1wrappers)
+		set(TR1_DIR_ADDED TRUE PARENT_SCOPE)
+	endif ()
+	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tr1wrappers/${hdr}
+			${CMAKE_CURRENT_BINARY_DIR}/tr1wrappers/${hdr}
+			COPYONLY)
+endfunction()
+
 include(CheckIncludeFileCXX)
+include(CheckCXXSourceCompiles)
 
 check_include_file_cxx(cstdint CSTDINT_HEADER)
 if (NOT CSTDINT_HEADER)
-	target_include_directories(osm2go_lib
-			PUBLIC
-				${CMAKE_CURRENT_SOURCE_DIR}/tr1wrappers)
+	add_compat_header(cstdint)
+	add_compat_header(cinttypes)
+endif ()
+
+check_cxx_source_compiles("#include <array>
+int main(int argc, char **) {
+  std::array<int, 4> a;
+  for (int i = 0; i < (argc > a.size() ? a.size() : argc); i++)
+    a[i] = i;
+  return a[2];
+}
+" HAS_STL_ARRAY)
+if (NOT HAS_STL_ARRAY)
+	add_compat_header(array)
+endif ()
+
+check_cxx_source_compiles("#include <mutex>
+int main() {
+  std::mutex m;
+  return !!m.try_lock();
+}
+" HAS_STL_MUTEX)
+if (NOT HAS_STL_MUTEX)
+	add_compat_header(mutex)
+endif ()
+
+check_cxx_source_compiles("#include <type_traits>
+int main() {
+  const int r = 5;
+  const int &s = r;
+  return !!std::is_integral<std::remove_const<typeof(s)>::type>::value;
+}
+" HAS_STL_TYPE_TRAITS)
+if (NOT HAS_STL_TYPE_TRAITS)
+	add_compat_header(type_traits)
+endif ()
+
+check_cxx_source_compiles("#include <unordered_map>
+int main(int argc, char **argv) {
+  std::unordered_map<int, char *> m;
+  for (int i = 0; i < argc; i++)
+    m[i] = argv[i];
+  return !!m.empty();
+}
+" HAS_STL_UNORDERED_MAP)
+if (NOT HAS_STL_UNORDERED_MAP)
+	add_compat_header(unordered_map)
+endif ()
+
+check_cxx_source_compiles("#include <unordered_set>
+int main(int argc, char **argv) {
+  std::unordered_set<char *> m;
+  for (int i = 0; i < argc; i++)
+    m.insert(argv[i]);
+  return !!m.empty();
+}
+" HAS_STL_UNORDERED_SET)
+if (NOT HAS_STL_UNORDERED_SET)
+	add_compat_header(unordered_set)
 endif ()
 
 pkg_check_modules(GooCanvas REQUIRED IMPORTED_TARGET goocanvas)
