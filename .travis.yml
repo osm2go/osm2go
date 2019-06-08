@@ -25,6 +25,11 @@ addons:
     - lcov
     - valgrind
 script:
+  # test with the minimum required version
+  - CMAKE_VERSION="$(sed -rn '/cmake_minimum_required/s,.*VERSION ([0-9]\.[0-9]+) .*,\1,p' CMakeLists.txt).0"
+  - wget -O /tmp/cmake.tar --no-check-certificate https://cmake.org/files/v$(echo ${CMAKE_VERSION} | sed 's/\.[0-9]*$//')/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz
+  - tar xf /tmp/cmake.tar -C /tmp
+  - export PATH=/tmp/cmake-${CMAKE_VERSION}-Linux-x86_64/bin:${PATH}
   # fix pc file, see https://savannah.nongnu.org/bugs/?51894
   - mkdir /tmp/fix-pc
   - cp $(find /usr/lib* -name libgps.pc) /tmp/fix-pc
