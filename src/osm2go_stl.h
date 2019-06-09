@@ -247,6 +247,7 @@ template<typename T> void shrink_to_fit(T &v) {
 }
 
 #if __cplusplus < 201103L
+#include <cstdio>
 #include <type_traits>
 namespace std {
   template<typename T, bool = std::is_integral<T>::value>

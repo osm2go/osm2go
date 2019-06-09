@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <limits>
 #if __cplusplus >= 201103L
 #include <random>
 #endif
