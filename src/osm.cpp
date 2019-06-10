@@ -1814,7 +1814,7 @@ void tag_list_t::clear()
 #if __cplusplus < 201103L
 // workaround for the fact that the default constructor is unavailable
 template<>
-static inline void shrink_to_fit(std::vector<tag_t> &v)
+inline void shrink_to_fit(std::vector<tag_t> &v)
 {
   size_t sz = v.size();
   if(v.capacity() == sz)
