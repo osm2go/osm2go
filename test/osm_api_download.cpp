@@ -188,7 +188,10 @@ int main(int argc, char **argv)
   OSM2GO_TEST_INIT(argc, argv);
 
   assert(mkdtemp(tmpdir) != nullptr);
-  strcat(tmpdir, "/");
+  size_t tlen = strlen(tmpdir);
+  assert_cmpnum_op(tlen, <, sizeof(tmpdir) - 2);
+  tmpdir[tlen++] = '/';
+  tmpdir[tlen] = '\0';
 
   if (unlikely(curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK))
     return 1;
