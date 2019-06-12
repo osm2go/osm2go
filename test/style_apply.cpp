@@ -198,6 +198,9 @@ int main(int argc, char **argv)
   node->tags.replace(tags);
   way->tags.replace(tags);
 
+  oldicon = style->node_icons[node->id];
+  // zoom should stay the same, but still be different than before
+
   style->colorize_world(osm);
   assert_cmpnum(way->draw.color, 0xaaaaaaff);
   assert_cmpnum(way->draw.area.color, 0);
