@@ -312,6 +312,8 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
   state = it->newState;
 
   elemstyle_t * const elemstyle = styles.empty() ? nullptr : styles.back();
+  if (state != TagRule && state != TagRules && state != DocStart)
+    assert(elemstyle != nullptr);
 
   switch(state){
   case TagRule:
