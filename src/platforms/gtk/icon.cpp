@@ -127,8 +127,8 @@ icon_item *icon_t::load(const std::string &sname, int limit)
     GdkPixbuf *pix = gdk_pixbuf_new_from_file_at_size(fullname.c_str(), limit, limit, nullptr);
 
     if(likely(pix)) {
-      //    g_debug("Successfully loaded icon %s to %p", name, pix);
       icon_buffer_item *ret = new icon_buffer_item(pix);
+//       g_debug("Successfully loaded icon %s to %p (pixmap %p)", sname.c_str(), ret, pix);
       entries[sname] = ret;
       return ret;
     }
