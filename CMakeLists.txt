@@ -173,11 +173,14 @@ add_library(osm2go_lib STATIC
 	src/net_io.cpp
 	src/net_io.h
 	src/osm.cpp
-	src/osm_parser.cpp
 	src/osm.h
+	src/osm_p.h
 	src/osm_api.cpp
 	src/osm_api.h
 	src/osm_api_p.h
+	src/osm_objects.cpp
+	src/osm_objects.h
+	src/osm_parser.cpp
 	src/osm2go_annotations.cpp
 	src/osm2go_annotations.h
 	src/osm2go_stl.h

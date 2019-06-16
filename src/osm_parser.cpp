@@ -24,6 +24,7 @@
 
 #include "osm.h"
 
+#include "osm_objects.h"
 #include "misc.h"
 #include "pos.h"
 

@@ -27,6 +27,7 @@
 #include "misc.h"
 #include "notifications.h"
 #include "osm.h"
+#include "osm_objects.h"
 #include "project.h"
 #include "uicontrol.h"
 

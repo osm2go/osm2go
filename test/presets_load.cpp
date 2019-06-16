@@ -2,6 +2,8 @@
 #include <josm_presets_p.h>
 
 #include <fdguard.h>
+#include <osm.h>
+#include <osm_objects.h>
 
 #include <algorithm>
 #include <array>

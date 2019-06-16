@@ -1,5 +1,6 @@
 #include <icon.h>
 #include <osm.h>
+#include <osm_objects.h>
 
 #include <osm2go_cpp.h>
 

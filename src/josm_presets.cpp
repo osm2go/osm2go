@@ -21,6 +21,7 @@
 #include "josm_presets_p.h"
 
 #include "osm.h"
+#include "osm_objects.h"
 
 #include <algorithm>
 #include <cassert>

@@ -21,6 +21,7 @@
 
 #include "map_hl.h"
 #include "osm.h"
+#include "osm_objects.h"
 #include "pos.h"
 #include "track.h"
 
