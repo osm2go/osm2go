@@ -1919,14 +1919,6 @@ void base_object_t::markDeleted()
   tags.clear();
 }
 
-struct value_match_functor {
-  const char * const value;
-  explicit inline value_match_functor(const char *v) : value(v) {}
-  bool operator()(const tag_t *tag) {
-    return tag->value != nullptr && (strcasecmp(tag->value, value) == 0);
-  }
-};
-
 way_t::way_t()
   : visible_item_t()
 {
