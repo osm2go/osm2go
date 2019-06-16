@@ -1523,12 +1523,12 @@ struct pt_relation_member_functor {
            std::find(it.second->members.begin(), it.second->members.end(), member) != it.second->members.end(); }
 };
 
-static trstring unspecified_name(const object_t &obj, const osm_t &osm)
+trstring osm_t::unspecified_name(const object_t &obj) const
 {
-  const std::map<item_id_t, relation_t *>::const_iterator itEnd = osm.relations.end();
+  const std::map<item_id_t, relation_t *>::const_iterator itEnd = relations.end();
   std::vector<member_t>::const_iterator mit, bmit;
   int rtype = -1; // type of the relation: 3 mp with name, 2 mp, 1 name, 0 anything else
-  std::map<item_id_t, relation_t *>::const_iterator it = std::find_if(osm.relations.begin(), itEnd,
+  std::map<item_id_t, relation_t *>::const_iterator it = std::find_if(relations.begin(), itEnd,
                                                                       any_relation_member_functor(obj, mit));
   std::map<item_id_t, relation_t *>::const_iterator best = it;
   std::string bname;
@@ -1578,7 +1578,7 @@ std::string object_t::get_name(const osm_t &osm) const {
 
   /* worst case: we have no tags at all. return techincal info then */
   if(!obj->tags.hasRealTags()) {
-    unspecified_name(*this, osm).swap(ret);
+    osm.unspecified_name(*this).swap(ret);
     return ret;
   }
 
@@ -1703,7 +1703,7 @@ std::string object_t::get_name(const osm_t &osm) const {
         trstring("building part").swap(ret);
         return ret;
       }
-      unspecified_name(*this, osm).swap(ret);
+      osm.unspecified_name(*this).swap(ret);
     }
   }
 

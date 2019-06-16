@@ -262,6 +262,8 @@ public:
   void way_free(way_t *way);
   void node_free(node_t *node);
 
+  trstring unspecified_name(const object_t &obj) const;
+
 private:
   template<typename T, typename _Predicate> inline
   T *find_object(const std::map<item_id_t, T *> &map, _Predicate pred) const {
