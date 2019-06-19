@@ -67,6 +67,7 @@ static void test_trivial() {
 
   tag_list_t tags;
   assert(!tags.hasTagCollisions());
+  assert_null(tags.singleTag());
   tag_t cr_by("created_by", "test");
   assert(cr_by.is_creator_tag());
   std::vector<tag_t> ntags(1, cr_by);
@@ -74,12 +75,16 @@ static void test_trivial() {
   assert(!tags.hasRealTags());
   assert(!tags.hasNonCreatorTags());
   assert(!tags.hasTagCollisions());
+  // only trivial tag
+  assert_null(tags.singleTag());
   tag_t src("source", "test");
   assert(!src.is_creator_tag());
   ntags.clear();
   ntags.push_back(cr_by);
   ntags.push_back(src);
   tags.replace(std::move(ntags));
+  // still only trivial tags
+  assert_null(tags.singleTag());
   assert(!tags.hasRealTags());
   assert(tags.hasNonCreatorTags());
   assert(!tags.hasTagCollisions());
@@ -127,10 +132,17 @@ static void test_trivial() {
   tmap.insert(osm_t::TagMap::value_type("ref", "KHM 55"));
   r->tags.replace(tmap);
   assert_cmpstr(r->descriptive_name(), "KHM 55");
+  // one non-trivial tag
+  const tag_t *st = r->tags.singleTag();
+  assert(st != nullptr);
+  assert_cmpstr(st->key, "ref");
+  assert_cmpstr(st->value, "KHM 55");
   // name is preferred over ref
   tmap.insert(osm_t::TagMap::value_type("name", "Rumpelstilzchen"));
   r->tags.replace(tmap);
   assert_cmpstr(r->descriptive_name(), "Rumpelstilzchen");
+  // multiple non-trivial tags
+  assert_null(r->tags.singleTag());
   // another way to clear
   std::vector<tag_t> notags;
   r->tags.replace(std::move(notags));
