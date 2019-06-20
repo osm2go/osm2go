@@ -337,6 +337,7 @@ public:
    */
   static bool tagSubset(const TagMap &sub, const TagMap &super);
 
+protected:
   /**
    * @brief check which of the objects should persist
    * @param first the first object
@@ -349,6 +350,7 @@ public:
    */
   bool checkObjectPersistence(const object_t &first, const object_t &second, std::vector<relation_t *> &rels) const;
 
+public:
   template<typename T>
   struct mergeResult {
     inline mergeResult(T *o, bool c) : obj(o), conflict(c) {}

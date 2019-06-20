@@ -303,6 +303,8 @@ void relation_membership_functor::operator()(const std::pair<item_id_t, relation
 bool osm_t::checkObjectPersistence(const object_t &first, const object_t &second, std::vector<relation_t *> &rels) const
 {
   object_t keep = first, remove = second;
+  assert(first.type == second.type);
+  assert(first.type == object_t::NODE || first.type == object_t::WAY);
 
   std::vector<relation_t *> removeRels, keepRels;
 
@@ -315,14 +317,22 @@ bool osm_t::checkObjectPersistence(const object_t &first, const object_t &second
               // or keep the one with most relations
               removeRels.size() > keepRels.size() ||
               // or the one with most ways (if nodes)
-              (keep.type == object_t::NODE && remove.type == keep.type &&
+              (keep.type == object_t::NODE &&
+#if 0
+                                              remove.type == keep.type &&
+#endif
                remove.node->ways > keep.node->ways) ||
               // or the one with most nodes (if ways)
-              (keep.type == object_t::WAY && remove.type == keep.type &&
+              (keep.type == object_t::WAY &&
+#if 0
+                                             remove.type == keep.type &&
+#endif
                remove.way->node_chain.size() > keep.way->node_chain.size()) ||
+#if 0
               // or the one with most members (if relations)
               (keep.type == object_t::RELATION && remove.type == keep.type &&
                remove.relation->members.size() > keep.relation->members.size()) ||
+#endif
               // or the one with the longest history
               remove.obj->version > keep.obj->version ||
               // or simply the older one
