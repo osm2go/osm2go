@@ -101,14 +101,14 @@ lpos_t pos_t::toLpos() const {
   return lpos;
 }
 
-pos_t lpos_t::toPos(const bounds_t &bounds) const {
-  lpos_t lpos = *this;
-  lpos.x = ( lpos.x / bounds.scale) + bounds.center.x;
-  lpos.y = (-lpos.y / bounds.scale) + bounds.center.y;
+pos_t lpos_t::toPos(const bounds_t &bounds) const
+{
+  float fx = ( x / bounds.scale) + bounds.center.x;
+  float fy = (-y / bounds.scale) + bounds.center.y;
 
   pos_t pos;
-  pos.lon = RAD2DEG(lpos.x / POS_EQ_RADIUS);
-  pos.lat = RAD2DEG(2 * atan(exp(lpos.y / POS_EQ_RADIUS)) - M_PI/2);
+  pos.lon = RAD2DEG(fx / POS_EQ_RADIUS);
+  pos.lat = RAD2DEG(2 * atan(exp(fy / POS_EQ_RADIUS)) - M_PI/2);
   return pos;
 }
 
