@@ -235,7 +235,8 @@ static bool wms_cap_parse_root(wms_t &wms, xmlDocPtr doc) {
 }
 
 /* get pixel extent of image display */
-static void wms_setup_extent(project_t *project, wms_t *wms) {
+static wms_t::size_t wms_setup_extent(project_t::ref project)
+{
   bounds_t bounds;
   bounds.init(project->bounds);
 
@@ -251,10 +252,13 @@ static void wms_setup_extent(project_t *project, wms_t *wms) {
   lmax.x *= bounds.scale;
   lmax.y *= bounds.scale;
 
-  wms->width = std::min(lmax.x - lmin.x, 2048);
-  wms->height = std::min(lmax.y - lmin.y, 2048);
+  wms_t::size_t ret;
+  ret.width = std::min(lmax.x - lmin.x, 2048);
+  ret.height = std::min(lmax.y - lmin.y, 2048);
 
-  printf("WMS: required image size = %dx%d\n", wms->width, wms->height);
+  printf("WMS: required image size = %dx%d\n", ret.width, ret.height);
+
+  return ret;
 }
 
 /* ---------------------- use ------------------- */
@@ -430,14 +434,13 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
                             const std::string &layers, const std::string &srss)
 {
   /* get required image size */
-  wms_setup_extent(appdata.project.get(), &wms);
+  wms.size = wms_setup_extent(appdata.project);
 
   /* start building url */
   std::string url = wmsUrl(wms, "Map&LAYERS=") + layers;
 
   /* uses epsg4326 if possible */
   const char *srs = srss.empty() ? wms_layer_t::EPSG4326() : srss.c_str();
-
 
   /* build strings of min and max lat and lon to be used in url */
   const std::string coords = appdata.project->bounds.print();
@@ -449,7 +452,7 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
   assert(it != itEnd);
 
   char buf[64];
-  sprintf(buf, "&WIDTH=%d&HEIGHT=%d&FORMAT=", wms.width, wms.height);
+  sprintf(buf, "&WIDTH=%d&HEIGHT=%d&FORMAT=", wms.size.width, wms.size.height);
 
   /* build complete url */
   const std::array<const char *, 7> parts = { {

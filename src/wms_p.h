@@ -83,10 +83,14 @@ struct wms_cap_t {
 
 struct wms_t {
   wms_t(const std::string &s)
-    : server(s), width(0), height(0) {}
+    : server(s) {}
 
   std::string server;
-  int width, height;
+  struct size_t {
+    size_t() : width(0), height(0) {}
+    unsigned int width, height;
+  };
+  size_t size;
 
   wms_cap_t cap;
 };
