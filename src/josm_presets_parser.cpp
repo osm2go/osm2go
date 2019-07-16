@@ -270,7 +270,8 @@ const PresetSax::StateMap &PresetSax::preset_state_map() {
 # define VECTOR_ONE(a) std::vector<State>(1, (a))
 #endif
 
-    map.reserve(20);
+#define MAPFILL 20
+    map.reserve(MAPFILL);
 
     map.push_back(StateMap::value_type("presets", TagPresets, VECTOR_ONE(DocStart)));
     map.push_back(StateMap::value_type("chunk", TagChunk, VECTOR_ONE(TagPresets)));
@@ -296,6 +297,9 @@ const PresetSax::StateMap &PresetSax::preset_state_map() {
 
     map.push_back(StateMap::value_type("checkgroup", IntermediateTag, item_chunks));
     map.push_back(StateMap::value_type("optional", IntermediateTag, item_chunks));
+
+    // make sure the one-time reservation is the correct size
+    assert(map.size() == MAPFILL);
   }
 
   return map;
