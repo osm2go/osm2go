@@ -960,7 +960,7 @@ void PresetSax::endElement(const xmlChar *name)
 
     const std::string &id = chunk->name;
 
-    if(chunks.find(id) != chunks.end()) {
+    if(unlikely(chunks.find(id) != chunks.end())) {
       dumpState("ignoring", "chunk with duplicate id ", id.c_str());
       delete chunk;
     } else {
