@@ -373,7 +373,7 @@ struct find_link_parent {
   const presets_element_link *link;
   explicit find_link_parent(const presets_element_link *l) : link(l) {}
   bool operator()(presets_item_t *t);
-  bool operator()(const ChunkMap::value_type &p) {
+  inline bool operator()(const ChunkMap::value_type &p) {
     return operator()(p.second);
   }
 };
