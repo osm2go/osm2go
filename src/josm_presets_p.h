@@ -39,7 +39,8 @@ enum presets_element_type_t {
   WIDGET_TYPE_TEXT,
   WIDGET_TYPE_KEY,
   WIDGET_TYPE_LINK,
-  WIDGET_TYPE_REFERENCE
+  WIDGET_TYPE_REFERENCE,
+  WIDGET_TYPE_CHUNK_LIST_ENTRIES  ///< no real widget, only for storing bare list_entry elements in chunks
 };
 
 struct preset_attach_context;
@@ -225,6 +226,20 @@ public:
   std::string getValue(attach_key *akey) const override;
   unsigned int rows() const override {
     return 1;
+  }
+};
+
+/**
+ * @brief a storage for bare list_entry elements stored in a chunk
+ */
+class presets_element_list_entry_chunks : public presets_element_selectable {
+protected:
+  bool matchValue(const std::string &) const override { abort(); }
+public:
+  explicit presets_element_list_entry_chunks();
+
+  unsigned int rows() const override {
+    abort();
   }
 };
 

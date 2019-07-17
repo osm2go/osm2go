@@ -74,11 +74,14 @@ struct counter {
   unsigned int &refs;
   unsigned int &plinks;
   unsigned int &roles;
+  unsigned int &list_entry_chunks;
   counter(unsigned int &gr,  unsigned int &it, unsigned int &sep, unsigned int &c,
           unsigned int &mu,  unsigned int &ce, unsigned int &lb,  unsigned int &ky,
-          unsigned int &chk, unsigned int &rf, unsigned int &pl,  unsigned int &rl)
+          unsigned int &chk, unsigned int &rf, unsigned int &pl,  unsigned int &rl,
+          unsigned int &lec)
     : groups(gr), items(it), separators(sep), combos(c), multis(mu), list_entries(ce),
-      labels(lb), keys(ky), checks(chk), refs(rf), plinks(pl), roles(rl) {}
+      labels(lb), keys(ky), checks(chk), refs(rf), plinks(pl), roles(rl),
+      list_entry_chunks(lec) {}
   void operator()(const presets_item_t *p);
   void operator()(const presets_element_t *w);
 };
@@ -140,6 +143,9 @@ void counter::operator()(const presets_element_t *w)
     break;
   case WIDGET_TYPE_LINK:
     plinks++;
+    break;
+  case WIDGET_TYPE_CHUNK_LIST_ENTRIES:
+    list_entry_chunks++;
     break;
   }
 }
@@ -264,7 +270,8 @@ int main(int argc, char **argv)
   unsigned int refs = 0;
   unsigned int plinks = 0;
   unsigned int roles = 0;
-  counter cnt(groups, items, separators, combos, multis, list_entries, labels, keys, checks, refs, plinks, roles);
+  unsigned int list_entry_chunks = 0;
+  counter cnt(groups, items, separators, combos, multis, list_entries, labels, keys, checks, refs, plinks, roles, list_entry_chunks);
 
   std::for_each(presets->items.begin(), presets->items.end(), cnt);
   std::for_each(presets->chunks.begin(), presets->chunks.end(), cnt);
@@ -283,7 +290,8 @@ int main(int argc, char **argv)
     << "checks: " << checks << std::endl
     << "references: " << refs << std::endl
     << "preset_links: " << plinks << std::endl
-    << "roles: " << roles << std::endl;
+    << "roles: " << roles << std::endl
+    << "list entry chunks: " << list_entry_chunks << std::endl;
 
   std::for_each(presets->items.begin(), presets->items.end(), checkItem);
 

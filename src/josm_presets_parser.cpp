@@ -257,16 +257,22 @@ const PresetSax::StateMap &PresetSax::preset_state_map() {
   if(unlikely(map.empty())) {
 #if __cplusplus >= 201103L
     const std::vector<State> item_chunks = { TagChunk, TagItem };
+    const std::vector<State> item_refs = { TagChunk, TagItem, TagCombo, TagMultiselect };
     const std::vector<State> pr_gr = { TagPresets, TagGroup };
-    const std::vector<State> selectables = { TagCombo, TagMultiselect };
+    const std::vector<State> selectables = { TagCombo, TagMultiselect, TagChunk };
 # define VECTOR_ONE(a) { a }
 #else
     std::vector<State> item_chunks(2, TagChunk);
     item_chunks[1] = TagItem;
+    std::vector<State> item_refs(4, TagChunk);
+    item_refs[1] = TagItem;
+    item_refs[2] = TagCombo;
+    item_refs[3] = TagMultiselect;
     std::vector<State> pr_gr(2, TagPresets);
     pr_gr[1] = TagGroup;
-    std::vector<State> selectables(2, TagCombo);
+    std::vector<State> selectables(3, TagCombo);
     selectables[1] = TagMultiselect;
+    selectables[2] = TagChunk;
 # define VECTOR_ONE(a) std::vector<State>(1, (a))
 #endif
 
@@ -281,7 +287,7 @@ const PresetSax::StateMap &PresetSax::preset_state_map() {
     map.push_back(StateMap::value_type("item", TagItem, VECTOR_ONE(TagGroup)));
     map.push_back(StateMap::value_type("separator", TagSeparator, VECTOR_ONE(TagGroup)));
 
-    map.push_back(StateMap::value_type("reference", TagReference, item_chunks));
+    map.push_back(StateMap::value_type("reference", TagReference, item_refs));
     map.push_back(StateMap::value_type("preset_link", TagPresetLink, item_chunks));
     map.push_back(StateMap::value_type("key", TagKey, item_chunks));
     map.push_back(StateMap::value_type("text", TagText, item_chunks));
@@ -650,10 +656,24 @@ void PresetSax::startElement(const char *name, const char **attrs)
       dumpState("found", "reference without ref");
     } else {
       const ChunkMap::const_iterator ait = chunks.find(id);
-      if(unlikely(ait == chunks.end()))
+      if(unlikely(ait == chunks.end())) {
         dumpState("found", "reference with unresolved ref ", id);
-      else
+      } else {
         ref = ait->second;
+        // if this is a reference to something that only contains list_entries, then just copy them over
+        if(ref->widgets.size() == 1 && ref->widgets.front()->type == WIDGET_TYPE_CHUNK_LIST_ENTRIES &&
+           (widgets.top()->type == WIDGET_TYPE_COMBO || widgets.top()->type == WIDGET_TYPE_MULTISELECT)) {
+          presets_element_selectable * const selitem = static_cast<presets_element_selectable *>(widgets.top());
+
+          const presets_element_list_entry_chunks * const lechunk = static_cast<presets_element_list_entry_chunks *>(ref->widgets.front());
+          std::vector<std::string>::const_iterator sitEnd = lechunk->values.end();
+          for(std::vector<std::string>::const_iterator sit = std::cbegin(lechunk->values); sit != sitEnd; sit++)
+            selitem->values.push_back(*sit);
+          sitEnd = lechunk->display_values.end();
+          for(std::vector<std::string>::const_iterator sit = std::cbegin(lechunk->display_values); sit != sitEnd; sit++)
+            selitem->display_values.push_back(*sit);
+        }
+      }
     }
     widgets.push(new presets_element_reference(ref));
     break;
@@ -816,9 +836,20 @@ void PresetSax::startElement(const char *name, const char **attrs)
   }
   case TagListEntry: {
     assert(!items.empty());
-    assert(!widgets.empty());
-    assert(widgets.top()->type == WIDGET_TYPE_COMBO || widgets.top()->type == WIDGET_TYPE_MULTISELECT);
-    presets_element_selectable * const sel = static_cast<presets_element_selectable *>(widgets.top());
+    presets_element_selectable *sel;
+    if(oldState == TagChunk) {
+      // to store list_entries we need a special container as they are not standalone items
+      presets_item * const pit = static_cast<presets_item *>(items.top());
+      if(pit->widgets.empty())
+        pit->widgets.push_back(new presets_element_list_entry_chunks());
+      assert_cmpnum(pit->widgets.size(), 1);
+      assert_cmpnum(pit->widgets.back()->type, WIDGET_TYPE_CHUNK_LIST_ENTRIES);
+      sel = static_cast<presets_element_selectable *>(pit->widgets.back());
+    } else {
+      assert(!widgets.empty());
+      assert(widgets.top()->type == WIDGET_TYPE_COMBO || widgets.top()->type == WIDGET_TYPE_MULTISELECT);
+      sel = static_cast<presets_element_selectable *>(widgets.top());
+    }
 
     std::array<const char *, 2> names = { { "display_value", "value" } };
     const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 3);
@@ -978,6 +1009,11 @@ void PresetSax::endElement(const xmlChar *name)
     widgets.pop();
     assert_cmpnum(ref->type, WIDGET_TYPE_REFERENCE);
     if(unlikely(ref->item == nullptr))
+      delete ref;
+    // if this is just a collection of list_entry elements that has been inserted
+    // then drop the pseudo widget, all information is in the actual selectable now
+    else if(ref->item->widgets.size() == 1 && ref->item->widgets.front()->type == WIDGET_TYPE_CHUNK_LIST_ENTRIES &&
+           (widgets.top()->type == WIDGET_TYPE_COMBO || widgets.top()->type == WIDGET_TYPE_MULTISELECT))
       delete ref;
     else
       static_cast<presets_item *>(items.top())->widgets.push_back(ref);
@@ -1277,6 +1313,12 @@ presets_element_multiselect::presets_element_multiselect(const std::string &k, c
 #ifdef FREMANTLE
   (void)rws;
 #endif
+}
+
+presets_element_list_entry_chunks::presets_element_list_entry_chunks()
+  : presets_element_selectable(WIDGET_TYPE_CHUNK_LIST_ENTRIES, std::string(), std::string(),
+                               std::string(), nullptr, std::vector<std::string>(), std::vector<std::string>(), false)
+{
 }
 
 presets_element_key::presets_element_key(const std::string &k, const std::string &val,
