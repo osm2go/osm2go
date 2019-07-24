@@ -74,10 +74,10 @@ canvas_item_info_t::canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canva
   it->destroy_connect(d);
 }
 
-canvas_item_info_circle::canvas_item_info_circle(canvas_t *cv, canvas_item_t *it, lpos_t c, const unsigned int radius)
+canvas_item_info_circle::canvas_item_info_circle(canvas_t *cv, canvas_item_t *it, lpos_t c, const unsigned int r)
   : canvas_item_info_t(CANVAS_ITEM_CIRCLE, cv, it, new item_info_destroyer<canvas_item_info_circle>(this, cv))
   , center(c)
-  , r(radius)
+  , radius(r)
 {
 }
 

@@ -47,10 +47,10 @@ public:
 
 class canvas_item_info_circle : public canvas_item_info_t {
 public:
-  canvas_item_info_circle(canvas_t *cv, canvas_item_t *it, lpos_t c, const unsigned int radius);
+  canvas_item_info_circle(canvas_t *cv, canvas_item_t *it, lpos_t c, const unsigned int r);
 
   const lpos_t center;
-  const unsigned int r;
+  const unsigned int radius;
 };
 
 class canvas_item_info_poly : public canvas_item_info_t {

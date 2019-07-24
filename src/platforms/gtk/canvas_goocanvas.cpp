@@ -389,7 +389,7 @@ bool item_at_functor::operator()(const canvas_item_info_t *item) const
     int xdist = circle->center.x - x;
     int ydist = circle->center.y - y;
     return (xdist * xdist + ydist * ydist <
-           (static_cast<int>(circle->r) + fuzziness) * (static_cast<int>(circle->r) + fuzziness));
+           (static_cast<int>(circle->radius) + fuzziness) * (static_cast<int>(circle->radius) + fuzziness));
   }
 
   case CANVAS_ITEM_POLY: {
