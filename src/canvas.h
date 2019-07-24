@@ -186,16 +186,15 @@ public:
   void set_bounds(lpos_t min, lpos_t max);
   void item_to_bottom(canvas_item_t *item);
 
-  /***** creating/destroying items ******/
-  canvas_item_circle *circle_new(canvas_group_t group,
-                            int x, int y, unsigned int radius, int border,
+  /***** creating items ******/
+  canvas_item_circle *circle_new(canvas_group_t group, lpos_t c, unsigned int radius, int border,
                             color_t fill_col, color_t border_col = color_t::transparent());
   canvas_item_polyline *polyline_new(canvas_group_t group, const std::vector<lpos_t> &points,
                               unsigned int width, color_t color);
   canvas_item_t *polygon_new(canvas_group_t group, const std::vector<lpos_t> &points,
                              unsigned int width, color_t color,
                              color_t fill);
-  canvas_item_pixmap *image_new(canvas_group_t group, icon_item *icon, int x, int y, float scale);
+  canvas_item_pixmap *image_new(canvas_group_t group, icon_item *icon, lpos_t pos, float scale);
 
   /**
    * @brief get the polygon/polyway segment a certain coordinate is over

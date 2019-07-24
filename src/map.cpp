@@ -265,8 +265,7 @@ void relation_select_functor::operator()(member_t& member)
     node_t *node = member.object.node;
     printf("  -> node " ITEM_ID_FORMAT "\n", node->id);
 
-    item = map->canvas->circle_new(CANVAS_GROUP_NODES_HL,
-                             node->lpos.x, node->lpos.y,
+    item = map->canvas->circle_new(CANVAS_GROUP_NODES_HL, node->lpos,
                              map->style->highlight.width + map->style->node.radius,
                              0, map->style->highlight.color);
     break;
@@ -369,12 +368,11 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
 
   if(!map->style->icon.enable ||
      (it = map->style->node_icons.find(node->id)) == map->style->node_icons.end())
-    map_item->item = map->canvas->circle_new(CANVAS_GROUP_NODES,
-       node->lpos.x, node->lpos.y, radius, width, fill, border);
+    map_item->item = map->canvas->circle_new(CANVAS_GROUP_NODES, node->lpos,
+       radius, width, fill, border);
   else
-    map_item->item = map->canvas->image_new(CANVAS_GROUP_NODES, it->second,
-                                            node->lpos.x, node->lpos.y,
-		      map->state.detail * map->style->icon.scale);
+    map_item->item = map->canvas->image_new(CANVAS_GROUP_NODES, it->second, node->lpos,
+                                            map->state.detail * map->style->icon.scale);
 
   map_item->item->set_zoom_max(node->zoom_max / (2 * map->state.detail));
 
@@ -445,8 +443,7 @@ void map_way_draw_functor::operator()(way_t *way)
     way->map_item = new map_item_t(object_t(way));
 
     assert(!way->node_chain.empty());
-    const lpos_t &firstPos = way->node_chain.front()->lpos;
-    way->map_item->item = map->canvas->circle_new(CANVAS_GROUP_WAYS, firstPos.x, firstPos.y,
+    way->map_item->item = map->canvas->circle_new(CANVAS_GROUP_WAYS, way->node_chain.front()->lpos,
                                              map->style->node.radius, 0,
                                              map->style->node.color, 0);
 
@@ -853,7 +850,7 @@ void map_t::touchnode_update(lpos_t pos) {
   if(rnode != nullptr) {
     delete touchnode;
 
-    touchnode = canvas->circle_new(CANVAS_GROUP_DRAW, rnode->lpos.x, rnode->lpos.y,
+    touchnode = canvas->circle_new(CANVAS_GROUP_DRAW, rnode->lpos,
                                    2 * style->node.radius, 0, style->highlight.touch_color);
 
     touchnode_node = rnode;
@@ -1584,7 +1581,7 @@ void map_t::track_pos(const lpos_t lpos) {
     radius /= zoom;
   }
 
-  gps_item = canvas->circle_new(CANVAS_GROUP_GPS, lpos.x, lpos.y, radius, 0,
+  gps_item = canvas->circle_new(CANVAS_GROUP_GPS, lpos, radius, 0,
                                 style->track.gps_color);
 }
 

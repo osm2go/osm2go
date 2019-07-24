@@ -27,7 +27,7 @@ static void testInObject()
   canvas_holder canvas;
 
   // a circle that should have nothing to do with the initial search
-  canvas_item_circle * const circle = canvas->circle_new(CANVAS_GROUP_WAYS, 100, 20, 15,
+  canvas_item_circle * const circle = canvas->circle_new(CANVAS_GROUP_WAYS, lpos_t(100, 20), 15,
                                                          0, color_t::transparent());
   assert(circle != nullptr);
 

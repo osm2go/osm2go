@@ -40,7 +40,7 @@ void map_highlight_t::clear()
 void map_t::hl_cursor_draw(lpos_t pos, unsigned int radius) {
   delete cursor;
 
-  cursor = canvas->circle_new(CANVAS_GROUP_DRAW, pos.x, pos.y, radius,
+  cursor = canvas->circle_new(CANVAS_GROUP_DRAW, pos, radius,
                               0, style->highlight.node_color);
 }
 
@@ -75,7 +75,7 @@ void map_highlight_t::circle_new(map_t *map, canvas_group_t group, node_t *node,
                                  unsigned int radius, color_t color)
 {
   map_item_t *map_item = new map_item_t(object_t(node));
-  map_item->item = map->canvas->circle_new(group, node->lpos.x, node->lpos.y, radius, 0, color);
+  map_item->item = map->canvas->circle_new(group, node->lpos, radius, 0, color);
   items.push_back(map_item->item);
 
   map_item->item->set_user_data(map_item);

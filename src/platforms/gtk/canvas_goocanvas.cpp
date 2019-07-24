@@ -448,19 +448,19 @@ canvas_item_t *canvas_t::get_item_at(lpos_t pos) const {
   return static_cast<canvas_item_t *>(item->data);
 }
 
-canvas_item_circle *canvas_t::circle_new(canvas_group_t group,
-                                    int x, int y, unsigned int radius, int border,
+canvas_item_circle *canvas_t::circle_new(canvas_group_t group, lpos_t c,
+                                    unsigned int radius, int border,
                                     color_t fill_col, color_t border_col) {
   canvas_item_t *item =
     goo_canvas_ellipse_new(static_cast<canvas_goocanvas *>(this)->group[group],
-                           x, y, radius, radius,
+                           c.x, c.y, radius, radius,
                            "line-width", static_cast<double>(border),
                            "stroke-color-rgba", border_col.rgba(),
                            "fill-color-rgba", fill_col.rgba(),
                            nullptr);
 
   if(CANVAS_SELECTABLE & (1<<group))
-    (void) new canvas_item_info_circle(this, item, x, y, radius + border);
+    (void) new canvas_item_info_circle(this, item, c, radius + border);
 
   return static_cast<canvas_item_circle *>(item);
 }
@@ -523,7 +523,7 @@ canvas_item_t *canvas_t::polygon_new(canvas_group_t group, const std::vector<lpo
 }
 
 /* place the image in pix centered on x/y on the canvas */
-canvas_item_pixmap *canvas_t::image_new(canvas_group_t group, icon_item *icon, int x, int y,
+canvas_item_pixmap *canvas_t::image_new(canvas_group_t group, icon_item *icon, lpos_t pos,
                                         float scale)
 {
   GdkPixbuf *pix = osm2go_platform::icon_pixmap(icon);
@@ -531,13 +531,13 @@ canvas_item_pixmap *canvas_t::image_new(canvas_group_t group, icon_item *icon, i
   int height = gdk_pixbuf_get_height(pix);
   GooCanvasItem *item =
       goo_canvas_image_new(static_cast<canvas_goocanvas *>(this)->group[group],
-                           pix, x / scale - width / 2,
-                           y / scale - height / 2, nullptr);
+                           pix, pos.x / scale - width / 2,
+                           pos.y / scale - height / 2, nullptr);
   goo_canvas_item_scale(item, scale, scale);
 
   if(CANVAS_SELECTABLE & (1<<group)) {
     int radius = 0.75 * scale * std::max(width, height);
-    (void) new canvas_item_info_circle(this, item, x, y, radius);
+    (void) new canvas_item_info_circle(this, item, pos, radius);
   }
 
   return reinterpret_cast<canvas_item_pixmap *>(item);

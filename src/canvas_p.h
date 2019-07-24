@@ -47,12 +47,9 @@ public:
 
 class canvas_item_info_circle : public canvas_item_info_t {
 public:
-  canvas_item_info_circle(canvas_t *cv, canvas_item_t *it,
-                          const int cx, const int cy, const unsigned int radius);
+  canvas_item_info_circle(canvas_t *cv, canvas_item_t *it, lpos_t c, const unsigned int radius);
 
-  struct {
-    int x, y;
-  } center;
+  const lpos_t center;
   const unsigned int r;
 };
 
