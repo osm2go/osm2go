@@ -540,7 +540,16 @@ project_matches(GtkTreeModel *model, GtkTreeIter *iter, gpointer data)
 static void
 on_filter_changed(gpointer user_data)
 {
-  gtk_tree_model_filter_refilter(static_cast<GtkTreeModelFilter *>(user_data));
+  select_context_t *context = static_cast<select_context_t *>(user_data);
+  gtk_tree_model_filter_refilter(context->filter);
+
+  GtkTreeModel *fmodel = reinterpret_cast<GtkTreeModel *>(context->filter);
+  if(gtk_tree_model_iter_n_children(fmodel, nullptr) == 1) {
+    GtkTreeIter iter;
+    gboolean b = gtk_tree_model_get_iter_first(fmodel, &iter);
+    assert(b == TRUE);
+    gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
+  }
 }
 
 /**
@@ -592,7 +601,7 @@ static GtkWidget *project_list_widget(select_context_t &context, bool &has_sel) 
   gtk_tree_model_filter_set_visible_func(context.filter, project_matches, entry, nullptr);
   gtk_widget_grab_focus(entry);
 
-  g_signal_connect_swapped(entry, "changed", G_CALLBACK(on_filter_changed), context.filter);
+  g_signal_connect_swapped(entry, "changed", G_CALLBACK(on_filter_changed), &context);
 
   return context.list;
 }
