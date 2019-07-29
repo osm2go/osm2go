@@ -256,25 +256,19 @@ const PresetSax::StateMap &PresetSax::preset_state_map() {
 
   if(unlikely(map.empty())) {
 #if __cplusplus >= 201103L
-    const std::vector<State> item_chunks = { TagChunk, TagItem };
-    const std::vector<State> item_refs = { TagChunk, TagItem, TagCombo, TagMultiselect };
-    const std::vector<State> pr_gr = { TagPresets, TagGroup };
-    const std::vector<State> selectables = { TagCombo, TagMultiselect, TagChunk };
+#define STATE_VECTOR_START(n, N) const std::vector<State> n =
+#define STATE_VECTOR_END(n)
 # define VECTOR_ONE(a) { a }
 #else
-    std::vector<State> item_chunks(2, TagChunk);
-    item_chunks[1] = TagItem;
-    std::vector<State> item_refs(4, TagChunk);
-    item_refs[1] = TagItem;
-    item_refs[2] = TagCombo;
-    item_refs[3] = TagMultiselect;
-    std::vector<State> pr_gr(2, TagPresets);
-    pr_gr[1] = TagGroup;
-    std::vector<State> selectables(3, TagCombo);
-    selectables[1] = TagMultiselect;
-    selectables[2] = TagChunk;
+#define STATE_VECTOR_START(n, N) const std::array<State, N> n##_ref = {
+#define STATE_VECTOR_END(n) }; const std::vector<State> n(n##_ref.begin(), n##_ref.end())
 # define VECTOR_ONE(a) std::vector<State>(1, (a))
 #endif
+
+    STATE_VECTOR_START(item_chunks, 2) { TagChunk, TagItem } STATE_VECTOR_END(item_chunks);
+    STATE_VECTOR_START(item_refs, 4) { TagChunk, TagItem, TagCombo, TagMultiselect } STATE_VECTOR_END(item_refs);
+    STATE_VECTOR_START(pr_gr, 2) { TagPresets, TagGroup } STATE_VECTOR_END(pr_gr);
+    STATE_VECTOR_START(selectables, 3) { TagCombo, TagMultiselect, TagChunk } STATE_VECTOR_END(selectables);
 
 #define MAPFILL 20
     map.reserve(MAPFILL);
