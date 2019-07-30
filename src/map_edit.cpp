@@ -46,8 +46,9 @@ void map_t::way_add_begin() {
   action.extending = nullptr;
 }
 
-struct check_first_last_node {
+class check_first_last_node {
   const node_t * const node;
+public:
   explicit check_first_last_node(const node_t *n) : node(n) {}
   bool operator()(const std::pair<item_id_t, way_t *> &p) {
     return p.second->ends_with_node(node);
@@ -152,8 +153,9 @@ void map_t::way_add_cancel() {
   action.way = nullptr;
 }
 
-struct map_draw_nodes {
+class map_draw_nodes {
   map_t * const map;
+public:
   explicit inline map_draw_nodes(map_t *m) : map(m) {}
   void operator()(node_t *node);
 };

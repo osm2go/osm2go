@@ -51,9 +51,9 @@ int canvas_t::get_item_segment(const canvas_item_t *item, lpos_t pos) const
 /* remove item_info from chain as its visual representation */
 /* has been destroyed */
 template<typename T> class item_info_destroyer : public canvas_item_destroyer {
-public:
   T * const info;
   canvas_t * const canvas;
+public:
   explicit inline item_info_destroyer(T *i, canvas_t *cv)
     : canvas_item_destroyer(), info(i), canvas(cv) {}
 

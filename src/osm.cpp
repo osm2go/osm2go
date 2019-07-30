@@ -346,10 +346,11 @@ bool osm_t::checkObjectPersistence(const object_t &first, const object_t &second
   return !nret;
 }
 
-struct find_way_ends {
+class find_way_ends {
   const node_t * const node;
+public:
   explicit find_way_ends(const node_t *n) : node(n) {}
-  bool operator()(const std::pair<item_id_t, way_t *> &p) {
+  bool operator()(const std::pair<item_id_t, way_t *> &p) const {
     return p.second->ends_with_node(node);
   }
 };
