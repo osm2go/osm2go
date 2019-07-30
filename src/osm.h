@@ -23,6 +23,7 @@
 #include "pos.h"
 
 #include <algorithm>
+#include <array>
 #include <cinttypes>
 #include <cstdint>
 #include <cstdlib>
@@ -373,7 +374,7 @@ public:
    *
    * The victim node is deleted.
    */
-  mergeResult<node_t> mergeNodes(node_t *first, node_t *second, way_t *(&mergeways)[2]);
+  mergeResult<node_t> mergeNodes(node_t *first, node_t *second, std::array<way_t *, 2> &mergeways);
 
   /**
    * @brief merge 2 ways

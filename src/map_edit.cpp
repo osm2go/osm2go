@@ -421,7 +421,7 @@ void map_t::node_move(map_item_t *map_item, const osm2go_platform::screenpos &p)
 
       // only offer to join ways if they come from the different nodes, not
       // if e.g. one node has 2 ways and the other has none
-      way_t *ways2join[2] = { nullptr, nullptr };
+      std::array<way_t *, 2> ways2join;
       if(node->ways > 0 && tn->ways > 0)
         ways2join_cnt = node->ways + tn->ways;
 

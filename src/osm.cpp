@@ -354,7 +354,7 @@ struct find_way_ends {
   }
 };
 
-osm_t::mergeResult<node_t> osm_t::mergeNodes(node_t *first, node_t *second, way_t *(&mergeways)[2])
+osm_t::mergeResult<node_t> osm_t::mergeNodes(node_t *first, node_t *second, std::array<way_t *, 2> &mergeways)
 {
   node_t *keep = first, *remove = second;
 
@@ -366,8 +366,7 @@ osm_t::mergeResult<node_t> osm_t::mergeNodes(node_t *first, node_t *second, way_
   keep->lpos = second->lpos;
   keep->pos = second->pos;
 
-  mergeways[0] = nullptr;
-  mergeways[1] = nullptr;
+  mergeways.fill(nullptr);
   bool mayMerge = keep->ways == 1 && remove->ways == 1; // if there could be mergeable ways
 
   const std::map<item_id_t, way_t *>::iterator witEnd = ways.end();

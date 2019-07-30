@@ -1057,7 +1057,7 @@ static void test_merge_nodes()
   o->node_attach(n1);
   o->node_attach(n2);
 
-  way_t *ways2join[2];
+  std::array<way_t *, 2> ways2join;
 
   {
     osm_t::mergeResult<node_t> mergeRes = o->mergeNodes(n1, n2, ways2join);
