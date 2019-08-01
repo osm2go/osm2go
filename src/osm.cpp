@@ -367,7 +367,11 @@ osm_t::mergeResult<node_t> osm_t::mergeNodes(node_t *first, node_t *second, std:
   keep->lpos = second->lpos;
   keep->pos = second->pos;
 
+#if O2G_COMPILER_IS_GNU && ((__GNUC__ * 100 + __GNUC_MINOR__) < 403)
+  mergeways.assign(nullptr);
+#else
   mergeways.fill(nullptr);
+#endif
   bool mayMerge = keep->ways == 1 && remove->ways == 1; // if there could be mergeable ways
 
   const std::map<item_id_t, way_t *>::iterator witEnd = ways.end();
