@@ -139,7 +139,7 @@ public:
   /**
    * @brief query the current position of the scrollbars
    */
-  void scroll_get(float &sx, float &sy) const;
+  osm2go_platform::screenpos scroll_get() const __attribute__((warn_unused_result));
 
   /****** manipulating the canvas ******/
   void set_background(color_t bg_color);
@@ -178,15 +178,14 @@ public:
    * value if the given position is too close to the canvas edges. The
    * actual position is returned.
    */
-  void scroll_to(float &sx, float &sy);
+  osm2go_platform::screenpos scroll_to(const osm2go_platform::screenpos &s);
 
   /**
    * @brief relative move of the visible screen area
    * @param d the offset to the current position
-   * @param nx the new x position in canvas coordinates
-   * @param ny the new y position in canvas coordinates
+   * @returns the new position in canvas coordinates
    */
-  void scroll_step(const osm2go_platform::screenpos &d, float &nx, float &ny);
+  osm2go_platform::screenpos scroll_step(const osm2go_platform::screenpos &d);
   void set_bounds(lpos_t min, lpos_t max);
   void item_to_bottom(canvas_item_t *item);
 

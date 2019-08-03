@@ -212,7 +212,11 @@ double canvas_t::get_zoom() const {
 
 struct scrollvalue {
   inline scrollvalue(gdouble ix, gdouble iy) noexcept : x(ix), y(iy) {}
+  inline scrollvalue(const osm2go_platform::screenpos &s) noexcept
+    : x(s.x()), y(s.y()) {}
   gdouble x, y;
+  inline operator osm2go_platform::screenpos() const
+  { return osm2go_platform::screenpos(x, y); }
 };
 
 static scrollvalue boundedScroll(canvas_goocanvas *gcanvas, scrollvalue d)
@@ -253,7 +257,7 @@ canvas_dimensions canvas_goocanvas::get_viewport_dimensions() const {
 }
 
 /* get scroll position in meters */
-void canvas_t::scroll_get(float &sx, float &sy) const
+osm2go_platform::screenpos canvas_t::scroll_get() const
 {
   GooCanvas *gc = GOO_CANVAS(widget);
   gdouble zoom = goo_canvas_get_scale(gc);
@@ -266,20 +270,16 @@ void canvas_t::scroll_get(float &sx, float &sy) const
   hs += widget->allocation.width/(2*zoom);
   vs += widget->allocation.height/(2*zoom);
 
-  sx = hs;
-  sy = vs;
+  return osm2go_platform::screenpos(hs, vs);
 }
 
 /* set scroll position in meters */
-void canvas_t::scroll_to(float &sx, float &sy)
+osm2go_platform::screenpos canvas_t::scroll_to(const osm2go_platform::screenpos &s)
 {
-  scrollvalue s = boundedScroll(static_cast<canvas_goocanvas *>(this), scrollvalue(sx, sy));
-
-  sx = s.x;
-  sy = s.y;
+  return boundedScroll(static_cast<canvas_goocanvas *>(this), s);
 }
 
-void canvas_t::scroll_step(const osm2go_platform::screenpos &d, float &nx, float &ny)
+osm2go_platform::screenpos canvas_t::scroll_step(const osm2go_platform::screenpos &d)
 {
   GooCanvas *gc = GOO_CANVAS(widget);
   gdouble hs = gtk_adjustment_get_value(gc->hadjustment) + d.x();
@@ -288,14 +288,8 @@ void canvas_t::scroll_step(const osm2go_platform::screenpos &d, float &nx, float
 
   gdouble zoom = goo_canvas_get_scale(gc);
 
-  // this is intentionally not using scroll_to() as that would result in
-  // double -> int -> double conversions and loss of precision
-  scrollvalue s = boundedScroll(static_cast<canvas_goocanvas *>(this),
-                                scrollvalue(hs + widget->allocation.width / (2 * zoom),
-                                            vs + widget->allocation.height / (2 * zoom)));
-
-  nx = s.x;
-  ny = s.y;
+  return scroll_to(osm2go_platform::screenpos(hs + widget->allocation.width / (2 * zoom),
+                                              vs + widget->allocation.height / (2 * zoom)));
 }
 
 void canvas_t::set_bounds(lpos_t min, lpos_t max) {
@@ -629,16 +623,15 @@ bool canvas_goocanvas::isVisible(const lpos_t lpos) const
   const canvas_dimensions dim = static_cast<const canvas_goocanvas *>(this)->get_viewport_dimensions();
 
   // Is the point still onscreen?
-  float sx, sy;
-  scroll_get(sx, sy);
+  osm2go_platform::screenpos s = scroll_get();
 
-  if (lpos.x > sx + dim.width / 2)
+  if (lpos.x > s.x() + dim.width / 2)
     return false;
-  else if (lpos.x < sx - dim.width / 2)
+  else if (lpos.x < s.x() - dim.width / 2)
     return false;
-  else if (lpos.y > sy + dim.height / 2)
+  else if (lpos.y > s.y() + dim.height / 2)
     return false;
-  else if (lpos.y < sy - dim.height / 2)
+  else if (lpos.y < s.y() - dim.height / 2)
     return false;
 
   return true;
@@ -649,8 +642,7 @@ bool canvas_t::ensureVisible(const lpos_t lpos)
   if(static_cast<canvas_goocanvas *>(this)->isVisible(lpos))
     return false;
 
-  float x = lpos.x, y = lpos.y;
-  scroll_to(x, y);
+  scroll_to(osm2go_platform::screenpos(lpos.x, lpos.y));
 
   return true;
 }

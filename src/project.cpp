@@ -109,11 +109,11 @@ bool project_read(const std::string &project_file, project_t::ref project,
 
             str.reset(xmlGetProp(node, BAD_CAST "scroll-offset-x"));
             if(str)
-              project->map_state.scroll_offset.x = strtoul(str, nullptr, 10);
+              project->map_state.scroll_offset = osm2go_platform::screenpos(strtoul(str, nullptr, 10), 0);
 
             str.reset(xmlGetProp(node, BAD_CAST "scroll-offset-y"));
             if(str)
-              project->map_state.scroll_offset.y = strtoul(str, nullptr, 10);
+              project->map_state.scroll_offset = osm2go_platform::screenpos(project->map_state.scroll_offset.x(), strtoul(str, nullptr, 10));
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "wms") == 0) {
             xmlString str(xmlGetProp(node, BAD_CAST "server"));
             if(!str.empty())
@@ -223,10 +223,10 @@ bool project_t::save(osm2go_platform::Widget *parent) {
   xmlNewProp(node, BAD_CAST "zoom", BAD_CAST str);
   format_float(map_state.detail, 4, str);
   xmlNewProp(node, BAD_CAST "detail", BAD_CAST str);
-  snprintf(str, sizeof(str), "%f", map_state.scroll_offset.x);
+  snprintf(str, sizeof(str), "%f", map_state.scroll_offset.x());
   remove_trailing_zeroes(str);
   xmlNewProp(node, BAD_CAST "scroll-offset-x", BAD_CAST str);
-  snprintf(str, sizeof(str), "%f", map_state.scroll_offset.y);
+  snprintf(str, sizeof(str), "%f", map_state.scroll_offset.y());
   remove_trailing_zeroes(str);
   xmlNewProp(node, BAD_CAST "scroll-offset-y", BAD_CAST str);
 

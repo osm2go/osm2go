@@ -679,7 +679,7 @@ bool map_t::scroll_to_if_offscreen(lpos_t lpos) {
   }
 
   if(!canvas->ensureVisible(lpos))
-    canvas->scroll_get(state.scroll_offset.x, state.scroll_offset.y);
+    state.scroll_offset = canvas->scroll_get();
 
   return true;
 }
@@ -700,11 +700,11 @@ void map_t::set_zoom(double zoom, bool update_scroll_offsets) {
   }
 
   if(update_scroll_offsets) {
-    canvas->scroll_get(state.scroll_offset.x, state.scroll_offset.y);
+    state.scroll_offset = canvas->scroll_get();
 
     if (!at_zoom_limit)
       /* zooming affects the scroll offsets */
-      canvas->scroll_to(state.scroll_offset.x, state.scroll_offset.y);
+      state.scroll_offset = canvas->scroll_to(state.scroll_offset);
   }
 
   if(gps_item != nullptr) {
@@ -728,7 +728,7 @@ static bool distance_above(const map_t *map, const osm2go_platform::screenpos &p
 /* scroll a certain step */
 void map_t::scroll_step(const osm2go_platform::screenpos &p)
 {
-  canvas->scroll_step(p, state.scroll_offset.x, state.scroll_offset.y);
+  state.scroll_offset = canvas->scroll_step(p);
 }
 
 bool map_t::item_is_selected_node(const map_item_t *map_item) const
@@ -1118,9 +1118,9 @@ void map_t::init() {
   paint();
 
   printf("restore scroll position %f/%f\n",
-         state.scroll_offset.x, state.scroll_offset.y);
+         state.scroll_offset.x(), state.scroll_offset.y());
 
-  canvas->scroll_to(state.scroll_offset.x, state.scroll_offset.y);
+  state.scroll_offset = canvas->scroll_to(state.scroll_offset);
 }
 
 void map_t::clear(clearLayers layers) {
@@ -1746,6 +1746,7 @@ void map_t::info_selected()
 }
 
 map_state_t::map_state_t() noexcept
+  : scroll_offset(0, 0)
 {
   reset();
 }
@@ -1755,6 +1756,5 @@ void map_state_t::reset() noexcept
   zoom = 0.25;
   detail = 1.0;
 
-  scroll_offset.x = 0;
-  scroll_offset.y = 0;
+  scroll_offset = osm2go_platform::screenpos(0, 0);
 }

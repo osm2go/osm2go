@@ -87,7 +87,7 @@ struct map_state_t {
 
   float zoom;                          // zoom level (1.0 = 1m/pixel
   float detail;                        // detail level (1.0 = normal)
-  struct { float x,y; } scroll_offset;   // initial scroll offset
+  osm2go_platform::screenpos scroll_offset; // initial scroll offset
 };
 
 class map_t {
