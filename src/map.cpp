@@ -1117,7 +1117,7 @@ void map_t::init() {
   set_zoom(state.zoom, false);
   paint();
 
-  printf("restore scroll position %d/%d\n",
+  printf("restore scroll position %f/%f\n",
          state.scroll_offset.x, state.scroll_offset.y);
 
   canvas->scroll_to(state.scroll_offset.x, state.scroll_offset.y);

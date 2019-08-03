@@ -253,7 +253,8 @@ canvas_dimensions canvas_goocanvas::get_viewport_dimensions() const {
 }
 
 /* get scroll position in meters */
-void canvas_t::scroll_get(int &sx, int &sy) const {
+void canvas_t::scroll_get(float &sx, float &sy) const
+{
   GooCanvas *gc = GOO_CANVAS(widget);
   gdouble zoom = goo_canvas_get_scale(gc);
 
@@ -270,7 +271,7 @@ void canvas_t::scroll_get(int &sx, int &sy) const {
 }
 
 /* set scroll position in meters */
-void canvas_t::scroll_to(int &sx, int &sy)
+void canvas_t::scroll_to(float &sx, float &sy)
 {
   scrollvalue s = boundedScroll(static_cast<canvas_goocanvas *>(this), scrollvalue(sx, sy));
 
@@ -278,7 +279,7 @@ void canvas_t::scroll_to(int &sx, int &sy)
   sy = s.y;
 }
 
-void canvas_t::scroll_step(const osm2go_platform::screenpos &d, int &nx, int &ny)
+void canvas_t::scroll_step(const osm2go_platform::screenpos &d, float &nx, float &ny)
 {
   GooCanvas *gc = GOO_CANVAS(widget);
   gdouble hs = gtk_adjustment_get_value(gc->hadjustment) + d.x();
@@ -628,7 +629,7 @@ bool canvas_goocanvas::isVisible(const lpos_t lpos) const
   const canvas_dimensions dim = static_cast<const canvas_goocanvas *>(this)->get_viewport_dimensions();
 
   // Is the point still onscreen?
-  int sx, sy;
+  float sx, sy;
   scroll_get(sx, sy);
 
   if (lpos.x > sx + dim.width / 2)
@@ -648,7 +649,7 @@ bool canvas_t::ensureVisible(const lpos_t lpos)
   if(static_cast<canvas_goocanvas *>(this)->isVisible(lpos))
     return false;
 
-  int x = lpos.x, y = lpos.y;
+  float x = lpos.x, y = lpos.y;
   scroll_to(x, y);
 
   return true;

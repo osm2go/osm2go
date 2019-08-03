@@ -135,7 +135,11 @@ public:
   item_mapping_t item_mapping;
 
   lpos_t window2world(const osm2go_platform::screenpos &p) const;
-  void scroll_get(int &sx, int &sy) const;
+
+  /**
+   * @brief query the current position of the scrollbars
+   */
+  void scroll_get(float &sx, float &sy) const;
 
   /****** manipulating the canvas ******/
   void set_background(color_t bg_color);
@@ -174,7 +178,7 @@ public:
    * value if the given position is too close to the canvas edges. The
    * actual position is returned.
    */
-  void scroll_to(int &sx, int &sy);
+  void scroll_to(float &sx, float &sy);
 
   /**
    * @brief relative move of the visible screen area
@@ -182,7 +186,7 @@ public:
    * @param nx the new x position in canvas coordinates
    * @param ny the new y position in canvas coordinates
    */
-  void scroll_step(const osm2go_platform::screenpos &d, int &nx, int &ny);
+  void scroll_step(const osm2go_platform::screenpos &d, float &nx, float &ny);
   void set_bounds(lpos_t min, lpos_t max);
   void item_to_bottom(canvas_item_t *item);
 

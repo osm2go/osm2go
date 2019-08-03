@@ -223,9 +223,11 @@ bool project_t::save(osm2go_platform::Widget *parent) {
   xmlNewProp(node, BAD_CAST "zoom", BAD_CAST str);
   format_float(map_state.detail, 4, str);
   xmlNewProp(node, BAD_CAST "detail", BAD_CAST str);
-  snprintf(str, sizeof(str), "%d", map_state.scroll_offset.x);
+  snprintf(str, sizeof(str), "%f", map_state.scroll_offset.x);
+  remove_trailing_zeroes(str);
   xmlNewProp(node, BAD_CAST "scroll-offset-x", BAD_CAST str);
-  snprintf(str, sizeof(str), "%d", map_state.scroll_offset.y);
+  snprintf(str, sizeof(str), "%f", map_state.scroll_offset.y);
+  remove_trailing_zeroes(str);
   xmlNewProp(node, BAD_CAST "scroll-offset-y", BAD_CAST str);
 
   if(wms_offset.x != 0 || wms_offset.y != 0 || !wms_server.empty()) {
