@@ -741,12 +741,12 @@ static void
 osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpointer user_data)
 {
     tile_download_t *dl = (tile_download_t *)user_data;
-    OsmGpsMap *map = OSM_GPS_MAP(dl->map);
-    OsmGpsMapPrivate *priv = map->priv;
 
     if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code))
     {
         gboolean file_saved = FALSE;
+        OsmGpsMap *map = OSM_GPS_MAP(dl->map);
+        OsmGpsMapPrivate *priv = map->priv;
 
         /* save tile into cachedir if one has been specified */
         if (priv->cache_dir)
@@ -838,6 +838,8 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
         g_warning("Error downloading tile: %d - %s", msg->status_code, msg->reason_phrase);
         if (msg->status_code == SOUP_STATUS_NOT_FOUND)
         {
+            OsmGpsMapPrivate *priv = OSM_GPS_MAP(dl->map)->priv;
+
             g_hash_table_insert(priv->missing_tiles, dl->uri, NULL);
             g_hash_table_remove(priv->tile_queue, dl->uri);
         }
