@@ -210,16 +210,8 @@ double canvas_t::get_zoom() const {
   return goo_canvas_get_scale(GOO_CANVAS(widget));
 }
 
-struct scrollvalue {
-  inline scrollvalue(gdouble ix, gdouble iy) noexcept : x(ix), y(iy) {}
-  inline scrollvalue(const osm2go_platform::screenpos &s) noexcept
-    : x(s.x()), y(s.y()) {}
-  gdouble x, y;
-  inline operator osm2go_platform::screenpos() const
-  { return osm2go_platform::screenpos(x, y); }
-};
-
-static scrollvalue boundedScroll(canvas_goocanvas *gcanvas, scrollvalue d)
+static osm2go_platform::screenpos boundedScroll(canvas_goocanvas *gcanvas,
+                                                const osm2go_platform::screenpos &d)
 {
   /* get size of visible area in canvas units (meters) */
   canvas_dimensions dim = gcanvas->get_viewport_dimensions() / 2;
@@ -231,8 +223,8 @@ static scrollvalue boundedScroll(canvas_goocanvas *gcanvas, scrollvalue d)
   gdouble max_sy_cu = 0.95 * (gcanvas->bounds.max.y + dim.height);
   gdouble max_sx_cu = 0.95 * (gcanvas->bounds.max.x + dim.width);
 
-  scrollvalue ret(std::min(std::max(d.x, min_sx_cu), max_sx_cu),
-                  std::min(std::max(d.y, min_sy_cu), max_sy_cu));
+  osm2go_platform::screenpos ret(std::min(std::max(d.x(), min_sx_cu), max_sx_cu),
+                                 std::min(std::max(d.y(), min_sy_cu), max_sy_cu));
 
   /* adjust to screen center */
   GooCanvas *gc = GOO_CANVAS(gcanvas->widget);
@@ -240,7 +232,7 @@ static scrollvalue boundedScroll(canvas_goocanvas *gcanvas, scrollvalue d)
   gdouble offx = gcanvas->widget->allocation.width / (2 * zoom);
   gdouble offy = gcanvas->widget->allocation.height / (2 * zoom);
 
-  goo_canvas_scroll_to(gc, ret.x - offx, ret.y - offy);
+  goo_canvas_scroll_to(gc, ret.x() - offx, ret.y() - offy);
 
   return ret;
 }
