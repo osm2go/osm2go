@@ -86,8 +86,7 @@
 #endif
 
 struct appdata_internal : public appdata_t {
-  explicit appdata_internal(map_state_t &mstate);
-  appdata_internal() O2G_DELETED_FUNCTION;
+  explicit appdata_internal();
   appdata_internal(const appdata_internal &) O2G_DELETED_FUNCTION;
   appdata_internal &operator=(const appdata_internal &) O2G_DELETED_FUNCTION;
 #if __cplusplus >= 201103L
@@ -345,14 +344,14 @@ cb_menu_fullscreen(appdata_t *, GtkCheckMenuItem *item) {
 
 static void
 cb_menu_zoomin(map_t *map) {
-  map->set_zoom(map->state.zoom * ZOOM_FACTOR_MENU, true);
-  g_debug("zoom is now %f", map->state.zoom);
+  map->set_zoom(map->appdata.project->map_state.zoom * ZOOM_FACTOR_MENU, true);
+  g_debug("zoom is now %f", map->appdata.project->map_state.zoom);
 }
 
 static void
 cb_menu_zoomout(map_t *map) {
-  map->set_zoom(map->state.zoom / ZOOM_FACTOR_MENU, true);
-  g_debug("zoom is now %f", map->state.zoom);
+  map->set_zoom(map->appdata.project->map_state.zoom / ZOOM_FACTOR_MENU, true);
+  g_debug("zoom is now %f", map->appdata.project->map_state.zoom);
 }
 
 static void
@@ -1010,12 +1009,11 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
 
 /********************* end of menu **********************/
 
-appdata_t::appdata_t(map_state_t &mstate)
+appdata_t::appdata_t()
   : uicontrol(new MainUiGtk())
   , project(nullptr)
   , iconbar(nullptr)
   , presets(nullptr)
-  , map_state(mstate)
   , map(nullptr)
   , icons(icon_t::instance())
   , style(style_load(settings_t::instance()->style))
@@ -1075,12 +1073,12 @@ void appdata_t::track_clear_current()
   track_menu_set(*this);
 }
 
-appdata_internal::appdata_internal(map_state_t &mstate)
-  : appdata_t(mstate)
+appdata_internal::appdata_internal()
+  :
 #ifdef FREMANTLE
-  , program(nullptr)
+  program(nullptr),
 #endif
-  , btn_zoom_in(nullptr)
+    btn_zoom_in(nullptr)
   , btn_zoom_out(nullptr)
 {
 }
@@ -1159,9 +1157,8 @@ icon_button(void *context, const char *icon, GCallback cb, GtkWidget *box) {
 static int application_run(const char *proj)
 {
   /* user specific init */
-  map_state_t map_state;
   settings_t::ref settings = settings_t::instance();
-  appdata_internal appdata(map_state);
+  appdata_internal appdata;
 
   if(unlikely(!appdata.style)) {
     error_dlg(trstring("Unable to load valid style %1, terminating.").arg(settings->style));

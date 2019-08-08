@@ -256,7 +256,8 @@ bool project_t::rename(const std::string &nname, project_t::ref global, osm2go_p
   const bool isGlobal = global && global->name == name;
   assert(global.get() != this);
 
-  std::unique_ptr<project_t> tmpproj(new project_t(map_state, nname, path.substr(0, path.size() - 1 /* slash */ - name.size())));
+  std::unique_ptr<project_t> tmpproj(new project_t(nname, path.substr(0, path.size() - 1 /* slash */ - name.size())));
+  tmpproj->map_state = map_state;
   const bool oldOsmExists = osm_file_exists();
 
   swap_project(tmpproj.get(), this);
@@ -339,7 +340,8 @@ std::string project_exists(int base_path, const char *name) {
   return ret;
 }
 
-std::vector<project_t *> project_scan(map_state_t &ms, const std::string &base_path, int base_path_fd, const std::string &server) {
+std::vector<project_t *> project_scan(const std::string &base_path, int base_path_fd, const std::string &server)
+{
   std::vector<project_t *> projects;
 
   /* scan for projects */
@@ -360,7 +362,7 @@ std::vector<project_t *> project_scan(map_state_t &ms, const std::string &base_p
       printf("found project %s\n", d->d_name);
 
       /* try to read project and append it to chain */
-      std::unique_ptr<project_t> n(new project_t(ms, d->d_name, base_path));
+      std::unique_ptr<project_t> n(new project_t(d->d_name, base_path));
 
       if(likely(project_read(fullname, n, server, base_path_fd)))
         projects.push_back(n.release());
@@ -440,7 +442,7 @@ bool project_t::osm_file_exists() const noexcept
   return fstatat(dirfd, osmFile.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode);
 }
 
-static project_t *project_open(appdata_t &appdata, const std::string &name)
+static project_t *project_open(const std::string &name)
 {
   std::unique_ptr<project_t> project;
   std::string project_file;
@@ -457,13 +459,12 @@ static project_t *project_open(appdata_t &appdata, const std::string &name)
     // usually that ends in /foo/foo.proj
     if(name.compare(sl - pname.size() - 1, pname.size() + 1, '/' + pname) == 0)
       sl -= pname.size();
-    project.reset(new project_t(appdata.map_state, pname, name.substr(0, sl)));
+    project.reset(new project_t(pname, name.substr(0, sl)));
   } else {
-    project.reset(new project_t(appdata.map_state, name, settings->base_path));
+    project.reset(new project_t(name, settings->base_path));
 
     project_file = project_filename(*project);
   }
-  project->map_state.reset();
 
   printf("project file = %s\n", project_file.c_str());
   if(unlikely(!project_read(project_file, project, settings->server, settings->base_path_fd))) {
@@ -560,7 +561,7 @@ bool project_load(appdata_t &appdata, const std::string &name)
   project_replace_start(appdata, name);
 
   /* open project itself */
-  std::unique_ptr<project_t> project(project_open(appdata, name));
+  std::unique_ptr<project_t> project(project_open(name));
 
   if(unlikely(!project)) {
     appdata.uicontrol->showNotification(trstring("Error opening %1").arg(name), MainUi::Brief);
@@ -591,9 +592,8 @@ bool project_t::parse_osm() {
   return static_cast<bool>(osm);
 }
 
-project_t::project_t(map_state_t &ms, const std::string &n, const std::string &base_path)
-  : map_state(ms)
-  , bounds(pos_t(0, 0), pos_t(0, 0))
+project_t::project_t(const std::string &n, const std::string &base_path)
+  : bounds(pos_t(0, 0), pos_t(0, 0))
   , name(n)
   , path(base_path +  name + '/')
   , data_dirty(false)
@@ -603,16 +603,14 @@ project_t::project_t(map_state_t &ms, const std::string &n, const std::string &b
   memset(&wms_offset, 0, sizeof(wms_offset));
 }
 
-project_t::project_t(map_state_t &ms, project_t &other)
+project_t::project_t(project_t &other)
   : wms_offset(other.wms_offset)
-  , map_state(ms)
+  , map_state(other.map_state)
   , bounds(other.bounds)
   , data_dirty(other.data_dirty)
   , isDemo(other.isDemo)
   , dirfd(-1)
 {
-  map_state = other.map_state;
-
   swap_project(this, &other);
 }
 

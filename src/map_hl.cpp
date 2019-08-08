@@ -19,6 +19,7 @@
 
 #include "map_hl.h"
 
+#include "appdata.h"
 #include "map.h"
 #include "osm.h"
 #include "style.h"
@@ -96,7 +97,7 @@ void map_highlight_t::polyline_new(map_t *map, canvas_group_t group, way_t *way,
   map_item_t *map_item = new map_item_t(object_t(way));
 
   unsigned int width = way->draw.flags & OSM_DRAW_FLAG_BG ? way->draw.bg.width : way->draw.width;
-  width = (2 * map->style->highlight.width + width) * map->state.detail;
+  width = (2 * map->style->highlight.width + width) * map->appdata.project->map_state.detail;
 
   map_item->item = map->canvas->polyline_new(group, points, width, color);
   items.push_back(map_item->item);

@@ -23,9 +23,8 @@ public:
   const char *msg;
 };
 
-appdata_t::appdata_t(map_state_t &mstate)
+appdata_t::appdata_t()
   : uicontrol(new MainUiDummy())
-  , map_state(mstate)
   , map(nullptr)
   , icons(icon_t::instance())
 {
@@ -56,15 +55,13 @@ static void set_bounds(osm_t::ref o) {
 
 static void test_map_delete()
 {
-  map_state_t ms;
-  appdata_t a(ms);
+  appdata_t a;
   std::unique_ptr<map_t> m(new test_map(a));
 }
 
 static void test_map_delete_items()
 {
-  map_state_t ms;
-  appdata_t a(ms);
+  appdata_t a;
   std::unique_ptr<map_t> m(new test_map(a));
   std::unique_ptr<osm_t> o(new osm_t());
   set_bounds(o);
@@ -87,8 +84,7 @@ static void test_map_delete_items()
 
 static void test_draw_deleted()
 {
-  map_state_t ms;
-  appdata_t a(ms);
+  appdata_t a;
   std::unique_ptr<map_t> m(new test_map(a));
   std::unique_ptr<osm_t> o(new osm_t());
   set_bounds(o);
@@ -117,11 +113,10 @@ void test_map::test_way_add_cancel()
 
 static void test_way_add_cancel(const std::string &tmpdir)
 {
-  map_state_t ms;
-  appdata_t a(ms);
+  appdata_t a;
   std::unique_ptr<test_map> m(new test_map(a));
 
-  a.project.reset(new project_t(ms, "foo", tmpdir));
+  a.project.reset(new project_t("foo", tmpdir));
   a.project->osm.reset(new osm_t());
   set_bounds(a.project->osm);
 

@@ -143,7 +143,6 @@ struct select_context_t {
   ~select_context_t();
 
   appdata_t &appdata;
-  map_state_t dummystate;
   std::vector<project_t *> projects;
   GtkWidget * const dialog;
   GtkTreeModelFilter *filter;
@@ -295,8 +294,7 @@ static project_t *project_new(select_context_t *context) {
   if(name.empty())
     return nullptr;
 
-  std::unique_ptr<project_t> project(new project_t(context->dummystate, name,
-                                                   settings_t::instance()->base_path));
+  std::unique_ptr<project_t> project(new project_t(name, settings_t::instance()->base_path));
 
   /* no data downloaded yet */
   project->data_dirty = true;
@@ -634,7 +632,7 @@ project_t *project_select(appdata_t &appdata)
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog))) {
     project_t *pr = project_get_selected(context.list, nullptr, nullptr);
 
-    return new project_t(appdata.map_state, *pr);
+    return new project_t(*pr);
   }
 
   return nullptr;
@@ -939,7 +937,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
 
 select_context_t::select_context_t(appdata_t &a, GtkWidget *dial)
   : appdata(a)
-  , projects(project_scan(dummystate, settings_t::instance()->base_path,
+  , projects(project_scan(settings_t::instance()->base_path,
                           settings_t::instance()->base_path_fd, settings_t::instance()->server))
   , dialog(dial)
   , filter(nullptr)

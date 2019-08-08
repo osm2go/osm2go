@@ -124,7 +124,7 @@ static void map_object_select(map_t *map, node_t *node)
       radius += map->style->node.border_radius;
   }
 
-  map->highlight.circle_new(map, CANVAS_GROUP_NODES_HL, node, radius * map->state.detail,
+  map->highlight.circle_new(map, CANVAS_GROUP_NODES_HL, node, radius * map->appdata.project->map_state.detail,
                             map->style->highlight.color);
 
   if(map_item->item == nullptr)
@@ -214,7 +214,7 @@ void draw_selected_way_functor::operator()(node_t *node)
   if(!map->highlight.isHighlighted(item)) {
     /* create a new map item for every node */
     map->highlight.circle_new(map, CANVAS_GROUP_NODES_IHL, node,
-                              map->style->node.radius * map->state.detail,
+                              map->style->node.radius * map->appdata.project->map_state.detail,
                               map->style->highlight.node_color);
   }
 
@@ -236,7 +236,7 @@ void map_t::select_way(way_t *way) {
   float arrow_width = ((map_item->object.way->draw.flags & OSM_DRAW_FLAG_BG)?
                         style->highlight.width + map_item->object.way->draw.bg.width / 2:
                         style->highlight.width + map_item->object.way->draw.width / 2)
-                       * state.detail;
+                       * appdata.project->map_state.detail;
 
   const node_chain_t &node_chain = map_item->object.way->node_chain;
   std::for_each(node_chain.begin(), node_chain.end(),
@@ -372,9 +372,9 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
        radius, width, fill, border);
   else
     map_item->item = map->canvas->image_new(CANVAS_GROUP_NODES, it->second, node->lpos,
-                                            map->state.detail * map->style->icon.scale);
+                                            map->appdata.project->map_state.detail * map->style->icon.scale);
 
-  map_item->item->set_zoom_max(node->zoom_max / (2 * map->state.detail));
+  map_item->item->set_zoom_max(node->zoom_max / (2 * map->appdata.project->map_state.detail));
 
   /* attach map_item to nodes map_item_chain */
   if(node->map_item != nullptr)
@@ -399,7 +399,7 @@ static map_item_t *map_way_new(map_t *map, canvas_group_t group,
     map_item->item = map->canvas->polyline_new(group, points, width, color);
   }
 
-  map_item->item->set_zoom_max(way->zoom_max / (2 * map->state.detail));
+  map_item->item->set_zoom_max(way->zoom_max / (2 * map->appdata.project->map_state.detail));
 
   /* a ways outline itself is never dashed */
   if (group != CANVAS_GROUP_WAYS_OL && way->draw.dash_length_on > 0)
@@ -452,7 +452,7 @@ void map_way_draw_functor::operator()(way_t *way)
     way->map_item->item->set_user_data(way->map_item);
   } else {
     /* draw way */
-    float width = way->draw.width * map->state.detail;
+    float width = way->draw.width * map->appdata.project->map_state.detail;
     color_t areacol = color_t::transparent();
     canvas_group_t gr;
 
@@ -462,7 +462,7 @@ void map_way_draw_functor::operator()(way_t *way)
     } else if(way->draw.flags & OSM_DRAW_FLAG_BG) {
       gr = CANVAS_GROUP_WAYS_INT;
       map_bg_modifier::add(map, way, map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
-                                                 way->draw.bg.width * map->state.detail,
+                                                 way->draw.bg.width * map->appdata.project->map_state.detail,
                                                  way->draw.bg.color, color_t::transparent()));
     } else {
       gr = CANVAS_GROUP_WAYS;
@@ -495,7 +495,7 @@ void map_node_draw_functor::operator()(node_t *node)
   int width;
   color_t fill, col;
   if(node->ways == 0) {
-    width = map->style->node.border_radius * map->state.detail;
+    width = map->style->node.border_radius * map->appdata.project->map_state.detail;
     fill = map->style->node.fill_color;
     col = map->style->node.color;
   } else if(map->style->node.show_untagged || node->tags.hasRealTags()) {
@@ -506,7 +506,7 @@ void map_node_draw_functor::operator()(node_t *node)
     return;
   }
 
-  map_node_new(map, node, map->style->node.radius * map->state.detail, width, fill, col);
+  map_node_new(map, node, map->style->node.radius * map->appdata.project->map_state.detail, width, fill, col);
 }
 
 void map_t::draw(node_t *node) {
@@ -679,7 +679,7 @@ bool map_t::scroll_to_if_offscreen(lpos_t lpos) {
   }
 
   if(!canvas->ensureVisible(lpos))
-    state.scroll_offset = canvas->scroll_get();
+    appdata.project->map_state.scroll_offset = canvas->scroll_get();
 
   return true;
 }
@@ -687,6 +687,7 @@ bool map_t::scroll_to_if_offscreen(lpos_t lpos) {
 #define GPS_RADIUS_LIMIT  3.0
 
 void map_t::set_zoom(double zoom, bool update_scroll_offsets) {
+  map_state_t &state = appdata.project->map_state;
   state.zoom = canvas->set_zoom(zoom);
   bool at_zoom_limit = zoom != state.zoom;
 
@@ -728,7 +729,7 @@ static bool distance_above(const map_t *map, const osm2go_platform::screenpos &p
 /* scroll a certain step */
 void map_t::scroll_step(const osm2go_platform::screenpos &p)
 {
-  state.scroll_offset = canvas->scroll_step(p);
+  appdata.project->map_state.scroll_offset = canvas->scroll_step(p);
 }
 
 bool map_t::item_is_selected_node(const map_item_t *map_item) const
@@ -1085,7 +1086,6 @@ map_t::map_t(appdata_t &a, canvas_t *c)
   : gps_item(nullptr)
   , appdata(a)
   , canvas(c)
-  , state(appdata.map_state)
   , cursor(nullptr)
   , touchnode(nullptr)
   , touchnode_node(nullptr)
@@ -1114,6 +1114,7 @@ void map_t::init() {
   // must be set before zoom so the valid dimension can be checked by canvas
   canvas->set_bounds(bounds.min, bounds.max);
 
+  map_state_t &state = appdata.project->map_state;
   set_zoom(state.zoom, false);
   paint();
 
@@ -1688,8 +1689,8 @@ void map_t::detail_change(float detail, trstring::native_type_arg banner_msg)
   /* as well as items becoming invisible by the detail change */
   item_deselect();
 
-  state.detail = detail;
-  printf("changing detail factor to %f\n", state.detail);
+  appdata.project->map_state.detail = detail;
+  printf("changing detail factor to %f\n", detail);
 
   clear(MAP_LAYER_OBJECTS_ONLY);
   paint();
@@ -1698,11 +1699,11 @@ void map_t::detail_change(float detail, trstring::native_type_arg banner_msg)
 }
 
 void map_t::detail_increase() {
-  detail_change(state.detail * MAP_DETAIL_STEP, _("Increasing detail level"));
+  detail_change(appdata.project->map_state.detail * MAP_DETAIL_STEP, _("Increasing detail level"));
 }
 
 void map_t::detail_decrease() {
-  detail_change(state.detail / MAP_DETAIL_STEP, _("Decreasing detail level"));
+  detail_change(appdata.project->map_state.detail / MAP_DETAIL_STEP, _("Decreasing detail level"));
 }
 
 void map_t::detail_normal() {

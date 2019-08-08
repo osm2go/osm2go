@@ -45,9 +45,8 @@ void MainUiDummy::showNotification(const char *message, unsigned int)
   messages.push_back(message);
 }
 
-appdata_t::appdata_t(map_state_t &mstate)
+appdata_t::appdata_t()
   : uicontrol(new MainUiDummy())
-  , map_state(mstate)
   , map(nullptr)
   , icons(icon_t::instance())
 {
@@ -57,10 +56,8 @@ static const char *proj_name = "test_proj";
 
 static void testNoFiles(const std::string &tmpdir)
 {
-  map_state_t dummystate;
-
-  appdata_t appdata(dummystate);
-  appdata.project.reset(new project_t(dummystate, proj_name, tmpdir));
+  appdata_t appdata;
+  appdata.project.reset(new project_t(proj_name, tmpdir));
 
   assert(!track_restore(appdata));
   assert(!appdata.track.track);
@@ -87,8 +84,7 @@ static void testNoFiles(const std::string &tmpdir)
 
 static void testSave(const std::string &tmpdir, const char *empty_proj)
 {
-  map_state_t dummystate;
-  std::unique_ptr<project_t> project(new project_t(dummystate, proj_name, tmpdir));
+  std::unique_ptr<project_t> project(new project_t(proj_name, tmpdir));
 
   assert(project->save());
 
@@ -121,8 +117,7 @@ static void testSave(const std::string &tmpdir, const char *empty_proj)
 
 static void testNoData(const std::string &tmpdir)
 {
-  map_state_t dummystate;
-  std::unique_ptr<project_t> project(new project_t(dummystate, proj_name, tmpdir));
+  std::unique_ptr<project_t> project(new project_t(proj_name, tmpdir));
 
   assert(project->save());
 
@@ -155,10 +150,9 @@ static void testNoData(const std::string &tmpdir)
 
 static void testServer(const std::string &tmpdir)
 {
-  map_state_t dummystate;
   const std::string defaultserver = "https://api.openstreetmap.org/api/0.6";
   const std::string oldserver = "http://api.openstreetmap.org/api/0.5";
-  project_t project(dummystate, proj_name, tmpdir);
+  project_t project(proj_name, tmpdir);
 
   assert_cmpstr(project.server(defaultserver), defaultserver);
   assert_cmpstr(project.server(oldserver), oldserver);
@@ -186,15 +180,14 @@ static void testServer(const std::string &tmpdir)
 
 static void testLoad(const std::string &tmpdir, const char *osmfile)
 {
-  map_state_t dummystate;
-  appdata_t appdata(dummystate);
+  appdata_t appdata;
 
   // 3 attempts of loading, the first will fail because of missing OSM data
   const size_t loopcnt = 3;
   for (size_t i = loopcnt * 2; i > 0; i--) {
     fflush(stdout); // output readability
     // create dummy project
-    std::unique_ptr<project_t> project(new project_t(dummystate, proj_name, tmpdir));
+    std::unique_ptr<project_t> project(new project_t(proj_name, tmpdir));
     project->bounds.min.lat = 0.5;
     project->bounds.min.lon = 0.5;
     project->bounds.max.lat = 0.6;
@@ -255,13 +248,12 @@ static void testLoad(const std::string &tmpdir, const char *osmfile)
     uid->messages.clear();
   }
 
-  project_delete(new project_t(dummystate, proj_name, tmpdir));
+  project_delete(new project_t(proj_name, tmpdir));
 }
 
 static void testRename(const std::string &tmpdir, const char *diff_file)
 {
-  map_state_t dummystate;
-  std::unique_ptr<project_t> project(new project_t(dummystate, "diff_restore", tmpdir));
+  std::unique_ptr<project_t> project(new project_t("diff_restore", tmpdir));
   assert(project->save());
   project->osmFile = "diff_restore.osm.gz";
   const std::string oldpath = project->path;

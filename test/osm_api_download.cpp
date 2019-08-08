@@ -33,9 +33,8 @@ public:
   const char *msg;
 };
 
-appdata_t::appdata_t(map_state_t &mstate)
+appdata_t::appdata_t()
   : uicontrol(new MainUiDummy())
-  , map_state(mstate)
   , map(nullptr)
   , icons(icon_t::instance())
 {
@@ -50,7 +49,6 @@ void MainUiDummy::showNotification(const char *message, unsigned int)
 
 static char tmpdir[32] = "/tmp/osm2go_api_dl_XXXXXX";
 static const char *dev_url  = "https://master.apis.dev.openstreetmap.org/api/0.6";
-static map_state_t mapstate;
 
 static project_t *
 setup_project(const std::string &projectName, std::string &project_dir)
@@ -59,7 +57,7 @@ setup_project(const std::string &projectName, std::string &project_dir)
   project_dir += projectName;
   assert(mkdir(project_dir.c_str(), 0755) == 0);
 
-  project_t *project = new project_t(mapstate, projectName, tmpdir);
+  project_t *project = new project_t(projectName, tmpdir);
   project->bounds = pos_area(pos_t(52.27659, 9.58270), pos_t(52.27738, 9.58426));
   assert(project->bounds.valid());
   project->osmFile = projectName + ".osm";
@@ -165,10 +163,9 @@ static void download_bad_coords()
 
 static void upload_none()
 {
-  map_state_t dummystate;
-  appdata_t appdata(dummystate);
+  appdata_t appdata;
 
-  appdata.project.reset(new project_t(dummystate, std::string(), std::string()));
+  appdata.project.reset(new project_t(std::string(), std::string()));
   appdata.project->osm.reset(new osm_t());
   appdata.project->osm->uploadPolicy = osm_t::Upload_Blocked;
 

@@ -64,7 +64,7 @@ static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event, map_t *map)
     return FALSE;
 
   if(event->type == GDK_SCROLL) {
-    double zoom = map->state.zoom;
+    double zoom = map->appdata.project->map_state.zoom;
     if(event->direction)
       zoom /= ZOOM_FACTOR_WHEEL;
     else
@@ -172,7 +172,7 @@ gboolean map_gtk::key_press_event(unsigned int keyval)
   case '+':
   case GDK_KP_Add:
 #endif
-    set_zoom(state.zoom * ZOOM_FACTOR_BUTTON, true);
+    set_zoom(appdata.project->map_state.zoom * ZOOM_FACTOR_BUTTON, true);
     return TRUE;
 
 #ifdef FREMANTLE
@@ -181,7 +181,7 @@ gboolean map_gtk::key_press_event(unsigned int keyval)
   case '-':
   case GDK_KP_Subtract:
 #endif
-    set_zoom(state.zoom / ZOOM_FACTOR_BUTTON, true);
+    set_zoom(appdata.project->map_state.zoom / ZOOM_FACTOR_BUTTON, true);
     return TRUE;
 
   default:

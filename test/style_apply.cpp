@@ -20,9 +20,8 @@
 #include <cstdlib>
 #include <iostream>
 
-appdata_t::appdata_t(map_state_t &mstate)
+appdata_t::appdata_t()
   : uicontrol(nullptr)
-  , map_state(mstate)
   , map(nullptr)
   , icons(icon_t::instance())
 {
@@ -39,8 +38,7 @@ int main(int argc, char **argv)
 
   xmlInitParser();
 
-  map_state_t map_state;
-  appdata_t appdata(map_state);
+  appdata_t appdata;
 
   style_t *style = style_load(argv[1]);
 

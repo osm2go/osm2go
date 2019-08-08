@@ -20,6 +20,7 @@
 #pragma once
 
 #include "map_hl.h"
+#include "map_state.h"
 #include "osm.h"
 #include "osm_objects.h"
 #include "pos.h"
@@ -80,16 +81,6 @@ struct map_item_t {
   canvas_item_t *item;
 };
 
-struct map_state_t {
-  map_state_t() noexcept;
-
-  void reset() noexcept;
-
-  float zoom;                          // zoom level (1.0 = 1m/pixel
-  float detail;                        // detail level (1.0 = normal)
-  osm2go_platform::screenpos scroll_offset; // initial scroll offset
-};
-
 class map_t {
   friend struct map_bg_modifier;
   std::unordered_map<visible_item_t *, map_item_t *> background_items;
@@ -114,7 +105,6 @@ public:
 
   appdata_t &appdata;
   canvas_t * const canvas;
-  map_state_t &state;
 
   map_highlight_t highlight;       // list of elements used for highlighting
 

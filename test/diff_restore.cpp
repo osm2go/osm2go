@@ -137,8 +137,7 @@ int main(int argc, char **argv)
   const std::string osm_path = argv[1];
   assert_cmpnum(osm_path[osm_path.size() - 1], '/');
 
-  map_state_t dummystate;
-  project_t project(dummystate, argv[2], osm_path);
+  project_t project(argv[2], osm_path);
   project.osmFile = argv[2] + std::string(".osm");
 
   bool b = project.parse_osm();
@@ -203,7 +202,7 @@ int main(int argc, char **argv)
     mkdir(bpath.c_str(), 0755);
     bpath.erase(bpath.rfind('/') + 1);
     // and create a new project from that
-    std::unique_ptr<project_t> sproject(new project_t(dummystate, argv[2], bpath));
+    std::unique_ptr<project_t> sproject(new project_t(argv[2], bpath));
     // CAUTION: osm is shared between the projects now
     sproject->osm.reset(osm.get());
 

@@ -167,6 +167,7 @@ add_library(osm2go_lib STATIC
 	src/map_edit.cpp
 	src/map_hl.cpp
 	src/map_hl.h
+	src/map_state.h
 	src/misc.cpp
 	src/misc.h
 	src/notifications.h

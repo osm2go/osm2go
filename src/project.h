@@ -20,6 +20,7 @@
 #pragma once
 
 #include "fdguard.h"
+#include "map_state.h"
 #include "pos.h"
 
 #include <libxml/parser.h>
@@ -30,7 +31,6 @@
 #include <osm2go_stl.h>
 
 struct appdata_t;
-struct map_state_t;
 class osm_t;
 
 struct project_t {
@@ -39,12 +39,12 @@ struct project_t {
   /**
    * @constructor
    */
-  project_t(map_state_t &ms, const std::string &n, const std::string &base_path);
+  project_t(const std::string &n, const std::string &base_path);
 
   /**
    * @brief sort-of move constructor
    */
-  project_t(map_state_t &ms, project_t &other);
+  project_t(project_t &other);
 
   inline const std::string &server(const std::string &def) const noexcept
   { return rserver.empty() ? def : rserver; }
@@ -60,7 +60,7 @@ struct project_t {
     int x, y;
   } wms_offset;
 
-  map_state_t &map_state;
+  map_state_t map_state;
 
   pos_area bounds;
 

@@ -28,7 +28,6 @@ class gps_state_t;
 class icon_t;
 class iconbar_t;
 class MainUi;
-struct map_state_t;
 class map_t;
 class osm_t;
 class presets_items;
@@ -37,7 +36,7 @@ struct style_t;
 struct track_t;
 
 struct appdata_t {
-  appdata_t(map_state_t &mstate);
+  appdata_t();
   ~appdata_t();
 
   static osm2go_platform::Widget *window;
@@ -53,7 +52,6 @@ struct appdata_t {
     int warn_cnt;
   } track;
 
-  map_state_t &map_state;
   map_t *map;
   icon_t &icons;
   std::unique_ptr<style_t> style;
