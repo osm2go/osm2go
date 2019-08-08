@@ -82,10 +82,12 @@ static void test_map_delete_items()
   o->node_delete(n);
 }
 
-static void test_draw_deleted()
+static void test_draw_deleted(const std::string &tmpdir)
 {
   appdata_t a;
+  a.project.reset(new project_t("foo", tmpdir));
   std::unique_ptr<map_t> m(new test_map(a));
+  m->style.reset(new style_t());
   std::unique_ptr<osm_t> o(new osm_t());
   set_bounds(o);
 
@@ -137,7 +139,7 @@ int main()
 
   test_map_delete();
   test_map_delete_items();
-  test_draw_deleted();
+  test_draw_deleted(osm_path);
   test_way_add_cancel(osm_path);
 
   assert_cmpnum(rmdir(tmpdir), 0);
