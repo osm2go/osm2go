@@ -21,6 +21,7 @@
 
 #include "project.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -31,7 +32,7 @@ void project_close(appdata_t &appdata);
 std::vector<project_t *> project_scan(const std::string &base_path,
                                       int base_path_fd, const std::string &server);
 std::string project_exists(int base_path, const char *name) __attribute__((nonnull(2)));
-void project_delete(project_t *project) __attribute__((nonnull(1)));
+void project_delete(std::unique_ptr<project_t> &project);
 
 struct projects_to_bounds {
   std::vector<pos_area> &pbounds;

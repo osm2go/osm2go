@@ -112,7 +112,7 @@ static void testSave(const std::string &tmpdir, const char *empty_proj)
     assert_cmpnum(errno, ENOENT);
   }
 
-  project_delete(project.release());
+  project_delete(project);
 }
 
 static void testNoData(const std::string &tmpdir)
@@ -145,7 +145,7 @@ static void testNoData(const std::string &tmpdir)
   assert_cmpnum(mkdir((project->path + ".foo").c_str(), 0755), 0);
   assert_cmpnum(mkdirat(project->dirfd, ".bar", 0755), 0);
 
-  project_delete(project.release());
+  project_delete(project);
 }
 
 static void testServer(const std::string &tmpdir)
@@ -248,7 +248,8 @@ static void testLoad(const std::string &tmpdir, const char *osmfile)
     uid->messages.clear();
   }
 
-  project_delete(new project_t(proj_name, tmpdir));
+  std::unique_ptr<project_t> tmpproj(new project_t(proj_name, tmpdir));
+  project_delete(tmpproj);
 }
 
 static void testRename(const std::string &tmpdir, const char *diff_file)
@@ -337,7 +338,7 @@ static void testRename(const std::string &tmpdir, const char *diff_file)
   u = project->diff_restore();
   assert_cmpnum(u, DIFF_PROJECT_MISMATCH);
 
-  project_delete(project.release());
+  project_delete(project);
 }
 
 int main(int argc, char **argv)

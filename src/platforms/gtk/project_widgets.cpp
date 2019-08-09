@@ -308,7 +308,7 @@ static project_t *project_new(select_context_t *context) {
   /* create project file on disk */
   if(!project->save(context->dialog) || !project_edit(context, project.get(), true)) {
     g_debug("creation of project '%s' cancelled, deleting", project->name.c_str());
-    project_delete(project.release());
+    project_delete(project);
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, FALSE);
     return nullptr;
   }
@@ -392,7 +392,8 @@ static void on_project_delete(select_context_t *context) {
   if(it != itEnd)
     context->projects.erase(it);
 
-  project_delete(project);
+  std::unique_ptr<project_t> proj(project);
+  project_delete(proj);
 
   /* disable ok button button */
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, FALSE);

@@ -282,14 +282,14 @@ bool project_t::rename(const std::string &nname, project_t::ref global, osm2go_p
   if(oldOsmExists && unlikely(linkat(tmpproj->dirfd, tmpproj->osmFile.c_str(), dirfd.fd, osmFile.c_str(), 0) != 0)) {
     error_dlg(trstring("Unable to link new OSM data file %1").arg(osmFile), parent);
     swap_project(tmpproj.get(), this);
-    project_delete(tmpproj.release());
+    project_delete(tmpproj);
     return false;
   }
 
   // diff has project name in it
   if(tmpproj->diff_file_present() && !diff_rename(tmpproj, this)) {
     swap_project(tmpproj.get(), this);
-    project_delete(tmpproj.release());
+    project_delete(tmpproj);
     return false;
   }
 
@@ -297,14 +297,14 @@ bool project_t::rename(const std::string &nname, project_t::ref global, osm2go_p
   if(linkat(tmpproj->dirfd, (tmpproj->name + ".trk").c_str(), dirfd.fd, (nname + ".trk").c_str(), 0) != 0 && errno != ENOENT) {
     error_dlg(_("Unable to link OSM track file"), parent);
     swap_project(tmpproj.get(), this);
-    project_delete(tmpproj.release());
+    project_delete(tmpproj);
     return false;
   }
 
   // everything fine up until here, get rid of the old things
 
   // the project file first, that will prevent the file to be loaded again
-  project_delete(tmpproj.release());
+  project_delete(tmpproj);
 
   if(isGlobal) {
     global->name = name;
@@ -394,7 +394,8 @@ void project_close(appdata_t &appdata) {
   project->save();
 }
 
-void project_delete(project_t *project) {
+void project_delete(std::unique_ptr<project_t> &project)
+{
   printf("deleting project \"%s\"\n", project->name.c_str());
 
   /* remove entire directory from disk */
@@ -414,7 +415,7 @@ void project_delete(project_t *project) {
   }
 
   /* free project structure */
-  delete project;
+  project.reset();
 }
 
 void projects_to_bounds::operator()(const project_t* project)
