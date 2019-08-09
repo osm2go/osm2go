@@ -34,8 +34,9 @@ std::vector<project_t *> project_scan(const std::string &base_path,
 std::string project_exists(int base_path, const char *name) __attribute__((nonnull(2)));
 void project_delete(std::unique_ptr<project_t> &project);
 
-struct projects_to_bounds {
+class projects_to_bounds {
   std::vector<pos_area> &pbounds;
-  explicit projects_to_bounds(std::vector<pos_area> &b) : pbounds(b) {}
+public:
+  explicit inline projects_to_bounds(std::vector<pos_area> &b) : pbounds(b) {}
   void operator()(const project_t *project);
 };
