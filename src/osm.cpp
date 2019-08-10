@@ -212,10 +212,11 @@ template<> const std::map<item_id_t, relation_t *> &osm_t::objects() const
 
 /* -------------------- tag handling ----------------------- */
 
-struct map_value_match_functor {
+class map_value_match_functor {
   const std::string &value;
+public:
   explicit inline map_value_match_functor(const std::string &v) : value(v) {}
-  bool operator()(const osm_t::TagMap::value_type &pair) {
+  inline bool operator()(const osm_t::TagMap::value_type &pair) const {
     return pair.second == value;
   }
 };
@@ -269,9 +270,10 @@ void relation_object_replacer::operator()(relation_t *r)
   }
 }
 
-struct relation_membership_functor {
+class relation_membership_functor {
   std::vector<relation_t *> &arels, &brels;
   const object_t &a, &b;
+public:
   explicit inline relation_membership_functor(const object_t &first, const object_t &second,
                                        std::vector<relation_t *> &firstRels,
                                        std::vector<relation_t *> &secondRels)
@@ -490,9 +492,10 @@ bool osm_t::is_clean(bool honor_hidden_flags) const
   return map_is_clean(relations);
 }
 
-struct tag_match_functor {
+class tag_match_functor {
   const tag_t &other;
   const bool same_values;
+public:
   inline tag_match_functor(const tag_t &o, bool s) : other(o), same_values(s) {}
   bool operator()(const tag_t &tag) {
     return (strcasecmp(other.key, tag.key) == 0) &&
@@ -545,10 +548,11 @@ struct check_creator_tag {
   }
 };
 
-struct tag_find_functor {
+class tag_find_functor {
   const char * const needle;
+public:
   explicit inline tag_find_functor(const char *n) : needle(n) {}
-  bool operator()(const tag_t &tag) {
+  inline bool operator()(const tag_t &tag) const {
     return (strcmp(needle, tag.key) == 0);
   }
 };
@@ -657,10 +661,11 @@ bool tag_list_t::operator!=(const osm_t::TagMap &t2) const {
   return false;
 }
 
-struct collision_functor {
+class collision_functor {
   const tag_t &tag;
+public:
   explicit inline collision_functor(const tag_t &t) : tag(t) { }
-  bool operator()(const tag_t &t) {
+  inline bool operator()(const tag_t &t) const {
     return (strcasecmp(t.key, tag.key) == 0);
   }
 };
@@ -741,8 +746,9 @@ void relation_t::remove_member(std::vector<member_t>::iterator it)
   flags |= OSM_FLAG_DIRTY;
 }
 
-struct gen_xml_relation_functor {
+class gen_xml_relation_functor {
   xmlNodePtr const xml_node;
+public:
   explicit inline gen_xml_relation_functor(xmlNodePtr n) : xml_node(n) {}
   void operator()(const member_t &member);
 };
@@ -817,10 +823,11 @@ trstring::native_type osm_t::sanity_check() const
 
 /* ------------------------- misc access functions -------------- */
 
-struct tag_to_xml {
+class tag_to_xml {
   xmlNodePtr const node;
   const bool keep_created;
-  explicit tag_to_xml(xmlNodePtr n, bool k = false) : node(n), keep_created(k) {}
+public:
+  explicit inline tag_to_xml(xmlNodePtr n, bool k = false) : node(n), keep_created(k) {}
   void operator()(const tag_t &tag) {
     /* skip "created_by" tags as they aren't needed anymore with api 0.6 */
     if(likely(keep_created || !tag.is_creator_tag())) {
@@ -868,9 +875,10 @@ void node_t::generate_xml_custom(xmlNodePtr xml_node) const {
   pos.toXmlProperties(xml_node);
 }
 
-struct add_xml_node_refs {
+class add_xml_node_refs {
   xmlNodePtr const way_node;
-  explicit add_xml_node_refs(xmlNodePtr n) : way_node(n) {}
+public:
+  explicit inline add_xml_node_refs(xmlNodePtr n) : way_node(n) {}
   void operator()(const node_t *node);
 };
 
@@ -955,10 +963,11 @@ way_t *osm_t::way_attach(way_t *way)
   return way;
 }
 
-struct node_chain_delete_functor {
+class node_chain_delete_functor {
   const node_t * const node;
   way_chain_t &way_chain;
   const bool affect_ways;
+public:
   inline node_chain_delete_functor(const node_t *n, way_chain_t &w, bool a) : node(n), way_chain(w), affect_ways(a) {}
   void operator()(std::pair<item_id_t, way_t *> p);
 };
@@ -1013,8 +1022,9 @@ way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
   return way_chain;
 }
 
-struct remove_member_functor {
+class remove_member_functor {
   const object_t obj;
+public:
   explicit inline remove_member_functor(object_t o) : obj(o) {}
   void operator()(std::pair<item_id_t, relation_t *> pair);
 };
@@ -1051,19 +1061,21 @@ relation_t *osm_t::relation_attach(relation_t *relation)
   return relation;
 }
 
-struct find_relation_members {
+class find_relation_members {
   const object_t obj;
-  explicit find_relation_members(const object_t o) : obj(o) {}
-  bool operator()(const std::pair<item_id_t, relation_t *> &pair) {
+public:
+  explicit inline find_relation_members(const object_t o) : obj(o) {}
+  bool operator()(const std::pair<item_id_t, relation_t *> &pair) const {
     const std::vector<member_t>::const_iterator itEnd = pair.second->members.end();
     return std::find(std::cbegin(pair.second->members), itEnd, obj) != itEnd;
   }
 };
 
-struct osm_unref_way_free {
+class osm_unref_way_free {
   osm_t * const osm;
   const way_t * const way;
-  osm_unref_way_free(osm_t *o, const way_t *w) : osm(o), way(w) {}
+public:
+  inline osm_unref_way_free(osm_t *o, const way_t *w) : osm(o), way(w) {}
   void operator()(node_t *node);
 };
 
@@ -1135,8 +1147,9 @@ void osm_t::relation_delete(relation_t *relation) {
 /* Reverse direction-sensitive tags like "oneway". Marks the way as dirty if
  * anything is changed, and returns the number of flipped tags. */
 
-struct reverse_direction_sensitive_tags_functor {
+class reverse_direction_sensitive_tags_functor {
   unsigned int &n_tags_altered;
+public:
   explicit inline reverse_direction_sensitive_tags_functor(unsigned int &c) : n_tags_altered(c) {}
   void operator()(tag_t &etag);
 };
@@ -1218,10 +1231,11 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
  * Returns the number of roles flipped, and marks any relations changed as
  * dirty. */
 
-struct reverse_roles {
+class reverse_roles {
   const object_t way;
   unsigned int &n_roles_flipped;
-  reverse_roles(way_t *w, unsigned int &n) : way(w), n_roles_flipped(n) {}
+public:
+  inline reverse_roles(way_t *w, unsigned int &n) : way(w), n_roles_flipped(n) {}
   void operator()(const std::pair<item_id_t, relation_t *> &pair);
 };
 
@@ -1324,10 +1338,11 @@ bool way_t::is_area() const
   return tags.contains(implicit_area);
 }
 
-struct relation_transfer {
+class relation_transfer {
   way_t * const dst;
   const way_t * const src;
-  relation_transfer(way_t *d, const way_t *s) : dst(d), src(s) {}
+public:
+  inline relation_transfer(way_t *d, const way_t *s) : dst(d), src(s) {}
   void operator()(const std::pair<item_id_t, relation_t *> &pair);
 };
 
@@ -1443,8 +1458,9 @@ way_t *way_t::split(osm_t::ref osm, node_chain_t::iterator cut_at, bool cut_at_n
   return ret;
 }
 
-struct tag_map_functor {
+class tag_map_functor {
   osm_t::TagMap &tags;
+public:
   explicit inline tag_map_functor(osm_t::TagMap &t) : tags(t) {}
   inline void operator()(const tag_t &otag) {
     tags.insert(osm_t::TagMap::value_type(otag.key, otag.value));
@@ -1461,8 +1477,9 @@ osm_t::TagMap tag_list_t::asMap() const
   return new_tags;
 }
 
-struct tag_vector_copy_functor {
+class tag_vector_copy_functor {
   std::vector<tag_t> &tags;
+public:
   explicit inline tag_vector_copy_functor(std::vector<tag_t> &t) : tags(t) {}
   void operator()(const tag_t &otag) {
     if(unlikely(otag.is_creator_tag()))
@@ -1485,9 +1502,10 @@ void tag_list_t::copy(const tag_list_t &other)
   std::for_each(other.contents->begin(), other.contents->end(), tag_vector_copy_functor(*contents));
 }
 
-struct any_relation_member_functor {
+class any_relation_member_functor {
   const object_t &member;
   std::vector<member_t>::const_iterator &mit;
+public:
   inline any_relation_member_functor(const object_t &o, std::vector<member_t>::const_iterator &mi)
     : member(o), mit(mi) {}
   bool operator()(const std::pair<item_id_t, relation_t *> &it) const
@@ -1497,9 +1515,10 @@ struct any_relation_member_functor {
   }
 };
 
-struct typed_relation_member_functor {
+class typed_relation_member_functor {
   const member_t member;
   const char * const type;
+public:
   inline typed_relation_member_functor(const char *t, const char *r, const object_t &o)
     : member(o, r), type(value_cache.insert(t)) {}
   bool operator()(const std::pair<item_id_t, relation_t *> &it) const
@@ -1507,10 +1526,11 @@ struct typed_relation_member_functor {
            std::find(it.second->members.begin(), it.second->members.end(), member) != it.second->members.end(); }
 };
 
-struct pt_relation_member_functor {
+class pt_relation_member_functor {
   const member_t member;
   const char * const type;
   const char * const stop_area;
+public:
   inline pt_relation_member_functor(const char *r, const object_t &o)
     : member(o, r), type(value_cache.insert("public_transport"))
     , stop_area(value_cache.insert("stop_area")) {}
@@ -1779,9 +1799,10 @@ osm_t::dirty_t::dirty_t(const osm_t &osm)
 }
 
 template<typename T>
-struct object_counter {
+class object_counter {
   osm_t::dirty_t::counter<T> &dirty;
-  explicit object_counter(osm_t::dirty_t::counter<T> &d) : dirty(d) {}
+public:
+  explicit inline object_counter(osm_t::dirty_t::counter<T> &d) : dirty(d) {}
   void operator()(std::pair<item_id_t, T *> pair);
 };
 

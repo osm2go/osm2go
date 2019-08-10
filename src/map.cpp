@@ -133,10 +133,11 @@ static void map_object_select(map_t *map, node_t *node)
                               map->style->node.radius, map->style->highlight.node_color);
 }
 
-struct set_point_pos {
+class set_point_pos {
   std::vector<lpos_t> &points;
-  explicit set_point_pos(std::vector<lpos_t> &p) : points(p) {}
-  void operator()(const node_t *n) {
+public:
+  explicit inline set_point_pos(std::vector<lpos_t> &p) : points(p) {}
+  inline void operator()(const node_t *n) {
     points.push_back(n->lpos);
   }
 };
@@ -167,13 +168,14 @@ points_from_node_chain(const way_t *way)
   return points;
 }
 
-struct draw_selected_way_functor {
+class draw_selected_way_functor {
   node_t *last;
   const float arrow_width;
   map_t * const map;
   way_t * const way;
   const float radius;
-  inline draw_selected_way_functor(float a, map_t *m, way_t *w)
+public:
+  draw_selected_way_functor(float a, map_t *m, way_t *w)
     : last(nullptr), arrow_width(a), map(m), way(w)
     , radius(map->style->node.radius * map->appdata.project->map_state.detail) {}
   void operator()(node_t *node);
@@ -247,9 +249,10 @@ void map_t::select_way(way_t *way) {
     highlight.polyline_new(this, CANVAS_GROUP_WAYS_HL, way, points, style->highlight.color);
 }
 
-struct relation_select_functor {
+class relation_select_functor {
   map_t * const map;
-  inline explicit relation_select_functor(map_t *m) : map(m) {}
+public:
+  explicit inline relation_select_functor(map_t *m) : map(m) {}
   void operator()(member_t &member);
 };
 
@@ -409,11 +412,12 @@ static map_item_t *map_way_new(map_t *map, canvas_group_t group,
   return map_item;
 }
 
-struct map_way_draw_functor {
+class map_way_draw_functor {
   map_t * const map;
+public:
   explicit inline map_way_draw_functor(map_t *m) : map(m) {}
   void operator()(way_t *way);
-  void operator()(std::pair<item_id_t, way_t *> pair) {
+  inline void operator()(std::pair<item_id_t, way_t *> pair) {
     operator()(pair.second);
   }
 };
@@ -477,10 +481,11 @@ void map_t::draw(way_t *way) {
   m(way);
 }
 
-struct map_node_draw_functor {
+class map_node_draw_functor {
   map_t * const map;
   const float border_width;
   const float radius;
+public:
   explicit inline map_node_draw_functor(map_t *m)
   : map(m)
   , border_width(map->style->node.border_radius * map->appdata.project->map_state.detail)
@@ -799,11 +804,12 @@ static void map_handle_click(map_t *map)
     map_object_select(map, map_obj);
 }
 
-struct hl_nodes {
+class hl_nodes {
   const node_t * const cur_node;
   const lpos_t pos;
   map_t * const map;
   node_t *& res_node;
+public:
   hl_nodes(const node_t *c, lpos_t p, map_t *m, node_t *&rnode)
     : cur_node(c), pos(p), map(m), res_node(rnode) {}
   void operator()(const std::pair<item_id_t, node_t *> &p);
@@ -1294,9 +1300,10 @@ void map_t::action_ok() {
   }
 }
 
-struct node_deleted_from_ways {
+class node_deleted_from_ways {
   map_t * const map;
-  explicit node_deleted_from_ways(map_t *m) : map(m) { }
+public:
+  explicit inline node_deleted_from_ways(map_t *m) : map(m) { }
   void operator()(way_t *way);
 };
 
@@ -1312,9 +1319,10 @@ void node_deleted_from_ways::operator()(way_t *way) {
   }
 }
 
-struct short_way {
+class short_way {
   const node_t * const node;
-  explicit short_way(const node_t *n) : node(n) {}
+public:
+  explicit inline short_way(const node_t *n) : node(n) {}
   bool operator()(const std::pair<item_id_t, way_t *> &p) {
     const way_t *way = p.second;
     return way->node_chain.size() < 3 && way->contains_node(node);
@@ -1531,8 +1539,9 @@ void map_t::track_update_seg(track_seg_t &seg) {
   }
 }
 
-struct map_track_seg_draw_functor {
+class map_track_seg_draw_functor {
   map_t * const map;
+public:
   explicit inline map_track_seg_draw_functor(map_t *m) : map(m) {}
   void operator()(track_seg_t &seg) {
     map->track_draw_seg(seg);
@@ -1672,8 +1681,9 @@ void map_t::hide_selected() {
   appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_MAP_SHOW_ALL, true);
 }
 
-struct map_show_all_functor {
+class map_show_all_functor {
   map_t * const map;
+public:
   explicit inline map_show_all_functor(map_t *m) : map(m) {}
   inline void operator()(way_t *way) const {
     map->draw(way);

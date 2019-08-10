@@ -50,7 +50,7 @@
 #include "osm2go_stl.h"
 
 struct canvas_points_deleter {
-  void operator()(void *ptr) {
+  inline void operator()(void *ptr) {
     goo_canvas_points_unref(static_cast<GooCanvasPoints *>(ptr));
   }
 };
@@ -358,10 +358,11 @@ static bool inpoly(const canvas_item_info_poly *poly, int x, int y) {
   return inside;
 }
 
-struct item_at_functor {
+class item_at_functor {
   const int x;
   const int y;
   const int fuzziness;
+public:
   const canvas_t * const canvas;
   inline item_at_functor(const lpos_t pos, int f, const canvas_t *cv)
     : x(pos.x), y(pos.y), fuzziness(f), canvas(cv) {}
@@ -452,10 +453,11 @@ canvas_item_circle *canvas_t::circle_new(canvas_group_t group, lpos_t c,
   return static_cast<canvas_item_circle *>(item);
 }
 
-struct points_fill {
+class points_fill {
   GooCanvasPoints * const gpoints;
   unsigned int offs;
-  explicit points_fill(GooCanvasPoints *g) : gpoints(g), offs(0) {}
+public:
+  explicit inline points_fill(GooCanvasPoints *g) : gpoints(g), offs(0) {}
   inline void operator()(lpos_t p) {
     gpoints->coords[offs++] = p.x;
     gpoints->coords[offs++] = p.y;

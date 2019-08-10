@@ -97,8 +97,9 @@ const tag_t *tag_list_t::singleTag() const noexcept
   return &(*it);
 }
 
-struct key_match_functor {
+class key_match_functor {
   const char * const key;
+public:
   explicit inline key_match_functor(const char *k) : key(k) {}
   inline bool operator()(const tag_t &tag) const {
     return tag.key_compare(key);
@@ -171,9 +172,10 @@ void tag_list_t::replace(std::vector<tag_t> &&ntags)
   shrink_to_fit(*contents);
 }
 
-struct tag_fill_functor {
+class tag_fill_functor {
   std::vector<tag_t> &tags;
-  inline explicit tag_fill_functor(std::vector<tag_t> &t) : tags(t) {}
+public:
+  explicit inline tag_fill_functor(std::vector<tag_t> &t) : tags(t) {}
   void operator()(const osm_t::TagMap::value_type &p) {
     if(unlikely(tag_t::is_creator_tag(p.first.c_str())))
       return;
@@ -374,9 +376,10 @@ std::vector<member_t>::iterator relation_t::find_member_object(const object_t &o
   return std::find_if(members.begin(), members.end(), find_member_object_functor(o));
 }
 
-struct member_counter {
+class member_counter {
   unsigned int &nodes, &ways, &relations;
-  member_counter(unsigned int &n, unsigned int &w, unsigned int &r) : nodes(n), ways(w), relations(r) {}
+public:
+  inline member_counter(unsigned int &n, unsigned int &w, unsigned int &r) : nodes(n), ways(w), relations(r) {}
   void operator()(const member_t &member) noexcept;
 };
 
