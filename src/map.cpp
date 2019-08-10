@@ -202,11 +202,9 @@ void draw_selected_way_functor::operator()(node_t *node)
       diff.x /= len;
       diff.y /= len;
 
-      std::vector<lpos_t> points(4);
-      points[0] = lpos_t(center.x + diff.x, center.y + diff.y);
+      std::vector<lpos_t> points(4, lpos_t(center.x + diff.x, center.y + diff.y));
       points[1] = lpos_t(center.x + diff.y - diff.x, center.y - diff.x - diff.y);
       points[2] = lpos_t(center.x - diff.y - diff.x, center.y + diff.x - diff.y);
-      points[3] = points[0];
 
       map->highlight.polygon_new(map, CANVAS_GROUP_WAYS_DIR, way,
                                  points, map->style->highlight.arrow_color);
