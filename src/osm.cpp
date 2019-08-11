@@ -570,7 +570,6 @@ static std::optional<bool> tag_list_compare_base(const tag_list_t &list, const s
   if(list.empty() && other.empty())
     return false;
 
-
   // Special case for an empty list as contents is not set in this case and
   // must not be dereferenced. Check if t2 only consists of a creator tag, in
   // which case both lists would still be considered the same, or not. Not
