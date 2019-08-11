@@ -10,7 +10,7 @@ namespace std {
 }
 
 #else
-#include <sys/stat.h>
+
 namespace std {
 	template<typename T> class optional {
 		const bool match;
