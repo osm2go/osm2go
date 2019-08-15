@@ -799,7 +799,7 @@ static void osm_relation_free_pair(std::pair<item_id_t, relation_t *> pair) {
 
 /* try to find something descriptive */
 std::string relation_t::descriptive_name() const {
-  std::array<const char *, 5> keys = { { "name", "ref", "description", "note", "fix" "me" } };
+  const std::array<const char *, 5> keys = { { "name", "ref", "description", "note", "fix" "me" } };
   for (unsigned int i = 0; i < keys.size(); i++) {
     const char *name = tags.get_value(keys[i]);
     if(name != nullptr)

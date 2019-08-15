@@ -157,7 +157,7 @@ bool pos_area::valid() const noexcept
 
 std::string pos_area::print() const
 {
-  std::array<pos_float_t, 4> pos = { { min.lon, min.lat, max.lon, max.lat } };
+  const std::array<pos_float_t, 4> pos = { { min.lon, min.lat, max.lon, max.lat } };
   char buf[16 * pos.size() + pos.size()];
 
   size_t p = 0;
