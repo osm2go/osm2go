@@ -844,20 +844,20 @@
             </checkgroup>
             <space />
             <label text="Transport mode restrictions" />
-            <multiselect key="access" text="General Access" values="yes,destination,delivery,permissive,private,customers,agricultural,forestry,no" match="key" values_searchable="true" />
-            <multiselect key="foot" text="Foot" values="yes,official,designated,permissive,destination,delivery,private,no" match="key" values_searchable="true" />
-            <multiselect key="horse" text="Horse" values="yes,official,designated,permissive,destination,delivery,private,no" match="key" values_searchable="true" />
+            <multiselect key="access" text="General Access" values="yes;destination;delivery;permissive;private;customers;agricultural;forestry;no" match="key" values_searchable="true" />
+            <multiselect key="foot" text="Foot" values="yes;official;designated;permissive;destination;delivery;private;no" match="key" values_searchable="true" />
+            <multiselect key="horse" text="Horse" values="yes;official;designated;permissive;destination;delivery;private;no" match="key" values_searchable="true" />
             <space />
             <label text="Vehicles per type" />
-            <multiselect key="vehicle" text="All vehicles" values="yes,destination,delivery,permissive,private,agricultural,forestry,no" match="key" values_searchable="true" />
-            <multiselect key="bicycle" text="Bicycle" values="yes,official,designated,permissive,destination,delivery,private,use_sidepath,no" match="key" values_searchable="true" />
-            <multiselect key="motor_vehicle" text="Motor vehicles" values="yes,destination,delivery,permissive,private,agricultural,forestry,no" match="key" values_searchable="true" />
-            <multiselect key="motorcycle" text="Motorcycle" values="yes,official,designated,destination,delivery,permissive,private,agricultural,forestry,no" match="key" values_searchable="true" />
-            <multiselect key="motorcar" text="Motorcar" values="yes,official,designated,destination,delivery,permissive,private,agricultural,forestry,no" match="key" values_searchable="true" />
-            <multiselect key="goods" text="Light Commercial Vehicles (goods)" values="yes,official,designated,destination,delivery,permissive,private,agricultural,forestry,no" match="key" values_searchable="true" />
-            <multiselect key="hgv" text="Heavy Goods Vehicles (hgv)" values="yes,official,designated,destination,delivery,permissive,private,agricultural,forestry,no" match="key" values_searchable="true" />
-            <multiselect key="agricultural" text="Agricultural Vehicles (with restrictions e.g. max. 25 km/h)" values="yes,official,designated,destination,permissive,private,no" match="key" values_searchable="true" />
-            <combo key="4wd_only" text="4WD only" values="yes,recommended,no" match="key" />
+            <multiselect key="vehicle" text="All vehicles" values="yes;destination;delivery;permissive;private;agricultural;forestry;no" match="key" values_searchable="true" />
+            <multiselect key="bicycle" text="Bicycle" values="yes;official;designated;permissive;destination;delivery;private;use_sidepath;no" match="key" values_searchable="true" />
+            <multiselect key="motor_vehicle" text="Motor vehicles" values="yes;destination;delivery;permissive;private;agricultural;forestry;no" match="key" values_searchable="true" />
+            <multiselect key="motorcycle" text="Motorcycle" values="yes;official;designated;destination;delivery;permissive;private;agricultural;forestry;no" match="key" values_searchable="true" />
+            <multiselect key="motorcar" text="Motorcar" values="yes;official;designated;destination;delivery;permissive;private;agricultural;forestry;no" match="key" values_searchable="true" />
+            <multiselect key="goods" text="Light Commercial Vehicles (goods)" values="yes;official;designated;destination;delivery;permissive;private;agricultural;forestry;no" match="key" values_searchable="true" />
+            <multiselect key="hgv" text="Heavy Goods Vehicles (hgv)" values="yes;official;designated;destination;delivery;permissive;private;agricultural;forestry;no" match="key" values_searchable="true" />
+            <multiselect key="agricultural" text="Agricultural Vehicles (with restrictions e.g. max. 25 km/h)" values="yes;official;designated;destination;permissive;private;no" match="key" values_searchable="true" />
+            <combo key="4wd_only" text="4WD only" values="yes;recommended;no" match="key" />
             <space />
             <label text="Vehicles per use" />
             <combo key="emergency" text="Emergency vehicles" values="yes,official,designated,destination,no" match="keyvalue" />
@@ -917,10 +917,10 @@
                 <reference ref="highway_yesno_incline_oneway_lit_width" />
                 <combo key="mtb:scale" text="MTB Scale" values="0,1,2,3,4,5" />
                 <reference ref="general_access" />
-                <multiselect key="motor_vehicle" text="Motor vehicles" values="yes,official,designated,destination,delivery,permissive,private,agricultural,forestry,no" values_searchable="true" />
-                <multiselect key="motorcycle" text="Motorcycle" values="yes,official,designated,destination,delivery,permissive,private,agricultural,forestry,no" values_searchable="true" />
-                <multiselect key="motorcar" text="Motorcar" values="yes,official,designated,destination,delivery,permissive,private,agricultural,forestry,no" values_searchable="true" />
-                <multiselect key="horse" text="Horse" values="yes,official,designated,permissive,destination,delivery,private,no" values_searchable="true" />
+                <multiselect key="motor_vehicle" text="Motor vehicles" values="yes;official;designated;destination;delivery;permissive;private;agricultural;forestry;no" values_searchable="true" />
+                <multiselect key="motorcycle" text="Motorcycle" values="yes;official;designated;destination;delivery;permissive;private;agricultural;forestry;no" values_searchable="true" />
+                <multiselect key="motorcar" text="Motorcar" values="yes;official;designated;destination;delivery;permissive;private;agricultural;forestry;no" values_searchable="true" />
+                <multiselect key="horse" text="Horse" values="yes;official;designated;permissive;destination;delivery;private;no" values_searchable="true" />
             </optional>
             <preset_link preset_name="Road Restrictions" />
         </item> <!-- Track -->
