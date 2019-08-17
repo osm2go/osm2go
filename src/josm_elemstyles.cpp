@@ -210,14 +210,23 @@ static float parse_scale(const char *val_str, int len) {
   }
 }
 
-static const char *true_values[] = { "1", "yes", "true", nullptr };
-static const char *false_values[] = { "0", "no", "false", nullptr };
+static const std::array<const char *, 3> true_values = { { "1", "yes", "true" } };
+static const std::array<const char *, 3> false_values = { { "0", "no", "false" } };
 
-static bool parse_boolean(const char *bool_str, const char **value_strings) {
-  for (int i = 0; value_strings[i] != nullptr; ++i)
-    if (strcasecmp(bool_str, value_strings[i]) == 0)
-      return true;
-  return false;
+class case_match {
+  const char * const needle;
+public:
+  explicit inline case_match(const char *n) : needle(n) {}
+  inline bool operator()(const char *v) const
+  {
+    return strcasecmp(needle, v) == 0;
+  }
+};
+
+static bool parse_boolean(const char *bool_str, const std::array<const char *, 3> &value_strings)
+{
+  return std::find_if(value_strings.begin(), value_strings.end(), case_match(bool_str))
+         != value_strings.end();
 }
 
 StyleSax::StyleSax()
@@ -500,7 +509,7 @@ bool elemstyle_condition_t::matches(const base_object_t &obj) const {
     const char *v = obj.tags.get_value(key);
     if(isBool) {
       if(v != nullptr) {
-         const char **value_strings = boolValue ? true_values : false_values;
+         const std::array<const char *, 3> &value_strings = boolValue ? true_values : false_values;
          return parse_boolean(v, value_strings);
       } else {
         return false;
