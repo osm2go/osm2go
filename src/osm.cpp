@@ -230,14 +230,21 @@ osm_t::TagMap::iterator osm_t::TagMap::findTag(const std::string &key, const std
   return it == matches.second ? end() : it;
 }
 
+class check_subset {
+  const osm_t::TagMap &super;
+  const osm_t::TagMap::const_iterator superEnd;
+public:
+  explicit inline check_subset(const osm_t::TagMap &s) : super(s), superEnd(s.end()) {}
+  inline bool operator()(const osm_t::TagMap::value_type &v) const
+  {
+    return super.findTag(v.first, v.second) == superEnd;
+  }
+};
+
 bool osm_t::tagSubset(const TagMap &sub, const TagMap &super)
 {
-  const TagMap::const_iterator superEnd = super.end();
   const TagMap::const_iterator itEnd = sub.end();
-  for(TagMap::const_iterator it = sub.begin(); it != itEnd; it++)
-    if(super.findTag(it->first, it->second) == superEnd)
-      return false;
-  return true;
+  return std::find_if(sub.begin(), itEnd, check_subset(super)) == itEnd;
 }
 
 void relation_object_replacer::operator()(relation_t *r)

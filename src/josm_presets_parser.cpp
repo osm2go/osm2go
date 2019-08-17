@@ -85,15 +85,27 @@ static TypeStrMap type_map_init() {
   return ret;
 }
 
+class find_type {
+  const char * const type;
+  const char sep;
+public:
+  explicit inline find_type(const char *t, const char s) : type(t), sep(s) {}
+  inline bool operator()(const TypeStrMap::value_type &v)
+  {
+    const size_t tlen = v.second.size();
+    return strncmp(v.second.c_str(), type, tlen) == 0 && type[tlen] == sep;
+  }
+};
+
 static int josm_type_bit(const char *type, char sep) {
   static const TypeStrMap types = type_map_init();
   const TypeStrMap::const_iterator itEnd = types.end();
 
-  for(TypeStrMap::const_iterator it = types.begin(); it != itEnd; it++) {
-    const size_t tlen = it->second.size();
-    if(strncmp(it->second.c_str(), type, tlen) == 0 && type[tlen] == sep)
-      return it->first;
-  }
+  const TypeStrMap::const_iterator it = std::find_if(types.begin(), itEnd,
+                                                     find_type(type, sep));
+
+  if(likely(it != itEnd))
+    return it->first;
 
   printf("WARNING: unexpected type %s\n", type);
   return 0;
@@ -160,6 +172,7 @@ public:
     State oldState;
     std::vector<State> newStates;
   };
+
   typedef std::vector<StateChange> StateMap;
   static const StateMap &preset_state_map();
 
@@ -174,15 +187,6 @@ private:
   const std::string &basepath;
   const int basedirfd;
   const std::vector<std::string> &langs;
-
-  // Map back a state to it's string. Only used for debug messages.
-  struct name_find {
-    const State state;
-    explicit name_find(State s) : state(s) {}
-    bool operator()(const StateMap::value_type &p) {
-      return p.oldState == state;
-    }
-  };
 
   bool resolvePresetLink(presets_element_link* link, const std::string &id);
 
@@ -313,21 +317,33 @@ const PresetSax::StateMap &PresetSax::preset_state_map()
   return map;
 }
 
+// Map back a state to it's string. Only used for debug messages.
+struct name_find {
+  const PresetSax::State state;
+  explicit inline name_find(PresetSax::State s) : state(s) {}
+  inline bool operator()(const PresetSax::StateMap::value_type &p) const {
+    return p.oldState == state;
+  }
+};
+
+static void dumpTag(PresetSax::State st)
+{
+  if(st == PresetSax::UnknownTag || st == PresetSax::IntermediateTag) {
+    printf("*/");
+  } else {
+    const PresetSax::StateMap &tags = PresetSax::preset_state_map();
+    const PresetSax::StateMap::const_iterator nitEnd = tags.end();
+    const PresetSax::StateMap::const_iterator nit = std::find_if(tags.begin(), nitEnd, name_find(st));
+    assert(nit != nitEnd);
+    printf("%s/", nit->name);
+  }
+}
+
 void PresetSax::dumpState(const char *before, const char *after0, const char *after1) const
 {
   if(before != nullptr)
     printf("%s ", before);
-  const StateMap &tags = preset_state_map();
-  std::vector<State>::const_iterator itEnd = state.end();
-  for(std::vector<State>::const_iterator it = std::next(state.begin()); it != itEnd; it++) {
-    if(*it == UnknownTag || *it == IntermediateTag) {
-      printf("*/");
-    } else {
-      const StateMap::const_iterator nit = std::find_if(tags.begin(), tags.end(), name_find(*it));
-      assert(nit != tags.end());
-      printf("%s/", nit->name);
-    }
-  }
+  std::for_each(std::next(state.begin()), state.end(), dumpTag);
   if(after0 != nullptr) {
     fputs(after0, stdout);
     if(after1 != nullptr)
@@ -523,6 +539,11 @@ PresetSax::AttrMap PresetSax::findAttributes(const char **attrs, const char **na
 #define NULL_OR_MAP_STR(it) ((it) != aitEnd ? (it)->second : std::string())
 #define NULL_OR_MAP_VAL(it) ((it) != aitEnd ? (it)->second : nullptr)
 
+static bool not_intermediate(PresetSax::State st)
+{
+  return st != PresetSax::IntermediateTag;
+}
+
 void PresetSax::startElement(const char *name, const char **attrs)
 {
   const StateMap &tags = preset_state_map();
@@ -538,11 +559,11 @@ void PresetSax::startElement(const char *name, const char **attrs)
   State oldState = state.back();
   if(oldState == IntermediateTag) {
     const std::vector<State>::const_reverse_iterator ritEnd = state.rend();
-    for(std::vector<State>::const_reverse_iterator rit = std::next(state.rbegin()); rit != ritEnd; rit++)
-      if(*rit != IntermediateTag) {
-        oldState = *rit;
-        break;
-      }
+    const std::vector<State>::const_reverse_iterator rit =
+          std::find_if(static_cast<std::vector<State>::const_reverse_iterator>(state.rbegin()),
+                       ritEnd, not_intermediate);
+    if(likely(rit != ritEnd))
+      oldState = *rit;
   }
 
   if(std::find(it->newStates.begin(), it->newStates.end(), oldState) ==

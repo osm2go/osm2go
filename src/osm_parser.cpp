@@ -51,13 +51,17 @@
 
 /* ------------------------- user handling --------------------- */
 
-struct cmp_user {
-  const char * const uname;
-  explicit cmp_user(const char *u) : uname(u) {}
-  bool operator()(const std::string &s) {
-    return (strcasecmp(s.c_str(), uname) == 0);
+class cmp_user {
+  const std::string &uname;
+public:
+  explicit inline cmp_user(const std::string &u) : uname(u) {}
+  inline bool operator()(const std::pair<int, std::string> &p) const
+  {
+    return p.second == uname;
   }
 };
+
+
 
 /**
  * @brief insert a username into osm_t::users if needed
@@ -90,9 +94,11 @@ static int osm_user_insert(std::map<int, std::string> &users, const char *name, 
     }
     /* check if any of the temporary ids already matches the name */
     std::map<int, std::string>::const_iterator it = users.begin();
-    for(; it != itEnd && it->first < 0; it++)
-      if(it->second == name)
-        return it->first;
+    const std::map<int, std::string>::const_iterator itTemp = std::next(users.find(-1)); ///< the first behind the range of temporary ids
+
+    it = std::find_if(it, itTemp, cmp_user(name));
+    if (it != itTemp)
+      return it->first;
     // generate a new temporary id
     // it is already one in there, so use one less as the lowest existing id
     int id = users.begin()->first - 1;
