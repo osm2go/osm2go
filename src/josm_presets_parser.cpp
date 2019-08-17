@@ -127,8 +127,7 @@ struct str_map_find {
 };
 
 class PresetSax {
-  xmlSAXHandler handler;
-
+public:
   enum State {
     DocStart,
     TagPresets,
@@ -153,15 +152,6 @@ class PresetSax {
     UnknownTag
   };
 
-  // not a stack because that can't be iterated
-  std::vector<State> state;
-  std::stack<presets_item_t *> items; // the current item stack (i.e. menu layout)
-  std::stack<presets_element_t *> widgets; // the current widget stack (i.e. dialog layout)
-  presets_items_internal &presets;
-  const std::string &basepath;
-  const int basedirfd;
-  const std::vector<std::string> &langs;
-
   // this maps the XML tag name to the target state and the list of allowed source states
   struct StateChange {
     StateChange(const char *nm, State os, const std::vector<State> &ns)
@@ -172,6 +162,18 @@ class PresetSax {
   };
   typedef std::vector<StateChange> StateMap;
   static const StateMap &preset_state_map();
+
+private:
+  xmlSAXHandler handler;
+
+  // not a stack because that can't be iterated
+  std::vector<State> state;
+  std::stack<presets_item_t *> items; // the current item stack (i.e. menu layout)
+  std::stack<presets_element_t *> widgets; // the current widget stack (i.e. dialog layout)
+  presets_items_internal &presets;
+  const std::string &basepath;
+  const int basedirfd;
+  const std::vector<std::string> &langs;
 
   // Map back a state to it's string. Only used for debug messages.
   struct name_find {
@@ -251,56 +253,62 @@ private:
   AttrMap findAttributes(const char **attrs, const char **names, unsigned int count, unsigned int langflags = 0) const;
 };
 
-const PresetSax::StateMap &PresetSax::preset_state_map() {
-  static PresetSax::StateMap map;
+static PresetSax::StateMap preset_state_map_init()
+{
+  PresetSax::StateMap map;
 
-  if(unlikely(map.empty())) {
 #if __cplusplus >= 201103L
-#define STATE_VECTOR_START(n, N) const std::vector<State> n =
+#define STATE_VECTOR_START(n, N) const std::vector<PresetSax::State> n =
 #define STATE_VECTOR_END(n)
 # define VECTOR_ONE(a) { a }
 #else
-#define STATE_VECTOR_START(n, N) const std::array<State, N> n##_ref = {
-#define STATE_VECTOR_END(n) }; const std::vector<State> n(n##_ref.begin(), n##_ref.end())
-# define VECTOR_ONE(a) std::vector<State>(1, (a))
+#define STATE_VECTOR_START(n, N) const std::array<PresetSax::State, N> n##_ref = {
+#define STATE_VECTOR_END(n) }; const std::vector<PresetSax::State> n(n##_ref.begin(), n##_ref.end())
+# define VECTOR_ONE(a) std::vector<PresetSax::State>(1, (a))
 #endif
 
-    STATE_VECTOR_START(item_chunks, 2) { TagChunk, TagItem } STATE_VECTOR_END(item_chunks);
-    STATE_VECTOR_START(item_refs, 4) { TagChunk, TagItem, TagCombo, TagMultiselect } STATE_VECTOR_END(item_refs);
-    STATE_VECTOR_START(pr_gr, 2) { TagPresets, TagGroup } STATE_VECTOR_END(pr_gr);
-    STATE_VECTOR_START(selectables, 3) { TagCombo, TagMultiselect, TagChunk } STATE_VECTOR_END(selectables);
+  STATE_VECTOR_START(item_chunks, 2) { PresetSax::TagChunk, PresetSax::TagItem } STATE_VECTOR_END(item_chunks);
+  STATE_VECTOR_START(item_refs, 4) { PresetSax::TagChunk, PresetSax::TagItem, PresetSax::TagCombo, PresetSax::TagMultiselect } STATE_VECTOR_END(item_refs);
+  STATE_VECTOR_START(pr_gr, 2) { PresetSax::TagPresets, PresetSax::TagGroup } STATE_VECTOR_END(pr_gr);
+  STATE_VECTOR_START(selectables, 3) { PresetSax::TagCombo, PresetSax::TagMultiselect, PresetSax::TagChunk } STATE_VECTOR_END(selectables);
 
 #define MAPFILL 20
-    map.reserve(MAPFILL);
+  map.reserve(MAPFILL);
 
-    map.push_back(StateMap::value_type("presets", TagPresets, VECTOR_ONE(DocStart)));
-    map.push_back(StateMap::value_type("chunk", TagChunk, VECTOR_ONE(TagPresets)));
-    map.push_back(StateMap::value_type("group", TagGroup, pr_gr));
+  map.push_back(PresetSax::StateMap::value_type("presets", PresetSax::TagPresets, VECTOR_ONE(PresetSax::DocStart)));
+  map.push_back(PresetSax::StateMap::value_type("chunk", PresetSax::TagChunk, VECTOR_ONE(PresetSax::TagPresets)));
+  map.push_back(PresetSax::StateMap::value_type("group", PresetSax::TagGroup, pr_gr));
 
-    // ignore the case of standalone items and separators for now as it does not happen yet
-    map.push_back(StateMap::value_type("item", TagItem, VECTOR_ONE(TagGroup)));
-    map.push_back(StateMap::value_type("separator", TagSeparator, VECTOR_ONE(TagGroup)));
+  // ignore the case of standalone items and separators for now as it does not happen yet
+  map.push_back(PresetSax::StateMap::value_type("item", PresetSax::TagItem, VECTOR_ONE(PresetSax::TagGroup)));
+  map.push_back(PresetSax::StateMap::value_type("separator", PresetSax::TagSeparator, VECTOR_ONE(PresetSax::TagGroup)));
 
-    map.push_back(StateMap::value_type("reference", TagReference, item_refs));
-    map.push_back(StateMap::value_type("preset_link", TagPresetLink, item_chunks));
-    map.push_back(StateMap::value_type("key", TagKey, item_chunks));
-    map.push_back(StateMap::value_type("text", TagText, item_chunks));
-    map.push_back(StateMap::value_type("combo", TagCombo, item_chunks));
-    map.push_back(StateMap::value_type("multiselect", TagMultiselect, item_chunks));
-    map.push_back(StateMap::value_type("list_entry", TagListEntry, selectables));
-    map.push_back(StateMap::value_type("check", TagCheck, item_chunks));
-    map.push_back(StateMap::value_type("label", TagLabel, item_chunks));
-    map.push_back(StateMap::value_type("space", TagSpace, item_chunks));
-    map.push_back(StateMap::value_type("link", TagLink, item_chunks));
-    map.push_back(StateMap::value_type("roles", TagRoles, item_chunks));
-    map.push_back(StateMap::value_type("role", TagRole, VECTOR_ONE(TagRoles)));
+  map.push_back(PresetSax::StateMap::value_type("reference", PresetSax::TagReference, item_refs));
+  map.push_back(PresetSax::StateMap::value_type("preset_link", PresetSax::TagPresetLink, item_chunks));
+  map.push_back(PresetSax::StateMap::value_type("key", PresetSax::TagKey, item_chunks));
+  map.push_back(PresetSax::StateMap::value_type("text", PresetSax::TagText, item_chunks));
+  map.push_back(PresetSax::StateMap::value_type("combo", PresetSax::TagCombo, item_chunks));
+  map.push_back(PresetSax::StateMap::value_type("multiselect", PresetSax::TagMultiselect, item_chunks));
+  map.push_back(PresetSax::StateMap::value_type("list_entry", PresetSax::TagListEntry, selectables));
+  map.push_back(PresetSax::StateMap::value_type("check", PresetSax::TagCheck, item_chunks));
+  map.push_back(PresetSax::StateMap::value_type("label", PresetSax::TagLabel, item_chunks));
+  map.push_back(PresetSax::StateMap::value_type("space", PresetSax::TagSpace, item_chunks));
+  map.push_back(PresetSax::StateMap::value_type("link", PresetSax::TagLink, item_chunks));
+  map.push_back(PresetSax::StateMap::value_type("roles", PresetSax::TagRoles, item_chunks));
+  map.push_back(PresetSax::StateMap::value_type("role", PresetSax::TagRole, VECTOR_ONE(PresetSax::TagRoles)));
 
-    map.push_back(StateMap::value_type("checkgroup", IntermediateTag, item_chunks));
-    map.push_back(StateMap::value_type("optional", IntermediateTag, item_chunks));
+  map.push_back(PresetSax::StateMap::value_type("checkgroup", PresetSax::IntermediateTag, item_chunks));
+  map.push_back(PresetSax::StateMap::value_type("optional", PresetSax::IntermediateTag, item_chunks));
 
-    // make sure the one-time reservation is the correct size
-    assert(map.size() == MAPFILL);
-  }
+  // make sure the one-time reservation is the correct size
+  assert(map.size() == MAPFILL);
+
+  return map;
+}
+
+const PresetSax::StateMap &PresetSax::preset_state_map()
+{
+  static const PresetSax::StateMap map = preset_state_map_init();
 
   return map;
 }
