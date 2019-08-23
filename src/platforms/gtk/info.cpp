@@ -184,6 +184,25 @@ static void callback_modified_key(GtkWidget *key, const key_context *context)
   gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_ACCEPT, en);
 }
 
+static gboolean cb_value_focus_in(GtkEntry *value, GdkEventFocus *, GtkEntry *key)
+{
+  const gchar *nk = gtk_entry_get_text(GTK_ENTRY(key));
+  GtkEntry *ventry = GTK_ENTRY(value);
+  const gchar *nv = gtk_entry_get_text(ventry);
+
+  if((g_strcmp0(nk, "survey:date") == 0 || g_strcmp0(nk, "source:date") == 0) && (nv == nullptr || strcmp(nv, "") == 0)) {
+    struct tm loctime;
+    const time_t t = time(nullptr);
+    localtime_r(&t, &loctime);
+    char time_str[16];
+    strftime(time_str, sizeof(time_str), "%Y-%m-%d", &loctime);
+
+    gtk_entry_set_text(ventry, time_str);
+  }
+
+  return FALSE;
+}
+
 /**
  * @brief request user input for the given tag
  * @param window the parent window
@@ -225,6 +244,7 @@ static bool tag_edit(GtkWindow *window, std::string &k, std::string &v,
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
   gtk_table_attach_defaults(GTK_TABLE(table), value, 1, 2, 1, 2);
   gtk_entry_set_activates_default(GTK_ENTRY(value), TRUE);
+  g_signal_connect(value, "focus-in-event", G_CALLBACK(cb_value_focus_in), key);
 
   gtk_entry_set_text(GTK_ENTRY(key), k.c_str());
   gtk_entry_set_text(GTK_ENTRY(value), v.c_str());
