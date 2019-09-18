@@ -67,5 +67,5 @@ public:
   /**
    * @brief get the polygon/polyway segment a certain coordinate is over
    */
-  int get_segment(int x, int y, unsigned int fuzziness = 0) const;
+  int get_segment(int x, int y, float fuzziness) const;
 };

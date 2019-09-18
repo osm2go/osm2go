@@ -45,7 +45,7 @@ int canvas_t::get_item_segment(const canvas_item_t *item, lpos_t pos) const
   const item_mapping_t::const_iterator it = item_mapping.find(item);
   assert(it != item_mapping.end());
 
-  return static_cast<const canvas_item_info_poly *>(it->second)->get_segment(pos.x, pos.y);
+  return static_cast<const canvas_item_info_poly *>(it->second)->get_segment(pos.x, pos.y, 0);
 }
 
 /* remove item_info from chain as its visual representation */
@@ -93,7 +93,7 @@ canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_item_t* it,
   memcpy(points.get(), p.data(), p.size() * sizeof(points[0]));
 }
 
-int canvas_item_info_poly::get_segment(int x, int y, unsigned int fuzziness) const
+int canvas_item_info_poly::get_segment(int x, int y, float fuzziness) const
 {
   int retval = -1;
   float mindist = static_cast<float>(width) / 2 + fuzziness;

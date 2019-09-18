@@ -361,11 +361,12 @@ static bool inpoly(const canvas_item_info_poly *poly, int x, int y) {
 class item_at_functor {
   const int x;
   const int y;
-  const int fuzziness;
+  const float ffuzziness;
 public:
+  const int fuzziness;
   const canvas_t * const canvas;
-  inline item_at_functor(const lpos_t pos, int f, const canvas_t *cv)
-    : x(pos.x), y(pos.y), fuzziness(f), canvas(cv) {}
+  inline item_at_functor(const lpos_t pos, float f, const canvas_t *cv)
+    : x(pos.x), y(pos.y), ffuzziness(f), fuzziness(f), canvas(cv) {}
   bool operator()(const canvas_item_info_t *item) const;
 };
 
@@ -382,7 +383,7 @@ bool item_at_functor::operator()(const canvas_item_info_t *item) const
 
   case CANVAS_ITEM_POLY: {
     const canvas_item_info_poly *poly = static_cast<const canvas_item_info_poly *>(item);
-    int on_segment = poly->get_segment(x, y, fuzziness);
+    int on_segment = poly->get_segment(x, y, ffuzziness);
     return ((on_segment >= 0) || (poly->is_polygon && inpoly(poly, x, y)));
   }
   }
@@ -412,15 +413,15 @@ struct g_list_deleter {
 /* item_info list */
 canvas_item_t *canvas_t::get_item_at(lpos_t pos) const {
   /* convert all "fuzziness" into meters */
-  int fuzziness = EXTRA_FUZZINESS_METER +
+  const float fuzziness = EXTRA_FUZZINESS_METER +
     EXTRA_FUZZINESS_PIXEL / get_zoom();
 
   const item_at_functor fc(pos, fuzziness, this);
   GooCanvasBounds find_bounds;
-  find_bounds.x1 = pos.x - fuzziness;
-  find_bounds.y1 = pos.y - fuzziness;
-  find_bounds.x2 = pos.x + fuzziness;
-  find_bounds.y2 = pos.y + fuzziness;
+  find_bounds.x1 = pos.x - fc.fuzziness;
+  find_bounds.y1 = pos.y - fc.fuzziness;
+  find_bounds.x2 = pos.x + fc.fuzziness;
+  find_bounds.y2 = pos.y + fc.fuzziness;
   std::unique_ptr<GList, g_list_deleter> items(goo_canvas_get_items_in_area(GOO_CANVAS(widget),
                                                                             &find_bounds, TRUE,
                                                                             TRUE, FALSE));
