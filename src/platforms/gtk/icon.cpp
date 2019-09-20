@@ -36,6 +36,8 @@
 #include "osm2go_platform_gtk.h"
 #include <osm2go_stl.h>
 
+namespace {
+
 class icon_buffer_item : public icon_item {
 public:
   explicit icon_buffer_item(GdkPixbuf *nbuf);
@@ -62,6 +64,8 @@ public:
   typedef std::unordered_map<std::string, icon_buffer_item *> BufferMap;
   BufferMap entries;
 };
+
+}
 
 icon_buffer_item::icon_buffer_item(GdkPixbuf *nbuf)
   : buf(nbuf)

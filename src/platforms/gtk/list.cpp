@@ -42,6 +42,8 @@
 #include "osm2go_i18n.h"
 #include <osm2go_platform_gtk.h>
 
+namespace {
+
 struct list_priv_t {
   typedef void (*change_cb)(GtkTreeSelection *, void *);
   list_priv_t(change_cb cb, void *cb_ctx, GtkWidget *tw, unsigned int btnflags);
@@ -76,7 +78,9 @@ typedef std::unique_ptr<GtkTreePath, tree_path_deleter> tree_path_guard;
 
 /* a list supports up to three user defined buttons besides */
 /* add, edit and remove */
-static void list_set_user_buttons(list_priv_t *priv, const std::vector<list_button> &buttons) {
+void
+list_set_user_buttons(list_priv_t *priv, const std::vector<list_button> &buttons)
+{
   for(unsigned int id = LIST_BUTTON_USER0; id < buttons.size(); id++) {
     const char *label = buttons[id].first;
     if(label == nullptr)
@@ -95,7 +99,9 @@ static void list_set_user_buttons(list_priv_t *priv, const std::vector<list_butt
   }
 }
 
-static void list_set_columns(GtkTreeView *view, const std::vector<list_view_column> &columns) {
+void
+list_set_columns(GtkTreeView *view, const std::vector<list_view_column> &columns)
+{
   for(unsigned int key = 0; key < columns.size(); key++) {
     const char *name = columns[key].name;
     int hlkey = columns[key].hlkey;
@@ -129,6 +135,8 @@ static void list_set_columns(GtkTreeView *view, const std::vector<list_view_colu
     gtk_tree_view_column_set_sort_column_id(column, key);
     gtk_tree_view_insert_column(view, column, -1);
   }
+}
+
 }
 
 /* put a custom widget into one of the button slots */

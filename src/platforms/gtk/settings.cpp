@@ -46,7 +46,10 @@ const char *apihttp = "http://api.openstreetmap.org/api/0.";
 
 static std::map<TrackVisibility, std::string> trackVisibilityKeys;
 
-static void initTrackVisibility() {
+namespace {
+
+void initTrackVisibility()
+{
   trackVisibilityKeys[RecordOnly] = "RecordOnly";
   trackVisibilityKeys[ShowPosition] = "ShowPosition";
   trackVisibilityKeys[DrawCurrent] = "DrawCurrent";
@@ -71,7 +74,8 @@ bool gconf_value_get_bool_wrapper(const GConfValue *gvalue) {
   return gconf_value_get_bool(gvalue) == TRUE;
 }
 
-template<typename T, typename U, U GETTER(const GConfValue *)> struct load_functor {
+template<typename T, typename U, U GETTER(const GConfValue *)>
+struct load_functor {
   std::string &key; ///< reference to avoid most reallocations
   GConfClient * const client;
   const GConfValueType type;
@@ -80,7 +84,8 @@ template<typename T, typename U, U GETTER(const GConfValue *)> struct load_funct
   void operator()(const std::pair<const char *, T *> &p);
 };
 
-template<typename T, typename U, U GETTER(const GConfValue *)> void load_functor<T, U, GETTER>::operator()(const std::pair<const char *, T *> &p)
+template<typename T, typename U, U GETTER(const GConfValue *)> void
+load_functor<T, U, GETTER>::operator()(const std::pair<const char *, T *> &p)
 {
   key = keybase + p.first;
 
@@ -94,6 +99,8 @@ template<typename T, typename U, U GETTER(const GConfValue *)> void load_functor
     g_warning("invalid type found for key '%s': expected %u, got %u", p.first, type, value->type);
   else
     *(p.second) = GETTER(value.get());
+}
+
 }
 
 settings_t::ref settings_t::instance() {

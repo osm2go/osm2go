@@ -24,6 +24,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+namespace {
+
 class MainUiDummy : public MainUi {
 public:
   MainUiDummy() : MainUi(), msg(nullptr) {}
@@ -32,6 +34,8 @@ public:
   void showNotification(const char *message, unsigned int flags) override;
   const char *msg;
 };
+
+}
 
 appdata_t::appdata_t()
   : uicontrol(new MainUiDummy())

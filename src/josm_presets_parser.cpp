@@ -62,17 +62,23 @@ std::string josm_icon_name_adjust(const char *name) {
   return std::string(name, len);
 }
 
-static std::string __attribute__((nonnull(1))) josm_icon_name_adjust(const char *name, const std::string &basepath, int basedirfd) {
+namespace {
+
+std::string __attribute__((nonnull(1)))
+josm_icon_name_adjust(const char *name, const std::string &basepath, int basedirfd)
+{
   struct stat st;
   if(fstatat(basedirfd, name, &st, 0) == 0 && S_ISREG(st.st_mode))
     return basepath + name;
 
-  return josm_icon_name_adjust(name);
+  return ::josm_icon_name_adjust(name);
 }
 
 typedef std::vector<std::pair<presets_item_t::item_type, std::string> > TypeStrMap;
 
-static TypeStrMap type_map_init() {
+TypeStrMap
+type_map_init()
+{
   TypeStrMap ret(5);
 
   TypeStrMap::size_type pos = 0;
@@ -97,7 +103,9 @@ public:
   }
 };
 
-static int josm_type_bit(const char *type, char sep) {
+int
+josm_type_bit(const char *type, char sep)
+{
   static const TypeStrMap types = type_map_init();
   const TypeStrMap::const_iterator itEnd = types.end();
 
@@ -112,7 +120,9 @@ static int josm_type_bit(const char *type, char sep) {
 }
 
 /* parse a comma seperated list of types and set their bits */
-static unsigned int josm_type_parse(const char *type) {
+unsigned int
+josm_type_parse(const char *type)
+{
   unsigned int type_mask = 0;
   if(type == nullptr)
     return presets_item_t::TY_ALL;
@@ -257,7 +267,8 @@ private:
   AttrMap findAttributes(const char **attrs, const char **names, unsigned int count, unsigned int langflags = 0) const;
 };
 
-static PresetSax::StateMap preset_state_map_init()
+PresetSax::StateMap
+preset_state_map_init()
 {
   PresetSax::StateMap map;
 
@@ -326,7 +337,8 @@ struct name_find {
   }
 };
 
-static void dumpTag(PresetSax::State st)
+void
+dumpTag(PresetSax::State st)
 {
   if(st == PresetSax::UnknownTag || st == PresetSax::IntermediateTag) {
     printf("*/");
@@ -339,7 +351,8 @@ static void dumpTag(PresetSax::State st)
   }
 }
 
-void PresetSax::dumpState(const char *before, const char *after0, const char *after1) const
+void
+PresetSax::dumpState(const char *before, const char *after0, const char *after1) const
 {
   if(before != nullptr)
     printf("%s ", before);
@@ -539,7 +552,8 @@ PresetSax::AttrMap PresetSax::findAttributes(const char **attrs, const char **na
 #define NULL_OR_MAP_STR(it) ((it) != aitEnd ? (it)->second : std::string())
 #define NULL_OR_MAP_VAL(it) ((it) != aitEnd ? (it)->second : nullptr)
 
-static bool not_intermediate(PresetSax::State st)
+bool
+not_intermediate(PresetSax::State st)
 {
   return st != PresetSax::IntermediateTag;
 }
@@ -1110,6 +1124,8 @@ struct move_chunks_functor {
     chunks.push_back(p.second);
   }
 };
+
+}
 
 bool presets_items_internal::addFile(const std::string &filename, const std::string &basepath, int basefd)
 {

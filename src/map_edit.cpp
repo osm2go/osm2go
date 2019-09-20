@@ -46,6 +46,8 @@ void map_t::way_add_begin() {
   action.extending = nullptr;
 }
 
+namespace {
+
 class check_first_last_node {
   const node_t * const node;
 public:
@@ -54,6 +56,8 @@ public:
     return p.second->ends_with_node(node);
   }
 };
+
+}
 
 void map_t::way_add_segment(lpos_t pos) {
   /* check if this was a double click. This is the case if */

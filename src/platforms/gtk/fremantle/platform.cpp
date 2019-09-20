@@ -292,6 +292,8 @@ bool osm2go_platform::isComboBoxEntryWidget(GtkWidget *widget)
   return HILDON_IS_PICKER_BUTTON(widget) == TRUE;
 }
 
+namespace {
+
 struct g_list_deleter {
   void operator()(GList *list) {
     g_list_foreach(list, reinterpret_cast<GFunc>(gtk_tree_path_free), nullptr);
@@ -300,6 +302,8 @@ struct g_list_deleter {
 };
 
 typedef std::unique_ptr<GList, g_list_deleter> GListGuard;
+
+}
 
 static std::string
 select_print_func_str(HildonTouchSelector *selector, gpointer data)

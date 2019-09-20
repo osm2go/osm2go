@@ -53,6 +53,7 @@ int canvas_t::get_item_segment(const canvas_item_t *item, lpos_t pos) const
   return poly->get_segment(pos.x, pos.y, fuzziness);
 }
 
+namespace {
 /* remove item_info from chain as its visual representation */
 /* has been destroyed */
 template<typename T> class item_info_destroyer : public canvas_item_destroyer {
@@ -70,6 +71,7 @@ public:
     delete info;
   }
 };
+}
 
 canvas_item_info_t::canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_item_t *it, canvas_item_destroyer *d)
   : type(t)

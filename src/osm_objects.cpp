@@ -97,6 +97,8 @@ const tag_t *tag_list_t::singleTag() const noexcept
   return &(*it);
 }
 
+namespace {
+
 class key_match_functor {
   const char * const key;
 public:
@@ -105,6 +107,8 @@ public:
     return tag.key_compare(key);
   }
 };
+
+}
 
 const char* tag_list_t::get_value(const char *key) const
 {
@@ -172,6 +176,8 @@ void tag_list_t::replace(std::vector<tag_t> &&ntags)
   shrink_to_fit(*contents);
 }
 
+namespace {
+
 class tag_fill_functor {
   std::vector<tag_t> &tags;
 public:
@@ -183,6 +189,8 @@ public:
     tags.push_back(tag_t(p.first.c_str(), p.second.c_str()));
   }
 };
+
+}
 
 void tag_list_t::replace(const osm_t::TagMap &ntags)
 {
@@ -376,12 +384,16 @@ std::vector<member_t>::iterator relation_t::find_member_object(const object_t &o
   return std::find_if(members.begin(), members.end(), find_member_object_functor(o));
 }
 
+namespace {
+
 class member_counter {
   unsigned int &nodes, &ways, &relations;
 public:
   inline member_counter(unsigned int &n, unsigned int &w, unsigned int &r) : nodes(n), ways(w), relations(r) {}
   void operator()(const member_t &member) noexcept;
 };
+
+}
 
 void member_counter::operator()(const member_t &member) noexcept
 {

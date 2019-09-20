@@ -49,6 +49,8 @@
 #include "osm2go_platform_gtk.h"
 #include "osm2go_stl.h"
 
+namespace {
+
 struct canvas_points_deleter {
   inline void operator()(void *ptr) {
     goo_canvas_points_unref(static_cast<GooCanvasPoints *>(ptr));
@@ -56,6 +58,8 @@ struct canvas_points_deleter {
 };
 
 typedef std::unique_ptr<GooCanvasPoints, canvas_points_deleter> pointGuard;
+
+}
 
 struct canvas_dimensions {
   canvas_dimensions(double w, double h)

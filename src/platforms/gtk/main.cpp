@@ -85,6 +85,8 @@
 #define ACCELS_FILE "accels"
 #endif
 
+namespace {
+
 struct appdata_internal : public appdata_t {
   explicit appdata_internal();
   appdata_internal(const appdata_internal &) O2G_DELETED_FUNCTION;
@@ -103,6 +105,8 @@ struct appdata_internal : public appdata_t {
 
   GtkWidget *btn_zoom_in, *btn_zoom_out;
 };
+
+}
 
 /* disable/enable main screen control dependant on presence of open project */
 void appdata_t::main_ui_enable() {

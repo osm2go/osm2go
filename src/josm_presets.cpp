@@ -64,6 +64,8 @@ unsigned int presets_type_mask(const object_t &obj)
   return r;
 }
 
+namespace {
+
 /**
  * @brief find the first widget that gives a negative match
  */
@@ -86,6 +88,8 @@ bool used_preset_functor::operator()(const presets_element_t* w)
   return (ret < 0);
 }
 
+}
+
 /**
  * @brief check if the currently active object uses this preset and the preset is interactive
  */
@@ -102,6 +106,8 @@ bool presets_item_t::matches(const osm_t::TagMap &tags, bool interactive) const
 
   return hasPositive && (is_interactive || !interactive);
 }
+
+namespace {
 
 struct relation_preset_functor {
   const relation_t * const relation;
@@ -163,6 +169,8 @@ void role_collect_functor::operator()(const presets_item::role &role)
   }
 
   result.insert(role.name);
+}
+
 }
 
 std::set<std::string> presets_items_internal::roles(const relation_t *relation, const object_t &obj) const

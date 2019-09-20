@@ -35,6 +35,8 @@
 #include <osm2go_i18n.h>
 #include "osm2go_platform_gtk.h"
 
+namespace {
+
 enum {
   TAG_COL_KEY = 0,
   TAG_COL_VALUE,
@@ -63,6 +65,8 @@ public:
 
   void update_collisions(const std::string &k);
 };
+
+}
 
 static void changed(GtkTreeSelection *, gpointer user_data) {
   GtkWidget *list = static_cast<info_tag_context_t *>(user_data)->list;

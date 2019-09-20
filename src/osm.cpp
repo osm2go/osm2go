@@ -51,6 +51,8 @@
 
 cache_set value_cache;
 
+namespace {
+
 class trstring_or_key {
 #ifdef TRSTRING_NATIVE_TYPE_IS_TRSTRING
   trstring::native_type tval;
@@ -96,6 +98,8 @@ public:
 #endif
   }
 };
+
+}
 
 bool object_t::operator==(const object_t &other) const noexcept
 {

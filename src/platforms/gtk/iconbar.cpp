@@ -47,6 +47,8 @@ static inline gboolean gtk_widget_is_sensitive(const GtkWidget *w) {
 #define MENU_ICON(a)  a
 #endif
 
+namespace {
+
 class iconbar_gtk : public iconbar_t {
 public:
   explicit iconbar_gtk(appdata_t &appdata);
@@ -73,6 +75,8 @@ public:
   inline void map_action_idle(bool idle, const object_t &selected);
   inline void map_cancel_ok(bool cancelv, bool okv);
 };
+
+}
 
 static void on_info_clicked(map_t *map) {
   map->info_selected();

@@ -59,6 +59,8 @@
 /* format string used to altitude and time */
 #define DATE_FORMAT "%FT%T"
 
+namespace {
+
 class TrackSax {
   xmlSAXHandler handler;
   track_point_t *curPoint;
@@ -118,6 +120,8 @@ private:
   }
 };
 
+}
+
 /* make menu represent the track state */
 void track_menu_set(appdata_t &appdata) {
   if(unlikely(appdata_t::window == nullptr))
@@ -146,6 +150,8 @@ static track_t *track_read(const char *filename, bool dirty)
 }
 
 /* ----------------------  saving track --------------------------- */
+
+namespace {
 
 struct track_save_segs {
   xmlNode * const node;
@@ -196,7 +202,9 @@ void track_save_segs::save_point::operator()(const track_point_t &point)
  *
  * doc is freed.
  */
-static void track_write(const char *name, const track_t *track, xmlDoc *d) {
+void
+track_write(const char *name, const track_t *track, xmlDoc *d)
+{
   printf("writing track to %s\n", name);
 
   xmlNodePtr trk_node;
@@ -262,6 +270,8 @@ static void track_write(const char *name, const track_t *track, xmlDoc *d) {
   std::for_each(it, itEnd, track_save_segs(trk_node));
 
   xmlSaveFormatFileEnc(name, doc.get(), "UTF-8", 1);
+}
+
 }
 
 /* save track in project */

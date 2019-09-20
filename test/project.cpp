@@ -30,6 +30,8 @@
 #include <osm2go_cpp.h>
 #include <osm2go_platform.h>
 
+namespace {
+
 class MainUiDummy : public MainUi {
 public:
   MainUiDummy() : MainUi() {}
@@ -43,6 +45,8 @@ void MainUiDummy::showNotification(const char *message, unsigned int)
 {
   printf("%s: %s\n", __PRETTY_FUNCTION__, message);
   messages.push_back(message);
+}
+
 }
 
 appdata_t::appdata_t()

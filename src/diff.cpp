@@ -73,6 +73,8 @@ static std::string project_diff_name(const project_t *project)
   return diff_name;
 }
 
+namespace {
+
 struct diff_save_tags_functor {
   xmlNode * const node;
   explicit inline diff_save_tags_functor(xmlNodePtr n) : node(n) {}
@@ -84,7 +86,9 @@ struct diff_save_tags_functor {
   }
 };
 
-static void diff_save_tags(const base_object_t *obj, xmlNodePtr node) {
+void
+diff_save_tags(const base_object_t *obj, xmlNodePtr node)
+{
   diff_save_tags_functor fc(node);
   obj->tags.for_each(fc);
 }
@@ -96,8 +100,8 @@ static void diff_save_tags(const base_object_t *obj, xmlNodePtr node) {
   * @param tname the name of the XML node
   * @return XML node object
   */
-static xmlNodePtr diff_save_state_n_id(xmlNodePtr root_node, const base_object_t *obj,
-                                       const char *tname)
+xmlNodePtr
+diff_save_state_n_id(xmlNodePtr root_node, const base_object_t *obj, const char *tname)
 {
   xmlNodePtr node = xmlNewChild(root_node, nullptr, BAD_CAST tname, nullptr);
 
@@ -175,6 +179,8 @@ template<>
 void diff_save_objects<relation_t>::save_additional_info(const relation_t *m, xmlNodePtr xmlnode) const
 {
   m->generate_member_xml(xmlnode);
+}
+
 }
 
 void project_t::diff_save() const {
@@ -643,6 +649,8 @@ xmlDocPtr osmchange_init()
   return doc;
 }
 
+namespace {
+
 struct osmchange_delete_functor {
   xmlNode * const xml_node; ///< <delete> node
   const char * const changeset; ///< changeset string
@@ -652,6 +660,8 @@ struct osmchange_delete_functor {
     obj->osmchange_delete(xml_node, changeset);
   }
 };
+
+}
 
 void osmchange_delete(const osm_t::dirty_t &dirty, xmlNodePtr xml_node, const char *changeset)
 {

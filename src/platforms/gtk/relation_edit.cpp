@@ -39,6 +39,8 @@
 
 /* --------------- relation dialog for an item (node or way) ----------- */
 
+namespace {
+
 struct relitem_context_t {
   relitem_context_t(object_t &o, const presets_items *pr, osm_t::ref os);
   relitem_context_t() O2G_DELETED_FUNCTION;
@@ -66,6 +68,8 @@ enum {
   RELITEM_NUM_COLS
 };
 
+}
+
 relitem_context_t::relitem_context_t(object_t &o, const presets_items *pr, osm_t::ref os)
   : item(o)
   , presets(pr)
@@ -74,6 +78,8 @@ relitem_context_t::relitem_context_t(object_t &o, const presets_items *pr, osm_t
   , selection(nullptr)
 {
 }
+
+namespace {
 
 struct entry_insert_text {
   GtkWidget * const entry;
@@ -103,8 +109,9 @@ struct relation_context_t {
   std::unique_ptr<GtkListStore, g_object_deleter> store;
 };
 
-static bool relation_add_item(GtkWidget *parent, relation_t *relation,
-                              const object_t &object, const presets_items *presets) {
+bool
+relation_add_item(GtkWidget *parent, relation_t *relation, const object_t &object, const presets_items *presets)
+{
   g_debug("add object of type %d to relation #" ITEM_ID_FORMAT, object.type, relation->id);
 
   const std::set<std::string> &roles = presets->roles(relation, object);
@@ -185,12 +192,14 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
   return true;
 }
 
-static bool relation_info_dialog(relation_context_t *context, relation_t *relation) {
+bool
+relation_info_dialog(relation_context_t *context, relation_t *relation)
+{
   object_t object(relation);
   return info_dialog(context->dialog.get(), context->map, context->osm, context->presets, object);
 }
 
-static gboolean
+gboolean
 changed_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer data)
 {
   relitem_context_t *context = static_cast<relitem_context_t *>(data);
@@ -227,7 +236,9 @@ changed_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer 
   return FALSE;
 }
 
-static void changed(relitem_context_t *context) {
+void
+changed(relitem_context_t *context)
+{
   g_debug("relation-edit changed event");
 
   gtk_tree_model_foreach(GTK_TREE_MODEL(context->store.get()), changed_foreach, context);
@@ -239,7 +250,9 @@ static void changed(relitem_context_t *context) {
 /* require the control key to be pressed). This interferes with */
 /* fremantle finger scrolling, but fortunately the fremantle */
 /* default behaviour already is what we want. */
-static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event, gpointer) {
+gboolean
+on_view_clicked(GtkWidget *widget, GdkEventButton *event, gpointer)
+{
   if(event->window == gtk_tree_view_get_bin_window(GTK_TREE_VIEW(widget))) {
     GtkTreePath *path;
 
@@ -267,6 +280,8 @@ struct relation_list_insert_functor {
     : context(c), sel_iter(it), selname(sn) {}
   void operator()(std::pair<item_id_t, relation_t *> pair);
 };
+
+}
 
 void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *> pair)
 {

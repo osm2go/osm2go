@@ -573,6 +573,8 @@ static bool checkLinearRelation(const relation_t *r)
 }
 
 // find out which part of the original way can be split at the given node
+namespace {
+
 struct findWay {
   const node_t * const node;
   explicit findWay(const node_t *n) : node(n) {}
@@ -582,6 +584,8 @@ struct findWay {
       ch.end() != std::find(ch.begin(), ch.end(), node);
   }
 };
+
+}
 
 static void test_split_order()
 {

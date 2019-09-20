@@ -51,12 +51,16 @@ void map_t::hl_cursor_clear()
   cursor = nullptr;
 }
 
+namespace {
+
 class find_highlighted {
   const map_item_t &item;
 public:
   explicit inline find_highlighted(const map_item_t &t) : item(t) {}
   bool operator()(canvas_item_t *c) const;
 };
+
+}
 
 bool find_highlighted::operator()(canvas_item_t* c) const
 {

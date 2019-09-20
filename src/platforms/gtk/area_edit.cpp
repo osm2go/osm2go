@@ -159,6 +159,8 @@ static pos_float_t pos_dist_get(GtkWidget *widget, bool is_mil) {
   return g_strtod(p, nullptr) * (is_mil?KMPMIL:1.0);
 }
 
+namespace {
+
 struct area_context_t {
   explicit area_context_t(area_edit_t &a, GtkWidget *dlg);
   area_context_t() O2G_DELETED_FUNCTION;
@@ -215,17 +217,12 @@ area_context_t::area_context_t(area_edit_t &a, GtkWidget *dlg)
   memset(&map, 0, sizeof(map));
 }
 
-area_edit_t::area_edit_t(gps_state_t *gps, pos_area &b, osm2go_platform::Widget *dlg)
-  : gps_state(gps)
-  , parent(dlg)
-  , bounds(b)
-{
-}
-
 /**
  * @brief calculate the selected area in square kilometers
  */
-static double selected_area(const area_context_t *context) {
+double
+selected_area(const area_context_t *context)
+{
   pos_float_t center_lat = context->bounds.centerLat();
   double vscale = DEG2RAD(POS_EQ_RADIUS / 1000.0);
   double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS / 1000.0);
@@ -234,13 +231,17 @@ static double selected_area(const area_context_t *context) {
          hscale * context->bounds.lonDist();
 }
 
-static bool current_tab_is(GtkNotebook *nb, GtkWidget *w, const char *str) {
+bool
+current_tab_is(GtkNotebook *nb, GtkWidget *w, const char *str)
+{
   const char *name = gtk_notebook_get_tab_label_text(nb, w);
 
   return (strcmp(name, _(str)) == 0);
 }
 
-static bool current_tab_is(area_context_t *context, const char *str) {
+bool
+current_tab_is(area_context_t *context, const char *str)
+{
   GtkNotebook *nb = osm2go_platform::notebook_get_gtk_notebook(context->notebook);
 
   gint page_num = gtk_notebook_get_current_page(nb);
@@ -251,7 +252,9 @@ static bool current_tab_is(area_context_t *context, const char *str) {
   return current_tab_is(nb, gtk_notebook_get_nth_page(nb, page_num), str);
 }
 
-static inline gchar *warn_text(double area) {
+inline gchar *
+warn_text(double area)
+{
   return g_strdup_printf(_("The currently selected area is %.02f km² (%.02f mi²) in size. "
                            "This is more than the recommended %.02f km² (%.02f mi²).\n\n"
                            "Continuing may result in a big or failing download and low "
@@ -259,14 +262,18 @@ static inline gchar *warn_text(double area) {
                          area, area / (KMPMIL * KMPMIL), WARN_OVER, WARN_OVER / (KMPMIL * KMPMIL));
 }
 
-static void on_area_warning_clicked(area_context_t *context) {
+void
+on_area_warning_clicked(area_context_t *context)
+{
   double area = selected_area(context);
 
   g_string msg(warn_text(area));
   warning_dlg(msg.get(), context->dialog.get());
 }
 
-static bool area_warning(area_context_t *context) {
+bool
+area_warning(area_context_t *context)
+{
   bool ret = true;
 
   /* check if area size exceeds recommended values */
@@ -283,7 +290,8 @@ static bool area_warning(area_context_t *context) {
   return ret;
 }
 
-static void area_main_update(area_context_t *context) {
+void area_main_update(area_context_t *context)
+{
   /* also setup the local error messages here, so they are */
   /* updated for all entries at once */
   gboolean sensitive;
@@ -310,14 +318,18 @@ static void area_main_update(area_context_t *context) {
     gtk_widget_hide(context->warning);
 }
 
-static GSList *pos_append_rad(GSList *list, pos_float_t lat, pos_float_t lon) {
+GSList *
+pos_append_rad(GSList *list, pos_float_t lat, pos_float_t lon)
+{
   OsmGpsMapPoint *coo = g_new(OsmGpsMapPoint, 1);
   coo->rlat = lat;
   coo->rlon = lon;
   return g_slist_append(list, coo);
 }
 
-static GSList *pos_append(GSList *list, pos_float_t lat, pos_float_t lon) {
+GSList *
+pos_append(GSList *list, pos_float_t lat, pos_float_t lon)
+{
   return pos_append_rad(list, DEG2RAD(lat), DEG2RAD(lon));
 }
 
@@ -326,6 +338,15 @@ struct add_bounds {
   explicit add_bounds(OsmGpsMap *m) : map(m) {}
   void operator()(const pos_area &b);
 };
+
+}
+
+area_edit_t::area_edit_t(gps_state_t *gps, pos_area &b, osm2go_platform::Widget *dlg)
+  : gps_state(gps)
+  , parent(dlg)
+  , bounds(b)
+{
+}
 
 void add_bounds::operator()(const pos_area &b)
 {

@@ -26,6 +26,8 @@
 #include <osm2go_platform.h>
 #include <osm2go_platform_gtk.h>
 
+namespace {
+
 class statusbar_gtk : public statusbar_t {
 public:
   statusbar_gtk();
@@ -55,6 +57,8 @@ public:
   void banner_busy_start(const char *text) override;
   void banner_busy_stop() override;
 };
+
+}
 
 /*
  * For non-Hildon builds, use the "brief" message in the statusbar to show

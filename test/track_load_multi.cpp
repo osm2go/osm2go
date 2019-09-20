@@ -6,6 +6,8 @@
 #include <cerrno>
 #include <libxml/parser.h>
 
+namespace {
+
 struct point_count {
   unsigned int &points;
   explicit point_count(unsigned int &p) : points(p) {}
@@ -13,6 +15,8 @@ struct point_count {
     points += seg.track_points.size();
   }
 };
+
+}
 
 int main(int argc, char **argv)
 {

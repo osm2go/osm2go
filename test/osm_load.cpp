@@ -9,6 +9,8 @@
 #include <cstring>
 #include <iostream>
 
+namespace {
+
 template<typename T>
 struct tag_counter {
   unsigned int &tags;
@@ -25,6 +27,8 @@ struct tag_counter {
     obj->tags.for_each(*this);
   }
 };
+
+}
 
 int main(int argc, char **argv)
 {

@@ -30,6 +30,8 @@
 
 #include <osm2go_cpp.h>
 
+namespace {
+
 class gps_liblocation_state_t : public gps_state_t {
 public:
   gps_liblocation_state_t(GpsCallback cb, void *context);
@@ -50,6 +52,8 @@ public:
   pos_t pos;
   float altitude;
 };
+
+}
 
 pos_t gps_liblocation_state_t::get_pos(float* alt)
 {

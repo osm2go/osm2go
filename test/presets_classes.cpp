@@ -11,20 +11,24 @@
 #include <iostream>
 #include <string>
 
+namespace {
+
 #define TESTTAG(a, b) static osm_t::TagMap::value_type tag_##a##_##b(#a, #b)
 
 TESTTAG(testkey, other);
 TESTTAG(testkey, testtext);
 TESTTAG(neutral, neutral);
 
-static osm_t::TagMap VECTOR_ONE(const osm_t::TagMap::value_type &a)
+osm_t::TagMap
+VECTOR_ONE(const osm_t::TagMap::value_type &a)
 {
   osm_t::TagMap ret;
   ret.insert(a);
   return ret;
 }
 
-static void checkTextMatch()
+void
+checkTextMatch()
 {
   presets_element_text w_0(tag_testkey_testtext.first,
                           tag_testkey_testtext.second,
@@ -83,7 +87,8 @@ static void checkTextMatch()
   assert_cmpnum(w_kvf.matches(osm_t::TagMap()), -1);
 }
 
-static void checkComboMatch()
+void
+checkComboMatch()
 {
   std::vector<std::string> values;
   values.push_back("nonmatch");
@@ -163,7 +168,8 @@ static void checkComboMatch()
   assert_cmpnum(w_kvf.matches(osm_t::TagMap()), -1);
 }
 
-static void checkMultiMatch()
+void
+checkMultiMatch()
 {
   static osm_t::TagMap::value_type tag_first("testkey", tag_testkey_testtext.second + ";abc");
   static osm_t::TagMap::value_type tag_middle("testkey", "abc;" + tag_testkey_testtext.second + ";abc");
@@ -268,7 +274,8 @@ static void checkMultiMatch()
   assert_cmpnum(w_kvf.matches(osm_t::TagMap()), -1);
 }
 
-static void check_combined()
+void
+check_combined()
 {
   presets_item item(presets_item_t::TY_ALL);
 
@@ -328,7 +335,8 @@ public:
   { return matchedIndexes(preset); }
 };
 
-static void checkMultiSplit()
+void
+checkMultiSplit()
 {
   std::vector<std::string> values;
   values.push_back("aaa");
@@ -368,6 +376,8 @@ static void checkMultiSplit()
   res = test1.matchTest("aa;ddd;f");
   assert_cmpnum(res.size(), 1);
   assert_cmpnum(res[0], 3);
+}
+
 }
 
 int main()

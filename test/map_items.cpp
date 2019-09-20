@@ -13,6 +13,8 @@
 #include <memory>
 #include <unistd.h>
 
+namespace {
+
 class MainUiDummy : public MainUi {
 public:
   MainUiDummy() : MainUi(), msg(nullptr) {}
@@ -22,6 +24,8 @@ public:
   { abort(); }
   const char *msg;
 };
+
+}
 
 appdata_t::appdata_t()
   : uicontrol(new MainUiDummy())

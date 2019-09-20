@@ -51,6 +51,8 @@
 
 /* ---------------------- use ------------------- */
 
+namespace {
+
 struct find_wms_functor {
   const char *name;
   explicit inline find_wms_functor(const char *n) : name(n) {}
@@ -89,7 +91,9 @@ struct wms_server_context_t {
   const wms_server_t *select_server() const;
 };
 
-static wms_server_t *get_selection(GtkTreeSelection *selection) {
+wms_server_t *
+get_selection(GtkTreeSelection *selection)
+{
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
@@ -109,7 +113,7 @@ struct server_select_context {
   wms_server_t *server;
 };
 
-static gboolean
+gboolean
 server_select_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer data)
 {
   server_select_context * const ctx = static_cast<server_select_context *>(data);
@@ -124,6 +128,8 @@ server_select_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpo
   }
 
   return FALSE;
+}
+
 }
 
 const wms_server_t *wms_server_context_t::select_server() const
@@ -272,8 +278,12 @@ bool wms_server_edit(wms_server_context_t *context, bool edit_name, wms_server_t
   return ret;
 }
 
+namespace {
+
 /* user clicked "edit..." button in the wms server list */
-static void on_server_edit(wms_server_context_t *context) {
+void
+on_server_edit(wms_server_context_t *context)
+{
   wms_server_t *server = get_selection(list_get_selection(context->list));
   assert(server != nullptr);
 
@@ -285,6 +295,8 @@ struct store_fill_functor {
   explicit inline store_fill_functor(GtkListStore *s) : store(s) {}
   GtkTreeIter operator()(const wms_server_t *srv);
 };
+
+}
 
 GtkTreeIter store_fill_functor::operator()(const wms_server_t *srv)
 {
@@ -404,11 +416,7 @@ bool wms_server_dialog(appdata_t &appdata, wms_t &wms)
   return ok;
 }
 
-enum {
-  LAYER_COL_TITLE = 0,
-  LAYER_COL_NAME,
-  LAYER_NUM_COLS
-};
+namespace {
 
 #ifdef FREMANTLE
 #define DIALOG_RESULT_OK GTK_RESPONSE_OK
@@ -416,7 +424,8 @@ enum {
 #define DIALOG_RESULT_OK GTK_RESPONSE_ACCEPT
 #endif
 
-static void layer_changed(GtkWidget *widget)
+void
+layer_changed(GtkWidget *widget)
 {
   gboolean okEn = osm2go_platform::select_widget_has_selection(widget) ? TRUE : FALSE;
 
@@ -424,6 +433,12 @@ static void layer_changed(GtkWidget *widget)
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
                                     DIALOG_RESULT_OK, okEn);
 }
+
+enum {
+  LAYER_COL_TITLE = 0,
+  LAYER_COL_NAME,
+  LAYER_NUM_COLS
+};
 
 struct fitting_layers_functor {
   GtkListStore * const store;
@@ -445,7 +460,9 @@ void fitting_layers_functor::operator()(const wms_layer_t &layer)
                                     -1);
 }
 
-static GtkWidget *wms_layer_widget(project_t::ref project, const wms_layer_t::list &layers) {
+GtkWidget *
+wms_layer_widget(project_t::ref project, const wms_layer_t::list &layers)
+{
   /* build the store */
   std::unique_ptr<GtkListStore, g_object_deleter> store(gtk_list_store_new(LAYER_NUM_COLS,
       G_TYPE_STRING, G_TYPE_STRING));
@@ -463,6 +480,8 @@ static GtkWidget *wms_layer_widget(project_t::ref project, const wms_layer_t::li
                            "changed", G_CALLBACK(layer_changed), widget);
 
   return widget;
+}
+
 }
 
 std::string wms_layer_dialog(project_t::ref project, const wms_layer_t::list &layers)

@@ -32,6 +32,8 @@
 #include <osm2go_platform.h>
 #include <osm2go_platform_gtk.h>
 
+namespace {
+
 /* setup for direct gpsd based communication */
 class gpsd_state_t : public gps_state_t {
 public:
@@ -63,6 +65,8 @@ public:
 
   gps_data_t gpsdata;
 };
+
+}
 
 pos_t gpsd_state_t::get_pos(float* alt)
 {

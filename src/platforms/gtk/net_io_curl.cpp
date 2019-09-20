@@ -39,6 +39,8 @@
 #include <osm2go_platform_gtk.h>
 
 /* structure shared between worker and master thread */
+namespace {
+
 struct net_io_request_t {
   net_io_request_t(const std::string &u, const std::string &f, bool c);
   net_io_request_t(const std::string &u, std::string *smem) __attribute__((nonnull(3)));
@@ -59,20 +61,23 @@ struct net_io_request_t {
   const bool use_compression;
 };
 
-static gint dialog_destroy_event(bool *data) {
+gint
+dialog_destroy_event(bool *data)
+{
   /* set cancel flag */
   *data = true;
   return FALSE;
 }
 
-static void on_cancel(bool *data) {
+void on_cancel(bool *data)
+{
   /* set cancel flag */
   *data = true;
 }
 
 /* create the dialog box shown while worker is running */
-static GtkWidget *busy_dialog(osm2go_platform::Widget *parent, GtkProgressBar *&pbar,
-                              bool *cancel_ind, const std::string &title)
+GtkWidget *
+busy_dialog(osm2go_platform::Widget *parent, GtkProgressBar *&pbar, bool *cancel_ind, const std::string &title)
 {
 #ifdef GTK_DIALOG_NO_SEPARATOR
   GtkWidget *dialog = gtk_dialog_new_with_buttons(nullptr, nullptr, GTK_DIALOG_NO_SEPARATOR);
@@ -131,15 +136,18 @@ net_io_request_t::net_io_request_t(const std::string &u, std::string *smem)
   memset(buffer, 0, sizeof(buffer));
 }
 
-static int curl_progress_func(void *req, curl_off_t dltotal, curl_off_t dlnow,
-                            curl_off_t, curl_off_t) {
+int
+curl_progress_func(void *req, curl_off_t dltotal, curl_off_t dlnow, curl_off_t, curl_off_t)
+{
   net_io_request_t *request = static_cast<net_io_request_t *>(req);
   request->download_cur = dlnow;
   request->download_end = dltotal;
   return 0;
 }
 
-static size_t mem_write(void *ptr, size_t size, size_t nmemb, void *stream) {
+size_t
+mem_write(void *ptr, size_t size, size_t nmemb, void *stream)
+{
   static_cast<std::string *>(stream)->append(static_cast<char *>(ptr), size * nmemb);
   return nmemb;
 }
@@ -149,7 +157,8 @@ struct f_closer {
   { fclose(f); }
 };
 
-static void *worker_thread(void *ptr) {
+void *worker_thread(void *ptr)
+{
   std::shared_ptr<net_io_request_t> request(*static_cast<std::shared_ptr<net_io_request_t>*>(ptr));
 
   printf("thread: running\n");
@@ -227,8 +236,8 @@ static void *worker_thread(void *ptr) {
  * In case parent is nullptr, no progress dialog is shown and title is ignored.
  * rq will be freed, regardless of the outcome of the function.
  */
-static bool net_io_do(osm2go_platform::Widget *parent, net_io_request_t *rq,
-                      const std::string &title)
+bool
+net_io_do(osm2go_platform::Widget *parent, net_io_request_t *rq, const std::string &title)
 {
   /* the request structure is shared between master and worker thread. */
   /* typically the master thread will do some waiting until the worker */
@@ -308,6 +317,8 @@ static bool net_io_do(osm2go_platform::Widget *parent, net_io_request_t *rq,
   }
 
   return true;
+}
+
 }
 
 bool net_io_download_file(osm2go_platform::Widget *parent,

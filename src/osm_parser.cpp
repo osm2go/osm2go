@@ -51,6 +51,8 @@
 
 /* ------------------------- user handling --------------------- */
 
+namespace {
+
 class cmp_user {
   const std::string &uname;
 public:
@@ -61,8 +63,6 @@ public:
   }
 };
 
-
-
 /**
  * @brief insert a username into osm_t::users if needed
  * @param osm the osm object
@@ -72,7 +72,9 @@ public:
  *
  * In case no userid is given a temporary one will be created.
  */
-static int osm_user_insert(std::map<int, std::string> &users, const char *name, int uid) {
+int
+osm_user_insert(std::map<int, std::string> &users, const char *name, int uid)
+{
   if(unlikely(!name)) {
     users[0] = std::string();
     return 0;
@@ -107,8 +109,9 @@ static int osm_user_insert(std::map<int, std::string> &users, const char *name, 
   }
 }
 
-static
-time_t __attribute__((nonnull(1))) convert_iso8601(const char *str) {
+time_t __attribute__((nonnull(1)))
+convert_iso8601(const char *str)
+{
   struct tm ctime;
   memset(&ctime, 0, sizeof(ctime));
   strptime(str, "%FT%T%z", &ctime);
@@ -116,6 +119,8 @@ time_t __attribute__((nonnull(1))) convert_iso8601(const char *str) {
   long gmtoff = ctime.tm_gmtoff;
 
   return timegm(&ctime) - gmtoff;
+}
+
 }
 
 /* -------------------- tag handling ----------------------- */

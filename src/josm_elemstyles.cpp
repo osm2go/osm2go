@@ -67,6 +67,8 @@ elemstyle_condition_t::elemstyle_condition_t(const char *k, bool b)
 {
 }
 
+namespace {
+
 typedef std::unordered_map<std::string, color_t> ColorMap;
 
 class StyleSax {
@@ -129,6 +131,8 @@ private:
     static_cast<StyleSax *>(ts)->endElement(name);
   }
 };
+
+}
 
 // ratio conversions
 

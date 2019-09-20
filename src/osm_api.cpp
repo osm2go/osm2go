@@ -136,6 +136,8 @@ bool osm_download(osm2go_platform::Widget *parent, project_t *project)
   return true;
 }
 
+namespace {
+
 struct curl_data_t {
   explicit curl_data_t(char *p = nullptr, curl_off_t l = 0)
     : ptr(p), len(l) {}
@@ -143,7 +145,9 @@ struct curl_data_t {
   long len;
 };
 
-static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *stream) {
+size_t
+read_callback(void *ptr, size_t size, size_t nmemb, void *stream)
+{
   curl_data_t *p = static_cast<curl_data_t *>(stream);
 
 //   printf("request to read %zu items of size %zu, pointer = %p\n",
@@ -159,7 +163,9 @@ static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *stream) 
   return nmemb;
 }
 
-static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *stream) {
+size_t
+write_callback(void *ptr, size_t size, size_t nmemb, void *stream)
+{
   std::string *p = static_cast<std::string *>(stream);
 
   p->append(static_cast<char *>(ptr), size * nmemb);
@@ -168,7 +174,8 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *stream)
 
 #define MAX_TRY 5
 
-static CURL *curl_custom_setup(const std::string &credentials)
+CURL *
+curl_custom_setup(const std::string &credentials)
 {
   /* get a curl handle */
   CURL *curl = curl_easy_init();
@@ -194,8 +201,10 @@ static CURL *curl_custom_setup(const std::string &credentials)
   return curl;
 }
 
-static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
-                            const char *url, item_id_t *id) {
+bool
+osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
+                            const char *url, item_id_t *id)
+{
   char buffer[CURL_ERROR_SIZE];
 
   std::unique_ptr<CURL, curl_deleter> &curl = context.curl;
@@ -273,8 +282,9 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
   return false;
 }
 
-static bool osm_post_xml(osm_upload_context_t &context, const xmlString &xml_str,
-                         int len, const char *url, std::string &write_data)
+bool
+osm_post_xml(osm_upload_context_t &context, const xmlString &xml_str, int len,
+             const char *url, std::string &write_data)
 {
   char buffer[CURL_ERROR_SIZE];
 
@@ -336,7 +346,8 @@ static bool osm_post_xml(osm_upload_context_t &context, const xmlString &xml_str
 /**
  * @brief upload one object to the OSM server
  */
-static void upload_object(osm_upload_context_t &context, base_object_t *obj, bool is_new)
+void
+upload_object(osm_upload_context_t &context, base_object_t *obj, bool is_new)
 {
   /* make sure gui gets updated */
   osm2go_platform::process_events();
@@ -403,7 +414,9 @@ static void upload_modified(osm_upload_context_t &co, trstring::native_type_arg 
                 upload_objects<T>(co, m, false));
 }
 
-static void log_deletion(osm_upload_context_t &context, const base_object_t *obj) {
+void
+log_deletion(osm_upload_context_t &context, const base_object_t *obj)
+{
   assert(obj->isDeleted());
 
   context.append(trstring("Deleted %1 #%2 (version %3)\n").arg(obj->apiString()).arg(obj->id)
@@ -435,7 +448,8 @@ struct osm_delete_objects_final {
  * @param server_reply the data returned from the server will be stored here
  * @returns if the operation was successful
  */
-static bool osmchange_upload(osm_upload_context_t &context, xmlDocGuard &doc, std::string &server_reply)
+bool
+osmchange_upload(osm_upload_context_t &context, xmlDocGuard &doc, std::string &server_reply)
 {
   /* make sure gui gets updated */
   osm2go_platform::process_events();
@@ -455,7 +469,9 @@ static bool osmchange_upload(osm_upload_context_t &context, xmlDocGuard &doc, st
   return ret;
 }
 
-static bool osm_create_changeset(osm_upload_context_t &context) {
+bool
+osm_create_changeset(osm_upload_context_t &context)
+{
   bool result = false;
 
   /* make sure gui gets updated */
@@ -479,7 +495,9 @@ static bool osm_create_changeset(osm_upload_context_t &context) {
   return result;
 }
 
-static bool osm_close_changeset(osm_upload_context_t &context) {
+bool
+osm_close_changeset(osm_upload_context_t &context)
+{
   assert(!context.changeset.empty());
 
   /* make sure gui gets updated */
@@ -490,6 +508,8 @@ static bool osm_close_changeset(osm_upload_context_t &context) {
   context.append_str(_("Close changeset "));
 
   return osm_update_item(context, nullptr, url.c_str(), nullptr);
+}
+
 }
 
 void osm_upload_context_t::upload(const osm_t::dirty_t &dirty, osm2go_platform::Widget *parent)

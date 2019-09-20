@@ -43,6 +43,8 @@
 #include "osm2go_platform_gtk.h"
 #include <osm2go_stl.h>
 
+namespace {
+
 class osm_upload_context_gtk : public osm_upload_context_t {
 public:
   osm_upload_context_gtk(appdata_t &a, project_t::ref p, const char *c, const char *s);
@@ -57,6 +59,8 @@ public:
   GtkTextBuffer * const logbuffer;
   GtkTextView * const logview;
 };
+
+}
 
 osm_upload_context_t::osm_upload_context_t(appdata_t &a, project_t::ref p, const char *c, const char *s)
   : appdata(a)

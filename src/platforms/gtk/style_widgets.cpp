@@ -34,6 +34,8 @@
 #include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
 
+namespace {
+
 struct selector_model_functor {
   GtkListStore * const store;
   int cnt;
@@ -49,8 +51,9 @@ struct selector_model_functor {
   }
 };
 
-static GtkWidget *style_select_widget(const std::string &currentstyle,
-                                      const std::map<std::string, std::string> &styles) {
+GtkWidget *
+style_select_widget(const std::string &currentstyle, const std::map<std::string, std::string> &styles)
+{
   /* there must be at least one style, otherwise */
   /* the program wouldn't be running */
   assert(!styles.empty());
@@ -64,6 +67,8 @@ static GtkWidget *style_select_widget(const std::string &currentstyle,
   GtkWidget *ret = osm2go_platform::select_widget_wrapped(_("Style"), GTK_TREE_MODEL(store.get()));
   osm2go_platform::combo_box_set_active(ret, match);
   return ret;
+}
+
 }
 
 #ifndef FREMANTLE

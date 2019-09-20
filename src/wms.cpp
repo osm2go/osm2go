@@ -50,6 +50,8 @@
 #error "Tree not enabled in libxml"
 #endif
 
+namespace {
+
 struct charcmp {
   inline bool operator()(const char *a, const char *b) const {
     if(unlikely(a == nullptr))
@@ -64,7 +66,8 @@ typedef std::map<const char *, WmsImageFormat, charcmp> FormatMap;
 static FormatMap ImageFormats;
 static std::map<WmsImageFormat, const char *> ImageFormatExtensions;
 
-static void initImageFormats()
+void
+initImageFormats()
 {
   ImageFormats["image/png"] = WMS_FORMAT_PNG;
   ImageFormats["image/gif"] = WMS_FORMAT_GIF;
@@ -77,7 +80,9 @@ static void initImageFormats()
   ImageFormatExtensions[WMS_FORMAT_JPEG] = "jpg";
 }
 
-static bool wms_bbox_is_valid(const pos_area &bounds) {
+bool
+wms_bbox_is_valid(const pos_area &bounds)
+{
   /* all four coordinates are valid? */
   if(unlikely(!bounds.valid()))
     return false;
@@ -91,7 +96,9 @@ static bool wms_bbox_is_valid(const pos_area &bounds) {
   return true;
 }
 
-static wms_layer_t wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
+wms_layer_t
+wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node)
+{
   wms_layer_t wms_layer;
   xmlNode *cur_node = nullptr;
 
@@ -135,7 +142,9 @@ static wms_layer_t wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
   return wms_layer;
 }
 
-static wms_getmap_t wms_cap_parse_getmap(xmlDocPtr doc, xmlNode *a_node) {
+wms_getmap_t
+wms_cap_parse_getmap(xmlDocPtr doc, xmlNode *a_node)
+{
   wms_getmap_t wms_getmap;
   xmlNode *cur_node;
 
@@ -162,7 +171,9 @@ static wms_getmap_t wms_cap_parse_getmap(xmlDocPtr doc, xmlNode *a_node) {
   return wms_getmap;
 }
 
-static wms_request_t wms_cap_parse_request(xmlDocPtr doc, xmlNode *a_node) {
+wms_request_t
+wms_cap_parse_request(xmlDocPtr doc, xmlNode *a_node)
+{
   wms_request_t wms_request;
   xmlNode *cur_node;
 
@@ -178,7 +189,9 @@ static wms_request_t wms_cap_parse_request(xmlDocPtr doc, xmlNode *a_node) {
   return wms_request;
 }
 
-static bool wms_cap_parse_cap(xmlDocPtr doc, xmlNode *a_node, wms_cap_t *wms_cap) {
+bool
+wms_cap_parse_cap(xmlDocPtr doc, xmlNode *a_node, wms_cap_t *wms_cap)
+{
   xmlNode *cur_node;
   bool has_request = false;
 
@@ -197,7 +210,9 @@ static bool wms_cap_parse_cap(xmlDocPtr doc, xmlNode *a_node, wms_cap_t *wms_cap
   return has_request && !wms_cap->layers.empty();
 }
 
-static bool wms_cap_parse(wms_t &wms, xmlDocPtr doc, xmlNode *a_node) {
+bool
+wms_cap_parse(wms_t &wms, xmlDocPtr doc, xmlNode *a_node)
+{
   xmlNode *cur_node = nullptr;
   bool has_service = false, has_cap = false;
 
@@ -218,7 +233,9 @@ static bool wms_cap_parse(wms_t &wms, xmlDocPtr doc, xmlNode *a_node) {
 }
 
 /* parse root element */
-static bool wms_cap_parse_root(wms_t &wms, xmlDocPtr doc) {
+bool
+wms_cap_parse_root(wms_t &wms, xmlDocPtr doc)
+{
   bool ret = false;
 
   for (xmlNodePtr cur_node = xmlDocGetRootElement(doc);
@@ -235,7 +252,8 @@ static bool wms_cap_parse_root(wms_t &wms, xmlDocPtr doc) {
 }
 
 /* get pixel extent of image display */
-static wms_t::size_t wms_setup_extent(project_t::ref project)
+wms_t::size_t
+wms_setup_extent(project_t::ref project)
 {
   bounds_t bounds;
   bounds.init(project->bounds);
@@ -261,6 +279,8 @@ static wms_t::size_t wms_setup_extent(project_t::ref project)
   return ret;
 }
 
+}
+
 /* ---------------------- use ------------------- */
 
 bool wms_llbbox_fits(project_t::ref project, const wms_llbbox_t &llbbox) {
@@ -269,6 +289,8 @@ bool wms_llbbox_fits(project_t::ref project, const wms_llbbox_t &llbbox) {
           (project->bounds.max.lat <= llbbox.bounds.max.lat) &&
           (project->bounds.max.lon <= llbbox.bounds.max.lon));
 }
+
+namespace {
 
 struct child_layer_functor {
   bool epsg4326;
@@ -321,20 +343,25 @@ void requestable_layers_functor::operator()(const wms_layer_t &layer)
                                     c_layer));
 }
 
-static void setMenuEntries(MainUi *uicontrol, bool en)
+void
+setMenuEntries(MainUi *uicontrol, bool en)
 {
   uicontrol->setActionEnable(MainUi::MENU_ITEM_WMS_CLEAR, en);
   uicontrol->setActionEnable(MainUi::MENU_ITEM_WMS_ADJUST, en);
 }
 
-static bool setBgImage(appdata_t &appdata, const std::string &filename) {
+bool
+setBgImage(appdata_t &appdata, const std::string &filename)
+{
   bool ret = appdata.map->set_bg_image(filename);
   if(ret)
     setMenuEntries(appdata.uicontrol.get(), true);
   return ret;
 }
 
-static inline bool layer_is_usable(const wms_layer_t &layer) {
+inline bool
+layer_is_usable(const wms_layer_t &layer)
+{
   return layer.is_usable();
 }
 
@@ -346,7 +373,8 @@ struct find_format_reverse_functor {
   }
 };
 
-static std::string wmsUrl(const wms_t &wms, const char *get)
+std::string
+wmsUrl(const wms_t &wms, const char *get)
 {
   /* nothing has to be done if the last character of path is already a valid URL delimiter */
   const char lastCh = wms.server[wms.server.size() - 1];
@@ -360,6 +388,8 @@ static std::string wmsUrl(const wms_t &wms, const char *get)
   url += get;
 
   return url;
+}
+
 }
 
 wms_layer_t::list wms_get_layers(project_t::ref project, wms_t& wms)
@@ -539,6 +569,8 @@ void wms_remove(appdata_t &appdata) {
   wms_remove_file(*appdata.project);
 }
 
+namespace {
+
 struct server_preset_s {
   const char *name, *server;
 };
@@ -552,6 +584,8 @@ static const std::array<struct server_preset_s, 1> default_servers = { {
 #endif
   /* add more servers here ... */
 } };
+
+}
 
 std::vector<wms_server_t *> wms_server_get_default()
 {

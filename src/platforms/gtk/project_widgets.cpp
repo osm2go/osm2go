@@ -47,6 +47,8 @@
 #include "osm2go_platform_gtk.h"
 #include "osm2go_stl.h"
 
+namespace {
+
 struct project_context_t {
   explicit project_context_t(appdata_t &a, project_t *p, bool n, const std::vector<project_t *> &j, GtkWidget *dlg);
   project_context_t() O2G_DELETED_FUNCTION;
@@ -73,21 +75,21 @@ struct project_context_t {
   const std::vector<project_t *> &projects;
 };
 
-static void pos_lat_label_set(GtkWidget *label, pos_float_t lat)
+void pos_lat_label_set(GtkWidget *label, pos_float_t lat)
 {
   char str[32];
   pos_lat_str(str, sizeof(str), lat);
   gtk_label_set_text(GTK_LABEL(label), str);
 }
 
-static void pos_lon_label_set(GtkWidget *label, pos_float_t lon)
+void pos_lon_label_set(GtkWidget *label, pos_float_t lon)
 {
   char str[32];
   pos_lon_str(str, sizeof(str), lon);
   gtk_label_set_text(GTK_LABEL(label), str);
 }
 
-static void boundsUpdated(project_context_t *context)
+void boundsUpdated(project_context_t *context)
 {
   const pos_area &bounds = context->project->bounds;
 
@@ -101,10 +103,13 @@ static void boundsUpdated(project_context_t *context)
 }
 
 /* create a left aligned label (normal ones are centered) */
-static GtkWidget *gtk_label_left_new(const char *str = nullptr) {
+GtkWidget *gtk_label_left_new(const char *str = nullptr)
+{
   GtkWidget *label = gtk_label_new(str);
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, .5f);
   return label;
+}
+
 }
 
 project_context_t::project_context_t(appdata_t &a, project_t *p, bool n,
@@ -131,6 +136,8 @@ project_context_t::project_context_t(appdata_t &a, project_t *p, bool n,
 {
 }
 
+namespace {
+
 struct select_context_t {
   select_context_t(appdata_t &a, GtkWidget *dial);
   select_context_t() O2G_DELETED_FUNCTION;
@@ -150,7 +157,7 @@ struct select_context_t {
   std::unique_ptr<GtkListStore, g_object_deleter> store;
 };
 
-static bool project_edit(select_context_t *scontext, project_t *project, bool is_new);
+bool project_edit(select_context_t *scontext, project_t *project, bool is_new);
 
 /* ------------ project selection dialog ------------- */
 
@@ -162,14 +169,15 @@ enum {
   PROJECT_NUM_COLS
 };
 
-static void view_selected(GtkWidget *dialog, const project_t *project)
+void
+view_selected(GtkWidget *dialog, const project_t *project)
 {
   /* check if the selected project also has a valid osm file */
   gboolean has_osm = project->osm_file_exists() ? TRUE : FALSE;
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT, has_osm);
 }
 
-static void
+void
 changed(GtkTreeSelection *selection, gpointer userdata) {
   select_context_t *context = static_cast<select_context_t *>(userdata);
 
@@ -196,7 +204,8 @@ changed(GtkTreeSelection *selection, gpointer userdata) {
  *
  * This assumes there is a selection and a project associated to it.
  */
-static project_t *project_get_selected(GtkWidget *list, GtkTreeModelFilter *filter, GtkTreeIter *iter)
+project_t *
+project_get_selected(GtkWidget *list, GtkTreeModelFilter *filter, GtkTreeIter *iter)
 {
   project_t *project = nullptr;
   GtkTreeModel *model;
@@ -227,7 +236,9 @@ struct name_callback_context_t {
   fdguard &basefd;
 };
 
-static void callback_modified_name(GtkWidget *widget, name_callback_context_t *context) {
+void
+callback_modified_name(GtkWidget *widget, name_callback_context_t *context)
+{
   const gchar *name = gtk_entry_get_text(GTK_ENTRY(widget));
 
   /* name must not contain some special chars */
@@ -257,7 +268,8 @@ static void callback_modified_name(GtkWidget *widget, name_callback_context_t *c
  * This will prevent the user entering an invalid project name, which
  * includes a name that is already in use.
  */
-static std::string project_name_dialog(GtkWidget *parent, const std::string &oldname)
+std::string
+project_name_dialog(GtkWidget *parent, const std::string &oldname)
 {
   /* --------------  first choose a name for the project --------------- */
   osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Project name"),
@@ -288,7 +300,9 @@ static std::string project_name_dialog(GtkWidget *parent, const std::string &old
   return gtk_entry_get_text(GTK_ENTRY(entry));
 }
 
-static project_t *project_new(select_context_t *context) {
+project_t *
+project_new(select_context_t *context)
+{
   const std::string &name = project_name_dialog(context->dialog, std::string());
 
   if(name.empty())
@@ -325,7 +339,7 @@ static project_t *project_new(select_context_t *context) {
  * @param project the project to check
  * @return the stock identifier
  */
-static const gchar *
+const gchar *
 project_get_status_icon_stock_id(project_t::ref current,
                                  const project_t *project) {
   /* is this the currently open project? */
@@ -341,7 +355,9 @@ project_get_status_icon_stock_id(project_t::ref current,
     // TODO: check for outdatedness too. Which icon to use?
 }
 
-static void on_project_new(select_context_t *context) {
+void
+on_project_new(select_context_t *context)
+{
   project_t *project = project_new(context);
   if(project != nullptr) {
     context->projects.push_back(project);
@@ -363,7 +379,9 @@ static void on_project_new(select_context_t *context) {
   }
 }
 
-static void on_project_delete(select_context_t *context) {
+void
+on_project_delete(select_context_t *context)
+{
   GtkTreeIter iter;
   project_t *project = project_get_selected(context->list, context->filter, &iter);
 
@@ -399,7 +417,8 @@ static void on_project_delete(select_context_t *context) {
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, FALSE);
 }
 
-static void on_project_edit(select_context_t *context) {
+void on_project_edit(select_context_t *context)
+{
   GtkTreeIter iter;
   project_t *project = project_get_selected(context->list, context->filter, &iter);
 
@@ -457,7 +476,7 @@ static void on_project_edit(select_context_t *context) {
   view_selected(context->dialog, project);
 }
 
-static gboolean
+gboolean
 project_update_all_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer data)
 {
   project_t *prj = nullptr;
@@ -473,7 +492,7 @@ project_update_all_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter
   return FALSE;
 }
 
-static void
+void
 on_project_update_all(select_context_t *context)
 {
   gtk_tree_model_foreach(GTK_TREE_MODEL(context->store.get()), project_update_all_foreach, context->dialog);
@@ -513,7 +532,7 @@ void project_list_add::operator()(const project_t *project)
   }
 }
 
-static gboolean
+gboolean
 project_matches(GtkTreeModel *model, GtkTreeIter *iter, gpointer data)
 {
   gchar *pname, *pdescr;
@@ -536,7 +555,7 @@ project_matches(GtkTreeModel *model, GtkTreeIter *iter, gpointer data)
   return FALSE;
 }
 
-static void
+void
 on_filter_changed(gpointer user_data)
 {
   select_context_t *context = static_cast<select_context_t *>(user_data);
@@ -556,7 +575,9 @@ on_filter_changed(gpointer user_data)
  * @param context the context struct
  * @param has_sel if an item has been selected
  */
-static GtkWidget *project_list_widget(select_context_t &context, bool &has_sel) {
+GtkWidget *
+project_list_widget(select_context_t &context, bool &has_sel)
+{
   std::vector<list_view_column> columns;
   columns.push_back(list_view_column(_("Name"), 0));
   columns.push_back(list_view_column(_("State"), LIST_FLAG_STOCK_ICON));
@@ -605,43 +626,11 @@ static GtkWidget *project_list_widget(select_context_t &context, bool &has_sel) 
   return context.list;
 }
 
-project_t *project_select(appdata_t &appdata)
-{
-  select_context_t context(appdata,
-                    gtk_dialog_new_with_buttons(_("Project selection"),
-                                    GTK_WINDOW(appdata_t::window), GTK_DIALOG_MODAL,
-                                    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-                                    GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-                                    nullptr));
-
-  osm2go_platform::dialog_size_hint(GTK_WINDOW(context.dialog), osm2go_platform::MISC_DIALOG_MEDIUM);
-
-  /* under fremantle the dialog does not have an "Open" button */
-  /* as it's closed when a project is being selected */
-  gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
-				  GTK_RESPONSE_ACCEPT);
-
-  bool has_sel = false;
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
-                     project_list_widget(context, has_sel), TRUE, TRUE, 0);
-
-  /* don't all user to click ok until something is selected */
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(context.dialog),
-                                    GTK_RESPONSE_ACCEPT, has_sel ? TRUE : FALSE);
-
-  gtk_widget_show_all(context.dialog);
-  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog))) {
-    project_t *pr = project_get_selected(context.list, nullptr, nullptr);
-
-    return new project_t(*pr);
-  }
-
-  return nullptr;
-}
-
 /* ---------------------------------------------------- */
 
-static void project_filesize(project_context_t *context) {
+void
+project_filesize(project_context_t *context)
+{
   const char *str = nullptr;
   trstring gstr;
   const project_t * const project = context->project;
@@ -690,7 +679,8 @@ static void project_filesize(project_context_t *context) {
 
 /* a project may currently be open. "unsaved changes" then also */
 /* means that the user may have unsaved changes */
-static bool active_n_dirty(appdata_t &appdata, const project_t *project)
+bool
+active_n_dirty(appdata_t &appdata, const project_t *project)
 {
   if(appdata.project && appdata.project->osm && appdata.project->name == project->name) {
     g_debug("editing the currently open project");
@@ -701,7 +691,9 @@ static bool active_n_dirty(appdata_t &appdata, const project_t *project)
   return false;
 }
 
-static void project_diffstat(project_context_t &context) {
+void
+project_diffstat(project_context_t &context)
+{
   const char *str;
 
   if(context.project->diff_file_present() || active_n_dirty(context.appdata, context.project)) {
@@ -713,7 +705,9 @@ static void project_diffstat(project_context_t &context) {
   gtk_label_set_text(GTK_LABEL(context.diff_stat), str);
 }
 
-static void on_edit_clicked(project_context_t *context) {
+void
+on_edit_clicked(project_context_t *context)
+{
   project_t * const project = context->project;
 
   if(project->diff_file_present() || active_n_dirty(context->appdata, project))
@@ -745,7 +739,9 @@ static void on_edit_clicked(project_context_t *context) {
   }
 }
 
-static void on_download_clicked(project_context_t *context) {
+void
+on_download_clicked(project_context_t *context)
+{
   project_t * const project = context->project;
 
   if(osm_download(context->dialog, project))
@@ -754,7 +750,8 @@ static void on_download_clicked(project_context_t *context) {
   project_filesize(context);
 }
 
-static void on_rename_clicked(project_context_t *context)
+void
+on_rename_clicked(project_context_t *context)
 {
   project_t * const project = context->project;
 
@@ -778,7 +775,9 @@ static void on_rename_clicked(project_context_t *context)
   context->appdata.set_title();
 }
 
-static void on_diff_remove_clicked(project_context_t *context) {
+void
+on_diff_remove_clicked(project_context_t *context)
+{
   const project_t * const project = context->project;
 
   g_debug("clicked diff remove");
@@ -807,8 +806,9 @@ static void on_diff_remove_clicked(project_context_t *context) {
   }
 }
 
-static bool
-project_edit(select_context_t *scontext, project_t *project, bool is_new) {
+bool
+project_edit(select_context_t *scontext, project_t *project, bool is_new)
+{
   GtkWidget *parent = scontext->dialog;
 
   if(project->check_demo(parent))
@@ -934,6 +934,42 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
   project->save(dialog.get());
 
   return ok;
+}
+
+}
+
+project_t *project_select(appdata_t &appdata)
+{
+  select_context_t context(appdata,
+                    gtk_dialog_new_with_buttons(_("Project selection"),
+                                    GTK_WINDOW(appdata_t::window), GTK_DIALOG_MODAL,
+                                    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                    GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                                    nullptr));
+
+  osm2go_platform::dialog_size_hint(GTK_WINDOW(context.dialog), osm2go_platform::MISC_DIALOG_MEDIUM);
+
+  /* under fremantle the dialog does not have an "Open" button */
+  /* as it's closed when a project is being selected */
+  gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
+				  GTK_RESPONSE_ACCEPT);
+
+  bool has_sel = false;
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
+                     project_list_widget(context, has_sel), TRUE, TRUE, 0);
+
+  /* don't all user to click ok until something is selected */
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(context.dialog),
+                                    GTK_RESPONSE_ACCEPT, has_sel ? TRUE : FALSE);
+
+  gtk_widget_show_all(context.dialog);
+  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog))) {
+    project_t *pr = project_get_selected(context.list, nullptr, nullptr);
+
+    return new project_t(*pr);
+  }
+
+  return nullptr;
 }
 
 select_context_t::select_context_t(appdata_t &a, GtkWidget *dial)

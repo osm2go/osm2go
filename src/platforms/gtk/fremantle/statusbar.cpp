@@ -30,6 +30,8 @@
 #include <osm2go_platform_gtk.h>
 #include <osm2go_stl.h>
 
+namespace {
+
 class statusbar_fremantle : public statusbar_t {
 public:
   statusbar_fremantle();
@@ -45,6 +47,8 @@ public:
 
   void setBanner(GtkWidget *b);
 };
+
+}
 
 statusbar_fremantle::statusbar_fremantle()
   : statusbar_t()

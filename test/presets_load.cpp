@@ -23,6 +23,8 @@
 
 static std::vector<std::string> basedirs;
 
+namespace {
+
 struct check_icon {
   const std::string &filename;
   explicit check_icon(const std::string &fn) : filename(fn) {}
@@ -56,7 +58,8 @@ bool check_icon::operator()(const std::string &dir)
   return false;
 }
 
-static void err(const std::string &filename)
+void
+err(const std::string &filename)
 {
   std::cerr << filename << std::endl;
 }
@@ -154,7 +157,8 @@ void counter::operator()(const presets_element_t *w)
  * @brief check icons of the given item
  * @param item the item to check
  */
-static void checkItem(const presets_item_t *item)
+void
+checkItem(const presets_item_t *item)
 {
   const presets_item_named * const vis = dynamic_cast<const presets_item_named *>(item);
   if(vis == nullptr)
@@ -172,7 +176,8 @@ static void checkItem(const presets_item_t *item)
     std::for_each(group->items.begin(), group->items.end(), checkItem);
 }
 
-static void test_roles(const presets_items *presets)
+void
+test_roles(const presets_items *presets)
 {
   relation_t r;
   osm_t::TagMap tags;
@@ -236,6 +241,8 @@ static void test_roles(const presets_items *presets)
   assert_cmpnum(roles.size(), 0);
 
   r.cleanup();
+}
+
 }
 
 int main(int argc, char **argv)
