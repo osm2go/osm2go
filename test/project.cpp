@@ -71,11 +71,12 @@ static void testNoFiles(const std::string &tmpdir)
   const std::string pfile = tmpdir + '/' + std::string(proj_name) + ".proj";
   assert(!project_read(pfile, appdata.project, std::string(), -1));
 
-  int fd = open(pfile.c_str(), O_WRONLY | O_CREAT, 0644);
-  assert(fd >= 0);
-  const char *xml_minimal = "<a><b/></a>";
-  write(fd, xml_minimal, strlen(xml_minimal));
-  close(fd);
+  {
+    fdguard fd(open(pfile.c_str(), O_WRONLY | O_CREAT, 0644));
+    assert_cmpnum_op(static_cast<int>(fd), >=, 0);
+    const char *xml_minimal = "<a><b/></a>";
+    write(fd, xml_minimal, strlen(xml_minimal));
+  }
   fdguard empty(pfile.c_str(), O_RDONLY);
   assert(empty.valid());
 
@@ -104,15 +105,16 @@ static void testSave(const std::string &tmpdir, const char *empty_proj)
   const std::array<const char *, 3> fext = { { "jpg", "gif", "png" } };
   for (unsigned int i = 0; i < fext.size(); i++) {
     const std::string fname = std::string("wms.") + fext.at(i);
-    int fd = openat(project->dirfd, fname.c_str(), O_WRONLY | O_CREAT | O_EXCL);
-    assert_cmpnum_op(fd, >=, 0);
-    close(fd);
+    {
+      fdguard fd(openat(project->dirfd, fname.c_str(), O_WRONLY | O_CREAT | O_EXCL));
+      assert_cmpnum_op(static_cast<int>(fd), >=, 0);
+    }
     struct stat st;
-    fd = fstatat(project->dirfd, fname.c_str(), &st, 0);
-    assert_cmpnum(fd, 0);
+    int ret = fstatat(project->dirfd, fname.c_str(), &st, 0);
+    assert_cmpnum(ret, 0);
     wms_remove_file(*project);
-    fd = fstatat(project->dirfd, fname.c_str(), &st, 0);
-    assert_cmpnum(fd, -1);
+    ret = fstatat(project->dirfd, fname.c_str(), &st, 0);
+    assert_cmpnum(ret, -1);
     assert_cmpnum(errno, ENOENT);
   }
 
@@ -130,19 +132,20 @@ static void testNoData(const std::string &tmpdir)
 
   const std::string &ofile = project->osmFile;
 
-  int osmfd = openat(project->dirfd, ofile.c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0644);
-  assert_cmpnum_op(osmfd, >=, 0);
+  {
+    fdguard osmfd(openat(project->dirfd, ofile.c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0644));
+    assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
 
-  bool b = project->parse_osm();
-  assert(!b);
+    bool b = project->parse_osm();
+    assert(!b);
 
-  const char *not_gzip = "<?xml version='1.0' encoding='UTF-8'?>\n<osm/>";
-  write(osmfd, not_gzip, strlen(not_gzip));
-  close(osmfd);
+    const char *not_gzip = "<?xml version='1.0' encoding='UTF-8'?>\n<osm/>";
+    write(osmfd, not_gzip, strlen(not_gzip));
+  }
 
   assert(!project->check_demo(nullptr));
   assert(project->osm_file_exists());
-  b = project->parse_osm();
+  bool b = project->parse_osm();
   assert(!b);
 
   // add an empty directories to see if project_delete() also cleans those
@@ -264,23 +267,26 @@ static void testRename(const std::string &tmpdir, const char *diff_file)
   const std::string oldpath = project->path;
 
   // wronly flagged as gzip
-  int osmfd = openat(project->dirfd, project->osmFile.c_str(), O_CREAT | O_WRONLY, 0644);
-  assert_cmpnum_op(osmfd, >=, 0);
   const char *not_gzip = "<?xml version='1.0' encoding='UTF-8'?>\n<osm></osm>";
-  write(osmfd, not_gzip, strlen(not_gzip));
-  close(osmfd);
+  {
+    fdguard osmfd(openat(project->dirfd, project->osmFile.c_str(), O_CREAT | O_WRONLY, 0644));
+    assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
+    write(osmfd, not_gzip, strlen(not_gzip));
+  }
 
-  osmfd = openat(project->dirfd, (project->name + ".trk").c_str(), O_CREAT | O_WRONLY, 0644);
-  assert_cmpnum_op(osmfd, >=, 0);
-  close(osmfd);
+  {
+   fdguard osmfd(openat(project->dirfd, (project->name + ".trk").c_str(), O_CREAT | O_WRONLY, 0644));
+    assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
+  }
 
   // use an already existing diff
   osm2go_platform::MappedFile mf(diff_file);
   assert(static_cast<bool>(mf));
-  osmfd = openat(project->dirfd, (project->name + ".diff").c_str(), O_CREAT | O_WRONLY, 0644);
-  assert_cmpnum_op(osmfd, >=, 0);
-  assert_cmpnum(write(osmfd, mf.data(), mf.length()), mf.length());
-  close(osmfd);
+  {
+    fdguard osmfd(openat(project->dirfd, (project->name + ".diff").c_str(), O_CREAT | O_WRONLY, 0644));
+    assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
+    assert_cmpnum(write(osmfd, mf.data(), mf.length()), mf.length());
+  }
 
   std::unique_ptr<project_t> global;
   assert(project->rename("newproj", global));
@@ -328,10 +334,11 @@ static void testRename(const std::string &tmpdir, const char *diff_file)
   assert(!project->diff_file_present());
 
   // recreate it with the unmodified diff
-  osmfd = open(ndiffname.c_str(), O_CREAT | O_WRONLY, 0644);
-  assert_cmpnum_op(osmfd, >=, 0);
-  assert_cmpnum(write(osmfd, mf.data(), mf.length()), mf.length());
-  close(osmfd);
+  {
+    fdguard osmfd(open(ndiffname.c_str(), O_CREAT | O_WRONLY, 0644));
+    assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
+    assert_cmpnum(write(osmfd, mf.data(), mf.length()), mf.length());
+  }
   assert(project->diff_file_present());
 
   // throw away all changes
