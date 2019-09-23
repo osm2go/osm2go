@@ -104,8 +104,7 @@ namespace osm2go_platform {
    * displayed, the second with the values that are returned. Both must be
    * of type G_TYPE_STRING.
    *
-   * The widget takes a reference on the model. Only the first character of delimiter
-   * is used, so it may be a pointer to a single char.
+   * The widget takes a reference on the model.
    *
    * This puts the select_widget() behind a picker button on Fremantle. It just
    * returns the select_widget() on desktop systems.
