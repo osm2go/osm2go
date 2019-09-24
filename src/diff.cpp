@@ -49,11 +49,16 @@
 #error "libxml doesn't support required tree or output"
 #endif
 
-static std::string diff_filename(const project_t *project) {
+namespace {
+
+std::string
+diff_filename(const project_t *project)
+{
   return project->name + ".diff";
 }
 
-static std::string project_diff_name(const project_t *project)
+std::string
+project_diff_name(const project_t *project)
 {
   struct stat st;
 
@@ -72,8 +77,6 @@ static std::string project_diff_name(const project_t *project)
 
   return diff_name;
 }
-
-namespace {
 
 struct diff_save_tags_functor {
   xmlNode * const node;

@@ -67,6 +67,19 @@ elemstyle_condition_t::elemstyle_condition_t(const char *k, bool b)
 {
 }
 
+// ratio conversions
+
+// Scaling constants. Our "zoom" is a screenpx:canvasunit ratio, and the figure
+// given by an elemstyles.xml is the denominator of a screen:real ratio.
+
+#define N810_PX_PER_METRE (800 / 0.09)
+    // XXX should probably ask the windowing system for DPI and
+    // work from that instead
+
+float scaledn_to_zoom(const float scaledn) {
+  return N810_PX_PER_METRE / scaledn;
+}
+
 namespace {
 
 typedef std::unordered_map<std::string, color_t> ColorMap;
@@ -132,24 +145,11 @@ private:
   }
 };
 
-}
-
-// ratio conversions
-
-// Scaling constants. Our "zoom" is a screenpx:canvasunit ratio, and the figure
-// given by an elemstyles.xml is the denominator of a screen:real ratio.
-
-#define N810_PX_PER_METRE (800 / 0.09)
-    // XXX should probably ask the windowing system for DPI and
-    // work from that instead
-
-float scaledn_to_zoom(const float scaledn) {
-  return N810_PX_PER_METRE / scaledn;
-}
-
 /* --------------------- elemstyles.xml parsing ----------------------- */
 
-static bool parse_color(const char *col, color_t &color, ColorMap &colors) {
+bool
+parse_color(const char *col, color_t &color, ColorMap &colors)
+{
   bool ret = false;
 
   /* if the color name contains a # it's a hex representation */
@@ -184,6 +184,8 @@ static bool parse_color(const char *col, color_t &color, ColorMap &colors) {
   return ret;
 }
 
+}
+
 bool parse_color(xmlNode *a_node, const char *name, color_t &color)
 {
   xmlString color_str(xmlGetProp(a_node, BAD_CAST name));
@@ -196,12 +198,17 @@ bool parse_color(xmlNode *a_node, const char *name, color_t &color)
   return ret;
 }
 
-static float parse_scale_buf(const char *buf)
+namespace {
+
+float
+parse_scale_buf(const char *buf)
 {
   return scaledn_to_zoom(osm2go_platform::string_to_double(buf));
 }
 
-static float parse_scale(const char *val_str, int len) {
+float
+parse_scale(const char *val_str, int len)
+{
   char buf[32];
   if(unlikely(static_cast<unsigned int>(len) >= sizeof(buf))) {
     // just for the case someone is really excessive with trailing or leading zeroes
@@ -214,8 +221,8 @@ static float parse_scale(const char *val_str, int len) {
   }
 }
 
-static const std::array<const char *, 3> true_values = { { "1", "yes", "true" } };
-static const std::array<const char *, 3> false_values = { { "0", "no", "false" } };
+const std::array<const char *, 3> true_values = { { "1", "yes", "true" } };
+const std::array<const char *, 3> false_values = { { "0", "no", "false" } };
 
 class case_match {
   const char * const needle;
@@ -227,7 +234,8 @@ public:
   }
 };
 
-static bool parse_boolean(const char *bool_str, const std::array<const char *, 3> &value_strings)
+bool
+parse_boolean(const char *bool_str, const std::array<const char *, 3> &value_strings)
 {
   return std::find_if(value_strings.begin(), value_strings.end(), case_match(bool_str))
          != value_strings.end();
@@ -281,7 +289,9 @@ void StyleSax::characters(const char *ch, int len)
 }
 
 /* parse "+123", "-123" and "123%" */
-static void parse_width_mod(const char *mod_str, elemstyle_width_mod_t &value) {
+void
+parse_width_mod(const char *mod_str, elemstyle_width_mod_t &value)
+{
   if(*mod_str != '\0') {
     if(mod_str[0] == '+') {
       value.mod = ES_MOD_ADD;
@@ -297,7 +307,8 @@ static void parse_width_mod(const char *mod_str, elemstyle_width_mod_t &value) {
   }
 }
 
-static int parse_priority(const char *attr)
+int
+parse_priority(const char *attr)
 {
   char *endch;
   long prio = strtol(attr, &endch, 10);
@@ -480,6 +491,8 @@ void StyleSax::endElement(const xmlChar *name)
   state = it->oldState;
 }
 
+}
+
 std::vector<elemstyle_t *> josm_elemstyles_load(const char *name) {
   printf("Loading JOSM elemstyles %s ...\n", name);
 
@@ -531,6 +544,8 @@ bool elemstyle_condition_t::matches(const base_object_t &obj) const {
   return true;
 }
 
+namespace {
+
 struct condition_not_matches_obj {
   const base_object_t &obj;
   explicit condition_not_matches_obj(const base_object_t *o) : obj(*o) {}
@@ -539,7 +554,9 @@ struct condition_not_matches_obj {
   }
 };
 
-static void node_icon_unref(style_t *style, const node_t *node, icon_t &icons) {
+void
+node_icon_unref(style_t *style, const node_t *node, icon_t &icons)
+{
   style_t::IconCache::iterator it = style->node_icons.find(node->id);
   if(it != style->node_icons.end()) {
     icons.icon_free(it->second);
@@ -599,6 +616,8 @@ void colorize_node::operator()(const elemstyle_t *elemstyle)
   priority = elemstyle->icon.priority;
 }
 
+}
+
 void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
   node->zoom_max = style->node.zoom_max;
 
@@ -614,6 +633,8 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
     node_icon_unref(style, node, icons);
 }
 
+namespace {
+
 struct josm_elemstyles_colorize_node_functor {
   style_t * const style;
   explicit inline josm_elemstyles_colorize_node_functor(style_t *s) : style(s) {}
@@ -622,7 +643,9 @@ struct josm_elemstyles_colorize_node_functor {
   }
 };
 
-static int line_mod_apply_width(int width, const elemstyle_width_mod_t *mod) {
+int
+line_mod_apply_width(int width, const elemstyle_width_mod_t *mod)
+{
   switch(mod->mod) {
   case ES_MOD_NONE:
   default:
@@ -758,6 +781,8 @@ void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
     if(line_mod->color != 0)
       way->draw.color = line_mod->color;
   }
+}
+
 }
 
 void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
