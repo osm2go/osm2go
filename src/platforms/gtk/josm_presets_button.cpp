@@ -51,14 +51,20 @@ struct preset_attach_context {
   guint &y;
 };
 
-static void attach_both(preset_attach_context &attctx, GtkWidget *widget) {
+namespace {
+
+void
+attach_both(preset_attach_context &attctx, GtkWidget *widget)
+{
   gtk_table_attach(attctx.table, widget, 0, 2, attctx.y, attctx.y + 1,
                    static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
                    static_cast<GtkAttachOptions>(0), 0, 0);
   attctx.y++;
 }
 
-static void attach_right(preset_attach_context &attctx, const char *text, GtkWidget *widget) {
+void
+attach_right(preset_attach_context &attctx, const char *text, GtkWidget *widget)
+{
   if(text != nullptr) {
     gtk_table_attach(attctx.table, gtk_label_new(text), 0, 1, attctx.y, attctx.y + 1,
                      static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
@@ -76,8 +82,8 @@ static void attach_right(preset_attach_context &attctx, const char *text, GtkWid
  * @param tags all tags of the object
  * @param value the new value
  */
-static bool store_value(const presets_element_t *widget, osm_t::TagMap &tags,
-                        std::string value)
+bool
+store_value(const presets_element_t *widget, osm_t::TagMap &tags, std::string value)
 {
   bool changed;
   osm_t::TagMap::iterator ctag = tags.find(widget->key);
@@ -104,7 +110,8 @@ static bool store_value(const presets_element_t *widget, osm_t::TagMap &tags,
 }
 
 #ifdef FREMANTLE
-static gboolean table_expose_event(GtkWidget *widget, GdkEventExpose *, bool *first)
+gboolean
+table_expose_event(GtkWidget *widget, GdkEventExpose *, bool *first)
 {
   if(*first) {
     guint border_width =
@@ -253,7 +260,9 @@ void get_widget_functor::operator()(const presets_element_t* w)
   }
 }
 
-static void presets_item_dialog(const presets_item *item) {
+void
+presets_item_dialog(const presets_item *item)
+{
   osm2go_platform::DialogGuard dialog;
   bool ok;
 
@@ -357,7 +366,8 @@ static void presets_item_dialog(const presets_item *item) {
 /* ------------------- the item list (popup menu) -------------- */
 
 #ifndef PICKER_MENU
-static GtkWidget *create_menuitem(icon_t &icons, const presets_item_named *item)
+GtkWidget *
+create_menuitem(icon_t &icons, const presets_item_named *item)
 {
   GtkWidget *menu_item;
 
@@ -384,7 +394,8 @@ struct build_menu_functor {
 };
 
 template<typename T>
-static GtkWidget *build_menu(const T &items, GtkWidget **matches)
+GtkWidget *
+build_menu(const T &items, GtkWidget **matches)
 {
   build_menu_functor fc(gtk_menu_new(), matches);
 
@@ -443,8 +454,8 @@ struct group_member_used {
   bool operator()(const presets_item_t *item);
 };
 
-static bool preset_group_is_used(const presets_item_group *item,
-                                 const osm_t::TagMap &tags)
+bool
+preset_group_is_used(const presets_item_group *item, const osm_t::TagMap &tags)
 {
   assert(item->type & presets_item_t::TY_GROUP);
   return std::find_if(item->items.begin(), item->items.end(),
@@ -468,7 +479,9 @@ enum {
   PRESETS_PICKER_NUM_COLS
 };
 
-static void remove_sub(presets_context_t::submenu_vector::value_type &sub_item) {
+void
+remove_sub(presets_context_t::submenu_vector::value_type &sub_item)
+{
 #if __cplusplus < 201103L
   // the unique_ptr will remove them automatically on destruction
   if(sub_item.widget) {
@@ -480,7 +493,7 @@ static void remove_sub(presets_context_t::submenu_vector::value_type &sub_item) 
 #endif
 }
 
-static void
+void
 on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *context) {
 #ifdef FREMANTLE
   /* try to prevent inital selection */
@@ -571,7 +584,9 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
   }
 }
 
-static GtkListStore *presets_picker_store(GtkTreeView **view) {
+GtkListStore *
+presets_picker_store(GtkTreeView **view)
+{
   GtkCellRenderer *renderer;
 
   *view = osm2go_platform::tree_view_new();
@@ -606,8 +621,9 @@ static GtkListStore *presets_picker_store(GtkTreeView **view) {
 			     );
 }
 
-static GtkWidget *presets_picker_embed(GtkTreeView *view, GtkListStore *store,
-                                       presets_context_t *context) {
+GtkWidget *
+presets_picker_embed(GtkTreeView *view, GtkListStore *store, presets_context_t *context)
+{
   gtk_tree_view_set_model(view, GTK_TREE_MODEL(store));
   g_object_unref(store);
 
@@ -621,8 +637,9 @@ static GtkWidget *presets_picker_embed(GtkTreeView *view, GtkListStore *store,
   return osm2go_platform::scrollable_container(GTK_WIDGET(view), false);
 }
 
-static GtkTreeIter preset_insert_item(const presets_item_named *item, icon_t &icons,
-                                      GtkListStore *store) {
+GtkTreeIter
+preset_insert_item(const presets_item_named *item, icon_t &icons, GtkListStore *store)
+{
   /* icon load can cope with empty string as name (returns nullptr then) */
   icon_item *icon = icons.load(item->icon, 16);
 
@@ -783,7 +800,9 @@ presets_context_t::presets_picker(const std::vector<presets_item_t *> &items,
 }
 #endif
 
-static gint button_press(GtkWidget *widget, GdkEventButton *event) {
+gint
+button_press(GtkWidget *widget, GdkEventButton *event)
+{
   if(event->type != GDK_BUTTON_PRESS)
     return FALSE;
 
@@ -857,10 +876,14 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event) {
   return TRUE;
 }
 
-static gint on_button_destroy(presets_context_t *context) {
+gint
+on_button_destroy(presets_context_t *context)
+{
   delete context;
 
   return FALSE;
+}
+
 }
 
 GtkWidget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_context) {
