@@ -324,9 +324,13 @@ void canvas_t::erase(unsigned int group_mask) {
   }
 }
 
+namespace {
+
 /* check whether a given point is inside a polygon */
 /* inpoly() taken from https://www.visibone.com/inpoly/ */
-static bool inpoly(const canvas_item_info_poly *poly, int x, int y) {
+bool
+inpoly(const canvas_item_info_poly *poly, int x, int y)
+{
   int xold, yold;
 
   if(poly->num_points < 3)
@@ -394,7 +398,8 @@ bool item_at_functor::operator()(const canvas_item_info_t *item) const
   assert_unreachable();
 }
 
-static gint item_at_compare(gconstpointer i, gconstpointer f)
+gint
+item_at_compare(gconstpointer i, gconstpointer f)
 {
   const item_at_functor &fc = *static_cast<const item_at_functor *>(f);
   const canvas_item_t * const citem = static_cast<const canvas_item_t *>(i);
@@ -412,6 +417,8 @@ struct g_list_deleter {
   inline void operator()(GList *list)
   { g_list_free(list); }
 };
+
+}
 
 /* try to find the object at position x/y by searching through the */
 /* item_info list */
@@ -458,6 +465,8 @@ canvas_item_circle *canvas_t::circle_new(canvas_group_t group, lpos_t c,
   return static_cast<canvas_item_circle *>(item);
 }
 
+namespace {
+
 class points_fill {
   GooCanvasPoints * const gpoints;
   unsigned int offs;
@@ -469,12 +478,16 @@ public:
   }
 };
 
-static GooCanvasPoints *canvas_points_create(const std::vector<lpos_t> &points) {
+GooCanvasPoints *
+canvas_points_create(const std::vector<lpos_t> &points)
+{
   GooCanvasPoints *gpoints = goo_canvas_points_new(points.size());
 
   std::for_each(points.begin(), points.end(), points_fill(gpoints));
 
   return gpoints;
+}
+
 }
 
 canvas_item_polyline *canvas_t::polyline_new(canvas_group_t group, const std::vector<lpos_t> &points,
