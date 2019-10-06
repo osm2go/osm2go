@@ -43,8 +43,7 @@ struct map_highlight_t {
 
   void clear();
 
-  void circle_new(map_t *map, canvas_group_t group, node_t *node,
-                  unsigned int radius, color_t color);
+  void circle_new(map_t *map, canvas_group_t group, node_t *node, float radius, color_t color);
 
   void polyline_new(map_t *map, canvas_group_t group, way_t *way,
                     const std::vector<lpos_t> &points, color_t color);

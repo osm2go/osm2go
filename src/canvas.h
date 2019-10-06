@@ -110,7 +110,7 @@ struct canvas_item_circle : public canvas_item_t {
   canvas_item_circle() O2G_DELETED_FUNCTION;
   canvas_item_circle &operator=(const canvas_item_circle &) O2G_DELETED_FUNCTION;
 
-  void set_radius(int radius);
+  void set_radius(float radius);
 };
 
 struct canvas_item_polyline : public canvas_item_t {
@@ -190,7 +190,7 @@ public:
   void item_to_bottom(canvas_item_t *item);
 
   /***** creating items ******/
-  canvas_item_circle *circle_new(canvas_group_t group, lpos_t c, unsigned int radius, int border,
+  canvas_item_circle *circle_new(canvas_group_t group, lpos_t c, float radius, int border,
                             color_t fill_col, color_t border_col = color_t::transparent());
   canvas_item_polyline *polyline_new(canvas_group_t group, const std::vector<lpos_t> &points,
                               unsigned int width, color_t color);

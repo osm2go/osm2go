@@ -449,7 +449,7 @@ canvas_item_t *canvas_t::get_item_at(lpos_t pos) const {
 }
 
 canvas_item_circle *canvas_t::circle_new(canvas_group_t group, lpos_t c,
-                                    unsigned int radius, int border,
+                                    float radius, int border,
                                     color_t fill_col, color_t border_col) {
   canvas_item_t *item =
     goo_canvas_ellipse_new(static_cast<canvas_goocanvas *>(this)->group[group],
@@ -460,7 +460,7 @@ canvas_item_circle *canvas_t::circle_new(canvas_group_t group, lpos_t c,
                            nullptr);
 
   if(CANVAS_SELECTABLE & (1<<group))
-    (void) new canvas_item_info_circle(this, item, c, radius + border);
+    (void) new canvas_item_info_circle(this, item, c, static_cast<unsigned int>(radius) + border);
 
   return static_cast<canvas_item_circle *>(item);
 }
@@ -562,7 +562,9 @@ void canvas_item_polyline::set_points(const std::vector<lpos_t> &points) {
   g_object_set(G_OBJECT(this), "points", cpoints.get(), nullptr);
 }
 
-void canvas_item_circle::set_radius(int radius) {
+void
+canvas_item_circle::set_radius(float radius)
+{
   g_object_set(G_OBJECT(this),
                "radius-x", static_cast<gdouble>(radius),
                "radius-y", static_cast<gdouble>(radius),

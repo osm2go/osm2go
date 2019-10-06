@@ -78,7 +78,7 @@ bool map_highlight_t::isHighlighted(const map_item_t& item) const
 }
 
 void map_highlight_t::circle_new(map_t *map, canvas_group_t group, node_t *node,
-                                 unsigned int radius, color_t color)
+                                 float radius, color_t color)
 {
   map_item_t *map_item = new map_item_t(object_t(node));
   map_item->item = map->canvas->circle_new(group, node->lpos, radius, 0, color);

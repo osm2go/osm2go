@@ -361,8 +361,9 @@ void map_t::item_deselect() {
   selected.object.type = object_t::ILLEGAL;
 }
 
-static void map_node_new(map_t *map, node_t *node, unsigned int radius,
-                         int width, color_t fill, color_t border) {
+static void
+map_node_new(map_t *map, node_t *node, float radius, int width, color_t fill, color_t border)
+{
   map_item_t *map_item = new map_item_t(object_t(node));
 
   style_t::IconCache::const_iterator it;
