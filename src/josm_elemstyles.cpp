@@ -436,7 +436,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
         parse_width_mod(attrs[i + 1], line_mod.line);
       else if(strcmp(attrs[i], "width_bg") == 0)
         parse_width_mod(attrs[i + 1], line_mod.bg);
-      else if(strcmp(attrs[i], "priority") == 0)
+      else if(likely(strcmp(attrs[i], "priority") == 0))
         line_mod.priority = parse_priority(attrs[i + 1]);
     }
     break;
@@ -447,7 +447,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
 
     bool hasColor = false;
     for(unsigned int i = 0; attrs[i] != nullptr && !hasColor; i += 2) {
-      if(strcmp(attrs[i], "colour") == 0)
+      if(likely(strcmp(attrs[i], "colour") == 0))
         hasColor = parse_color(attrs[i + 1], elemstyle->area.color, colors);
       else if(strcmp(attrs[i], "priority") == 0)
         elemstyle->area.priority = parse_priority(attrs[i + 1]);
@@ -463,7 +463,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
         elemstyle->icon.annotate = (strcmp(attrs[i + 1], "true") != 0);
       else if(strcmp(attrs[i], "src") == 0)
         elemstyle->icon.filename = josm_icon_name_adjust(attrs[i + 1]);
-      else if(strcmp(attrs[i], "priority") == 0)
+      else if(likely(strcmp(attrs[i], "priority") == 0))
         elemstyle->icon.priority = parse_priority(attrs[i + 1]);
     }
 
