@@ -72,7 +72,7 @@ elemstyle_condition_t::elemstyle_condition_t(const char *k, bool b)
 // Scaling constants. Our "zoom" is a screenpx:canvasunit ratio, and the figure
 // given by an elemstyles.xml is the denominator of a screen:real ratio.
 
-#define N810_PX_PER_METRE (800 / 0.09)
+#define N810_PX_PER_METRE (800.0f / 0.09f)
     // XXX should probably ask the windowing system for DPI and
     // work from that instead
 
@@ -519,7 +519,7 @@ void josm_elemstyles_free(std::vector<elemstyle_t *> &elemstyles) {
   elemstyles.clear();
 }
 
-#define WIDTH_SCALE (1.0)
+#define WIDTH_SCALE (1)
 
 bool elemstyle_condition_t::matches(const base_object_t &obj) const {
   if(key != nullptr) {

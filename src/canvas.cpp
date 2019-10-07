@@ -114,7 +114,7 @@ int canvas_item_info_poly::get_segment(int x, int y, float fuzziness) const
     float m = (static_cast<float>(x - pos.x) * dx + static_cast<float>(y - pos.y) * dy) / len;
 
     /* this is a possible candidate */
-    if((m >= 0.0) && (m <= 1.0)) {
+    if((m >= 0.0f) && (m <= 1.0f)) {
 
       float n;
       if(abs(dx) > abs(dy))

@@ -543,7 +543,7 @@ canvas_item_pixmap *canvas_t::image_new(canvas_group_t group, icon_item *icon, l
   goo_canvas_item_scale(item, scale, scale);
 
   if(CANVAS_SELECTABLE & (1<<group)) {
-    int radius = 0.75 * scale * std::max(width, height);
+    int radius = 0.75f * scale * std::max(width, height);
     (void) new canvas_item_info_circle(this, item, pos, radius);
   }
 
@@ -593,9 +593,9 @@ void canvas_item_t::set_zoom_max(float zoom_max) {
 void canvas_item_t::set_dashed(unsigned int line_width, unsigned int dash_length_on,
                                unsigned int dash_length_off) {
   GooCanvasLineDash *dash;
+  guint cap = CAIRO_LINE_CAP_BUTT;
   gfloat off_len = dash_length_off;
   gfloat on_len = dash_length_on;
-  guint cap = CAIRO_LINE_CAP_BUTT;
   if(dash_length_on > line_width)
     cap = CAIRO_LINE_CAP_ROUND;
 

@@ -41,7 +41,7 @@
 #define ZOOM_FACTOR_WHEEL  (1.1)
 #define ZOOM_FACTOR_BUTTON (1.5)
 
-#define MAP_DETAIL_STEP 1.5
+#define MAP_DETAIL_STEP 1.5f
 
 /* the "drag limit" is the number of pixels the mouse/pen has to */
 /* be moved so the action is actually considered dragging. This is */

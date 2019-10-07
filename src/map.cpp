@@ -117,7 +117,7 @@ static void map_object_select(map_t *map, node_t *node)
      (it = map->style->node_icons.find(node->id)) != map->style->node_icons.end()) {
     /* icons are technically square, so a radius slightly bigger */
     /* than sqrt(2)*MAX(w,h) should fit nicely */
-    radius = 0.75 * map->style->icon.scale * it->second->maxDimension();
+    radius = 0.75f * map->style->icon.scale * it->second->maxDimension();
   } else {
     radius = map->style->highlight.width + map->style->node.radius;
     if(node->ways == 0)
@@ -194,7 +194,7 @@ void draw_selected_way_functor::operator()(node_t *node)
 
     /* only draw arrow if there's sufficient space */
     /* TODO: what if there's not enough space anywhere? */
-    float len = std::sqrt(std::pow(diff.x, 2) + std::pow(diff.y, 2)) / arrow_width;
+    float len = std::sqrt(std::pow(diff.x, 2.0f) + std::pow(diff.y, 2.0f)) / arrow_width;
     if(len > map->style->highlight.arrow_limit) {
       struct { float x, y; } center;
       center.x = (last->lpos.x + node->lpos.x) / 2.0;
@@ -723,7 +723,7 @@ void map_t::set_zoom(double zoom, bool update_scroll_offsets) {
   }
 
   if(gps_item != nullptr) {
-    float radius = style->track.width / 2.0;
+    float radius = style->track.width / 2.0f;
     if(zoom < GPS_RADIUS_LIMIT) {
       radius *= GPS_RADIUS_LIMIT;
       radius /= zoom;
@@ -1593,7 +1593,7 @@ void map_t::track_pos(const lpos_t lpos) {
   /* remove the old item */
   remove_gps_position();
 
-  float radius = style->track.width / 2.0;
+  float radius = style->track.width / 2.0f;
   double zoom = canvas->get_zoom();
   if(zoom < GPS_RADIUS_LIMIT) {
     radius *= GPS_RADIUS_LIMIT;

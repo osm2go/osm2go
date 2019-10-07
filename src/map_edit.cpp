@@ -67,8 +67,8 @@ void map_t::way_add_segment(lpos_t pos) {
   if(lnode != nullptr) {
     const lpos_t lnpos = lnode->lpos;
 
-    if(appdata.project->map_state.zoom * std::sqrt((lnpos.x - pos.x) * (lnpos.x - pos.x) +
-                              (lnpos.y - pos.y) * (lnpos.y - pos.y)) < 5) {
+    if(appdata.project->map_state.zoom * std::sqrt(static_cast<float>((lnpos.x - pos.x) * (lnpos.x - pos.x) +
+                              (lnpos.y - pos.y) * (lnpos.y - pos.y))) < 5.0f) {
 #if 0
       printf("detected double click -> simulate ok click\n");
       touchnode_clear();

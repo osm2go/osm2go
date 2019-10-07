@@ -105,7 +105,7 @@ int main(int argc, char **argv)
   assert(!style->node_icons.empty());
   assert(style->node_icons[node->id] != nullptr);
   assert(oldicon != style->node_icons[node->id]);
-  assert_cmpnum_op(oldzoom * 1.9, <, node->zoom_max);
+  assert_cmpnum_op(oldzoom * 1.9f, <, node->zoom_max);
 
   way_t * const way = osm->way_attach(new way_t(0));
 
