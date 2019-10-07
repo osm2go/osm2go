@@ -773,12 +773,12 @@ void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
     if(line_mod->bg.mod != ES_MOD_NONE && !(way->draw.flags & OSM_DRAW_FLAG_BG)) {
       /* add a background in black color */
       way->draw.flags |= OSM_DRAW_FLAG_BG;
-      way->draw.bg.color = (0) | 0xff;
+      way->draw.bg.color = color_t::black();
       way->draw.bg.width =  way->draw.width;
     }
 
     way->draw.bg.width = line_mod_apply_width(way->draw.bg.width, &line_mod->bg);
-    if(line_mod->color != 0)
+    if(!line_mod->color.is_transparent())
       way->draw.color = line_mod->color;
   }
 }
