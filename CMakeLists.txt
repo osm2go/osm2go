@@ -88,6 +88,13 @@ find_package(PkgConfig REQUIRED)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wshadow -Wpointer-arith")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow -Wpointer-arith")
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 4.8)
+	# the warning is already available in gcc 4.7, but there NULL is badly defined so it will
+	# cause lot of warnings in the Gtk headers
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wzero-as-null-pointer-constant")
+endif ()
+
 set(CMAKE_CXX_STANDARD 11)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/find_filesystem.cmake)
