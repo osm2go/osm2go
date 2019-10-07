@@ -31,7 +31,7 @@ struct check_icon {
   bool operator()(const std::string &dir);
 };
 
-static std::set<std::string> missingIcons;
+std::set<std::string> missingIcons;
 
 bool check_icon::operator()(const std::string &dir)
 {

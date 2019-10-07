@@ -13,7 +13,7 @@
 
 namespace {
 
-#define TESTTAG(a, b) static osm_t::TagMap::value_type tag_##a##_##b(#a, #b)
+#define TESTTAG(a, b) osm_t::TagMap::value_type tag_##a##_##b(#a, #b)
 
 TESTTAG(testkey, other);
 TESTTAG(testkey, testtext);

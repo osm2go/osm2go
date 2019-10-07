@@ -63,8 +63,8 @@ struct charcmp {
 };
 
 typedef std::map<const char *, WmsImageFormat, charcmp> FormatMap;
-static FormatMap ImageFormats;
-static std::map<WmsImageFormat, const char *> ImageFormatExtensions;
+FormatMap ImageFormats;
+std::map<WmsImageFormat, const char *> ImageFormatExtensions;
 
 void
 initImageFormats()
@@ -575,7 +575,7 @@ struct server_preset_s {
   const char *name, *server;
 };
 
-static const std::array<struct server_preset_s, 1> default_servers = { {
+const std::array<struct server_preset_s, 1> default_servers = { {
   { "Open Geospatial Consortium Web Services",
 #ifdef FREMANTLE
                                                "http://ows.terrestris.de/osm/service?" }
