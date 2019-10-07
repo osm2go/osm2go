@@ -95,42 +95,6 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/find_optional.cmake)
 
 set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 
-# The epilog defines nullptr on unsupported compilers, using __null instead of 0 on
-# gcc (i.e. N900 gcc 4.2) to make the function sentinel detection working again and
-# avoid all the misleading compiler warnings generated otherwise.
-if (CMAKE_VERSION VERSION_LESS 3.12)
-	set(WCDH_COMPAT
-		EPILOG
-"#if !(defined(O2G_COMPILER_CXX_NULLPTR) && O2G_COMPILER_CXX_NULLPTR)
-# if O2G_COMPILER_IS_GNU
-#  define nullptr __null
-# else
-#  define nullptr O2G_NULLPTR
-# endif
-#endif
-#undef O2G_NULLPTR
-#if !(defined(O2G_COMPILER_CXX_OVERRIDE) && O2G_COMPILER_CXX_OVERRIDE)
-#  define override
-#endif
-#undef O2G_OVERRIDE
-#if !(defined(O2G_COMPILER_CXX_NOEXCEPT) && O2G_COMPILER_CXX_NOEXCEPT)
-#  define noexcept
-#endif
-#undef O2G_NOEXCEPT
-#if !(defined(O2G_COMPILER_CXX_STATIC_ASSERT) && O2G_COMPILER_CXX_STATIC_ASSERT)
-#  define static_assert(X, MSG) O2G_STATIC_ASSERT_MSG(X, MSG)
-#endif
-")
-else ()
-	set(WCDH_COMPAT
-		BARE_FEATURES cxx_nullptr cxx_override cxx_noexcept
-		EPILOG
-"#if !(defined(O2G_COMPILER_CXX_STATIC_ASSERT) && O2G_COMPILER_CXX_STATIC_ASSERT)
-#  define static_assert(X, MSG) O2G_STATIC_ASSERT_MSG(X, MSG)
-#endif
-")
-endif ()
-
 write_compiler_detection_header(
 		FILE "${CMAKE_CURRENT_BINARY_DIR}/osm2go_cpp.h"
 		PREFIX "O2G"
@@ -139,7 +103,12 @@ write_compiler_detection_header(
 				cxx_noexcept
 		ALLOW_UNKNOWN_COMPILER_VERSIONS ALLOW_UNKNOWN_COMPILERS
 		${WCDH_COMPAT}
-)
+		BARE_FEATURES cxx_nullptr cxx_override cxx_noexcept
+		EPILOG
+"#if !(defined(O2G_COMPILER_CXX_STATIC_ASSERT) && O2G_COMPILER_CXX_STATIC_ASSERT)
+#  define static_assert(X, MSG) O2G_STATIC_ASSERT_MSG(X, MSG)
+#endif
+")
 
 add_library(osm2go_lib STATIC
 	src/appdata.h
