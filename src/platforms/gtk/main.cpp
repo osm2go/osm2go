@@ -599,7 +599,7 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
 {
   return menu_append_new_item(&appdata, menu_shell, activate_cb, nullptr, nullptr,
                               accel_path, keys,
-                              static_cast<GtkWidget *>(static_cast<MainUiGtk *>(appdata.uicontrol.get())->menu_item(item)));
+                              static_cast<MainUiGtk *>(appdata.uicontrol.get())->menu_item(item));
 }
 
 static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {

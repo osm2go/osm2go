@@ -496,8 +496,7 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
   for(unsigned int i = 0; i < parts.size(); i++)
     url += parts[i];
 
-  const std::string filename = std::string(appdata.project->path) + "wms." +
-                               ImageFormatExtensions[it->second];
+  const std::string filename = appdata.project->path + "wms." + ImageFormatExtensions[it->second];
 
   /* remove any existing image before */
   wms_remove(appdata);

@@ -634,7 +634,7 @@ bool canvas_goocanvas::isVisible(const lpos_t lpos) const
   // Viewport dimensions in canvas space
 
   /* get size of visible area in canvas units (meters) */
-  const canvas_dimensions dim = static_cast<const canvas_goocanvas *>(this)->get_viewport_dimensions();
+  const canvas_dimensions dim = get_viewport_dimensions();
 
   // Is the point still onscreen?
   osm2go_platform::screenpos s = scroll_get();
