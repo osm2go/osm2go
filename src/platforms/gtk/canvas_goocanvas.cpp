@@ -594,12 +594,11 @@ void canvas_item_t::set_dashed(unsigned int line_width, unsigned int dash_length
                                unsigned int dash_length_off) {
   GooCanvasLineDash *dash;
   guint cap = CAIRO_LINE_CAP_BUTT;
-  gfloat off_len = dash_length_off;
-  gfloat on_len = dash_length_on;
   if(dash_length_on > line_width)
     cap = CAIRO_LINE_CAP_ROUND;
 
-  dash = goo_canvas_line_dash_new(2, on_len, off_len, 0);
+  dash = goo_canvas_line_dash_new(2, static_cast<gdouble>(dash_length_on),
+                                  static_cast<gdouble>(dash_length_off));
   g_object_set(G_OBJECT(this),
                "line-dash", dash,
                "line-cap", cap,
