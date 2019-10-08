@@ -580,7 +580,7 @@ void canvas_item_t::set_zoom_max(float zoom_max) {
   gdouble vis_thres = zoom_max;
   GooCanvasItemVisibility vis
     = GOO_CANVAS_ITEM_VISIBLE_ABOVE_THRESHOLD;
-  if (vis_thres < 0) {
+  if (vis_thres <= 0) {
     vis_thres = 0;
     vis = GOO_CANVAS_ITEM_VISIBLE;
   }
