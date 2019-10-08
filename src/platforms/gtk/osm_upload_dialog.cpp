@@ -138,12 +138,11 @@ static void callback_buffer_modified(GtkTextBuffer *buffer, GtkDialog *dialog) {
 }
 
 static gboolean cb_focus_in(GtkTextView *view, GdkEventFocus *, GtkTextBuffer *buffer) {
-  gboolean first_click = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(view), "first_click"));
+  gint first_click = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(view), "first_click"));
 
-  g_object_set_data(G_OBJECT(view), "first_click", GINT_TO_POINTER(FALSE));
-
-  if(first_click == TRUE) {
+  if(first_click == 1) {
     GtkTextIter start, end;
+    g_object_set_data(G_OBJECT(view), "first_click", GINT_TO_POINTER(2));
     gtk_text_buffer_get_start_iter(buffer, &start);
     gtk_text_buffer_get_end_iter(buffer, &end);
     gtk_text_buffer_delete(buffer, &start, &end);
@@ -269,7 +268,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
   gtk_text_view_set_left_margin(view, 2 );
   gtk_text_view_set_right_margin(view, 2 );
 
-  g_object_set_data(G_OBJECT(view), "first_click", GINT_TO_POINTER(TRUE));
+  g_object_set_data(G_OBJECT(view), "first_click", GINT_TO_POINTER(1));
   g_signal_connect(view, "focus-in-event", G_CALLBACK(cb_focus_in), buffer);
 
   gtk_box_pack_start(dialog.vbox(), osm2go_platform::scrollable_container(GTK_WIDGET(view)), TRUE, TRUE, 0);
