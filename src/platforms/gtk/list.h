@@ -67,6 +67,8 @@ struct list_view_column {
 
 typedef std::pair<const char *, GCallback> list_button;
 
+typedef void(*list_changed_callback)(GtkTreeSelection*, void*);
+
 /**
  * @brief create a new list widget
  * @param show_headers if the table headers should be shown
@@ -79,7 +81,7 @@ typedef std::pair<const char *, GCallback> list_button;
  * WARNING: all callbacks have swapped arguments
  */
 GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
-                    void(*cb_changed)(GtkTreeSelection*,void*),
+                    list_changed_callback cb_changed,
                     const std::vector<list_button> &buttons,
                     const std::vector<list_view_column> &columns,
                     GtkTreeModel *store);

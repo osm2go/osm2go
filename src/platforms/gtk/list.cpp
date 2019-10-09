@@ -45,12 +45,11 @@
 namespace {
 
 struct list_priv_t {
-  typedef void (*change_cb)(GtkTreeSelection *, void *);
-  list_priv_t(change_cb cb, void *cb_ctx, GtkWidget *tw, unsigned int btnflags);
+  list_priv_t(list_changed_callback cb, void *cb_ctx, GtkWidget *tw, unsigned int btnflags);
 
   GtkTreeView * const view;
 
-  const change_cb change;
+  const list_changed_callback change;
   void * const callback_context;
 
   GtkWidget * const table;
@@ -61,7 +60,7 @@ struct list_priv_t {
   } button;
 };
 
-list_priv_t::list_priv_t(change_cb cb, void *cb_ctx, GtkWidget *tw, unsigned int btnflags)
+list_priv_t::list_priv_t(list_changed_callback cb, void *cb_ctx, GtkWidget *tw, unsigned int btnflags)
   : view(osm2go_platform::tree_view_new())
   , change(cb)
   , callback_context(cb_ctx)
@@ -289,7 +288,7 @@ static void del_priv(gpointer p)
 /* a generic list widget with "add", "edit" and "remove" buttons as used */
 /* for all kinds of lists in osm2go */
 GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
-                    void(*cb_changed)(GtkTreeSelection*,void*),
+                    list_changed_callback cb_changed,
                     const std::vector<list_button> &buttons,
                     const std::vector<list_view_column> &columns,
                     GtkTreeModel *store)
