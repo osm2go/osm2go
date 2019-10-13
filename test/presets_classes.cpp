@@ -378,7 +378,7 @@ checkMultiSplit()
   assert_cmpnum(res[0], 3);
 }
 
-}
+} // namespace
 
 int main()
 {

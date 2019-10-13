@@ -585,7 +585,7 @@ struct findWay {
   }
 };
 
-}
+} // namespace
 
 static void test_split_order()
 {

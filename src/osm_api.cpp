@@ -510,7 +510,7 @@ osm_close_changeset(osm_upload_context_t &context)
   return osm_update_item(context, nullptr, url.c_str(), nullptr);
 }
 
-}
+} // namespace
 
 void osm_upload_context_t::upload(const osm_t::dirty_t &dirty, osm2go_platform::Widget *parent)
 {

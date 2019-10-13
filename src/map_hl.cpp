@@ -60,7 +60,7 @@ public:
   bool operator()(canvas_item_t *c) const;
 };
 
-}
+} // namespace
 
 bool find_highlighted::operator()(canvas_item_t* c) const
 {

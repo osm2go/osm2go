@@ -88,7 +88,7 @@ bool used_preset_functor::operator()(const presets_element_t* w)
   return (ret < 0);
 }
 
-}
+} // namespace
 
 /**
  * @brief check if the currently active object uses this preset and the preset is interactive
@@ -171,7 +171,7 @@ void role_collect_functor::operator()(const presets_item::role &role)
   result.insert(role.name);
 }
 
-}
+} // namespace
 
 std::set<std::string> presets_items_internal::roles(const relation_t *relation, const object_t &obj) const
 {

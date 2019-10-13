@@ -243,7 +243,7 @@ test_roles(const presets_items *presets)
   r.cleanup();
 }
 
-}
+} // namespace
 
 int main(int argc, char **argv)
 {

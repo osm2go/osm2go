@@ -1125,7 +1125,7 @@ struct move_chunks_functor {
   }
 };
 
-}
+} // namespace
 
 bool presets_items_internal::addFile(const std::string &filename, const std::string &basepath, int basefd)
 {

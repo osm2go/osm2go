@@ -28,7 +28,7 @@ struct tag_counter {
   }
 };
 
-}
+} // namespace
 
 int main(int argc, char **argv)
 {

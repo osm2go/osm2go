@@ -99,7 +99,7 @@ public:
   }
 };
 
-}
+} // namespace
 
 bool object_t::operator==(const object_t &other) const noexcept
 {

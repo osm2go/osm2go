@@ -120,7 +120,7 @@ private:
   }
 };
 
-}
+} // namespace
 
 /* make menu represent the track state */
 void track_menu_set(appdata_t &appdata) {
@@ -272,7 +272,7 @@ track_write(const char *name, const track_t *track, xmlDoc *d)
   xmlSaveFormatFileEnc(name, doc.get(), "UTF-8", 1);
 }
 
-}
+} // namespace
 
 /* save track in project */
 void track_save(project_t::ref project, track_t *track)

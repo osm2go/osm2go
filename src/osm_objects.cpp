@@ -108,7 +108,7 @@ public:
   }
 };
 
-}
+} // namespace
 
 const char* tag_list_t::get_value(const char *key) const
 {
@@ -190,7 +190,7 @@ public:
   }
 };
 
-}
+} // namespace
 
 void tag_list_t::replace(const osm_t::TagMap &ntags)
 {
@@ -393,7 +393,7 @@ public:
   void operator()(const member_t &member) noexcept;
 };
 
-}
+} // namespace
 
 void member_counter::operator()(const member_t &member) noexcept
 {

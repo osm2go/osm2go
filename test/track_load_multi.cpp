@@ -16,7 +16,7 @@ struct point_count {
   }
 };
 
-}
+} // namespace
 
 int main(int argc, char **argv)
 {

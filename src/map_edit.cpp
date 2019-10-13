@@ -57,7 +57,7 @@ public:
   }
 };
 
-}
+} // namespace
 
 void map_t::way_add_segment(lpos_t pos) {
   /* check if this was a double click. This is the case if */

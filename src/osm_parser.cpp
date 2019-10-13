@@ -121,7 +121,7 @@ convert_iso8601(const char *str)
   return timegm(&ctime) - gmtoff;
 }
 
-}
+} // namespace
 
 /* -------------------- tag handling ----------------------- */
 

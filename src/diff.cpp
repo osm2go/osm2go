@@ -184,7 +184,7 @@ void diff_save_objects<relation_t>::save_additional_info(const relation_t *m, xm
   m->generate_member_xml(xmlnode);
 }
 
-}
+} // namespace
 
 void project_t::diff_save() const {
   if(unlikely(!osm))
@@ -664,7 +664,7 @@ struct osmchange_delete_functor {
   }
 };
 
-}
+} // namespace
 
 void osmchange_delete(const osm_t::dirty_t &dirty, xmlNodePtr xml_node, const char *changeset)
 {

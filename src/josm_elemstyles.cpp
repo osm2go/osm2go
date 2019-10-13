@@ -184,7 +184,7 @@ parse_color(const char *col, color_t &color, ColorMap &colors)
   return ret;
 }
 
-}
+
 
 bool parse_color(xmlNode *a_node, const char *name, color_t &color)
 {
@@ -491,7 +491,7 @@ void StyleSax::endElement(const xmlChar *name)
   state = it->oldState;
 }
 
-}
+} // namespace
 
 std::vector<elemstyle_t *> josm_elemstyles_load(const char *name) {
   printf("Loading JOSM elemstyles %s ...\n", name);
@@ -616,7 +616,7 @@ void colorize_node::operator()(const elemstyle_t *elemstyle)
   priority = elemstyle->icon.priority;
 }
 
-}
+} // namespace
 
 void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
   node->zoom_max = style->node.zoom_max;
@@ -783,7 +783,7 @@ void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
   }
 }
 
-}
+} // namespace
 
 void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
   josm_elemstyles_colorize_way_functor f(style);

@@ -279,7 +279,7 @@ wms_setup_extent(project_t::ref project)
   return ret;
 }
 
-}
+} // namespace
 
 /* ---------------------- use ------------------- */
 
@@ -390,7 +390,7 @@ wmsUrl(const wms_t &wms, const char *get)
   return url;
 }
 
-}
+} // namespace
 
 wms_layer_t::list wms_get_layers(project_t::ref project, wms_t& wms)
 {
@@ -584,7 +584,7 @@ const std::array<struct server_preset_s, 1> default_servers = { {
   /* add more servers here ... */
 } };
 
-}
+} // namespace
 
 std::vector<wms_server_t *> wms_server_get_default()
 {

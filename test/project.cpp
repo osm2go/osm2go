@@ -47,7 +47,7 @@ void MainUiDummy::showNotification(const char *message, unsigned int)
   messages.push_back(message);
 }
 
-}
+} // namespace
 
 appdata_t::appdata_t()
   : uicontrol(new MainUiDummy())
