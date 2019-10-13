@@ -184,7 +184,7 @@ parse_color(const char *col, color_t &color, ColorMap &colors)
   return ret;
 }
 
-
+} // namespace
 
 bool parse_color(xmlNode *a_node, const char *name, color_t &color)
 {
