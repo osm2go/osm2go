@@ -25,7 +25,7 @@ public:
   const char *msg;
 };
 
-}
+} // namespace
 
 appdata_t::appdata_t()
   : uicontrol(new MainUiDummy())
