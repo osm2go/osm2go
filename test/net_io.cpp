@@ -36,7 +36,7 @@ static void do_file(osm2go_platform::MappedFile &lic)
   fname += "/lic";
   assert(net_io_download_file(nullptr, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/COPYING", fname, trstring::native_type(), false));
 
-  osm2go_platform::MappedFile download(fname.c_str());
+  osm2go_platform::MappedFile download(fname);
   assert(download);
   assert_cmpmem(lic.data(), lic.length(), download.data(), download.length());
 
@@ -45,7 +45,7 @@ static void do_file(osm2go_platform::MappedFile &lic)
 
   fname += ".gz";
   assert(net_io_download_file(nullptr, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/COPYING", fname, trstring::native_type(), true));
-  osm2go_platform::MappedFile downloadgz(fname.c_str());
+  osm2go_platform::MappedFile downloadgz(fname);
 
   assert(check_gzip(downloadgz.data(), downloadgz.length()));
 

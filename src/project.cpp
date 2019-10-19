@@ -267,7 +267,7 @@ bool project_t::rename(const std::string &nname, project_t::ref global, osm2go_p
     osmFile = tmpproj->osmFile;
   } else {
     osmFile = nname + ".osm";
-    osm2go_platform::MappedFile osmData((tmpproj->path + tmpproj->osmFile).c_str());
+    osm2go_platform::MappedFile osmData(tmpproj->path + tmpproj->osmFile);
     if(likely(osmData) && check_gzip(osmData.data(), osmData.length()))
       osmFile += ".gz";
   }

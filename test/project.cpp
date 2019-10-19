@@ -97,7 +97,7 @@ static void testSave(const std::string &tmpdir, const char *empty_proj)
 
   osm2go_platform::MappedFile empty(empty_proj);
   assert(empty);
-  osm2go_platform::MappedFile proj(pfile.c_str());
+  osm2go_platform::MappedFile proj(pfile);
   assert(proj);
 
   assert_cmpmem(empty.data(), empty.length(), proj.data(), proj.length());
@@ -310,7 +310,7 @@ static void testRename(const std::string &tmpdir, const char *diff_file)
   assert_cmpnum(st.st_size, 0);
   // diff exists
   const std::string ndiffname = project->path + project->name + ".diff";
-  osm2go_platform::MappedFile ndiff(ndiffname.c_str());
+  osm2go_platform::MappedFile ndiff(ndiffname);
   assert(static_cast<bool>(ndiff));
   const char *dnold = strstr(mf.data(), "diff_restore");
   const char *dnnew = strstr(ndiff.data(), project->name.c_str());

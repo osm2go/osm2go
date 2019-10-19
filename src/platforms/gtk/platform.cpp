@@ -107,8 +107,8 @@ void osm2go_platform::dialog_size_hint(GtkWindow *window, osm2go_platform::Dialo
   gtk_window_set_default_size(window, dialog_sizes.at(hint).at(0), dialog_sizes.at(hint).at(1));
 }
 
-osm2go_platform::MappedFile::MappedFile(const char *fname)
-  : map(g_mapped_file_new(fname, FALSE, nullptr))
+osm2go_platform::MappedFile::MappedFile(const std::string &fname)
+  : map(g_mapped_file_new(fname.c_str(), FALSE, nullptr))
 {
 }
 

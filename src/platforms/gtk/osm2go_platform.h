@@ -59,7 +59,7 @@ namespace osm2go_platform {
   class MappedFile {
     GMappedFile *map;
   public:
-    explicit MappedFile(const char *fname);
+    explicit MappedFile(const std::string &fname);
     inline ~MappedFile()
     { reset(); }
 

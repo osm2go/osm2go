@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 
   delete track;
 
-  osm2go_platform::MappedFile ogpx(fn.c_str());
+  osm2go_platform::MappedFile ogpx(fn);
   osm2go_platform::MappedFile ngpx(argv[3]);
 
   assert(ogpx);

@@ -94,7 +94,7 @@ bool osm_download(osm2go_platform::Widget *parent, project_t *project)
   const bool wasGzip = project->osmFile.size() > 3 && project->osmFile.compare(project->osmFile.size() - 3, 3, ".gz") == 0;
 
   // check the contents of the new file
-  osm2go_platform::MappedFile osmData(update.c_str());
+  osm2go_platform::MappedFile osmData(update);
   if(unlikely(!osmData)) {
     error_dlg(trstring("Error accessing the downloaded file:\n\n%1").arg(update), parent);
     unlink(update.c_str());
