@@ -1129,6 +1129,8 @@ struct move_chunks_functor {
 
 bool presets_items_internal::addFile(const std::string &filename, const std::string &basepath, int basefd)
 {
+  printf("... %s\n", filename.c_str());
+
   PresetSax p(*this, basepath, basefd);
   if(!p.parse(filename))
     return false;
