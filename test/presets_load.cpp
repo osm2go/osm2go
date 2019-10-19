@@ -26,8 +26,8 @@ static std::vector<std::string> basedirs;
 namespace {
 
 struct check_icon {
-  const std::string &filename;
-  explicit check_icon(const std::string &fn) : filename(fn) {}
+  const presets_item_named * const vis;
+  explicit __attribute__((nonnull(2))) check_icon(const presets_item_named *v) : vis(v) {}
   bool operator()(const std::string &dir);
 };
 
@@ -35,8 +35,8 @@ std::set<std::string> missingIcons;
 
 bool check_icon::operator()(const std::string &dir)
 {
-  if(filename[0] == '/')
-    return std::filesystem::is_regular_file(filename);
+  if(vis->icon[0] == '/')
+    return std::filesystem::is_regular_file(vis->icon);
 
   const std::array<const char *, 4> icon_exts = { { ".svg", ".gif", ".png", ".jpg" } };
   const std::string dirname = dir + "/icons";
@@ -44,7 +44,7 @@ bool check_icon::operator()(const std::string &dir)
   if(unlikely(!dirfd.valid()))
     return false;
 
-  std::string name = filename;
+  std::string name = vis->icon;
 
   for(unsigned int i = 0; i < icon_exts.size(); i++) {
     struct stat st;
@@ -166,7 +166,7 @@ checkItem(const presets_item_t *item)
 
   if(!vis->icon.empty()) {
     const std::vector<std::string>::const_iterator it = std::find_if(
-                      basedirs.begin(), basedirs.end(), check_icon(vis->icon));
+                      basedirs.begin(), basedirs.end(), check_icon(vis));
     if(it == basedirs.end())
       missingIcons.insert(vis->icon);
   }
