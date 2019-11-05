@@ -38,6 +38,7 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <map>
+#include <numeric>
 #include <strings.h>
 #include <unistd.h>
 #include <vector>
@@ -466,9 +467,6 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
   /* get required image size */
   wms.size = wms_setup_extent(appdata.project);
 
-  /* start building url */
-  std::string url = wmsUrl(wms, "Map&LAYERS=") + layers;
-
   /* uses epsg4326 if possible */
   const char *srs = srss.empty() ? wms_layer_t::EPSG4326() : srss.c_str();
 
@@ -493,8 +491,7 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
                           "&SRS=", srs, "&BBOX=", coords.c_str(),
                           buf, it->first, "&reaspect=false"
                           } };
-  for(unsigned int i = 0; i < parts.size(); i++)
-    url += parts[i];
+  const std::string url = std::accumulate(parts.begin(), parts.end(), wmsUrl(wms, "Map&LAYERS=") + layers);
 
   const std::string filename = appdata.project->path + "wms." + ImageFormatExtensions[it->second];
 
