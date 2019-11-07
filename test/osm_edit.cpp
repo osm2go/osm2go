@@ -1627,6 +1627,20 @@ static void test_description()
   n->tags.replace(tags);
   assert_cmpstr(o.get_name(*osm), "emergency access point: \"H-112\"");
 
+  // test the special bollard code
+  // have 2 tags, as the result could otherwise come from the "single tag" fallback code
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("barrier", "bollard"));
+  tags.insert(osm_t::TagMap::value_type("start_date", "2019-04-01"));
+  n->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm), "bollard");
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("barrier", "yes"));
+  tags.insert(osm_t::TagMap::value_type("start_date", "2019-04-01"));
+  n->tags.replace(tags);
+  assert_cmpstr(o.get_name(*osm), "barrier");
+
   way_t *w = new way_t();
   osm->way_attach(w);
   o = w;

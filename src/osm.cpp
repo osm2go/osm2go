@@ -1707,6 +1707,16 @@ std::string object_t::get_name(const osm_t &osm) const {
     }
   }
 
+  if(ret.empty()) {
+    const char *btype = obj->tags.get_value("barrier");
+    if(btype != nullptr) {
+      if(strcmp("yes", btype) == 0)
+        trstring("barrier").swap(ret);
+      else
+        typestr = btype;
+    }
+  }
+
   if(typestr) {
     assert(ret.empty());
     ret = static_cast<std::string>(typestr);
