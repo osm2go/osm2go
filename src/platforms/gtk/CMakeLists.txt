@@ -110,6 +110,16 @@ if (NOT HAS_STL_UNORDERED_SET)
 	add_compat_header(unordered_set)
 endif ()
 
+check_cxx_source_compiles("#include <variant>
+int main(int argc, char **argv) {
+  std::variant<bool, const char *> foo(bar);
+  return std::holds_alternative<bool>(foo) ? std::get<bool>(foo) ? 1 : 0 : 0;
+}
+" HAS_STL_VARIANT)
+if (NOT HAS_STL_VARIANT)
+	add_compat_header(variant)
+endif ()
+
 pkg_check_modules(GooCanvas REQUIRED IMPORTED_TARGET goocanvas)
 target_sources(osm2go_lib PRIVATE
 	src/platforms/gtk/canvas_goocanvas.cpp

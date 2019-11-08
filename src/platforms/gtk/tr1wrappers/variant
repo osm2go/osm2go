@@ -1,0 +1,40 @@
+// Copyright (C) 2019 Rolf Eike Beer <eike@sf-mail.de>
+
+#pragma once
+
+namespace std
+{
+  template<typename T, typename U>
+  class variant {
+    bool m_firstType;
+    union {
+      T m_first;
+      U m_second;
+    };
+  public:
+    explicit inline variant(T t) : m_firstType(true), m_first(t) {}
+    explicit inline variant(U u) : m_firstType(false), m_second(u) {}
+
+    inline bool __first_type() const { return m_firstType; }
+    T __first_val() const { return m_first; }
+    U __second_val() const { return m_second; }
+  };
+
+  template<typename T, typename U>
+  bool holds_alternative(const variant<T, U> &v)
+  {
+    return v.__first_type();
+  }
+
+  template<typename T, typename U>
+  T get(const variant<T, U> &v)
+  {
+    return v.__first_val();
+  }
+
+  template<typename T, typename U>
+  T get(const variant<U, T> &v)
+  {
+    return v.__second_val();
+  }
+} // namespace

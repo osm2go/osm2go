@@ -24,6 +24,7 @@
 #include <cstring>
 #include <cstdint>
 #include <string>
+#include <variant>
 
 #include <osm2go_cpp.h>
 
@@ -34,27 +35,17 @@ struct elemstyle_condition_t {
     elemstyle_condition_t(const char *k, bool b);
 
     const char * const key;
-#if __cplusplus < 201103L
-    // a special version of the union, as the old compiler chokes
-    // on the constness in the constructor
-    union {
-      const char *value;
-      bool boolValue;
-    };
+    const std::variant<bool, const char *> value;
 
+#if __cplusplus < 201103L
     elemstyle_condition_t &operator=(const elemstyle_condition_t &other)
     {
       memcpy(this, &other, sizeof(*this));
       return *this;
     }
 #else
-    union {
-      const char * const value;
-      const bool boolValue;
-    };
     elemstyle_condition_t &operator=(const elemstyle_condition_t &other) = default;
 #endif
-    const bool isBool;
 
     bool matches(const base_object_t &obj) const;
 };

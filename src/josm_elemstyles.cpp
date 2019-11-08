@@ -56,14 +56,12 @@
 elemstyle_condition_t::elemstyle_condition_t(const char *k, const char *v)
   : key(tag_t::mapToCache(k))
   , value(tag_t::mapToCache(v))
-  , isBool(false)
 {
 }
 
 elemstyle_condition_t::elemstyle_condition_t(const char *k, bool b)
   : key(tag_t::mapToCache(k))
-  , boolValue(b)
-  , isBool(true)
+  , value(b)
 {
 }
 
@@ -524,20 +522,23 @@ void josm_elemstyles_free(std::vector<elemstyle_t *> &elemstyles) {
 bool elemstyle_condition_t::matches(const base_object_t &obj) const {
   if(key != nullptr) {
     const char *v = obj.tags.get_value(key);
-    if(isBool) {
+    if(std::holds_alternative<bool>(value)) {
       if(v != nullptr) {
-         const std::array<const char *, 3> &value_strings = boolValue ? true_values : false_values;
+         const std::array<const char *, 3> &value_strings = std::get<bool>(value) ? true_values : false_values;
          return parse_boolean(v, value_strings);
       } else {
         return false;
       }
     } else {
-      // The "v != value" term is a shortcut: when the case matches exact, which is the
+      if(v == nullptr)
+        return false;
+      // The "v != val" term is a shortcut: when the case matches exact, which is the
       // usual case, the pointers should be the same, as both come from the value cache.
       // This compare is faster than the later term and helps avoiding the string compare
       // often enough. If it fails it's just a single compare of 2 values already in the
       // CPU registers, so it wont hurt much anyway.
-      if(v == nullptr || (value != nullptr && v != value && strcasecmp(v, value) != 0))
+      const char *val = std::get<const char *>(value);
+      if(val != nullptr && v != val && strcasecmp(v, val) != 0)
         return false;
     }
   }
