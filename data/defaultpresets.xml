@@ -336,7 +336,7 @@
         <combo key="circuits" text="Amount of circuits" values="1,2,3,4" />
     </chunk>
     <chunk id="power_loc">
-        <combo key="location" text="Location" values="outdoor,indoor,underground,platform,rooftop" values_context="power" />
+        <combo key="location" text="Location" values="outdoor,indoor,underground,platform,roof" values_context="power" />
     </chunk>
     <chunk id="power_extra">
         <reference ref="power_loc" />
@@ -372,6 +372,7 @@
     <chunk id="power_pole">
         <text key="height" text="Height (meters)" />
         <combo key="material" text="Material" values="concrete,metal,plastic,steel,stone,wood" />
+        <combo key="line_attachment" text="Line attachment" values="anchor,pin,pulley,suspension" values_context="power" />
         <check key="location:transition" text="Location transition" disable_off="true" />
         <reference ref="ref_operator" />
     </chunk>
@@ -854,6 +855,8 @@
                 <check key="oneway" text="Oneway" />
                 <check key="toll" text="Toll" />
                 <check key="noexit" text="No exit (cul-de-sac)" disable_off="true" />
+                <check key="winter_road" text="Winter road" disable_off="true" />
+                <check key="ice_road" text="Ice road" disable_off="true" />
             </checkgroup>
             <space />
             <label text="Transport mode restrictions" />
@@ -1364,6 +1367,11 @@
                 <combo key="colour" text="Color (HTML name or hexadecimal code)" values_context="color" values="black,blue,brown,gray,green,orange,purple,red,silver,white,yellow,#CD853F" />
             </optional>
         </item> <!-- Handrail -->
+        <item name="Cable barrier" icon="presets/barrier/cable_barrier.svg" type="way,closedway" preset_name_label="true">
+            <link wiki="Tag:barrier=cable_barrier" />
+            <key key="barrier" value="cable_barrier" />
+            <reference ref="optional_height" />
+        </item> <!-- Cable barrier -->
         <item name="Guard Rail" icon="presets/barrier/guard_rail.svg" type="way,closedway" preset_name_label="true">
             <link wiki="Tag:barrier=guard_rail" />
             <key key="barrier" value="guard_rail" />
@@ -2094,6 +2102,18 @@
                 <text key="aerialway:duration" text="Typical journey time in minutes" />
             </optional>
         </item> <!-- Goods -->
+        <item name="Zip line" icon="presets/transport/aerialway/zip_line.svg" type="way" preset_name_label="true">
+            <link wiki="Tag:aerialway=zip_line" />
+            <space />
+            <key key="aerialway" value="zip_line" />
+            <optional>
+                <reference ref="name_ref_operator" />
+                <reference ref="oh" />
+                <reference ref="fee" />
+                <reference ref="min_age" />
+                <text key="maxweight" text="Max. weight (tonnes)" />
+            </optional>
+        </item> <!-- Zip line -->
         <separator/>
         <item name="Station" name_context="aerialway" icon="presets/transport/aerialway/station.svg" type="node,closedway" preset_name_label="true">
             <link wiki="Tag:aerialway=station" />
@@ -2110,7 +2130,7 @@
     </group> <!-- Aerialway -->
     <separator/>
     <group name="Car" icon="presets/shop/vehicle.svg">
-        <item name="Parking" icon="presets/vehicle/parking/parking.svg" type="node,closedway,multipolygon" preset_name_label="true">
+        <item name="Parking" name_context="car" icon="presets/vehicle/parking/parking.svg" type="node,closedway,multipolygon" preset_name_label="true">
             <link wiki="Tag:amenity=parking" />
             <space />
             <key key="amenity" value="parking" />
@@ -2313,7 +2333,7 @@
         </item> <!-- Sharing -->
     </group> <!-- Car -->
     <group name="Motorcycle" icon="presets/vehicle/motorbike.svg">
-        <item name="Parking" icon="presets/vehicle/parking/motorbike.svg" type="node,closedway,multipolygon" preset_name_label="true">
+        <item name="Parking" name_context="motorcycle" icon="presets/vehicle/parking/motorbike.svg" type="node,closedway,multipolygon" preset_name_label="true">
             <link wiki="Tag:amenity=motorcycle_parking" />
             <space />
             <key key="amenity" value="motorcycle_parking" />
@@ -2345,7 +2365,7 @@
         </item> <!-- Motorcycle Dealer -->
     </group> <!-- Motorcycle -->
     <group name="Bicycle" icon="presets/shop/bicycle.svg">
-        <item name="Parking" icon="presets/vehicle/parking/bicycle.svg" type="node,way,closedway,multipolygon" preset_name_label="true">
+        <item name="Parking" name_context="bicycle" icon="presets/vehicle/parking/bicycle.svg" type="node,way,closedway,multipolygon" preset_name_label="true">
             <link wiki="Tag:amenity=bicycle_parking" />
             <space />
             <key key="amenity" value="bicycle_parking" />
@@ -2482,22 +2502,17 @@
                 <combo key="tactile_paving" text="Tactile Paving" values="yes,no,incorrect" />
             </optional>
             <space />
-            <checkgroup columns="2">
-                <check key="bus" text="Bus" />
-                <check key="highway" value_on="bus_stop" value_off="" text="Bus stop (legacy)" />
-                <check key="tram" text="Tram" />
-                <check key="railway" value_on="tram_stop" value_off="" text="Tram stop (legacy)" />
-                <check key="train" text="Train" />
-                <check key="railway" value_on="halt" value_off="" text="Railway halt (legacy)" />
-            </checkgroup>
-            <check key="trolleybus" text="Trolleybus" />
-            <check key="share_taxi" text="Share taxi" />
-            <check key="subway" text="Subway" />
-            <check key="light_rail" text="Light Rail" />
-            <check key="monorail" text="Monorail" />
-            <check key="funicular" text="Funicular" />
-            <check key="aerialway" text="Aerialway" />
-            <check key="ferry" text="Ferry" />
+            <check key="bus" text="Bus" icon="presets/transport/bus.svg" />
+            <check key="tram" text="Tram" icon="presets/transport/railway/tram.svg" />
+            <check key="train" text="Train" icon="presets/transport/train.svg" />
+            <check key="trolleybus" text="Trolleybus" icon="presets/transport/trolleybus.svg" />
+            <check key="share_taxi" text="Share taxi" icon="presets/transport/share_taxi.svg" />
+            <check key="subway" text="Subway" icon="presets/transport/railway/subway.svg" />
+            <check key="light_rail" text="Light Rail" icon="presets/transport/railway/light_rail.svg" />
+            <check key="monorail" text="Monorail" icon="presets/transport/railway/monorail.svg" />
+            <check key="funicular" text="Funicular" icon="presets/transport/railway/funicular.svg" />
+            <check key="aerialway" text="Aerialway" icon="presets/transport/aerialway/station.svg" />
+            <check key="ferry" text="Ferry" icon="presets/nautical/ferry.svg" />
         </item> <!-- Stop Position -->
         <item name="Platform" type="node,way,closedway,multipolygon" icon="presets/transport/platform.svg" preset_name_label="true">
             <link wiki="Tag:public_transport=platform" />
@@ -5368,6 +5383,7 @@
             <space />
             <key key="power" value="terminal" />
             <optional>
+                <combo key="line_attachment" text="Line attachment" values="anchor,pin,pulley,suspension" values_context="power" />
                 <text key="ref" text="Reference" />
                 <text key="operator" text="Operator" />
             </optional>
@@ -5382,6 +5398,7 @@
             <combo key="colour" text="Color (HTML name or hexadecimal code)" values="black,red,white,gray,red/white" values_context="color" />
             <reference ref="ref_operator" />
             <combo key="design" text="Portal design" values="portal,portal_two-level,portal_three-level" values_context="power" />
+            <combo key="line_attachment" text="Line attachment" values="anchor,pin,pulley,suspension" values_context="power" />
         </item> <!-- Power Portal -->
         <item name="Power Tower" icon="presets/power/tower.svg" type="node" preset_name_label="true">
             <link wiki="Tag:power=tower" />
@@ -5393,9 +5410,10 @@
             <combo key="colour" text="Color (HTML name or hexadecimal code)" values="black,red,white,gray,red/white" values_context="color" />
             <reference ref="ref_operator" />
             <optional>
-                <combo key="tower:type" text="Tower type" values="suspension,anchor,termination,branch,transposing,crossing,transition" text_context="power" values_context="power" />
+                <combo key="tower:type" text="Tower type" values="termination,branch,transposing,crossing,transition" text_context="power" values_context="power" />
                 <combo key="branch:type" text="Branch tower type" values="tap,split,loop,cross" values_context="power" />
                 <combo key="design" text="Tower design" values="one-level,two-level,donau,three-level,barrel,asymmetric,triangle,flag,donau;one-level,four-level,six-level,nine-level,delta,delta_two-level,y-frame,x-frame,h-frame,guyed_h-frame,portal,portal_two-level,portal_three-level,guyed_v-frame,bipole,monopolar" values_context="power" />
+                <combo key="line_attachment" text="Line attachment" values="anchor,pin,pulley,suspension" values_context="power" />
                 <check key="triple_tower" text="Triple tower" />
                 <check key="design:incomplete" text="Incomplete tower" />
                 <check key="location:transition" text="Location transition" disable_off="true" />
@@ -5446,6 +5464,7 @@
             <link wiki="Tag:power=insulator" />
             <space />
             <key key="power" value="insulator" />
+            <combo key="line_attachment" text="Line attachment" values="anchor,pin,pulley,suspension" values_context="power" />
             <reference ref="ref_operator" />
         </item> <!-- Insulator -->
         <item name="Power Line" icon="presets/power/line.svg" type="way" preset_name_label="true">
@@ -6092,6 +6111,13 @@
             <reference ref="name_operator_oh_wheelchair" />
             <reference ref="link_contact_address_payment" />
         </item> <!-- Tobacco -->
+        <item name="E-cigarette" icon="presets/shop/e-cigarette.svg" type="node,closedway,multipolygon" preset_name_label="true">
+            <link wiki="Tag:shop=e-cigarette" />
+            <space />
+            <key key="shop" value="e-cigarette" />
+            <reference ref="name_operator_oh_wheelchair" />
+            <reference ref="link_contact_address_payment" />
+        </item> <!-- E-cigarette -->
         <item name="Hairdresser/Barber" icon="presets/shop/hairdresser.svg" type="node,closedway,multipolygon" preset_name_label="true">
             <link wiki="Tag:shop=hairdresser" />
             <space />
@@ -6296,6 +6322,13 @@
             <reference ref="name_oh_wheelchair" />
             <reference ref="link_contact_address_payment" />
         </item> <!-- Pet -->
+        <item name="Pet grooming" icon="presets/shop/pet_grooming.svg" type="node,closedway,multipolygon" preset_name_label="true">
+            <link wiki="Tag:shop=pet_grooming" />
+            <space />
+            <key key="shop" value="pet_grooming" />
+            <reference ref="name_oh_wheelchair" />
+            <reference ref="link_contact_address_payment" />
+        </item> <!-- Pet grooming -->
         <item name="Photo" icon="presets/shop/photo.svg" type="node,closedway,multipolygon" preset_name_label="true">
             <link wiki="Tag:shop=photo" />
             <space />
@@ -7646,7 +7679,8 @@
                 <key key="route" value="power"/>
                 <reference ref="name_ref_operator"/>
                 <roles>
-                    <role key="" text="route segment" requisite="required" type="way" member_expression="power"/>
+                    <role key="line" text="route segment" requisite="required" type="way" member_expression="power=line|power=cable"/>
+                    <role key="substation" text="Power Substation" requisite="optional" type="way,closedway,multipolygon" member_expression="power"/>
                 </roles>
             </item> <!-- Power Route -->
             <item name="Railway Route" icon="presets/misc/route.svg" type="relation" preset_name_label="true">
