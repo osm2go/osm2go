@@ -157,9 +157,10 @@ settings_t::ref settings_t::instance() {
 
         key = keybase + "wms/server" + nbuf;
         gconf_value_guard server(gconf_client_get(client.get(), key.c_str(), nullptr));
-        key = keybase + "wms/name" + nbuf;
+        const size_t offs = keybase.size() + 4;
+        key.replace(offs, strlen("server"), "name");
         gconf_value_guard name(gconf_client_get(client.get(), key.c_str(), nullptr));
-        key = keybase + "wms/path" + nbuf;
+        key.replace(offs, strlen("name"), "path");
         gconf_value_guard path(gconf_client_get(client.get(), key.c_str(), nullptr));
 
         /* apply valid entry to list */
@@ -286,7 +287,8 @@ void settings_t::save() const {
 
     key = keybase + "wms/server" + nbuf;
     gconf_client_set_string(client.get(), key.c_str(), cur->server.c_str(), nullptr);
-    key = keybase + "wms/name" + nbuf;
+    const size_t offs = keybase.size() + 4;
+    key.replace(offs, strlen("server"), "name");
     gconf_client_set_string(client.get(), key.c_str(), cur->name.c_str(), nullptr);
   }
 
