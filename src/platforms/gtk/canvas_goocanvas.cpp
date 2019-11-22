@@ -538,8 +538,8 @@ canvas_item_pixmap *canvas_t::image_new(canvas_group_t group, icon_item *icon, l
   int height = gdk_pixbuf_get_height(pix);
   GooCanvasItem *item =
       goo_canvas_image_new(static_cast<canvas_goocanvas *>(this)->group[group],
-                           pix, pos.x / scale - width / 2,
-                           pos.y / scale - height / 2, nullptr);
+                           pix, pos.x / scale - width / 2.0f,
+                           pos.y / scale - height / 2.0f, nullptr);
   goo_canvas_item_scale(item, scale, scale);
 
   if(CANVAS_SELECTABLE & (1<<group)) {
