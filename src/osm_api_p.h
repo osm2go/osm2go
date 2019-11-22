@@ -45,6 +45,7 @@ public:
 #if __cplusplus >= 201103L
   osm_upload_context_t(osm_upload_context_t &&) = delete;
   osm_upload_context_t &operator=(osm_upload_context_t &&) = delete;
+  ~osm_upload_context_t() = default;
 #endif
 
   appdata_t &appdata;
