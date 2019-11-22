@@ -1195,7 +1195,7 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
   if (etag.key_compare(oneway)) {
     // oneway={yes/true/1/-1} is unusual.
     // Favour "yes" and "-1".
-    if (etag.value_compare(DS_ONEWAY_FWD) || strcasecmp("yes", etag.value) == 0 ||
+    if (etag.value_compare_ci(DS_ONEWAY_FWD) ||
         strcasecmp("true", etag.value) == 0 || strcmp(etag.value, "1") == 0) {
       etag = tag_t::uncached(oneway, DS_ONEWAY_REV);
       n_tags_altered++;
@@ -1206,10 +1206,10 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
       printf("warning: unknown oneway value: %s\n", etag.value);
     }
   } else if (etag.key_compare(sidewalk)) {
-    if (etag.value_compare(right) || strcasecmp(etag.value, "right") == 0) {
+    if (etag.value_compare_ci(right)) {
       etag = tag_t::uncached(sidewalk, left);
       n_tags_altered++;
-    } else if (etag.value_compare(left) || strcasecmp(etag.value, "left") == 0) {
+    } else if (etag.value_compare_ci(left)) {
       etag = tag_t::uncached(sidewalk, right);
       n_tags_altered++;
     }

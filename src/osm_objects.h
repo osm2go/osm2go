@@ -74,6 +74,18 @@ public:
   {
     return value == k;
   }
+
+  /**
+   * @brief compare if the values are identical
+   *
+   * This is intended to compare to values already mapped to the value cache
+   * so a simple pointer compare is a fast start. Afterwards a case insensitive
+   * compare of the values is done.
+   */
+  bool value_compare_ci(const char *v) const
+  {
+    return value_compare(v) || strcasecmp(v, value) == 0;
+  }
 };
 
 class tag_list_t {
