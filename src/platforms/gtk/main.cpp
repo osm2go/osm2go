@@ -1015,9 +1015,6 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
 
 appdata_t::appdata_t()
   : uicontrol(new MainUiGtk())
-  , project(nullptr)
-  , iconbar(nullptr)
-  , presets(nullptr)
   , map(nullptr)
   , icons(icon_t::instance())
   , style(style_t::load(settings_t::instance()->style))
