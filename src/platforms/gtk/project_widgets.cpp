@@ -556,9 +556,8 @@ project_matches(GtkTreeModel *model, GtkTreeIter *iter, gpointer data)
 }
 
 void
-on_filter_changed(gpointer user_data)
+on_filter_changed(select_context_t *context)
 {
-  select_context_t *context = static_cast<select_context_t *>(user_data);
   gtk_tree_model_filter_refilter(context->filter);
 
   GtkTreeModel *fmodel = reinterpret_cast<GtkTreeModel *>(context->filter);
