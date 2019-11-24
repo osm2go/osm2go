@@ -536,6 +536,17 @@ void project_list_add::operator()(const project_t *project)
   }
 }
 
+bool
+utf8_match(const g_string &utf8_needle, const g_string &hay)
+{
+  if (!hay)
+    return false;
+
+  g_string hay_down(g_utf8_strdown(hay.get(), strlen(hay.get())));
+
+  return strstr(hay_down.get(), utf8_needle.get()) != nullptr;
+}
+
 gboolean
 project_matches(GtkTreeModel *model, GtkTreeIter *iter, gpointer data)
 {
@@ -546,14 +557,14 @@ project_matches(GtkTreeModel *model, GtkTreeIter *iter, gpointer data)
   if(text == nullptr || *text == '\0')
     return TRUE;
 
+  g_string uni(g_utf8_strdown(text, strlen(text)));
+
   gtk_tree_model_get(model, iter, PROJECT_COL_NAME, &pname,
                                   PROJECT_COL_DESCRIPTION, &pdescr, -1);
   g_string name(pname);
   g_string descr(pdescr);
 
-  if(name && strcasestr(name.get(), text) != nullptr)
-    return TRUE;
-  if(descr && strcasestr(descr.get(), text) != nullptr)
+  if (utf8_match(uni, name) || utf8_match(uni, descr))
     return TRUE;
 
   return FALSE;
