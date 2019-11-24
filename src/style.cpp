@@ -220,7 +220,8 @@ style_t *style_load_fname(const std::string &filename) {
   return nullptr;
 }
 
-style_t *style_load(const std::string &name) {
+style_t *style_t::load(const std::string &name)
+{
   printf("Trying to load style %s\n", name.c_str());
 
   std::string fullname = osm2go_platform::find_file(name + ".style");

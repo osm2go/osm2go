@@ -40,7 +40,7 @@ int main(int argc, char **argv)
 
   appdata_t appdata;
 
-  style_t *style = style_load(argv[1]);
+  style_t *style = style_t::load(argv[1]);
 
   if(style == nullptr) {
     std::cerr << "failed to load styles" << std::endl;

@@ -96,6 +96,6 @@ struct style_t {
   void colorize(node_t *n);
   void colorize(way_t *w) const;
   void colorize_world(osm_t::ref osm);
-};
 
-style_t *style_load(const std::string &name);
+  static style_t *load(const std::string &name);
+};

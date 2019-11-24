@@ -1020,7 +1020,7 @@ appdata_t::appdata_t()
   , presets(nullptr)
   , map(nullptr)
   , icons(icon_t::instance())
-  , style(style_load(settings_t::instance()->style))
+  , style(style_t::load(settings_t::instance()->style))
   , gps_state(gps_state_t::create(track_t::gps_position_callback, this))
 {
   track.warn_cnt = 0;
