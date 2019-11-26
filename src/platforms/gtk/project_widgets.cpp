@@ -165,6 +165,7 @@ enum {
   PROJECT_COL_NAME = 0,
   PROJECT_COL_STATUS,
   PROJECT_COL_DESCRIPTION,
+  PROJECT_COL_NAME_SORTABLE,
   PROJECT_COL_DATA,
   PROJECT_NUM_COLS
 };
@@ -367,10 +368,11 @@ on_project_new(select_context_t *context)
                                                                     project);
     gtk_list_store_insert_with_values(GTK_LIST_STORE(context->store.get()), &iter,
                                       context->projects.size(),
-                                      PROJECT_COL_NAME,        project->name.c_str(),
-                                      PROJECT_COL_STATUS,      status_stock_id,
-                                      PROJECT_COL_DESCRIPTION, project->desc.c_str(),
-                                      PROJECT_COL_DATA,        project,
+                                      PROJECT_COL_NAME,          project->name.c_str(),
+                                      PROJECT_COL_NAME_SORTABLE, g_utf8_collate_key(project->name.c_str(), project->name.size()),
+                                      PROJECT_COL_STATUS,        status_stock_id,
+                                      PROJECT_COL_DESCRIPTION,   project->desc.c_str(),
+                                      PROJECT_COL_DATA,          project,
                                       -1);
 
     GtkTreeSelection *selection = list_get_selection(context->list);
@@ -428,6 +430,7 @@ void on_project_edit(select_context_t *context)
     const gchar *status_stock_id = project_get_status_icon_stock_id(appdata.project, project);
     gtk_list_store_set(GTK_LIST_STORE(context->store.get()), &iter,
                        PROJECT_COL_NAME, project->name.c_str(),
+                       PROJECT_COL_NAME_SORTABLE, g_utf8_collate_key(project->name.c_str(), project->name.size()),
                        PROJECT_COL_STATUS, status_stock_id,
                        PROJECT_COL_DESCRIPTION, project->desc.c_str(),
                        -1);
@@ -519,6 +522,7 @@ void project_list_add::operator()(const project_t *project)
   /* Append a row and fill in some data */
   gtk_list_store_insert_with_values(store, &iter, -1,
                                     PROJECT_COL_NAME,        project->name.c_str(),
+                                    PROJECT_COL_NAME_SORTABLE, g_utf8_collate_key(project->name.c_str(), project->name.size()),
                                     PROJECT_COL_STATUS,      status_stock_id,
                                     PROJECT_COL_DESCRIPTION, project->desc.c_str(),
                                     PROJECT_COL_DATA,        project,
@@ -569,6 +573,21 @@ on_filter_changed(select_context_t *context)
   }
 }
 
+gint
+project_list_sorter(GtkTreeModel *model, GtkTreeIter *a, GtkTreeIter *b, gpointer)
+{
+  gchar *aname, *bname;
+  gtk_tree_model_get(model, a, PROJECT_COL_NAME_SORTABLE, &aname, -1);
+  gtk_tree_model_get(model, b, PROJECT_COL_NAME_SORTABLE, &bname, -1);
+
+  gint ret = strcmp(aname, bname);
+
+  g_free(aname);
+  g_free(bname);
+
+  return ret;
+}
+
 /**
  * @brief create a widget to list the projects
  * @param context the context struct
@@ -593,7 +612,8 @@ project_list_widget(select_context_t &context, bool &has_sel)
                                          G_TYPE_STRING,    // name
                                          G_TYPE_STRING,    // status
                                          G_TYPE_STRING,    // desc
-                                         G_TYPE_POINTER));  // data
+                                         G_TYPE_STRING,    // utf8 sortable data
+                                         G_TYPE_POINTER)); // data
 
   context.filter = reinterpret_cast<GtkTreeModelFilter *>(
             gtk_tree_model_filter_new(GTK_TREE_MODEL(context.store.get()), nullptr));
@@ -606,7 +626,10 @@ project_list_widget(select_context_t &context, bool &has_sel)
                 project_list_add(context.store.get(), context.appdata, seliter, has_sel));
 
   gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context.store.get()),
-                                       PROJECT_COL_NAME, GTK_SORT_ASCENDING);
+                                       PROJECT_COL_NAME_SORTABLE, GTK_SORT_ASCENDING);
+  gtk_tree_sortable_set_sort_func(GTK_TREE_SORTABLE(context.store.get()),
+                                  PROJECT_COL_NAME_SORTABLE, project_list_sorter,
+                                  nullptr, nullptr);
 
   if(has_sel) {
     GtkTreeIter fiter;
@@ -935,7 +958,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new)
   return ok;
 }
 
-}
+} // namespace
 
 project_t *project_select(appdata_t &appdata)
 {
