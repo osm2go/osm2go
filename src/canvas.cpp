@@ -48,7 +48,7 @@ int canvas_t::get_item_segment(const canvas_item_t *item, lpos_t pos) const
   const canvas_item_info_poly *poly = static_cast<const canvas_item_info_poly *>(it->second);
 
   const float fuzziness = poly->width > 0 ? 0 :
-                          EXTRA_FUZZINESS_METER + EXTRA_FUZZINESS_PIXEL / get_zoom();
+                          EXTRA_FUZZINESS_METER + EXTRA_FUZZINESS_PIXEL / static_cast<float>(get_zoom());
 
   return poly->get_segment(pos.x, pos.y, fuzziness);
 }
