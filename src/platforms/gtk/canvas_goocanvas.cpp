@@ -638,16 +638,10 @@ bool canvas_goocanvas::isVisible(const lpos_t lpos) const
   // Is the point still onscreen?
   osm2go_platform::screenpos s = scroll_get();
 
-  if (lpos.x > s.x() + dim.width / 2)
-    return false;
-  else if (lpos.x < s.x() - dim.width / 2)
-    return false;
-  else if (lpos.y > s.y() + dim.height / 2)
-    return false;
-  else if (lpos.y < s.y() - dim.height / 2)
-    return false;
-
-  return true;
+  return (lpos.x <= s.x() + dim.width / 2) &&
+         (lpos.x >= s.x() - dim.width / 2) &&
+         (lpos.y <= s.y() + dim.height / 2) &&
+         (lpos.y >= s.y() - dim.height / 2);
 }
 
 bool canvas_t::ensureVisible(const lpos_t lpos)
