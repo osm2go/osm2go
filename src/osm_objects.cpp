@@ -281,13 +281,8 @@ bool way_t::ends_with_node(const node_t *node) const noexcept
   /* any valid way must have at least two nodes */
   assert(!node_chain.empty());
 
-  if(node_chain.front() == node)
-    return true;
-
-  if(node_chain.back() == node)
-    return true;
-
-  return false;
+  return node_chain.front() == node ||
+         node_chain.back()  == node;
 }
 
 void way_t::cleanup() {
