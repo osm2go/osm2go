@@ -88,8 +88,9 @@ void map_t::way_add_segment(lpos_t pos) {
 
     assert(action.way != nullptr);
 
-    /* check whether this node is first or last one of a different way */
-    way_t *touch_way = osm->find_way(check_first_last_node(node));
+    /* check whether this node is first or last one of a different way,
+     * but since the user can't choose allow this only if there is exactly one */
+    way_t *touch_way = osm->find_only_way(check_first_last_node(node));
 
     /* remember this way as this may be the last node placed */
     /* and we might want to join this with this other way */

@@ -276,9 +276,26 @@ private:
   }
 
 public:
+  /**
+   * @brief find a way matching the given predicate
+   */
   template<typename _Predicate>
   way_t *find_way(_Predicate pred) const {
     return find_object(ways, pred);
+  }
+
+  /**
+   * @brief find a way matching the given predicate, but only if no other one does
+   */
+  template<typename _Predicate>
+  way_t *find_only_way(_Predicate pred) const {
+    const typename std::map<item_id_t, way_t *>::const_iterator itEnd = ways.end();
+    const typename std::map<item_id_t, way_t *>::const_iterator it = std::find_if(ways.begin(), itEnd, pred);
+    if(it == itEnd)
+      return nullptr;
+    if (std::find_if(std::next(it), itEnd, pred) != itEnd)
+      return nullptr;
+    return it->second;
   }
 
   template<typename _Predicate>

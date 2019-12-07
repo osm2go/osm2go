@@ -21,17 +21,19 @@
 
 #include <osm2go_annotations.h>
 
-static bool find_aa(const tag_t &t)
+namespace {
+
+bool find_aa(const tag_t &t)
 {
   return strcmp(t.value, "aa") == 0;
 }
 
-static bool find_bb(const tag_t &t)
+bool find_bb(const tag_t &t)
 {
   return strcmp(t.value, "bb") == 0;
 }
 
-static std::vector<tag_t> ab_with_creator()
+std::vector<tag_t> ab_with_creator()
 {
   std::vector<tag_t> ntags;
 
@@ -44,15 +46,18 @@ static std::vector<tag_t> ab_with_creator()
   return ntags;
 }
 
-static bool rtrue(const tag_t &) {
+bool rtrue(const tag_t &)
+{
   return true;
 }
 
-static void nevercalled(const tag_t &) {
+void nevercalled(const tag_t &)
+{
   assert_unreachable();
 }
 
-static void set_bounds(osm_t::ref o) {
+void set_bounds(osm_t::ref o)
+{
   bool b = o->bounds.init(pos_area(pos_t(52.2692786, 9.5750497), pos_t(52.2695463, 9.5755)));
   assert(b);
 }
@@ -60,7 +65,8 @@ static void set_bounds(osm_t::ref o) {
 /**
  * @brief collection of trivial tests to get some coverage
  */
-static void test_trivial() {
+void test_trivial()
+{
   object_t obj;
 
   assert(obj == obj);
@@ -156,7 +162,8 @@ static void test_trivial() {
   assert_null(mb.role);
 }
 
-static void test_taglist() {
+void test_taglist()
+{
   tag_list_t tags;
   std::vector<tag_t> ntags;
 
@@ -314,7 +321,8 @@ static void test_taglist() {
   assert(virgin != tags.asMap());
 }
 
-static void test_replace() {
+void test_replace()
+{
   node_t node(1, pos_t(0, 0), 1);
   assert_cmpnum(node.flags, 0);
 
@@ -372,11 +380,12 @@ static void test_replace() {
   assert(node.tags == nstags);
 }
 
-static unsigned int intrnd(unsigned int r) {
+unsigned int intrnd(unsigned int r)
+{
   return std::rand() % r;
 }
 
-static void test_split()
+void test_split()
 {
   std::unique_ptr<osm_t> o(new osm_t());
   way_t * const v = new way_t();
@@ -537,7 +546,7 @@ static void test_split()
   }
 }
 
-static bool checkLinearRelation(const relation_t *r)
+bool checkLinearRelation(const relation_t *r)
 {
   std::cout << "checking order of relation " << r->id << std::endl;
   bool ret = true;
@@ -573,8 +582,6 @@ static bool checkLinearRelation(const relation_t *r)
 }
 
 // find out which part of the original way can be split at the given node
-namespace {
-
 struct findWay {
   const node_t * const node;
   explicit findWay(const node_t *n) : node(n) {}
@@ -585,9 +592,7 @@ struct findWay {
   }
 };
 
-} // namespace
-
-static void test_split_order()
+void test_split_order()
 {
   std::unique_ptr<osm_t> o(new osm_t());
   std::vector<node_t *> nodes;
@@ -671,7 +676,7 @@ static void test_split_order()
   }
 }
 
-static void test_changeset()
+void test_changeset()
 {
   const char message[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                          "<osm>\n"
@@ -699,7 +704,7 @@ static void test_changeset()
   assert_cmpstr(cs, message_src);
 }
 
-static void test_reverse()
+void test_reverse()
 {
   std::unique_ptr<osm_t> o(new osm_t());
   set_bounds(o);
@@ -809,13 +814,13 @@ static void test_reverse()
   assert(w->tags == tags);
 }
 
-static unsigned int nn_cnt;
-static void node_noop(node_t *)
+unsigned int nn_cnt;
+void node_noop(node_t *)
 {
   nn_cnt++;
 }
 
-static void test_way_delete()
+void test_way_delete()
 {
   std::unique_ptr<osm_t> o(new osm_t());
   set_bounds(o);
@@ -951,7 +956,7 @@ static void test_way_delete()
   assert(w->tags.empty());
 }
 
-static void test_member_delete()
+void test_member_delete()
 {
   std::unique_ptr<osm_t> o(new osm_t());
   set_bounds(o);
@@ -1047,7 +1052,21 @@ struct node_collector {
   }
 };
 
-static void test_merge_nodes()
+bool all_ways(const std::pair<item_id_t, way_t *>)
+{
+  return true;
+}
+
+struct first_way {
+  unsigned int &cnt;
+  first_way(unsigned int &c) : cnt(c) {}
+  inline bool operator()(const std::pair<item_id_t, way_t *>)
+  {
+    return cnt++ == 0;
+  }
+};
+
+void test_merge_nodes()
 {
   std::unique_ptr<osm_t> o(new osm_t());
   set_bounds(o);
@@ -1190,6 +1209,12 @@ static void test_merge_nodes()
     ways.push_back(w);
     relations.push_back(r);
   }
+
+  // check that find_only_way() really matches exactly one way
+  unsigned int cnt = 0;
+  first_way fw(cnt);
+  assert_null(o->find_only_way(all_ways));
+  assert(o->find_only_way(fw) != nullptr);
 
   n1 = o->node_new(oldpos);
   n2 = o->node_new(newpos);
@@ -1338,15 +1363,15 @@ static void test_merge_nodes()
   assert(ways2join[1] == nullptr);
 }
 
-static void setup_way_relations_for_merge(osm_t::ref o, way_t *w0, way_t *w1)
+void setup_way_relations_for_merge(osm_t::ref o, way_t *w0, way_t *w1)
 {
   o->relation_by_id(-3)->members.push_back(member_t(object_t(w0), "foo"));
   o->relation_by_id(-4)->members.push_back(member_t(object_t(w1), "bar"));
   o->relation_by_id(-4)->members.push_back(member_t(object_t(w0)));
 }
 
-static node_chain_t setup_ways_for_merge(const node_chain_t &nodes, osm_t::ref o, way_t *&w0,
-                                         way_t *&w1, const unsigned int i, int relations)
+node_chain_t setup_ways_for_merge(const node_chain_t &nodes, osm_t::ref o, way_t *&w0,
+                                  way_t *&w1, const unsigned int i, int relations)
 {
   node_chain_t expect;
 
@@ -1387,8 +1412,7 @@ static node_chain_t setup_ways_for_merge(const node_chain_t &nodes, osm_t::ref o
   return expect;
 }
 
-static void verify_merged_way(way_t *w, osm_t::ref o, const node_chain_t &nodes,
-                              const node_chain_t &expect, bool expectRels)
+void verify_merged_way(way_t *w, osm_t::ref o, const node_chain_t &nodes, const node_chain_t &expect, bool expectRels)
 {
   assert_cmpnum(w->node_chain.size(), nodes.size());
   assert_cmpnum(o->ways.size(), 1);
@@ -1430,7 +1454,7 @@ static void verify_merged_way(way_t *w, osm_t::ref o, const node_chain_t &nodes,
     assert_cmpnum((*it)->ways, 0);
 }
 
-static void test_merge_ways()
+void test_merge_ways()
 {
   std::unique_ptr<osm_t> o(new osm_t());
   set_bounds(o);
@@ -1484,7 +1508,7 @@ static void test_merge_ways()
 }
 
 // test that neighbors in relations are merged if necessary
-static void test_way_merge_relation_neighbors()
+void test_way_merge_relation_neighbors()
 {
   std::unique_ptr<osm_t> osm(new osm_t());
   set_bounds(osm);
@@ -1569,7 +1593,7 @@ static void test_way_merge_relation_neighbors()
   assert(rel->members == relcmp->members);
 }
 
-static void test_api_adjust()
+void test_api_adjust()
 {
  const std::string api06https = "https://api.openstreetmap.org/api/0.6";
  const std::string apihttp = "http://api.openstreetmap.org/api/0.";
@@ -1599,7 +1623,7 @@ static void test_api_adjust()
  assert(server == apidev);
 }
 
-static void test_description()
+void test_description()
 {
   std::unique_ptr<osm_t> osm(new osm_t());
   set_bounds(osm);
@@ -1873,7 +1897,7 @@ static void test_description()
   assert_cmpstr(o.get_name(*osm), "building part");
 }
 
-static void test_relation_members()
+void test_relation_members()
 {
   std::unique_ptr<osm_t> osm(new osm_t());
   set_bounds(osm);
@@ -1892,7 +1916,7 @@ static void test_relation_members()
   assert_cmpnum(r->members.size(), 1);
 }
 
-static void test_way_insert()
+void test_way_insert()
 {
   std::unique_ptr<osm_t> osm(new osm_t());
   set_bounds(osm);
@@ -1917,6 +1941,8 @@ static void test_way_insert()
   assert(w->node_chain.at(1) == in);
   assert(w->node_chain.at(2) == n1);
 }
+
+} // namespace
 
 int main()
 {
