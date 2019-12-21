@@ -690,7 +690,7 @@ project_filesize(project_context_t *context)
         strftime(time_str, sizeof(time_str), "%x %X", &loctime);
         gstr = trstring("%1 bytes present\nfrom %2").arg(st.st_size).arg(time_str);
 
-        if(project->osmFile.size() > 3 && project->osmFile.compare(project->osmFile.size() - 3, 3, ".gz") == 0)
+        if(project->osmFile.size() > 3 && ends_with(project->osmFile, ".gz"))
           gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:\n(compressed)"));
         else
           gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:"));

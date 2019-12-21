@@ -23,6 +23,7 @@
 #include <string>
 
 #include <osm2go_cpp.h>
+#include <osm2go_stl.h>
 
 struct fdguard {
   explicit fdguard(int f) : fd(f) {}
@@ -96,7 +97,7 @@ public:
   explicit inline dirguard(const char *name) __attribute__((nonnull(2)))
     : p(name), d(opendir(name)) {}
   explicit inline dirguard(const std::string &name)
-    : p(name.at(name.size() - 1) == '/' ? name : name + '/'), d(opendir(name.c_str())) {}
+    : p(ends_with(name, '/') ? name : name + '/'), d(opendir(name.c_str())) {}
   explicit dirguard(int fd);
   /**
    * @brief opens the given subdirectory of a parent directory

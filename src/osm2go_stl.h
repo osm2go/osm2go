@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <cstring>
 #include <string>
 
 #include <osm2go_cpp.h>
@@ -243,6 +244,27 @@ template<typename T> void shrink_to_fit(T &v) {
   T tmp(sz);
   tmp = v;
   tmp.swap(v);
+#endif
+}
+
+static inline bool ends_with(const std::string &s, const char ch)
+{
+#ifdef __cpp_lib_starts_ends_with
+  return s.ends_with(ch);
+#elif __cplusplus >= 201103L
+  return s.back() == ch;
+#else
+  return *s.rbegin() == ch;
+#endif
+}
+
+static inline bool ends_with(const std::string &s, const char *es)
+{
+#ifdef __cpp_lib_starts_ends_with
+  return s.ends_with(es);
+#else
+  const size_t eslen = strlen(es);
+  return s.compare(s.size() - eslen, eslen, es) == 0;
 #endif
 }
 

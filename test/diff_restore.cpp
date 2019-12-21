@@ -135,7 +135,7 @@ int main(int argc, char **argv)
   xmlInitParser();
 
   const std::string osm_path = argv[1];
-  assert_cmpnum(osm_path[osm_path.size() - 1], '/');
+  assert(ends_with(osm_path, '/'));
 
   project_t project(argv[2], osm_path);
   project.osmFile = argv[2] + std::string(".osm");

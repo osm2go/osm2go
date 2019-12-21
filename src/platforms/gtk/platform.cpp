@@ -331,7 +331,7 @@ const std::vector<dirguard> &osm2go_platform::base_paths()
     pathnames.push_back("../data/");
 
     for (unsigned int i = 0; i < pathnames.size(); i++) {
-      assert(pathnames[i][pathnames[i].size() - 1] == '/');
+      assert(ends_with(pathnames[i], '/'));
       dirguard dfd(pathnames[i].c_str());
       if(dfd.valid()) {
 #if __cplusplus >= 201103L

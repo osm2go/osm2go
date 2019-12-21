@@ -291,7 +291,7 @@ static void testRename(const std::string &tmpdir, const char *diff_file)
   std::unique_ptr<project_t> global;
   assert(project->rename("newproj", global));
   // the non-gzip file should have been properly renamed
-  assert_cmpnum(project->osmFile.compare(project->osmFile.size() - 4, 4, ".osm"), 0);
+  assert(ends_with(project->osmFile, ".osm"));
 
   struct stat st;
   assert_cmpnum(stat(oldpath.c_str(), &st), -1);

@@ -305,7 +305,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
 
   project_t::ref project = appdata.project;
   /* server url should not end with a slash */
-  if(!project->rserver.empty() && project->rserver[project->rserver.size() - 1] == '/') {
+  if(!project->rserver.empty() && ends_with(project->rserver, '/')) {
     g_debug("removing trailing slash");
     project->rserver.erase(project->rserver.size() - 1);
   }

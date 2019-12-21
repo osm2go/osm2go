@@ -455,7 +455,7 @@ static project_t *project_open(const std::string &name)
     // load with absolute or relative path, usually only done for demo
     project_file = name;
     std::string pname = name.substr(sl + 1);
-    if(likely(pname.compare(pname.size() - 5, 5, ".proj") == 0))
+    if(likely(ends_with(pname, ".proj")))
       pname.erase(pname.size() - 5);
     // usually that ends in /foo/foo.proj
     if(name.compare(sl - pname.size() - 1, pname.size() + 1, '/' + pname) == 0)
