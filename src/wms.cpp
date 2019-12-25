@@ -580,12 +580,7 @@ struct server_preset_s {
 };
 
 const std::array<struct server_preset_s, 1> default_servers = { {
-  { "Open Geospatial Consortium Web Services",
-#ifdef FREMANTLE
-                                               "http://ows.terrestris.de/osm/service?" }
-#else
-                                               "https://ows.terrestris.de/osm/service?" }
-#endif
+  { "Open Geospatial Consortium Web Services", "https://ows.terrestris.de/osm/service?" }
   /* add more servers here ... */
 } };
 
