@@ -2,7 +2,7 @@ Source: osm2go
 Section: user/navigation
 Priority: extra
 Maintainer: Till Harbaum <Till@Harbaum.org>
-Build-Depends: debhelper (>= 5), sharutils, maemo-version-dev, libcurl4-openssl-dev | libcurl3-openssl-dev, libgoocanvas-dev, libosso-dev, liblocation-dev|libgpsmgr-dev, libosso-gnomevfs2-dev, libhildonfm2-dev, mce-dev, perl-base (>= 5), tablet-browser-interface-dev|devscripts, libsoup2.4-dev|libsoup2.2-dev
+Build-Depends: debhelper (>= 5), sharutils, maemo-version-dev, libcurl4-openssl-dev | libcurl3-openssl-dev, libgoocanvas-dev, libosso-dev, liblocation-dev|libgpsmgr-dev, libosso-gnomevfs2-dev, libhildonfm2-dev, mce-dev, perl-base (>= 5), tablet-browser-interface-dev|devscripts, libsoup2.4-dev
 Standards-Version: 3.7.2
 
 Package: osm2go
