@@ -164,7 +164,7 @@
         <reference ref="oh_wheelchair" />
     </chunk>
     <chunk id="cuisine">
-    <multiselect key="cuisine" text="Cuisine" values="african;american;arab;argentinian;asian;bagel;balkan;barbecue;bavarian;brazilian;burger;cake;caribbean;chicken;chinese;coffee_shop;crepe;curry;danish;donut;ethiopian;fish;fish_and_chips;french;friture;german;greek;ice_cream;indian;indonesian;international;italian;japanese;kebab;korean;lebanese;mediterranean;mexican;moroccan;noodle;pancake;pasta;peruvian;pizza;polish;portuguese;regional;russian;sandwich;sausage;seafood;spanish;steak_house;sushi;tapas;thai;turkish;vietnamese" values_searchable="true" />
+    <multiselect key="cuisine" text="Cuisine" values="african;american;arab;argentinian;asian;bagel;balkan;barbecue;bavarian;beef_bowl;brazilian;burger;cake;caribbean;chicken;chinese;coffee_shop;crepe;curry;danish;donut;ethiopian;filipino;fish;fish_and_chips;french;friture;frozen_yogurt;german;georgian;greek;heuriger;hot_dog;ice_cream;indian;indonesian;international;italian;japanese;kebab;korean;lebanese;malaysian;mediterranean;mexican;moroccan;noodle;pancake;pasta;persian;peruvian;pizza;polish;portuguese;ramen;regional;russian;sandwich;sausage;seafood;soba;spanish;steak_house;sushi;tex-mex;tapas;thai;turkish;vietnamese;wings" values_searchable="true" />
     </chunk>
     <chunk id="internet">
         <combo key="internet_access" text="Internet access" values="yes,wlan,wired,terminal,no" />
@@ -1268,6 +1268,21 @@
         <item name="Elevator" icon="presets/service/elevator.svg" type="node,way,closedway" preset_name_label="true">
             <link wiki="Tag:highway=elevator" />
             <key key="highway" value="elevator" />
+            <text key="capacity:persons" text="Capacity (persons)" />
+            <text key="maxweight" text="Max. weight (tonnes)" />
+            <text key="level" text="Storey" />
+            <optional>
+                <text key="manufacturer" text="Manufacturer" />
+                <reference ref="name_ref_operator" />
+                <reference ref="oh_wheelchair" />
+                <check key="handrail" text="Handrail" />
+                <check key="bicycle" text="Bicycle" />
+                <check key="indoor" text="Indoor" />
+                <reference ref="fee" />
+                <combo key="goods" text="Freight elevator" values="yes,designated,no" />
+                <combo key="access" text="Access" values="yes,no,customers,private" />
+                <combo key="surveillance" text="Surveillance Camera" values="indoor,outdoor" />
+            </optional>
         </item> <!-- Elevator -->
         <separator/>
         <item name="Grit Bin" icon="presets/misc/grit_bin.svg" type="node" preset_name_label="true">
@@ -1554,6 +1569,55 @@
   </group> <!-- Highways -->
   <group name="Water" name_context="main group" icon="presets/nautical/waterway_river.svg">
     <group name="Water" name_context="sub group" icon="presets/nautical/waterway_river.svg">
+        <item name="River" icon="presets/nautical/waterway_river.svg" type="way" preset_name_label="true">
+            <link wiki="Tag:waterway=river" />
+            <space />
+            <key key="waterway" value="river" />
+            <text key="name" text="Name" />
+            <optional>
+                <reference ref="waterway_wikipedia" />
+                <check key="lock" text="Lock" disable_off="true" />
+            </optional>
+            <reference ref="water_access" />
+        </item> <!-- River -->
+        <item name="Stream" icon="presets/nautical/waterway_stream.svg" type="way" preset_name_label="true">
+            <link wiki="Tag:waterway=stream" />
+            <space />
+            <key key="waterway" value="stream" />
+            <text key="name" text="Name" />
+            <optional>
+                <reference ref="waterway_wikipedia" />
+            </optional>
+            <reference ref="water_access" />
+        </item> <!-- Stream -->
+        <item name="Tidal channel" icon="presets/nautical/tidal_channel.svg" type="way" preset_name_label="true">
+            <link wiki="Tag:waterway=tidal_channel" />
+            <space />
+            <key key="waterway" value="tidal_channel" />
+            <optional>
+                <text key="name" text="Name" />
+                <check key="salt" text="Salt Water" disable_off="true" />
+                <check key="intermittent" text="Intermittent" disable_off="true" />
+                <check key="seasonal" text="Seasonal" disable_off="true" />
+                <text key="width" text="Width (meters)" />
+                <text key="wikipedia" text="Wikipedia" />
+            </optional>
+        </item> <!-- Tidal channel -->
+        <item name="Canal" icon="presets/nautical/waterway_canal.svg" type="way" preset_name_label="true">
+            <link wiki="Tag:waterway=canal" />
+            <space />
+            <key key="waterway" value="canal" />
+            <text key="name" text="Name" />
+            <optional>
+                <combo key="layer" text="Layer" values="5,4,3,2,1,0,-1,-2,-3,-4,-5" length="3" />
+                <combo key="tunnel" text="Tunnel" values="culvert,flooded,yes" />
+                <combo key="usage" text="Usage" values="transportation,transmission,irrigation,headrace,tailrace,spillway" values_context="usage" />
+                <text key="width" text="Width (meters)" />
+                <text key="wikipedia" text="Wikipedia" />
+                <check key="lock" text="Lock" disable_off="true" />
+            </optional>
+            <reference ref="water_access" />
+        </item> <!-- Canal -->
         <item name="Drain" icon="presets/nautical/waterway_drain.svg" type="way" preset_name_label="true">
             <link wiki="Tag:waterway=drain" />
             <space />
@@ -1572,42 +1636,6 @@
                 <reference ref="waterway" />
             </optional>
         </item> <!-- Ditch -->
-        <item name="Stream" icon="presets/nautical/waterway_stream.svg" type="way" preset_name_label="true">
-            <link wiki="Tag:waterway=stream" />
-            <space />
-            <key key="waterway" value="stream" />
-            <text key="name" text="Name" />
-            <optional>
-                <reference ref="waterway_wikipedia" />
-            </optional>
-            <reference ref="water_access" />
-        </item> <!-- Stream -->
-        <item name="River" icon="presets/nautical/waterway_river.svg" type="way" preset_name_label="true">
-            <link wiki="Tag:waterway=river" />
-            <space />
-            <key key="waterway" value="river" />
-            <text key="name" text="Name" />
-            <optional>
-                <reference ref="waterway_wikipedia" />
-                <check key="lock" text="Lock" disable_off="true" />
-            </optional>
-            <reference ref="water_access" />
-        </item> <!-- River -->
-        <item name="Canal" icon="presets/nautical/waterway_canal.svg" type="way" preset_name_label="true">
-            <link wiki="Tag:waterway=canal" />
-            <space />
-            <key key="waterway" value="canal" />
-            <text key="name" text="Name" />
-            <optional>
-                <combo key="layer" text="Layer" values="5,4,3,2,1,0,-1,-2,-3,-4,-5" length="3" />
-                <combo key="tunnel" text="Tunnel" values="culvert,flooded,yes" />
-                <combo key="usage" text="Usage" values="transportation,transmission,irrigation,headrace,tailrace,spillway" values_context="usage" />
-                <text key="width" text="Width (meters)" />
-                <text key="wikipedia" text="Wikipedia" />
-                <check key="lock" text="Lock" disable_off="true" />
-            </optional>
-            <reference ref="water_access" />
-        </item> <!-- Canal -->
         <separator/>
         <item name="Spring" icon="presets/landmark/spring.svg" type="node,closedway" preset_name_label="true">
             <link wiki="Tag:natural=spring" />
@@ -2450,6 +2478,7 @@
                 <role key="platform_exit_only" text="platform (exit only)" requisite="optional" type="node,way,closedway" member_expression="public_transport=platform" />
                 <role key="platform_entry_only" text="platform (entry only)" requisite="optional" type="node,way,closedway" member_expression="public_transport=platform" />
                 <role key="" text="route segment" requisite="required" type="way,closedway" member_expression="highway" />
+                <role key="hail_and_ride" text="hail and ride route segment" requisite="optional" type="way,closedway" member_expression="highway" />
             </roles>
         </item> <!-- Public Transport Route (Bus) -->
         <item name="Route Master" icon="presets/misc/route.svg" type="relation" preset_name_label="true">
@@ -2897,6 +2926,22 @@
             <reference ref="nudism" />
             <reference ref="link_contact_address_payment" />
         </item> <!-- Campsite -->
+        <item name="Camp pitch" icon="presets/accommodation/camp_pitch.svg" type="node,closedway,multipolygon" preset_name_label="true">
+            <link wiki="Tag:tourism=camp_pitch" />
+            <space />
+            <key key="tourism" value="camp_pitch" />
+            <text key="ref" text="Reference" />
+            <text key="addr:unit" text="Unit number" />
+            <text key="capacity" text="Number of places" />
+            <reference ref="surface" />
+            <checkgroup columns="2">
+                <check key="tents" text="Tents allowed" />
+                <check key="caravans" text="Caravans allowed" />
+                <check key="drinking_water" text="Drinking Water" />
+                <check key="power_supply" text="Power supply" />
+                <check key="permanent_camping" text="Permanent camping only" />
+            </checkgroup>
+        </item> <!-- Camp pitch -->
     </group> <!-- Accommodation -->
     <group name="Food+Drinks" icon="presets/food/restaurant.svg">
         <item name="Restaurant" icon="presets/food/restaurant.svg" type="node,closedway,multipolygon" preset_name_label="true">
@@ -3272,6 +3317,14 @@
             <space />
             <reference ref="link_contact_address_payment" />
         </item> <!-- Horse Riding -->
+        <item name="Hackerspace" icon="presets/leisure/hackerspace.svg" type="node,closedway,multipolygon" preset_name_label="true">
+            <link wiki="Tag:leisure=hackerspace" />
+            <space />
+            <key key="leisure" value="hackerspace" />
+            <reference ref="name_operator_oh_wheelchair" />
+            <space />
+            <reference ref="link_contact_address" />
+        </item> <!-- Hackerspace -->
         <separator/>
         <item name="Playground" icon="presets/leisure/playground.svg" type="node,closedway,multipolygon" preset_name_label="true">
             <link wiki="Tag:leisure=playground" />
@@ -4681,7 +4734,7 @@
         <item name="Building" icon="presets/landmark/building.svg" type="node,closedway,multipolygon" preset_name_label="true">
             <link wiki="Key:building" />
             <space />
-            <combo key="building" text="Building" values="bakehouse,barn,basilica,cabin,carport,cathedral,chapel,church,college,commercial,construction,cowshed,farm_auxiliary,garage,garages,gasometer,greenhouse,hangar,hospital,industrial,kindergarten,manufacture,mosque,office,public,retail,roof,ruins,school,service,shed,silo,stable,storage_tank,supermarket,synagogue,temple,train_station,transformer_tower,transportation,university,warehouse,yes" values_context="building" default="yes" match="keyvalue!" values_searchable="true" />
+            <combo key="building" text="Building" values="allotment_house,bakehouse,barn,basilica,cabin,carport,cathedral,chapel,church,college,commercial,construction,cowshed,farm_auxiliary,garage,garages,gasometer,greenhouse,hangar,hospital,industrial,kindergarten,manufacture,mosque,office,public,retail,roof,ruins,school,service,shed,silo,stable,storage_tank,supermarket,synagogue,temple,toilets,train_station,transformer_tower,transportation,university,warehouse,yes" values_context="building" default="yes" match="keyvalue!" values_searchable="true" />
             <optional>
                 <text key="name" text="Name" />
                 <combo key="building:levels" text="Levels" values="1,2,3,4,5,6,7,8,9,10,11" text_context="building" />
@@ -4703,7 +4756,7 @@
         <item name="Building part" icon="presets/landmark/building.svg" type="closedway,multipolygon" preset_name_label="true">
             <link wiki="Key:building:part" />
             <space />
-            <combo key="building:part" text="Building part" values="bakehouse,barn,college,commercial,construction,cowshed,farm_auxiliary,garage,garages,greenhouse,hangar,hospital,industrial,office,retail,roof,ruins,school,shed,supermarket,transportation,university,warehouse,yes" values_context="building" default="yes" match="keyvalue!" values_searchable="true" />
+            <combo key="building:part" text="Building part" values="allotment_house,bakehouse,barn,college,commercial,construction,cowshed,farm_auxiliary,garage,garages,greenhouse,hangar,hospital,industrial,office,retail,roof,ruins,school,shed,supermarket,toilets,transportation,university,warehouse,yes" values_context="building" default="yes" match="keyvalue!" values_searchable="true" />
             <text key="name" text="Name" />
             <combo key="building:levels" text="Levels" values="1,2,3,4,5,6,7,8,9,10,11" text_context="building" />
             <combo key="building:min_level" text="Skipped Levels" values="1,2,3,4,5,6,7,8,9,10" text_context="building" />
@@ -4871,14 +4924,6 @@
             <combo key="diameter" text="Diameter (mm)" values="800,1000,1200,1500,1600,1800,2200,2300,2400,2500,2600,2800,3200,3300,3400,3500,4000,4200,4300,4800" />
             <text key="pressure" text="Pressure (bar)" />
         </item> <!-- Pipeline -->
-        <item name="Pipeline Marker" icon="presets/misc/pipeline_marker.svg" type="node" preset_name_label="true">
-            <link wiki="Tag:pipeline=marker" />
-            <space />
-            <key key="pipeline" value="marker" />
-            <text key="ref" text="Reference" />
-            <reference ref="operator_substance" />
-            <reference ref="support" />
-        </item> <!-- Pipeline Marker -->
         <item name="Pipeline Valve" icon="presets/misc/valve.svg" type="node" preset_name_label="true">
             <link wiki="Tag:pipeline=valve" />
             <space />
@@ -4890,6 +4935,18 @@
             <combo key="sensor:position" text="Position sensor" values="optical,mechanical,inductive,yes" />
             <reference ref="ref_operator" />
         </item> <!-- Pipeline Valve -->
+        <item name="Marker" icon="presets/misc/pipeline_marker.svg" type="node" preset_name_label="true">
+            <link wiki="Key:marker" />
+            <space />
+            <combo key="marker" text="Type" values="aerial,ground,pedestal,plate,post,stone" values_context="marker" match="key" />
+            <combo key="utility" text="Utility" values="chemical,gas,heating,hydrant,oil,power,sewerage,street_lighting,telecom,television,waste,water" />
+            <optional>
+                <reference ref="ref_operator" />
+                <combo key="material" text="Material" values="concrete,metal,plastic,steel,stone,wood" />
+                <combo key="colour" text="Color (HTML name or hexadecimal code)" values_context="color" values="black,blue,brown,gray,green,orange,purple,red,silver,white,yellow,#CD853F" />
+                <combo key="location" text="Location" values="underground,overground" values_context="pipeline" />
+            </optional>
+        </item> <!-- Marker -->
         <item name="Manhole" icon="presets/misc/manhole.svg" type="node" preset_name_label="true">
             <link wiki="Key:manhole" />
             <space />
@@ -6249,6 +6306,13 @@
             <reference ref="name_brand_oh_wheelchair" />
             <reference ref="link_contact_address_payment" />
         </item> <!-- Travel Agency -->
+        <item name="Scuba diving" icon="presets/shop/scuba_diving.svg" type="node,closedway,multipolygon" preset_name_label="true">
+            <link wiki="Tag:shop=scuba_diving" />
+            <space />
+            <key key="shop" value="scuba_diving" />
+            <reference ref="name_brand_oh_wheelchair" />
+            <reference ref="link_contact_address_payment" />
+        </item> <!-- Scuba diving -->
         <item name="Musical Instrument" icon="presets/shop/musical_instrument.svg" type="node,closedway,multipolygon" preset_name_label="true">
             <link wiki="Tag:shop=musical_instrument" />
             <space />
@@ -6336,6 +6400,13 @@
             <reference ref="name_oh_wheelchair" />
             <reference ref="link_contact_address_payment" />
         </item> <!-- Photo -->
+        <item name="Weapons" icon="presets/shop/weapons.svg" type="node,closedway,multipolygon" preset_name_label="true">
+            <link wiki="Tag:shop=weapons" />
+            <space />
+            <key key="shop" value="weapons" />
+            <reference ref="name_oh_wheelchair" />
+            <reference ref="link_contact_address_payment" />
+        </item> <!-- Weapons -->
         <item name="Funeral Directors" icon="presets/shop/funeral_directors.svg" type="node,closedway,multipolygon" preset_name_label="true">
             <link wiki="Tag:shop=funeral_directors" />
             <space />
@@ -7518,9 +7589,6 @@
             <space />
             <key key="type" value="restriction" />
             <combo key="restriction" text="Restriction" values="no_left_turn,no_right_turn,no_straight_on,no_u_turn,only_right_turn,only_left_turn,only_straight_on" values_searchable="true" />
-            <optional>
-                <text key="name" text="Name" />
-            </optional>
             <roles>
                 <role key="from" text="from way" requisite="required" count="1" type="way" />
                 <role key="via" text="via node or ways" requisite="required" type="way,node" />
