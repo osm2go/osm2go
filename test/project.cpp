@@ -261,9 +261,9 @@ static void testLoad(const std::string &tmpdir, const char *osmfile)
 
 static void testRename(const std::string &tmpdir, const char *diff_file)
 {
-  std::unique_ptr<project_t> project(new project_t("diff_restore", tmpdir));
+  std::unique_ptr<project_t> project(new project_t("diff_restore_data", tmpdir));
   assert(project->save());
-  project->osmFile = "diff_restore.osm.gz";
+  project->osmFile = "diff_restore_data.osm.gz";
   const std::string oldpath = project->path;
 
   // wronly flagged as gzip
@@ -312,12 +312,12 @@ static void testRename(const std::string &tmpdir, const char *diff_file)
   const std::string ndiffname = project->path + project->name + ".diff";
   osm2go_platform::MappedFile ndiff(ndiffname);
   assert(static_cast<bool>(ndiff));
-  const char *dnold = strstr(mf.data(), "diff_restore");
+  const char *dnold = strstr(mf.data(), "diff_restore_data");
   const char *dnnew = strstr(ndiff.data(), project->name.c_str());
   assert_cmpmem(mf.data(), dnold - mf.data(), ndiff.data(), dnnew - ndiff.data());
   // only compare the next few bytes. The rest of the file may be differently formatted
   // (e.g. ' vs ", spaces before /> or not.
-  assert_cmpmem(dnold + strlen("diff_restore"), 60, dnnew + project->name.size(), 60);
+  assert_cmpmem(dnold + strlen("diff_restore_data"), 60, dnnew + project->name.size(), 60);
   dnnew = nullptr; // sanity
   ndiff.reset();
 
