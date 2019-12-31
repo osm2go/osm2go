@@ -36,11 +36,11 @@ function(add_compat_header hdr)
 	# yes, NOT: it will add this only on the first call, afterwards the
 	# directory exists so we know that the include has been added
 	if (NOT TR1_DIR_ADDED)
-		target_include_directories(osm2go_lib PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/tr1wrappers)
+		target_include_directories(osm2go_lib PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/tr1wrappers_bin)
 		set(TR1_DIR_ADDED TRUE PARENT_SCOPE)
 	endif ()
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tr1wrappers/${hdr}
-			${CMAKE_CURRENT_BINARY_DIR}/tr1wrappers/${hdr}
+			${CMAKE_CURRENT_BINARY_DIR}/tr1wrappers_bin/${hdr}
 			COPYONLY)
 endfunction()
 
