@@ -29,7 +29,7 @@ tar xf ~/curl-${CURL_VERSION}.tar*
 mv curl-${CURL_VERSION} curl
 
 # run CMake so the debian/control is generated
-cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_TOOLCHAIN_FILE=/opt/scratchbox.cmake -D CMAKE_BUILD_WITH_INSTALL_RPATH=On -D CMAKE_INSTALL_PREFIX=/usr .
+cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_TOOLCHAIN_FILE=/opt/scratchbox.cmake -D CMAKE_BUILD_WITH_INSTALL_RPATH=On -D CMAKE_INSTALL_PREFIX=/usr -D BUILD_TESTING=Off .
 
 # do a build, otherwise fakeroot injects things that break the build
 make -j 5
