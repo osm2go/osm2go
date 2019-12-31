@@ -1,3 +1,18 @@
+osm2go (1:0.9.16-maemo1) karmic; urgency=low
+
+  * fix "clear current track segment"
+  * allow fetching OSM background tiles up to zoom level 19
+  * fix bad assertions when extending ways
+  * small fixes in Mapnik style
+  * prefill value of newly added source:date and survey:date tags with current date
+  * make it possible to add nodes to area boundaries without width
+  * show description for barriers
+  * use correct UTF8 aware ordering in project list
+  * make filtering the project list aware of UTF8
+  * when restricting WMS image size keep the aspect ratio of the image
+
+ -- Rolf Eike Beer <eike@sf-mail.de>  Tue, 31 Dec 2019 12:47:03 +0100
+
 osm2go (1:0.9.15-maemo1) karmic; urgency=low
 
   * internal refactoring of writing floating point numbers

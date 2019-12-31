@@ -9,7 +9,7 @@ if (POLICY CMP0076)
 	cmake_policy(SET CMP0076 OLD)
 endif ()
 
-project(osm2go VERSION 0.9.15 LANGUAGES C CXX)
+project(osm2go VERSION 0.9.16 LANGUAGES C CXX)
 
 include(CMakePushCheckState)
 include(CheckCXXSourceCompiles)
