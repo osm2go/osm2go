@@ -215,7 +215,7 @@ static void callback_modified_name(GtkWidget *widget) {
   /* search all entries except the last (which is the one we are editing) */
   settings_t::ref settings = settings_t::instance();
   std::vector<wms_server_t *> &servers = settings->wms_server;
-  const std::vector<wms_server_t *>::iterator itEnd = servers.end() - 1;
+  const std::vector<wms_server_t *>::iterator itEnd = std::prev(servers.end());
   std::vector<wms_server_t *>::iterator it = std::find_if(servers.begin(), itEnd,
                                                           find_wms_functor(name));
 

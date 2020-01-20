@@ -876,7 +876,7 @@ void map_t::touchnode_update(lpos_t pos) {
   /* need to be searched */
   if(touchnode == nullptr && action.way != nullptr && action.way->node_chain.size() > 1) {
     const node_chain_t &chain = action.way->node_chain;
-    std::for_each(chain.begin(), chain.end() - 1, fc);
+    std::for_each(chain.begin(), std::prev(chain.end()), fc);
   }
 }
 

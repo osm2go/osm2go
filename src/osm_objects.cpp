@@ -340,12 +340,12 @@ bool way_t::merge(way_t *other, osm_t *osm, map_t *map, const std::vector<relati
     printf("  need to prepend\n");
     node_chain.insert(node_chain.begin(), other->node_chain.begin(), std::prev(other->node_chain.end()));
 
-    other->node_chain.erase(other->node_chain.begin(), other->node_chain.end() - 1);
+    other->node_chain.erase(other->node_chain.begin(), std::prev(other->node_chain.end()));
   } else if(other->node_chain.back() == node_chain.back()) {
     printf("  need to append\n");
     node_chain.insert(node_chain.end(), std::next(other->node_chain.rbegin()), other->node_chain.rend());
 
-    other->node_chain.erase(other->node_chain.begin(), other->node_chain.end() - 1);
+    other->node_chain.erase(other->node_chain.begin(), std::prev(other->node_chain.end()));
   } else {
     printf("  need to append\n");
     node_chain.insert(node_chain.end(), std::next(other->node_chain.begin()), other->node_chain.end());
