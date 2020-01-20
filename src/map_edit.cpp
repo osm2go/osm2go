@@ -381,15 +381,19 @@ void map_t::way_cut(lpos_t pos) {
 struct redraw_way {
   node_t * const node;
   map_t * const map;
-  redraw_way(node_t *n, map_t *m) : node(n), map(m) {}
+  unsigned int &cnt;
+  redraw_way(node_t *n, map_t *m, unsigned int &c) : node(n), map(m), cnt(c) {}
   void operator()(const std::pair<item_id_t, way_t *> &p);
 };
 
 void redraw_way::operator()(const std::pair<item_id_t, way_t *> &p)
 {
   way_t * const way = p.second;
-  if(!way->contains_node(node))
+  if(!cnt || !way->contains_node(node))
     return;
+
+  // limit the real work to the number of ways this node is actually part of
+  cnt--;
 
   printf("  node is part of way #" ITEM_ID_FORMAT ", redraw!\n", way->id);
 
@@ -489,8 +493,11 @@ void map_t::node_move(map_item_t *map_item, const osm2go_platform::screenpos &p)
   draw(node);
 
   /* visually update ways, node is part of */
-  if(node->ways > 0)
-    std::for_each(osm->ways.begin(), osm->ways.end(), redraw_way(node, this));
+  if(node->ways > 0) {
+    unsigned int wcnt = node->ways;
+    redraw_way fc(node, this, wcnt);
+    std::for_each(osm->ways.begin(), osm->ways.end(), fc);
+  }
 
   /* and mark the node as dirty */
   node->flags |= OSM_FLAG_DIRTY;
