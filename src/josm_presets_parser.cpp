@@ -481,6 +481,15 @@ void PresetSax::characters(const char *ch, int len)
     }
 }
 
+// check if the given string starts with the iterator value
+struct matchHead {
+  const char * const a;
+  matchHead(const char *attr) : a(attr) {}
+  inline bool operator()(const std::string &l) {
+    return strncmp(a, l.c_str(), l.size()) == 0;
+  }
+};
+
 const char *PresetSax::findAttribute(const char **attrs, const char *name, bool useLang) const {
   // If the entire key matches name this is the non-localized (i.e. fallback)
   // key. Continue search to find a localized text, if no other is found return
@@ -491,11 +500,11 @@ const char *PresetSax::findAttribute(const char **attrs, const char *name, bool 
     // Check if the given attribute begins with one of the preferred language
     // codes. If yes, skip over the language code and check this one.
     const char *a = attrs[i];
-    for(std::vector<std::string>::size_type j = 0; (j < langs.size()) && useLang; j++) {
-      if(strncmp(a, langs[j].c_str(), langs[j].size()) == 0) {
-        a += langs[j].size();
-        break;
-      }
+    if (useLang) {
+      const std::vector<std::string>::const_iterator itEnd = langs.end();
+      const std::vector<std::string>::const_iterator it = std::find_if(std::cbegin(langs), itEnd, matchHead(a));
+      if (it != itEnd)
+        a += it->size();
     }
 
     if(strcmp(a, name) == 0) {
@@ -522,12 +531,11 @@ PresetSax::AttrMap PresetSax::findAttributes(const char **attrs, const char **na
     // codes. If yes, skip over the language code and check this one.
     const char *a = attrs[i];
     bool isLoc = false;
-    for(std::vector<std::string>::size_type j = 0; (j < langs.size()); j++) {
-      if(strncmp(a, langs[j].c_str(), langs[j].size()) == 0) {
-        a += langs[j].size();
-        isLoc = true;
-        break;
-      }
+    const std::vector<std::string>::const_iterator itEnd = langs.end();
+    const std::vector<std::string>::const_iterator it = std::find_if(std::cbegin(langs), itEnd, matchHead(a));
+    if (it != itEnd) {
+      a += it->size();
+      isLoc = true;
     }
 
     for(unsigned int j = 0; j < count; j++) {
