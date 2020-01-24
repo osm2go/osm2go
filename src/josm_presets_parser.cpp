@@ -712,13 +712,10 @@ void PresetSax::startElement(const char *name, const char **attrs)
 
           const presets_element_list_entry_chunks * const lechunk = static_cast<presets_element_list_entry_chunks *>(ref->widgets.front());
           selitem->values.reserve(selitem->values.size() + lechunk->values.size());
-          std::vector<std::string>::const_iterator sitEnd = lechunk->values.end();
-          for(std::vector<std::string>::const_iterator sit = std::cbegin(lechunk->values); sit != sitEnd; sit++)
-            selitem->values.push_back(*sit);
-          sitEnd = lechunk->display_values.end();
+          std::copy(lechunk->values.begin(), lechunk->values.end(), std::back_inserter(selitem->values));
+
           selitem->display_values.reserve(selitem->display_values.size() + lechunk->display_values.size());
-          for(std::vector<std::string>::const_iterator sit = std::cbegin(lechunk->display_values); sit != sitEnd; sit++)
-            selitem->display_values.push_back(*sit);
+          std::copy(lechunk->display_values.begin(), lechunk->display_values.end(), std::back_inserter(selitem->display_values));
         }
       }
     }
