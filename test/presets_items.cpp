@@ -48,7 +48,7 @@ int main(void)
   const presets_item *item = dynamic_cast<const presets_item *>(p);
   assert(item != nullptr);
   assert_cmpnum(item->roles.size(), 0);
-  assert_cmpnum(item->widgets.size(), 3);
+  assert_cmpnum(item->widgets.size(), 4);
   assert_cmpstr(item->link, std::string());
   assert(!item->addEditName);
 
@@ -63,10 +63,21 @@ int main(void)
   assert(el_lb != nullptr);
   assert_cmpstr(el_lb->text, "xy label");
 
-  assert_cmpnum(item->widgets.back()->type, WIDGET_TYPE_CHECK);
-  const presets_element_checkbox *el_chk = dynamic_cast<const presets_element_checkbox *>(item->widgets.back());
+  assert_cmpnum(item->widgets.at(2)->type, WIDGET_TYPE_CHECK);
+  const presets_element_checkbox *el_chk = dynamic_cast<const presets_element_checkbox *>(item->widgets.at(2));
   assert(el_chk != nullptr);
   assert_cmpstr(el_chk->text, "xy Chk");
+
+  assert_cmpnum(item->widgets.back()->type, WIDGET_TYPE_COMBO);
+  const presets_element_combo *el_cmb = dynamic_cast<const presets_element_combo *>(item->widgets.back());
+  assert(el_cmb != nullptr);
+  assert_cmpstr(el_cmb->text, "combo");
+  assert_cmpnum(el_cmb->values.size(), 2);
+  assert_cmpnum(el_cmb->display_values.size(), 2);
+  assert_cmpstr(el_cmb->values.front(), "cval");
+  assert_cmpstr(el_cmb->values.back(), "cval2");
+  assert_cmpstr(el_cmb->display_values.front(), "cval");
+  assert_cmpstr(el_cmb->display_values.back(), "second cval");
 
   p = gr->items.at(1);
   assert(!p->isItem());
