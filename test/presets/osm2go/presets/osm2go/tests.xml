@@ -10,7 +10,7 @@
 			<key key="OSM2go test" value="passed" />
 			<label text="Test check" xy.text="xy label" />
 			<check key="check" text="chk" xy.text="xy Chk" default="on" />
-			<multiselect key="colors" values="red;green;blue;black" rows="2"/>
+			<multiselect key="colors" values="red|green|blue|black" rows="2" delimiter="|"/>
 			<combo key="ckey" text="combo" xyz.name="bad combo"><!-- intentionally no match on language -->
 				<reference ref="cv" />
 			</combo>
