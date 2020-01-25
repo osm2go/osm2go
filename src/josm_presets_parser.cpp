@@ -868,7 +868,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
       char *endp;
       rows = strtoul(rowstr, &endp, 10);
       if(unlikely(*endp != '\0')) {
-        dumpState("ignoring invalid count value of", "role");
+        dumpState("ignoring invalid count value of", "rows");
         rows = 0;
       }
     }
