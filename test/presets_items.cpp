@@ -12,9 +12,12 @@
 
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
+#include <osm2go_test.h>
 
-int main(void)
+int main(int argc, char **argv)
 {
+  OSM2GO_TEST_INIT(argc, argv);
+
   xmlInitParser();
 
   std::unique_ptr<presets_items_internal> presets(static_cast<presets_items_internal *>(presets_items::load()));

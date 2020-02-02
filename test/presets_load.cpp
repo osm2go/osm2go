@@ -20,6 +20,7 @@
 
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
+#include <osm2go_test.h>
 
 static std::vector<std::string> basedirs;
 
@@ -247,6 +248,8 @@ test_roles(const presets_items *presets)
 
 int main(int argc, char **argv)
 {
+  OSM2GO_TEST_INIT(argc, argv);
+
   xmlInitParser();
 
   basedirs.reserve(argc - 1);
