@@ -115,6 +115,7 @@ josm_type_bit(const char *type, char sep)
   if(likely(it != itEnd))
     return it->first;
 
+  // This prints the remaining string even if a separator follows. Who cares.
   printf("WARNING: unexpected type %s\n", type);
   return 0;
 }
@@ -442,6 +443,7 @@ void PresetSax::find_link_ref::operator()(PresetSax::LLinks::value_type &l)
 {
   if(unlikely(!px.resolvePresetLink(l.first, l.second))) {
     printf("found preset_link with unmatched preset_name '%s'\n", l.second.c_str());
+    // delete the link widget everywhere it was inserted
     find_link_parent fc(l.first);
     const std::vector<presets_item_t *>::const_iterator itEnd = px.presets.items.end();
     if(std::find_if(std::cbegin(px.presets.items), itEnd, fc) == itEnd) {

@@ -14,7 +14,11 @@
 			<combo key="ckey" text="combo" xyz.name="bad combo"><!-- intentionally no match on language -->
 				<reference ref="cv" />
 			</combo>
+			<preset_link preset_name="second" />
+			<preset_link preset_name="third" />
 		</item>
 		<separator/>
+		<item name="second" type="make,warnings">
+		</item>
 	</group>
 </presets>
