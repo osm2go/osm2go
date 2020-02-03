@@ -51,7 +51,7 @@ struct track_t {
   track_t();
 
   std::vector<track_seg_t> segments;
-  bool dirty;
+  mutable bool dirty;
   bool active; ///< if the last element in segments is currently written to
 
   void clear();
@@ -65,7 +65,7 @@ struct project_t;
 struct track_t;
 
 /* used internally to save and restore the currently displayed track */
-void track_save(project_t::ref project, track_t *track);
+void track_save(project_t::ref project, const track_t *track);
 
 /**
  * @brief restore the track of the current project

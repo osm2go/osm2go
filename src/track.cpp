@@ -275,7 +275,7 @@ track_write(const char *name, const track_t *track, xmlDoc *d)
 } // namespace
 
 /* save track in project */
-void track_save(project_t::ref project, track_t *track)
+void track_save(project_t::ref project, const track_t *track)
 {
   if(!project)
     return;
