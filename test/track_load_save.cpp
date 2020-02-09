@@ -20,11 +20,11 @@ int main(int argc, char **argv)
 
   xmlInitParser();
 
-  track_t *track = track_import(fn.c_str());
+  std::unique_ptr<track_t> track(track_import(fn.c_str()));
 
-  track_export(track, argv[3]);
+  track_export(track.get(), argv[3]);
 
-  delete track;
+  track.reset();
 
   osm2go_platform::MappedFile ogpx(fn);
   osm2go_platform::MappedFile ngpx(argv[3]);
