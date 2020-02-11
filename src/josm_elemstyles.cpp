@@ -386,8 +386,6 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
         hasBgWidth = (*endch == '\0');
       } else if(strcmp(attrs[i], "colour_bg") == 0) {
         hasBgColor = parse_color(attrs[i + 1], line->bg.color, colors);
-      } else if(strcmp(attrs[i], "priority") == 0) {
-        line->priority = parse_priority(attrs[i + 1]);
       } else if(strcmp(attrs[i], "dashed") == 0) {
         const char * const dval = attrs[i + 1];
         if(parse_boolean(dval, true_values)) {
@@ -434,8 +432,6 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
         parse_width_mod(attrs[i + 1], line_mod.line);
       else if(strcmp(attrs[i], "width_bg") == 0)
         parse_width_mod(attrs[i + 1], line_mod.bg);
-      else if(likely(strcmp(attrs[i], "priority") == 0))
-        line_mod.priority = parse_priority(attrs[i + 1]);
     }
     break;
   }
@@ -447,8 +443,6 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
     for(unsigned int i = 0; attrs[i] != nullptr && !hasColor; i += 2) {
       if(likely(strcmp(attrs[i], "colour") == 0))
         hasColor = parse_color(attrs[i + 1], elemstyle->area.color, colors);
-      else if(strcmp(attrs[i], "priority") == 0)
-        elemstyle->area.priority = parse_priority(attrs[i + 1]);
     }
 
     /* this has to be present */

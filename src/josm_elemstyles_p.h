@@ -62,7 +62,6 @@ struct elemstyle_line_t {
     memset(this, 0, sizeof(*this));
   }
 
-  int priority;
   int width;
   color_t color;
   unsigned short dash_length_on;
@@ -102,24 +101,20 @@ struct elemstyle_width_mod_t {
 
 struct elemstyle_line_mod_t {
   inline elemstyle_line_mod_t()
-    : priority(0)
-    , color(0)
+    : color(0)
   {
   }
 
-  int priority;
   elemstyle_width_mod_t line, bg;
   color_t color;
 } __attribute__ ((packed));
 
 struct elemstyle_area_t {
   elemstyle_area_t()
-    : priority(0)
-    , color(0)
+    : color(0)
   {
   }
 
-  int priority;
   color_t color;
 };
 
