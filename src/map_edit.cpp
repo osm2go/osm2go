@@ -295,7 +295,7 @@ void map_t::way_cut_highlight(map_item_t *item, lpos_t pos) {
       std::vector<lpos_t> coords(2);
       coords[0] = item->object.way->node_chain[seg]->lpos;
       coords[1] = item->object.way->node_chain[seg + 1]->lpos;
-      cursor = canvas->polyline_new(CANVAS_GROUP_DRAW, coords, width, style->highlight.node_color);
+      cursor.reset(canvas->polyline_new(CANVAS_GROUP_DRAW, coords, width, style->highlight.node_color));
     }
   } else if(item_is_selected_node(item)) {
     /* cutting a way at its first or last node doesn't make much sense ... */

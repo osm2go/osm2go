@@ -1101,7 +1101,6 @@ map_t::map_t(appdata_t &a, canvas_t *c)
   : gps_item(nullptr)
   , appdata(a)
   , canvas(c)
-  , cursor(nullptr)
   , touchnode(nullptr)
   , touchnode_node(nullptr)
   , bg_offset(0, 0)
@@ -1117,6 +1116,7 @@ map_t::~map_t()
   // no need to clear background_items here, the items were all deleted when
   // destroying the canvas
   map_free_map_item_chains(appdata);
+  cursor.release();
   appdata.map = nullptr;
 }
 

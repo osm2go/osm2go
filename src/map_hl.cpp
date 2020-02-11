@@ -38,17 +38,15 @@ void map_highlight_t::clear()
 }
 
 /* create a new item for the cursor */
-void map_t::hl_cursor_draw(lpos_t pos, unsigned int radius) {
-  delete cursor;
-
-  cursor = canvas->circle_new(CANVAS_GROUP_DRAW, pos, radius,
-                              0, style->highlight.node_color);
+void map_t::hl_cursor_draw(lpos_t pos, unsigned int radius)
+{
+  cursor.reset(canvas->circle_new(CANVAS_GROUP_DRAW, pos, radius,
+                                  0, style->highlight.node_color));
 }
 
 void map_t::hl_cursor_clear()
 {
-  delete cursor;
-  cursor = nullptr;
+  cursor.reset();
 }
 
 namespace {

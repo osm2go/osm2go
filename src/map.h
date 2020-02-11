@@ -110,7 +110,7 @@ public:
 
   map_item_t selected;             // the currently selected item (node or way)
 
-  canvas_item_t *cursor;           // the cursor visible on the draw layer
+  std::unique_ptr<canvas_item_t> cursor; // the cursor visible on the draw layer
   canvas_item_t *touchnode;        // the blue "touch node" on the draw layer
   node_t *touchnode_node;          ///< the underlying node belonging to touchnode
 
