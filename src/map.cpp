@@ -1448,6 +1448,8 @@ void map_t::track_draw_seg(track_seg_t &seg) {
     if(last != itEnd) {
       it = last;
       visible++;
+      if (tmp == itEnd)
+        elements_drawn++;
     }
 
     /* also use last one that's offscreen to nicely leave the visible area */
