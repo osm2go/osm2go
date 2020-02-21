@@ -87,4 +87,4 @@ int main(int argc, char **argv)
   return 0;
 }
 
-#include "appdata_dummy.h"
+#include "dummy_appdata.h"

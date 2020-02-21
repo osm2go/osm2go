@@ -276,4 +276,4 @@ int main(int argc, char **argv)
   return result;
 }
 
-#include "appdata_dummy.h"
+#include "dummy_appdata.h"
