@@ -1478,6 +1478,7 @@ void map_t::track_update_seg(track_seg_t &seg) {
   const bounds_t &bounds = appdata.project->osm->bounds;
 
   printf("-- APPENDING TO TRACK --\n");
+  assert(!seg.track_points.empty());
 
   /* there are two cases: either the second last point was on screen */
   /* or it wasn't. We'll have to start a new screen item if the latter */
@@ -1485,7 +1486,7 @@ void map_t::track_update_seg(track_seg_t &seg) {
 
   /* search last point */
   const std::vector<track_point_t>::const_iterator itEnd = seg.track_points.end();
-  std::vector<track_point_t>::const_iterator last = itEnd - 1;
+  std::vector<track_point_t>::const_iterator last = std::prev(itEnd);
   /* check if the last and second_last points are visible */
   const bool last_is_visible = bounds.ll.contains(last->pos);
   const bool second_last_is_visible = (elements_drawn > 0);
@@ -1499,8 +1500,8 @@ void map_t::track_update_seg(track_seg_t &seg) {
 
   const std::vector<track_point_t>::const_iterator begin = // start of track to draw
                                                    second_last_is_visible
-                                                   ? itEnd - elements_drawn - 1
-                                                   : itEnd - 2;
+                                                   ? std::prev(itEnd, elements_drawn + 1)
+                                                   : std::prev(itEnd, 2);
 
   /* since we are updating an existing track, it sure has at least two
    * points, second_last must be valid and its "next" (last) also */
