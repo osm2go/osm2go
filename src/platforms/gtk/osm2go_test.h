@@ -27,4 +27,5 @@ public:
   }
 
   inline canvas_t *operator->() { return c; }
+  inline canvas_t *operator*() { return c; }
 };

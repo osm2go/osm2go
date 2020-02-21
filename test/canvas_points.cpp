@@ -1,13 +1,25 @@
+#include "dummy_map.h"
+
 #include <canvas.h>
+#include <style.h>
 
 #include <cassert>
+#include <iostream>
 #include <memory>
 
 #include <osm2go_annotations.h>
 #include <osm2go_stl.h>
 #include <osm2go_test.h>
 
-static void testSegment()
+namespace {
+
+void set_bounds(osm_t::ref o)
+{
+  bool b = o->bounds.init(pos_area(pos_t(52.2692786, 9.5750497), pos_t(52.2695463, 9.5755)));
+  assert(b);
+}
+
+void testSegment()
 {
   std::vector<lpos_t> points;
   for (unsigned int i = 0; i < 8; i += 2)
@@ -22,7 +34,7 @@ static void testSegment()
   assert_cmpnum(segnum, 1);
 }
 
-static void testInObject()
+void testInObject()
 {
   canvas_holder canvas;
 
@@ -55,7 +67,7 @@ static void testInObject()
   assert(circle == search);
 }
 
-static void testToBottom()
+void testToBottom()
 {
   std::vector<lpos_t> points;
   for (unsigned int i = 0; i < 3; i += 2)
@@ -97,11 +109,111 @@ static void testToBottom()
   assert(search1 == search3);
 }
 
+void testTrackSegments()
+{
+  char tmpdir[] = "/tmp/osm2go-canvas-XXXXXX";
+
+  if(mkdtemp(tmpdir) == nullptr) {
+    std::cerr << "cannot create temporary directory" << std::endl;
+    return;
+  }
+
+  std::string osm_path = tmpdir;
+  osm_path += '/';
+
+  appdata_t a;
+  canvas_holder canvas;
+  std::unique_ptr<map_t> m(new test_map(a, *canvas));
+  a.project.reset(new project_t("test_proj", tmpdir));
+  a.project->osm.reset(new osm_t());
+  set_bounds(a.project->osm);
+  m->style.reset(new style_t());
+  a.track.track.reset(new track_t());
+
+  a.track.track->segments.push_back(track_seg_t());
+  {
+    track_seg_t &tseg1 = a.track.track->segments.back();
+
+    // calling this on an empty segment should do nothing
+    m->track_draw_seg(tseg1);
+    assert(tseg1.item_chain.empty());
+
+    // all items are outside the bounds
+    for (int i = 0; i < 5; i++)
+      tseg1.track_points.push_back(track_point_t(pos_t(i, i)));
+    m->elements_drawn = 42;
+
+    m->track_draw_seg(tseg1);
+    assert(tseg1.item_chain.empty());
+    assert_cmpnum(m->elements_drawn, 0);
+
+    // and this one is still outside
+    tseg1.track_points.push_back(track_point_t(pos_t(8, 8)));
+    m->track_update_seg(tseg1);
+    assert(tseg1.item_chain.empty());
+    assert_cmpnum(m->elements_drawn, 0);
+
+    tseg1.track_points.clear();
+
+    // draw one element in the middle of the bounds
+    tseg1.track_points.push_back(track_point_t(a.project->osm->bounds.ll.center()));
+    m->track_draw_seg(tseg1);
+    assert(!tseg1.item_chain.empty());
+    assert_cmpnum(m->elements_drawn, 1);
+  }
+
+  a.track.track->clear_current();
+
+  pos_t uncenter = a.project->osm->bounds.ll.center();
+  // a track segment entering the bounds
+  a.track.track->segments.push_back(track_seg_t());
+  {
+    track_seg_t &tseg2 = a.track.track->segments.back();
+
+    tseg2.track_points.push_back(track_point_t(pos_t(0, 0)));
+    tseg2.track_points.push_back(track_point_t(a.project->osm->bounds.ll.center()));
+    m->track_draw_seg(tseg2);
+    assert(!tseg2.item_chain.empty());
+    assert_cmpnum(m->elements_drawn, 2);
+
+    // add another point that is within bounds
+    uncenter.lat = (uncenter.lat + a.project->osm->bounds.ll.max.lat) / 2;
+    tseg2.track_points.push_back(track_point_t(uncenter));
+    m->track_update_seg(tseg2);
+    assert(!tseg2.item_chain.empty());
+    assert_cmpnum(m->elements_drawn, 3);
+  }
+
+  a.track.track->clear();
+
+  // a track segment going in and out
+  a.track.track->segments.push_back(track_seg_t());
+  {
+    track_seg_t &tseg3 = a.track.track->segments.back();
+
+    tseg3.track_points.push_back(track_point_t(pos_t(0, 0)));
+    tseg3.track_points.push_back(track_point_t(a.project->osm->bounds.ll.center()));
+    tseg3.track_points.push_back(track_point_t(pos_t(2, 2)));
+    m->track_draw_seg(tseg3);
+    assert(!tseg3.item_chain.empty());
+    assert_cmpnum(m->elements_drawn, 3);
+
+    // add another one that now is onscreen again
+    tseg3.track_points.push_back(track_point_t(uncenter));
+    m->track_update_seg(tseg3);
+    assert_cmpnum(tseg3.item_chain.size(), 1);
+    assert_cmpnum(m->elements_drawn, 4);
+  }
+}
+
+} // namespace
+
 int main()
 {
   testSegment();
   testInObject();
   testToBottom();
+  testTrackSegments();
 
   return 0;
 }
