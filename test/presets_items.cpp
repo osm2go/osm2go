@@ -74,7 +74,9 @@ int main(int argc, char **argv)
   assert_cmpnum(item->widgets.at(3)->type, WIDGET_TYPE_MULTISELECT);
   const presets_element_multiselect *el_ms = dynamic_cast<const presets_element_multiselect *>(item->widgets.at(3));
   assert(el_ms != nullptr);
+#ifndef FREMANTLE
   assert_cmpnum(el_ms->rows_height, 2);
+#endif
   assert_cmpnum(el_ms->values.size(), 4);
   assert_cmpnum(el_ms->display_values.size(), 0);
 
