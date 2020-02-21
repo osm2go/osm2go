@@ -1381,6 +1381,7 @@ void map_t::delete_selected() {
 
 /* ----------------------- track related stuff ----------------------- */
 
+namespace {
 /**
  * @brief allocate a point array and initialize it with screen coordinates
  * @param bounds screen boundary
@@ -1388,9 +1389,10 @@ void map_t::delete_selected() {
  * @param count number of points to use
  * @return point array
  */
-static std::vector<lpos_t> canvas_points_init(const bounds_t &bounds,
-                                           std::vector<track_point_t>::const_iterator point,
-                                           const unsigned int count) {
+std::vector<lpos_t>
+canvas_points_init(const bounds_t &bounds, std::vector<track_point_t>::const_iterator point,
+                   const unsigned int count)
+{
   std::vector<lpos_t> points;
   points.reserve(count);
   lpos_t lpos;
@@ -1402,6 +1404,18 @@ static std::vector<lpos_t> canvas_points_init(const bounds_t &bounds,
 
   return points;
 }
+
+struct out_of_bounds {
+  inline out_of_bounds(const bounds_t &b, bool inv) : bounds(b.ll), invert(inv) {}
+
+  const pos_area &bounds;
+  const bool invert;
+
+  inline bool operator()(const track_point_t &pt) const
+  { return invert == bounds.contains(pt.pos); }
+};
+
+} // namespace
 
 void map_t::track_draw_seg(track_seg_t &seg) {
   const bounds_t &bounds = appdata.project->osm->bounds;
@@ -1417,44 +1431,29 @@ void map_t::track_draw_seg(track_seg_t &seg) {
   std::vector<track_point_t>::const_iterator it = seg.track_points.begin();
   while(it != itEnd) {
     /* skip all points not on screen */
-    std::vector<track_point_t>::const_iterator last = itEnd;
-    while(it != itEnd && !bounds.ll.contains(it->pos)) {
-      last = it;
-      it++;
-    }
+    std::vector<track_point_t>::const_iterator tmp = std::find_if(it, itEnd, out_of_bounds(bounds, true));
 
-    if(it == itEnd) {
+    if(tmp == itEnd) {
       // the segment ends in a segment that is not on screen
       elements_drawn = 0;
       return;
     }
-
-    unsigned int visible = 0;
+    /* actually start drawing with the last position that was offscreen */
+    /* so the track nicely enters the viewing area */
+    if (tmp != it)
+      it = std::prev(tmp);
 
     /* count nodes that _are_ on screen */
-    std::vector<track_point_t>::const_iterator tmp = it;
-    while(tmp != itEnd && bounds.ll.contains(tmp->pos)) {
-      tmp++;
-      visible++;
-    }
+    tmp = std::find_if(tmp, itEnd, out_of_bounds(bounds, false));
+    unsigned int visible = std::distance(it, tmp);
 
     /* the last element is still on screen, so save the number of elements in
      * the point list to avoid recalculation on update */
-    if(tmp == itEnd)
+    if(tmp == itEnd) {
       elements_drawn = visible;
-
-    /* actually start drawing with the last position that was offscreen */
-    /* so the track nicely enters the viewing area */
-    if(last != itEnd) {
-      it = last;
-      visible++;
-      if (tmp == itEnd)
-        elements_drawn++;
-    }
-
-    /* also use last one that's offscreen to nicely leave the visible area */
-    /* also determine the first item to use in the next loop */
-    if(tmp != itEnd && tmp + 1 != itEnd) {
+    } else if(std::next(tmp) != itEnd) {
+      /* also use last one that's offscreen to nicely leave the visible area */
+      /* also determine the first item to use in the next loop */
       visible++;
       tmp++;
     } else {
