@@ -1,3 +1,5 @@
+#include "dummy_map.h"
+
 #include <map.h>
 
 #include <appdata.h>
@@ -12,45 +14,6 @@
 #include <iostream>
 #include <memory>
 #include <unistd.h>
-
-namespace {
-
-class MainUiDummy : public MainUi {
-public:
-  MainUiDummy() : MainUi(), msg(nullptr) {}
-  void setActionEnable(menu_items, bool) override
-  { abort(); }
-  void showNotification(const char *, unsigned int) override
-  { abort(); }
-  const char *msg;
-};
-
-} // namespace
-
-appdata_t::appdata_t()
-  : uicontrol(new MainUiDummy())
-  , map(nullptr)
-  , icons(icon_t::instance())
-{
-}
-
-appdata_t::~appdata_t()
-{
-}
-
-void appdata_t::track_clear()
-{
-  abort();
-}
-
-class test_map: public map_t {
-public:
-  explicit test_map(appdata_t &a) : map_t(a, nullptr) {}
-
-  void set_autosave(bool) override { abort(); }
-
-  void test_way_add_cancel();
-};
 
 static void set_bounds(osm_t::ref o) {
   bool b = o->bounds.init(pos_area(pos_t(52.2692786, 9.5750497), pos_t(52.2695463, 9.5755)));
@@ -111,7 +74,7 @@ static void test_draw_deleted(const std::string &tmpdir)
   m->draw(w);
 }
 
-void test_map::test_way_add_cancel()
+void test_map::test_function()
 {
   way_add_begin();
   way_add_cancel();
@@ -126,7 +89,7 @@ static void test_way_add_cancel(const std::string &tmpdir)
   a.project->osm.reset(new osm_t());
   set_bounds(a.project->osm);
 
-  m->test_way_add_cancel();
+  m->test_function();
 }
 
 int main()
@@ -150,3 +113,5 @@ int main()
 
   return 0;
 }
+
+#include "dummy_appdata.h"
