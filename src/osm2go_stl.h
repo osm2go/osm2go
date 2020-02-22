@@ -163,11 +163,7 @@ namespace std {
 
       /// Return the stored pointer.
       element_type *
-      get()
-      { return _M_t; }
-
-      const element_type *
-      get() const
+      get() const noexcept
       { return _M_t; }
 
       /// Return @c true if the stored pointer is not null.
