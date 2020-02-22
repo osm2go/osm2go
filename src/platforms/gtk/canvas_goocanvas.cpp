@@ -331,36 +331,31 @@ namespace {
 bool
 inpoly(const canvas_item_info_poly *poly, int x, int y)
 {
-  int xold, yold;
-
   if(poly->num_points < 3)
     return false;
 
-  xold = poly->points[poly->num_points - 1].x;
-  yold = poly->points[poly->num_points - 1].y;
+  lpos_t oldPos = poly->points[poly->num_points - 1];
   bool inside = false;
   for (unsigned i = 0 ; i < poly->num_points ; i++) {
-    int x1, y1, x2, y2;
-    int xnew = poly->points[i].x;
-    int ynew = poly->points[i].y;
+    float x1, y1, x2, y2;
+    lpos_t newPos = poly->points[i];
 
-    if (xnew > xold) {
-      x1 = xold;
-      x2 = xnew;
-      y1 = yold;
-      y2 = ynew;
+    if (newPos.x > oldPos.x) {
+      x1 = oldPos.x;
+      x2 = newPos.x;
+      y1 = oldPos.y;
+      y2 = newPos.y;
     } else {
-      x1 = xnew;
-      x2 = xold;
-      y1 = ynew;
-      y2 = yold;
+      x1 = newPos.x;
+      x2 = oldPos.x;
+      y1 = newPos.y;
+      y2 = oldPos.y;
     }
-    if ((xnew < x) == (x <= xold)          /* edge "open" at one end */
-        && (y - y1) * static_cast<long>(x2 - x1) < (y2 - y1) * static_cast<long>(x - x1))
+    if ((newPos.x < x) == (x <= oldPos.x)          /* edge "open" at one end */
+        && (y - y1) * (x2 - x1) < (y2 - y1) * (x - x1))
       inside = !inside;
 
-    xold = xnew;
-    yold = ynew;
+    oldPos = newPos;
   }
 
   return inside;
