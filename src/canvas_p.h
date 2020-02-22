@@ -62,7 +62,7 @@ public:
   unsigned int width;
   // stored as single items to save one size_t of memory per object
   const unsigned int num_points;
-  std::unique_ptr<lpos_t[]> points;
+  const std::unique_ptr<lpos_t[]> points;
 
   /**
    * @brief get the polygon/polyway segment a certain coordinate is over
