@@ -117,6 +117,12 @@ struct canvas_item_polyline : public canvas_item_t {
   canvas_item_polyline() O2G_DELETED_FUNCTION;
   canvas_item_polyline &operator=(const canvas_item_polyline &) O2G_DELETED_FUNCTION;
 
+  /**
+   * @brief update the visible points
+   *
+   * This must not be called for selectable items. In fact, it is intended
+   * only to grow GPS track items.
+   */
   void set_points(const std::vector<lpos_t> &points);
 };
 
