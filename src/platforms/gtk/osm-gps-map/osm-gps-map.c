@@ -995,6 +995,8 @@ osm_gps_map_render_missing_tile_upscaled (OsmGpsMap *map, int zoom,
     /* get a Pixbuf for the area to magnify */
     int zoom_diff = zoom - zoom_big;
     int area_size = TILESIZE >> zoom_diff;
+    if (area_size == 0)
+      return NULL;
     int modulo = 1 << zoom_diff;
     int area_x = (x % modulo) * area_size;
     int area_y = (y % modulo) * area_size;
