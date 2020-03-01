@@ -256,7 +256,7 @@ bool project_t::rename(const std::string &nname, project_t::ref global, osm2go_p
   const bool isGlobal = global && global->name == name;
   assert(global.get() != this);
 
-  std::unique_ptr<project_t> tmpproj(new project_t(nname, path.substr(0, path.size() - 1 /* slash */ - name.size())));
+  std::unique_ptr<project_t> tmpproj(std::make_unique<project_t>(nname, path.substr(0, path.size() - 1 /* slash */ - name.size())));
   tmpproj->map_state = map_state;
   const bool oldOsmExists = osm_file_exists();
 
@@ -362,7 +362,7 @@ std::vector<project_t *> project_scan(const std::string &base_path, int base_pat
       printf("found project %s\n", d->d_name);
 
       /* try to read project and append it to chain */
-      std::unique_ptr<project_t> n(new project_t(d->d_name, base_path));
+      std::unique_ptr<project_t> n(std::make_unique<project_t>(d->d_name, base_path));
 
       if(likely(project_read(fullname, n, server, base_path_fd)))
         projects.push_back(n.release());

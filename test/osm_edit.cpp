@@ -95,7 +95,7 @@ void test_trivial()
   assert(tags.hasNonCreatorTags());
   assert(!tags.hasTagCollisions());
 
-  std::unique_ptr<osm_t> osm(new osm_t());
+  std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
   osm->bounds.min = lpos_t(0, 0);
   osm->bounds.max = lpos_t(0, 0);
   assert_cmpstr(osm->sanity_check(), trstring::native_type(_("Invalid data in OSM file:\nBoundary box invalid!")));
@@ -387,7 +387,7 @@ unsigned int intrnd(unsigned int r)
 
 void test_split()
 {
-  std::unique_ptr<osm_t> o(new osm_t());
+  std::unique_ptr<osm_t> o(std::make_unique<osm_t>());
   way_t * const v = new way_t();
   way_t * const w = new way_t();
   relation_t * const r1 = new relation_t();
@@ -594,7 +594,7 @@ struct findWay {
 
 void test_split_order()
 {
-  std::unique_ptr<osm_t> o(new osm_t());
+  std::unique_ptr<osm_t> o(std::make_unique<osm_t>());
   std::vector<node_t *> nodes;
   for(unsigned int i = 1; i <= 10; i++) {
     node_t *n = new node_t(3, pos_t(52.25 + i * 0.001, 9.58 + i * 0.001), 1234500 + i);
@@ -706,7 +706,7 @@ void test_changeset()
 
 void test_reverse()
 {
-  std::unique_ptr<osm_t> o(new osm_t());
+  std::unique_ptr<osm_t> o(std::make_unique<osm_t>());
   set_bounds(o);
 
   lpos_t l(10, 20);
@@ -822,7 +822,7 @@ void node_noop(node_t *)
 
 void test_way_delete()
 {
-  std::unique_ptr<osm_t> o(new osm_t());
+  std::unique_ptr<osm_t> o(std::make_unique<osm_t>());
   set_bounds(o);
 
   // delete a simple way
@@ -958,7 +958,7 @@ void test_way_delete()
 
 void test_member_delete()
 {
-  std::unique_ptr<osm_t> o(new osm_t());
+  std::unique_ptr<osm_t> o(std::make_unique<osm_t>());
   set_bounds(o);
 
   // a way with 3 points
@@ -1068,7 +1068,7 @@ struct first_way {
 
 void test_merge_nodes()
 {
-  std::unique_ptr<osm_t> o(new osm_t());
+  std::unique_ptr<osm_t> o(std::make_unique<osm_t>());
   set_bounds(o);
 
   /// ==================
@@ -1456,7 +1456,7 @@ void verify_merged_way(way_t *w, osm_t::ref o, const node_chain_t &nodes, const 
 
 void test_merge_ways()
 {
-  std::unique_ptr<osm_t> o(new osm_t());
+  std::unique_ptr<osm_t> o(std::make_unique<osm_t>());
   set_bounds(o);
 
   node_chain_t nodes;
@@ -1510,7 +1510,7 @@ void test_merge_ways()
 // test that neighbors in relations are merged if necessary
 void test_way_merge_relation_neighbors()
 {
-  std::unique_ptr<osm_t> osm(new osm_t());
+  std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
   set_bounds(osm);
 
   // delete a simple way
@@ -1625,7 +1625,7 @@ void test_api_adjust()
 
 void test_description()
 {
-  std::unique_ptr<osm_t> osm(new osm_t());
+  std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
   set_bounds(osm);
   lpos_t pos(1, 1);
   node_t *n = osm->node_new(pos);
@@ -1899,7 +1899,7 @@ void test_description()
 
 void test_relation_members()
 {
-  std::unique_ptr<osm_t> osm(new osm_t());
+  std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
   set_bounds(osm);
   relation_t *r = new relation_t(0);
   osm->relation_attach(r);
@@ -1918,7 +1918,7 @@ void test_relation_members()
 
 void test_way_insert()
 {
-  std::unique_ptr<osm_t> osm(new osm_t());
+  std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
   set_bounds(osm);
 
   node_t * const n0 = osm->node_new(lpos_t(10, 10));

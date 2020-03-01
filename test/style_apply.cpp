@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 
   assert(!style->elemstyles.empty());
 
-  std::unique_ptr<osm_t> osm(new osm_t());
+  std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
 
   osm->bounds.min = lpos_t(0, 0);
   osm->bounds.max = lpos_t(0, 0);

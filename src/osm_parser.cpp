@@ -486,7 +486,7 @@ static osm_t::UploadPolicy parseUploadPolicy(const char *str) {
 
 static osm_t *process_osm(xmlTextReaderPtr reader) {
   /* alloc osm structure */
-  std::unique_ptr<osm_t> osm(new osm_t());
+  std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
 
   xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST "upload"));
   if(unlikely(prop))

@@ -23,14 +23,14 @@ static void set_bounds(osm_t::ref o) {
 static void test_map_delete()
 {
   appdata_t a;
-  std::unique_ptr<map_t> m(new test_map(a));
+  std::unique_ptr<map_t> m(std::make_unique<test_map>(a));
 }
 
 static void test_map_delete_items()
 {
   appdata_t a;
-  std::unique_ptr<map_t> m(new test_map(a));
-  std::unique_ptr<osm_t> o(new osm_t());
+  std::unique_ptr<map_t> m(std::make_unique<test_map>(a));
+  std::unique_ptr<osm_t> o(std::make_unique<osm_t>());
   set_bounds(o);
 
   way_t *w = o->way_attach(new way_t(1));
@@ -53,9 +53,9 @@ static void test_draw_deleted(const std::string &tmpdir)
 {
   appdata_t a;
   a.project.reset(new project_t("foo", tmpdir));
-  std::unique_ptr<map_t> m(new test_map(a));
+  std::unique_ptr<map_t> m(std::make_unique<test_map>(a));
   m->style.reset(new style_t());
-  std::unique_ptr<osm_t> o(new osm_t());
+  std::unique_ptr<osm_t> o(std::make_unique<osm_t>());
   set_bounds(o);
 
   lpos_t p(10, 10);
@@ -83,7 +83,7 @@ void test_map::test_function()
 static void test_way_add_cancel(const std::string &tmpdir)
 {
   appdata_t a;
-  std::unique_ptr<test_map> m(new test_map(a));
+  std::unique_ptr<test_map> m(std::make_unique<test_map>(a));
 
   a.project.reset(new project_t("foo", tmpdir));
   a.project->osm.reset(new osm_t());

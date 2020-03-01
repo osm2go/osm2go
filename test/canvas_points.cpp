@@ -123,7 +123,7 @@ void testTrackSegments()
 
   appdata_t a;
   canvas_holder canvas;
-  std::unique_ptr<map_t> m(new test_map(a, *canvas));
+  std::unique_ptr<map_t> m(std::make_unique<test_map>(a, *canvas));
   a.project.reset(new project_t("test_proj", tmpdir));
   a.project->osm.reset(new osm_t());
   set_bounds(a.project->osm);

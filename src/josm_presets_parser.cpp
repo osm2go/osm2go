@@ -1172,7 +1172,7 @@ presets_items *presets_items::load()
 {
   printf("Loading JOSM presets ...\n");
 
-  std::unique_ptr<presets_items_internal> presets(new presets_items_internal());
+  std::unique_ptr<presets_items_internal> presets(std::make_unique<presets_items_internal>());
 
   const std::string &filename = osm2go_platform::find_file("defaultpresets.xml");
   if(likely(!filename.empty()))

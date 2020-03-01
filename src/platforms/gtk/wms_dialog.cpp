@@ -313,7 +313,7 @@ GtkTreeIter store_fill_functor::operator()(const wms_server_t *srv)
 /* user clicked "add..." button in the wms server list */
 static void on_server_add(wms_server_context_t *context) {
 
-  std::unique_ptr<wms_server_t> newserver(new wms_server_t());
+  std::unique_ptr<wms_server_t> newserver(std::make_unique<wms_server_t>());
   // in case the project has a server set, but the global list is empty,
   // fill the data of the project server
   if(settings_t::instance()->wms_server.empty() &&

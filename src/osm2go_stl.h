@@ -216,7 +216,25 @@ namespace std {
     swap(unique_ptr<_Tp, _Dp>& __x,
          unique_ptr<_Tp, _Dp>& __y) noexcept
     { __x.swap(__y); }
+}
+#endif
 
+#if __cplusplus < 201402L
+struct appdata_t;
+
+namespace std {
+  template<typename _Tp>
+  inline _Tp *make_unique() { return new _Tp(); }
+
+  template<typename _Tp>
+  inline _Tp *make_unique(appdata_t &u) { return new _Tp(u); }
+  template<typename _Tp, typename _Up>
+  inline _Tp *make_unique(_Up u) { return new _Tp(u); }
+
+  template<typename _Tp, typename _Up, typename _Vp>
+  inline _Tp *make_unique(_Up u, _Vp v) { return new _Tp(u, v); }
+  template<typename _Tp, typename _Vp>
+  inline _Tp *make_unique(appdata_t &u, _Vp v) { return new _Tp(u, v); }
 }
 #endif
 

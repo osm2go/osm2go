@@ -309,7 +309,7 @@ project_new(select_context_t *context)
   if(name.empty())
     return nullptr;
 
-  std::unique_ptr<project_t> project(new project_t(name, settings_t::instance()->base_path));
+  std::unique_ptr<project_t> project(std::make_unique<project_t>(name, settings_t::instance()->base_path));
 
   /* no data downloaded yet */
   project->data_dirty = true;

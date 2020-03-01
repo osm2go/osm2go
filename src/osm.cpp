@@ -1427,7 +1427,7 @@ way_t *way_t::split(osm_t::ref osm, node_chain_t::iterator cut_at, bool cut_at_n
   }
 
   /* create a duplicate of the currently selected way */
-  std::unique_ptr<way_t> neww(new way_t(0));
+  std::unique_ptr<way_t> neww(std::make_unique<way_t>(0));
 
   /* attach remaining nodes to new way */
   neww->node_chain.insert(neww->node_chain.end(), cut_at, node_chain.end());

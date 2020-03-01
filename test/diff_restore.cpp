@@ -202,7 +202,7 @@ int main(int argc, char **argv)
     mkdir(bpath.c_str(), 0755);
     bpath.erase(bpath.rfind('/') + 1);
     // and create a new project from that
-    std::unique_ptr<project_t> sproject(new project_t(argv[2], bpath));
+    std::unique_ptr<project_t> sproject(std::make_unique<project_t>(argv[2], bpath));
     // CAUTION: osm is shared between the projects now
     sproject->osm.reset(osm.get());
 

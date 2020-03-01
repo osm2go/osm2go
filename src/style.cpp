@@ -209,7 +209,7 @@ static bool style_parse(const std::string &fullname, xmlString *fname, style_t &
 
 style_t *style_load_fname(const std::string &filename) {
   xmlString fname;
-  std::unique_ptr<style_t> style(new style_t());
+  std::unique_ptr<style_t> style(std::make_unique<style_t>());
 
   if(likely(style_parse(filename, &fname, *style))) {
     printf("  elemstyle filename: %s\n", static_cast<const char *>(fname));

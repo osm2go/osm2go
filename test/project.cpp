@@ -89,7 +89,7 @@ static void testNoFiles(const std::string &tmpdir)
 
 static void testSave(const std::string &tmpdir, const char *empty_proj)
 {
-  std::unique_ptr<project_t> project(new project_t(proj_name, tmpdir));
+  std::unique_ptr<project_t> project(std::make_unique<project_t>(proj_name, tmpdir));
 
   assert(project->save());
 
@@ -123,7 +123,7 @@ static void testSave(const std::string &tmpdir, const char *empty_proj)
 
 static void testNoData(const std::string &tmpdir)
 {
-  std::unique_ptr<project_t> project(new project_t(proj_name, tmpdir));
+  std::unique_ptr<project_t> project(std::make_unique<project_t>(proj_name, tmpdir));
 
   assert(project->save());
 
@@ -194,7 +194,7 @@ static void testLoad(const std::string &tmpdir, const char *osmfile)
   for (size_t i = loopcnt * 2; i > 0; i--) {
     fflush(stdout); // output readability
     // create dummy project
-    std::unique_ptr<project_t> project(new project_t(proj_name, tmpdir));
+    std::unique_ptr<project_t> project(std::make_unique<project_t>(proj_name, tmpdir));
     project->bounds.min.lat = 0.5;
     project->bounds.min.lon = 0.5;
     project->bounds.max.lat = 0.6;
@@ -255,13 +255,13 @@ static void testLoad(const std::string &tmpdir, const char *osmfile)
     uid->messages.clear();
   }
 
-  std::unique_ptr<project_t> tmpproj(new project_t(proj_name, tmpdir));
+  std::unique_ptr<project_t> tmpproj(std::make_unique<project_t>(proj_name, tmpdir));
   project_delete(tmpproj);
 }
 
 static void testRename(const std::string &tmpdir, const char *diff_file)
 {
-  std::unique_ptr<project_t> project(new project_t("diff_restore_data", tmpdir));
+  std::unique_ptr<project_t> project(std::make_unique<project_t>("diff_restore_data", tmpdir));
   assert(project->save());
   project->osmFile = "diff_restore_data.osm.gz";
   const std::string oldpath = project->path;
