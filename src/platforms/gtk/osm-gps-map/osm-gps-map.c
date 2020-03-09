@@ -119,9 +119,9 @@ struct _OsmGpsMapPrivate
     //the uri string contains, that will be replaced when calculating
     //the uri to download.
     OsmGpsMapSource_t map_source;
+    int uri_format;
     char *repo_uri;
     char *image_format;
-    int uri_format;
 #ifdef DISABLED_MAPS
     //flag indicating if the map source is located on the google
     gboolean the_google;
