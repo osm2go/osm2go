@@ -1,6 +1,7 @@
 #include "dummy_map.h"
 
 #include <canvas.h>
+#include <canvas_p.h>
 #include <style.h>
 
 #include <cassert>
@@ -92,6 +93,16 @@ void testToBottom()
   canvas_item_t *line2 = canvas->polyline_new(CANVAS_GROUP_WAYS, points, 1, 0);
   assert(line2 != nullptr);
 
+  // an area polygon
+  points.clear();
+  points.push_back(lpos_t(2, 1));
+  points.push_back(lpos_t(EXTRA_FUZZINESS_PIXEL * 3, 0));
+  points.push_back(lpos_t(4, 7));
+  points.push_back(lpos_t(1, 6));
+  points.push_back(points.front());
+  canvas_item_t *bgpoly = canvas->polygon_new(CANVAS_GROUP_POLYGONS, points, 1, color_t::black(), color_t::black());
+  assert(bgpoly != nullptr);
+
   canvas_item_t *search1 = canvas->get_item_at(lpos_t(3, 6));
   // must be one of the items, it's exactly on them
   assert(search1 == line || search1 == line2);
@@ -105,8 +116,27 @@ void testToBottom()
   // and back to the first
   canvas->item_to_bottom(search2);
   canvas_item_t *search3 = canvas->get_item_at(lpos_t(3, 6));
-
   assert(search1 == search3);
+
+  canvas->item_to_bottom(search3);
+  search3 = canvas->get_item_at(lpos_t(3, 6));
+  assert(search2 == search3);
+  canvas->item_to_bottom(search3);
+  search3 = canvas->get_item_at(lpos_t(3, 6));
+  assert(search1 == search3);
+
+  // now the polygon should be the item
+  search3 = canvas->get_item_at(lpos_t(EXTRA_FUZZINESS_PIXEL * 2, 1));
+  assert(bgpoly == search3);
+
+  // there is only one item at that position, so it should be returned again
+  canvas->item_to_bottom(search3);
+  search3 = canvas->get_item_at(lpos_t(15, 1));
+  assert(bgpoly == search3);
+
+  // outside of everything
+  search3 = canvas->get_item_at(lpos_t(EXTRA_FUZZINESS_PIXEL * 4, 3));
+  assert_null(search3);
 }
 
 void testTrackSegments()
