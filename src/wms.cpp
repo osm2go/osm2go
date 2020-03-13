@@ -64,21 +64,48 @@ struct charcmp {
 };
 
 typedef std::map<const char *, WmsImageFormat, charcmp> FormatMap;
-FormatMap ImageFormats;
-std::map<WmsImageFormat, const char *> ImageFormatExtensions;
+typedef std::map<WmsImageFormat, const char *> ExtensionMap;
 
-void
+inline FormatMap
 initImageFormats()
 {
+  FormatMap ImageFormats;
+
   ImageFormats["image/png"] = WMS_FORMAT_PNG;
   ImageFormats["image/gif"] = WMS_FORMAT_GIF;
   ImageFormats["image/jpg"] = WMS_FORMAT_JPG;
   ImageFormats["image/jpeg"] = WMS_FORMAT_JPEG;
 
+  return ImageFormats;
+}
+
+const FormatMap &
+imageFormats()
+{
+  static const FormatMap ret = initImageFormats();
+
+  return ret;
+}
+
+inline ExtensionMap
+initFormatExtensions()
+{
+  ExtensionMap ImageFormatExtensions;
+
   ImageFormatExtensions[WMS_FORMAT_PNG] = "png";
   ImageFormatExtensions[WMS_FORMAT_GIF] = "gif";
   ImageFormatExtensions[WMS_FORMAT_JPG] = "jpg";
   ImageFormatExtensions[WMS_FORMAT_JPEG] = "jpg";
+
+  return ImageFormatExtensions;
+}
+
+const ExtensionMap &
+imageFormatExtensions()
+{
+  static const ExtensionMap ret = initFormatExtensions();
+
+  return ret;
 }
 
 bool
@@ -148,6 +175,7 @@ wms_cap_parse_getmap(xmlDocPtr doc, xmlNode *a_node)
 {
   wms_getmap_t wms_getmap;
   xmlNode *cur_node;
+  const FormatMap &ImageFormats = imageFormats();
 
   for (cur_node = a_node->children; cur_node != nullptr; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
@@ -419,9 +447,6 @@ wms_layer_t::list wms_get_layers(project_t::ref project, wms_t& wms)
     return layers;
   }
 
-  if(unlikely(ImageFormats.empty()))
-    initImageFormats();
-
   xmlDocGuard doc(xmlReadMemory(capmem.c_str(), capmem.size(),
                                                           nullptr, nullptr, XML_PARSE_NONET));
 
@@ -482,6 +507,7 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
   const std::string coords = appdata.project->bounds.print();
 
   /* find preferred supported video format */
+  const FormatMap &ImageFormats = imageFormats();
   const FormatMap::const_iterator itEnd = ImageFormats.end();
   FormatMap::const_iterator it = std::find_if(std::cbegin(ImageFormats), itEnd,
                                               find_format_reverse_functor(wms.cap.request.getmap.format));
@@ -501,7 +527,10 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
                           } };
   const std::string url = std::accumulate(parts.begin(), parts.end(), wmsUrl(wms, "Map&LAYERS=") + layers);
 
-  const std::string filename = appdata.project->path + "wms." + ImageFormatExtensions[it->second];
+  const ExtensionMap &ImageFormatExtensions = imageFormatExtensions();
+  ExtensionMap::const_iterator extIt = ImageFormatExtensions.find(it->second);
+  assert(extIt != ImageFormatExtensions.end());
+  const std::string filename = appdata.project->path + "wms." + extIt->second;
 
   /* remove any existing image before */
   wms_remove(appdata);
@@ -516,16 +545,14 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
 
 /* try to load an existing image into map */
 void wms_load(appdata_t &appdata) {
-  if(unlikely(ImageFormatExtensions.empty()))
-    initImageFormats();
+  const ExtensionMap &ImageFormatExtensions = imageFormatExtensions();
 
-  const std::map<WmsImageFormat, const char *>::const_iterator itEnd = ImageFormatExtensions.end();
-  std::map<WmsImageFormat, const char *>::const_iterator it = ImageFormatExtensions.begin();
+  const ExtensionMap::const_iterator itEnd = ImageFormatExtensions.end();
 
   std::string filename = appdata.project->path + "/wms.";
   const std::string::size_type extpos = filename.size();
 
-  for(; it != itEnd; it++) {
+  for(ExtensionMap::const_iterator it = ImageFormatExtensions.begin(); it != itEnd; it++) {
     filename.erase(extpos);
     filename += it->second;
 
@@ -540,8 +567,6 @@ void wms_load(appdata_t &appdata) {
 }
 
 void wms_remove_file(project_t &project) {
-  if(unlikely(ImageFormatExtensions.empty()))
-    initImageFormats();
 
   fdguard dirfd(project.path.c_str());
   if(unlikely(!dirfd.valid()))
@@ -549,10 +574,10 @@ void wms_remove_file(project_t &project) {
 
   std::string filename = "wms.";
   const std::string::size_type extpos = filename.size();
+  const ExtensionMap &ImageFormatExtensions = imageFormatExtensions();
 
-  const std::map<WmsImageFormat, const char *>::const_iterator itEnd = ImageFormatExtensions.end();
-  for(std::map<WmsImageFormat, const char *>::const_iterator it = ImageFormatExtensions.begin();
-      it != itEnd; it++) {
+  const ExtensionMap::const_iterator itEnd = ImageFormatExtensions.end();
+  for(ExtensionMap::const_iterator it = ImageFormatExtensions.begin(); it != itEnd; it++) {
     filename.erase(extpos);
     filename += it->second;
 
