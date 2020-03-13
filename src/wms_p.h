@@ -100,4 +100,4 @@ wms_layer_t::list wms_get_layers(project_t::ref project, wms_t &wms);
 void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
                             const std::string &layers, const std::string &srss);
 std::string wms_layer_dialog(project_t::ref project, const wms_layer_t::list &layers);
-bool wms_server_dialog(appdata_t &appdata, wms_t &wms);
+bool wms_server_dialog(const std::string &wms_server, wms_t &wms);

@@ -68,8 +68,8 @@ enum {
 };
 
 struct wms_server_context_t {
-  inline wms_server_context_t(appdata_t &a, wms_t *w, GtkWidget *d)
-    : appdata(a), wms(w), dialog(d), list(nullptr) , server_label(nullptr) {}
+  inline wms_server_context_t(const std::string &ws, wms_t *w, GtkWidget *d)
+    : wms_server(ws), wms(w), dialog(d), list(nullptr) , server_label(nullptr) {}
   wms_server_context_t() O2G_DELETED_FUNCTION;
   wms_server_context_t(const wms_server_context_t &) O2G_DELETED_FUNCTION;
   wms_server_context_t &operator=(const wms_server_context_t &) O2G_DELETED_FUNCTION;
@@ -78,7 +78,7 @@ struct wms_server_context_t {
   wms_server_context_t &operator=(wms_server_context_t &&) = delete;
 #endif
 
-  appdata_t &appdata;
+  const std::string &wms_server;
   wms_t * const wms;
   GtkWidget * const dialog, *list;
   std::unique_ptr<GtkListStore, g_object_deleter> store;
@@ -317,8 +317,8 @@ static void on_server_add(wms_server_context_t *context) {
   // in case the project has a server set, but the global list is empty,
   // fill the data of the project server
   if(settings_t::instance()->wms_server.empty() &&
-     !context->appdata.project->wms_server.empty())
-    newserver->server = context->appdata.project->wms_server;
+     !context->wms_server.empty())
+    newserver->server = context->wms_server;
 
   if(wms_server_edit(context, true, newserver.get())) {
     /* attach a new server item to the chain */
@@ -357,11 +357,11 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
   return context->list;
 }
 
-bool wms_server_dialog(appdata_t &appdata, wms_t &wms)
+bool wms_server_dialog(const std::string &wms_server, wms_t &wms)
 {
   bool ok = false;
 
-  wms_server_context_t context(appdata, &wms,
+  wms_server_context_t context(wms_server, &wms,
                                gtk_dialog_new_with_buttons(_("WMS Server Selection"),
                                                            GTK_WINDOW(appdata_t::window),
                                                            GTK_DIALOG_MODAL,

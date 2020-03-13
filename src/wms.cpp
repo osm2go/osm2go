@@ -639,7 +639,7 @@ void wms_import(appdata_t &appdata)
   appdata.map->bg_offset = osm2go_platform::screenpos(0, 0);
 
   /* get server from dialog */
-  if(!wms_server_dialog(appdata, wms))
+  if(!wms_server_dialog(appdata.project->wms_server, wms))
     return;
 
   const wms_layer_t::list layers = wms_get_layers(appdata.project, wms);
