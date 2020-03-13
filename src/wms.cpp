@@ -282,18 +282,18 @@ wms_cap_parse_root(wms_t &wms, xmlDocPtr doc)
 
 /* get pixel extent of image display */
 wms_t::size_t
-wms_setup_extent(project_t::ref project)
+wms_setup_extent(const pos_area &pbounds)
 {
   bounds_t bounds;
-  bounds.init(project->bounds);
+  bounds.init(pbounds);
 
-  lpos_t lmin = project->bounds.min.toLpos();
+  lpos_t lmin = pbounds.min.toLpos();
   lmin.x -= bounds.center.x;
   lmin.y -= bounds.center.y;
   lmin.x *= bounds.scale;
   lmin.y *= bounds.scale;
 
-  lpos_t lmax = project->bounds.max.toLpos();
+  lpos_t lmax = pbounds.max.toLpos();
   lmax.x -= bounds.center.x;
   lmax.y -= bounds.center.y;
   lmax.x *= bounds.scale;
@@ -498,7 +498,7 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
                             const std::string &layers, const std::string &srss)
 {
   /* get required image size */
-  wms.size = wms_setup_extent(appdata.project);
+  wms.size = wms_setup_extent(appdata.project->bounds);
 
   /* uses epsg4326 if possible */
   const char *srs = srss.empty() ? wms_layer_t::EPSG4326() : srss.c_str();
