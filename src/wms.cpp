@@ -28,7 +28,6 @@
 #include "notifications.h"
 #include "project.h"
 #include "settings.h"
-#include "uicontrol.h"
 
 #include <algorithm>
 #include <array>
@@ -380,22 +379,6 @@ void requestable_layers_functor::operator()(const wms_layer_t &layer)
                                     c_layer));
 }
 
-void
-setMenuEntries(MainUi *uicontrol, bool en)
-{
-  uicontrol->setActionEnable(MainUi::MENU_ITEM_WMS_CLEAR, en);
-  uicontrol->setActionEnable(MainUi::MENU_ITEM_WMS_ADJUST, en);
-}
-
-bool
-setBgImage(appdata_t &appdata, const std::string &filename)
-{
-  bool ret = appdata.map->set_bg_image(filename);
-  if(ret)
-    setMenuEntries(appdata.uicontrol.get(), true);
-  return ret;
-}
-
 inline bool
 layer_is_usable(const wms_layer_t &layer)
 {
@@ -540,7 +523,7 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
     return;
 
   /* there should be a matching file on disk now */
-  setBgImage(appdata, filename);
+  appdata.map->set_bg_image(filename);
 }
 
 /* try to load an existing image into map */
@@ -559,11 +542,9 @@ void wms_load(appdata_t &appdata) {
     appdata.map->bg_offset = osm2go_platform::screenpos(appdata.project->wms_offset.x,
                                                         appdata.project->wms_offset.y);
 
-    if(setBgImage(appdata, filename))
+    if(appdata.map->set_bg_image(filename))
       return;
   }
-
-  setMenuEntries(appdata.uicontrol.get(), false);
 }
 
 void wms_remove_file(project_t &project) {
@@ -590,8 +571,6 @@ void wms_remove(appdata_t &appdata) {
   /* this cancels any wms adjustment in progress */
   if(appdata.map->action.type == MAP_ACTION_BG_ADJUST)
     appdata.map->action_cancel();
-
-  setMenuEntries(appdata.uicontrol.get(), false);
 
   appdata.map->remove_bg_image();
 

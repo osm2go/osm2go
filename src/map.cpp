@@ -1640,9 +1640,22 @@ void map_t::action_cancel()
 
 /* ------------------- map background ------------------ */
 
+namespace {
+
+void
+setMenuEntries(const std::unique_ptr<MainUi> &uicontrol, bool en)
+{
+  uicontrol->setActionEnable(MainUi::MENU_ITEM_WMS_CLEAR, en);
+  uicontrol->setActionEnable(MainUi::MENU_ITEM_WMS_ADJUST, en);
+}
+
+} // namespace
+
 void map_t::remove_bg_image()
 {
   canvas->set_background(std::string());
+
+  setMenuEntries(appdata.uicontrol, false);
 }
 
 void map_t::set_bg_color_from_style()
@@ -1654,16 +1667,17 @@ bool map_t::set_bg_image(const std::string &filename)
 {
   const lpos_t min = appdata.project->osm->bounds.min;
 
-  remove_bg_image();
+  bool ret = canvas->set_background(filename);
 
-  if(!canvas->set_background(filename))
-    return false;
+  if (ret) {
+    int x = min.x + bg_offset.x();
+    int y = min.y + bg_offset.y();
+    canvas->move_background(x, y);
+  }
 
-  int x = min.x + bg_offset.x();
-  int y = min.y + bg_offset.y();
-  canvas->move_background(x, y);
+  setMenuEntries(appdata.uicontrol, ret);
 
-  return true;
+  return ret;
 }
 
 /* -------- hide and show objects (for performance reasons) ------- */

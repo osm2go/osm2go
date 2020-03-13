@@ -9,9 +9,22 @@
 
 class MainUiDummy : public MainUi {
 public:
+  std::map<menu_items, bool> m_actions;
+
   MainUiDummy() : MainUi(), msg(nullptr) {}
-  void setActionEnable(menu_items, bool) override
-  { abort(); }
+  ~MainUiDummy() override
+  {
+    assert(m_actions.empty());
+  }
+
+  void setActionEnable(menu_items item, bool en) override
+  {
+    std::map<menu_items, bool>::iterator it = m_actions.find(item);
+    if (it != m_actions.end() && it->second == en)
+      m_actions.erase(it);
+    else
+      abort();
+  }
   void showNotification(const char *, unsigned int) override
   { abort(); }
   const char *msg;

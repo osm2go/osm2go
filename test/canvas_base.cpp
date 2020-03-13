@@ -42,10 +42,22 @@ void testBackground()
   set_bounds(a.project->osm);
   m->style.reset(new style_t());
   a.track.track.reset(new track_t());
+  MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
 
+  ui->m_actions[MainUi::MENU_ITEM_WMS_CLEAR] = false;
+  ui->m_actions[MainUi::MENU_ITEM_WMS_ADJUST] = false;
   assert(!m->set_bg_image(std::string()));
+  assert(ui->m_actions.empty());
+
+  ui->m_actions[MainUi::MENU_ITEM_WMS_CLEAR] = false;
+  ui->m_actions[MainUi::MENU_ITEM_WMS_ADJUST] = false;
   assert(!m->set_bg_image(nonfile));
+  assert(ui->m_actions.empty());
+
+  ui->m_actions[MainUi::MENU_ITEM_WMS_CLEAR] = false;
+  ui->m_actions[MainUi::MENU_ITEM_WMS_ADJUST] = false;
   m->remove_bg_image();
+  assert(ui->m_actions.empty());
 }
 
 } // namespace
