@@ -228,6 +228,14 @@ cb_menu_download(appdata_t *appdata) {
 }
 
 static void
+cb_menu_wms_import(appdata_t *appdata)
+{
+  std::string fn = wms_import(*appdata);
+  if (!fn.empty())
+    appdata->map->set_bg_image(fn);
+}
+
+static void
 cb_menu_wms_adjust(appdata_t *appdata) {
   appdata->map->set_action(MAP_ACTION_BG_ADJUST);
 }
@@ -724,7 +732,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
 
   menu_append_new_item(
-    &appdata, submenu, G_CALLBACK(wms_import), _("_Import"),
+    &appdata, submenu, G_CALLBACK(cb_menu_wms_import), _("_Import"),
     GTK_STOCK_INDEX, "<OSM2Go-Main>/WMS/Import");
 
   menu_append_new_item(
@@ -979,7 +987,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
 
   /* -- the wms submenu -- */
   const std::array<menu_entry_t, 3> sm_wms_entries = { {
-    menu_entry_t(_("Import"),                  G_CALLBACK(wms_import)),
+    menu_entry_t(_("Import"),                  G_CALLBACK(cb_menu_wms_import)),
     menu_entry_t(MainUi::MENU_ITEM_WMS_CLEAR,  G_CALLBACK(wms_remove)),
     menu_entry_t(MainUi::MENU_ITEM_WMS_ADJUST, G_CALLBACK(cb_menu_wms_adjust)),
   } };

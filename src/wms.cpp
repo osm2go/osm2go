@@ -478,8 +478,8 @@ wms_layer_t::list wms_get_layers(project_t::ref project, wms_t& wms)
   return layers;
 }
 
-void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
-                            const std::string &layers, const std::string &srss)
+static std::string wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
+                                          const std::string &layers, const std::string &srss)
 {
   /* get required image size */
   wms.size = wms_setup_extent(appdata.project->bounds);
@@ -517,14 +517,14 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
   const std::string filename = appdata.project->path + "wms." + extIt->second;
 
   /* remove any existing image before */
-  wms_remove(appdata);
+  wms_remove_file(*appdata.project);
 
   trstring::native_type wtitle = _("WMS layer");
   if(!net_io_download_file(appdata_t::window, url, filename, wtitle))
-    return;
+    return std::string();
 
   /* there should be a matching file on disk now */
-  appdata.map->set_bg_image(filename);
+  return filename;
 }
 
 /* try to load an existing image into map */
@@ -601,7 +601,7 @@ std::vector<wms_server_t *> wms_server_get_default()
   return servers;
 }
 
-void wms_import(appdata_t &appdata)
+std::string wms_import(appdata_t &appdata)
 {
   assert(appdata.project);
 
@@ -620,13 +620,15 @@ void wms_import(appdata_t &appdata)
 
   /* get server from dialog */
   if(!wms_server_dialog(appdata.project->wms_server, wms))
-    return;
+    return std::string();
 
   const wms_layer_t::list layers = wms_get_layers(appdata.project, wms);
   if(layers.empty())
-    return;
+    return std::string();
 
   const std::string &l = wms_layer_dialog(appdata.project, layers);
   if(!l.empty())
-    wms_get_selected_layer(appdata, wms, l, layers.front().srs);
+    return wms_get_selected_layer(appdata, wms, l, layers.front().srs);
+
+  return std::string();
 }

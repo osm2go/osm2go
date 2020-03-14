@@ -32,7 +32,7 @@ struct wms_server_t {
 struct appdata_t;
 struct project_t;
 
-void wms_import(appdata_t &appdata);
+std::string wms_import(appdata_t &appdata);
 std::string wms_find_file(const std::string &project_path);
 void wms_remove(appdata_t &appdata);
 void wms_remove_file(project_t &project);
