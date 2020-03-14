@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include "project.h"
+
 #include <string>
 #include <vector>
 
@@ -29,10 +31,7 @@ struct wms_server_t {
   std::string name, server;
 };
 
-struct appdata_t;
-struct project_t;
-
-std::string wms_import(appdata_t &appdata);
+std::string wms_import(project_t::ref project);
 std::string wms_find_file(const std::string &project_path);
 void wms_remove_file(project_t &project);
 

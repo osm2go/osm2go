@@ -477,17 +477,17 @@ wms_layer_t::list wms_get_layers(project_t::ref project, wms_t& wms)
   return layers;
 }
 
-static std::string wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
+static std::string wms_get_selected_layer(project_t::ref project, wms_t &wms,
                                           const std::string &layers, const std::string &srss)
 {
   /* get required image size */
-  wms.size = wms_setup_extent(appdata.project->bounds);
+  wms.size = wms_setup_extent(project->bounds);
 
   /* uses epsg4326 if possible */
   const char *srs = srss.empty() ? wms_layer_t::EPSG4326() : srss.c_str();
 
   /* build strings of min and max lat and lon to be used in url */
-  const std::string coords = appdata.project->bounds.print();
+  const std::string coords = project->bounds.print();
 
   /* find preferred supported video format */
   const FormatMap &ImageFormats = imageFormats();
@@ -513,10 +513,10 @@ static std::string wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
   const ExtensionMap &ImageFormatExtensions = imageFormatExtensions();
   ExtensionMap::const_iterator extIt = ImageFormatExtensions.find(it->second);
   assert(extIt != ImageFormatExtensions.end());
-  const std::string filename = appdata.project->path + "wms." + extIt->second;
+  const std::string filename = project->path + "wms." + extIt->second;
 
   /* remove any existing image before */
-  wms_remove_file(*appdata.project);
+  wms_remove_file(*project);
 
   trstring::native_type wtitle = _("WMS layer");
   if(!net_io_download_file(appdata_t::window, url, filename, wtitle))
@@ -589,27 +589,27 @@ std::vector<wms_server_t *> wms_server_get_default()
   return servers;
 }
 
-std::string wms_import(appdata_t &appdata)
+std::string wms_import(project_t::ref project)
 {
-  assert(appdata.project);
+  assert(project);
 
-  wms_t wms(appdata.project->wms_server);
+  wms_t wms(project->wms_server);
 
   /* reset any background adjustments in the project ... */
-  appdata.project->wms_offset.x = 0;
-  appdata.project->wms_offset.y = 0;
+  project->wms_offset.x = 0;
+  project->wms_offset.y = 0;
 
   /* get server from dialog */
-  if(!wms_server_dialog(appdata.project->wms_server, wms))
+  if(!wms_server_dialog(project->wms_server, wms))
     return std::string();
 
-  const wms_layer_t::list layers = wms_get_layers(appdata.project, wms);
+  const wms_layer_t::list layers = wms_get_layers(project, wms);
   if(layers.empty())
     return std::string();
 
-  const std::string &l = wms_layer_dialog(appdata.project, layers);
+  const std::string &l = wms_layer_dialog(project, layers);
   if(!l.empty())
-    return wms_get_selected_layer(appdata, wms, l, layers.front().srs);
+    return wms_get_selected_layer(project, wms, l, layers.front().srs);
 
   return std::string();
 }
