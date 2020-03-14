@@ -34,6 +34,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstring>
+#include <filesystem>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <map>
@@ -527,24 +528,24 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
 }
 
 /* try to load an existing image into map */
-void wms_load(appdata_t &appdata) {
+std::string wms_find_file(const std::string &project_path)
+{
   const ExtensionMap &ImageFormatExtensions = imageFormatExtensions();
-
   const ExtensionMap::const_iterator itEnd = ImageFormatExtensions.end();
 
-  std::string filename = appdata.project->path + "/wms.";
+  std::string filename = project_path + "/wms.";
   const std::string::size_type extpos = filename.size();
 
   for(ExtensionMap::const_iterator it = ImageFormatExtensions.begin(); it != itEnd; it++) {
     filename.erase(extpos);
     filename += it->second;
 
-    appdata.map->bg_offset = osm2go_platform::screenpos(appdata.project->wms_offset.x,
-                                                        appdata.project->wms_offset.y);
-
-    if(appdata.map->set_bg_image(filename))
-      return;
+    if (std::filesystem::is_regular_file(filename))
+      return filename;
   }
+
+  filename.clear();
+  return filename;
 }
 
 void wms_remove_file(project_t &project) {

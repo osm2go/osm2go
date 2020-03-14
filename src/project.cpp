@@ -533,7 +533,12 @@ static bool project_load_inner(appdata_t &appdata, std::unique_ptr<project_t> &p
   osm2go_platform::process_events();
   if(unlikely(appdata_t::window == nullptr))
     return false;
-  wms_load(appdata);
+
+  std::string wmsfn = wms_find_file(appdata.project->path);
+  if (!wmsfn.empty()) {
+    appdata.map->bg_offset = osm2go_platform::screenpos(project->wms_offset.x, project->wms_offset.y);
+    appdata.map->set_bg_image(wmsfn);
+  }
 
   /* save the name of the project for the perferences */
   settings_t::instance()->project = appdata.project->name;
