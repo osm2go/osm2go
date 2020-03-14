@@ -1658,6 +1658,12 @@ void map_t::remove_bg_image()
   setMenuEntries(appdata.uicontrol, false);
 }
 
+void map_t::cancel_bg_adjust()
+{
+  if(action.type == MAP_ACTION_BG_ADJUST)
+    action_cancel();
+}
+
 void map_t::set_bg_color_from_style()
 {
   canvas->set_background(style->background.color);

@@ -117,6 +117,7 @@ public:
   /* background image related stuff */
   osm2go_platform::screenpos bg_offset;
 
+private:
   struct {
     map_action_t type;            // current action type in progress
 
@@ -124,6 +125,7 @@ public:
     way_t *extending, *ends_on;   // ways touched by first and last node
   } action;
 
+public:
   /* variables required for pen/mouse handling */
   struct _pd {
     _pd();
@@ -170,6 +172,8 @@ public:
   bool set_bg_image(const std::string &filename);
   void set_bg_color_from_style();
   void remove_bg_image();
+  /* this cancels any wms adjustment in progress */
+  void cancel_bg_adjust();
 
   void hide_selected();
   void show_all();

@@ -567,17 +567,6 @@ void wms_remove_file(project_t &project) {
   }
 }
 
-void wms_remove(appdata_t &appdata) {
-
-  /* this cancels any wms adjustment in progress */
-  if(appdata.map->action.type == MAP_ACTION_BG_ADJUST)
-    appdata.map->action_cancel();
-
-  appdata.map->remove_bg_image();
-
-  wms_remove_file(*appdata.project);
-}
-
 namespace {
 
 struct server_preset_s {
@@ -604,10 +593,6 @@ std::vector<wms_server_t *> wms_server_get_default()
 std::string wms_import(appdata_t &appdata)
 {
   assert(appdata.project);
-
-  /* this cancels any wms adjustment in progress */
-  if(appdata.map->action.type == MAP_ACTION_BG_ADJUST)
-    appdata.map->action_cancel();
 
   wms_t wms(appdata.project->wms_server);
 

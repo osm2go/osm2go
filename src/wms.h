@@ -34,7 +34,6 @@ struct project_t;
 
 std::string wms_import(appdata_t &appdata);
 std::string wms_find_file(const std::string &project_path);
-void wms_remove(appdata_t &appdata);
 void wms_remove_file(project_t &project);
 
 std::vector<wms_server_t *> wms_server_get_default(void);
