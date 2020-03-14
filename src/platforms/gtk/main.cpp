@@ -234,7 +234,7 @@ cb_menu_wms_import(appdata_t *appdata)
 
   std::string fn = wms_import(*appdata);
   if (!fn.empty())
-    appdata->map->set_bg_image(fn);
+    appdata->map->set_bg_image(fn, osm2go_platform::screenpos(0, 0));
 }
 
 static void

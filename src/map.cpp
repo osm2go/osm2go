@@ -1669,9 +1669,11 @@ void map_t::set_bg_color_from_style()
   canvas->set_background(style->background.color);
 }
 
-bool map_t::set_bg_image(const std::string &filename)
+bool map_t::set_bg_image(const std::string &filename, osm2go_platform::screenpos offset)
 {
   const lpos_t min = appdata.project->osm->bounds.min;
+
+  bg_offset = offset;
 
   bool ret = canvas->set_background(filename);
 

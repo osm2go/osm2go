@@ -46,12 +46,12 @@ void testBackground()
 
   ui->m_actions[MainUi::MENU_ITEM_WMS_CLEAR] = false;
   ui->m_actions[MainUi::MENU_ITEM_WMS_ADJUST] = false;
-  assert(!m->set_bg_image(std::string()));
+  assert(!m->set_bg_image(std::string(), osm2go_platform::screenpos(0, 0)));
   assert(ui->m_actions.empty());
 
   ui->m_actions[MainUi::MENU_ITEM_WMS_CLEAR] = false;
   ui->m_actions[MainUi::MENU_ITEM_WMS_ADJUST] = false;
-  assert(!m->set_bg_image(nonfile));
+  assert(!m->set_bg_image(nonfile, osm2go_platform::screenpos(0, 0)));
   assert(ui->m_actions.empty());
 
   ui->m_actions[MainUi::MENU_ITEM_WMS_CLEAR] = false;

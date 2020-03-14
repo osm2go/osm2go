@@ -114,10 +114,10 @@ public:
   canvas_item_t *touchnode;        // the blue "touch node" on the draw layer
   node_t *touchnode_node;          ///< the underlying node belonging to touchnode
 
+private:
   /* background image related stuff */
   osm2go_platform::screenpos bg_offset;
 
-private:
   struct {
     map_action_t type;            // current action type in progress
 
@@ -169,7 +169,7 @@ public:
   void cmenu_show();
 
   /* background stuff */
-  bool set_bg_image(const std::string &filename);
+  bool set_bg_image(const std::string &filename, osm2go_platform::screenpos offset);
   void set_bg_color_from_style();
   void remove_bg_image();
   /* this cancels any wms adjustment in progress */

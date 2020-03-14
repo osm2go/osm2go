@@ -22,7 +22,6 @@
 
 #include "appdata.h"
 #include "fdguard.h"
-#include "map.h"
 #include "misc.h"
 #include "net_io.h"
 #include "notifications.h"
@@ -599,9 +598,6 @@ std::string wms_import(appdata_t &appdata)
   /* reset any background adjustments in the project ... */
   appdata.project->wms_offset.x = 0;
   appdata.project->wms_offset.y = 0;
-
-  /* ... as well as in the map */
-  appdata.map->bg_offset = osm2go_platform::screenpos(0, 0);
 
   /* get server from dialog */
   if(!wms_server_dialog(appdata.project->wms_server, wms))
