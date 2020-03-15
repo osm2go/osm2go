@@ -1653,6 +1653,8 @@ setMenuEntries(const std::unique_ptr<MainUi> &uicontrol, bool en)
 
 void map_t::remove_bg_image()
 {
+  cancel_bg_adjust();
+
   canvas->set_background(std::string());
 
   setMenuEntries(appdata.uicontrol, false);

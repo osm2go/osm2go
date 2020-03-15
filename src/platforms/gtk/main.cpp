@@ -240,8 +240,6 @@ cb_menu_wms_import(appdata_t *appdata)
 static void
 cb_menu_wms_remove(appdata_t *appdata)
 {
-  appdata->map->cancel_bg_adjust();
-
   appdata->map->remove_bg_image();
 
   wms_remove_file(*appdata->project);
