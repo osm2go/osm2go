@@ -67,8 +67,8 @@ enum {
 };
 
 struct wms_server_context_t {
-  inline wms_server_context_t(const std::string &ws, wms_t *w, GtkWidget *d)
-    : wms_server(ws), wms(w), dialog(d), list(nullptr) , server_label(nullptr) {}
+  inline wms_server_context_t(const std::string &ws, GtkWidget *d)
+    : wms_server(ws), dialog(d), list(nullptr) , server_label(nullptr) {}
   wms_server_context_t() O2G_DELETED_FUNCTION;
   wms_server_context_t(const wms_server_context_t &) O2G_DELETED_FUNCTION;
   wms_server_context_t &operator=(const wms_server_context_t &) O2G_DELETED_FUNCTION;
@@ -78,7 +78,6 @@ struct wms_server_context_t {
 #endif
 
   const std::string &wms_server;
-  wms_t * const wms;
   GtkWidget * const dialog, *list;
   std::unique_ptr<GtkListStore, g_object_deleter> store;
   GtkWidget *server_label;
@@ -107,8 +106,11 @@ get_selection(GtkTreeSelection *selection)
 }
 
 struct server_select_context {
+  server_select_context(GtkTreeSelection *sel, const std::string &defsrv)
+    : selection(sel), defserver(defsrv), server(nullptr) {}
+
   GtkTreeSelection *selection;
-  wms_t *wms;
+  const std::string &defserver;
   wms_server_t *server;
 };
 
@@ -120,7 +122,7 @@ server_select_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpo
   gtk_tree_model_get(model, iter, WMS_SERVER_COL_DATA, &server, -1);
   assert(server != nullptr);
 
-  if(ctx->wms->server == server->server) {
+  if(ctx->defserver == server->server) {
     gtk_tree_selection_select_iter(ctx->selection, iter);
     ctx->server = server;
     return TRUE;
@@ -131,14 +133,11 @@ server_select_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpo
 
 const wms_server_t *wms_server_context_t::select_server() const
 {
-  if(wms->server.empty())
+  if(wms_server.empty())
     return nullptr;
 
   /* if the projects settings match a list entry, then select this */
-  server_select_context ctx;
-  ctx.selection = list_get_selection(list);
-  ctx.wms = wms;
-  ctx.server = nullptr;
+  server_select_context ctx(list_get_selection(list), wms_server);
 
   gtk_tree_model_foreach(GTK_TREE_MODEL(store.get()), server_select_foreach, &ctx);
 
@@ -159,8 +158,8 @@ wms_server_selected(wms_server_context_t *context, const wms_server_t *selected)
     en = TRUE;
     s = &selected->server;
   } else {
-    en = context->wms->server.empty() ? FALSE : TRUE;
-    s = &context->wms->server;
+    en = context->wms_server.empty() ? FALSE : TRUE;
+    s = &context->wms_server;
   }
 
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, en);
@@ -365,7 +364,7 @@ wms_server_dialog(osm2go_platform::Widget *parent, const std::string &wms_server
 {
   bool ok = false;
 
-  wms_server_context_t context(wms_server, &wms,
+  wms_server_context_t context(wms_server,
                                gtk_dialog_new_with_buttons(_("WMS Server Selection"),
                                                            GTK_WINDOW(parent),
                                                            GTK_DIALOG_MODAL,
