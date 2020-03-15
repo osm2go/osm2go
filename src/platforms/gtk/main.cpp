@@ -230,8 +230,6 @@ cb_menu_download(appdata_t *appdata) {
 static void
 cb_menu_wms_import(appdata_t *appdata)
 {
-  appdata->map->cancel_bg_adjust();
-
   std::string fn = wms_import(appdata_t::window, appdata->project);
   if (!fn.empty())
     appdata->map->set_bg_image(fn, osm2go_platform::screenpos(0, 0));
