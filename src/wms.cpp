@@ -51,6 +51,38 @@
 
 namespace {
 
+enum WmsImageFormat {
+  WMS_FORMAT_JPG = (1<<0),
+  WMS_FORMAT_JPEG = (1<<1),
+  WMS_FORMAT_PNG = (1<<2),
+  WMS_FORMAT_GIF = (1<<3)
+};
+
+struct wms_getmap_t {
+  wms_getmap_t()
+    : format(0) {}
+  unsigned int format;
+};
+
+struct wms_cap_t {
+  wms_layer_t::list layers;
+  wms_getmap_t request;
+};
+
+struct wms_t {
+  wms_t(const std::string &s)
+    : server(s) {}
+
+  std::string server;
+  struct size_t {
+    size_t() : width(0), height(0) {}
+    unsigned int width, height;
+  };
+  size_t size;
+
+  wms_cap_t cap;
+};
+
 struct charcmp {
   inline bool operator()(const char *a, const char *b) const {
     if(unlikely(a == nullptr))
@@ -198,16 +230,16 @@ wms_cap_parse_getmap(xmlDocPtr doc, xmlNode *a_node)
   return wms_getmap;
 }
 
-wms_request_t
+wms_getmap_t
 wms_cap_parse_request(xmlDocPtr doc, xmlNode *a_node)
 {
-  wms_request_t wms_request;
+  wms_getmap_t wms_request;
   xmlNode *cur_node;
 
   for (cur_node = a_node->children; cur_node != nullptr; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "GetMap") == 0)
-        wms_request.getmap = wms_cap_parse_getmap(doc, cur_node);
+        wms_request = wms_cap_parse_getmap(doc, cur_node);
       else
         printf("found unhandled WMT_MS_Capabilities/Capability/Request/%s\n", cur_node->name);
     }
@@ -393,17 +425,17 @@ struct find_format_reverse_functor {
 };
 
 std::string
-wmsUrl(const wms_t &wms, const char *get)
+wmsUrl(const std::string &wms_server, const char *get)
 {
   /* nothing has to be done if the last character of path is already a valid URL delimiter */
-  const char lastCh = wms.server[wms.server.size() - 1];
+  const char lastCh = wms_server[wms_server.size() - 1];
   const char *append_char = (lastCh == '?' || lastCh == '&') ? "" :
   /* if there's already a question mark, then add further */
   /* parameters using the &, else use the ? */
-                            (wms.server.find('?') != std::string::npos ? "&" : "?");
+                            (wms_server.find('?') != std::string::npos ? "&" : "?");
   std::string url;
   url.reserve(256); // make enough room that most URLs will need no reallocation
-  url = wms.server + append_char + "SERVICE=wms&VERSION=1.1.1&REQUEST=Get";
+  url = wms_server + append_char + "SERVICE=wms&VERSION=1.1.1&REQUEST=Get";
   url += get;
 
   return url;
@@ -415,7 +447,7 @@ wms_get_layers(osm2go_platform::Widget *parent, wms_t &wms)
   wms_layer_t::list layers;
 
   /* ----------- request capabilities -------------- */
-  const std::string &url = wmsUrl(wms, "Capabilities");
+  const std::string &url = wmsUrl(wms.server, "Capabilities");
   std::string capmem;
 
   /* ----------- parse capabilities -------------- */
@@ -448,7 +480,7 @@ wms_get_layers(osm2go_platform::Widget *parent, wms_t &wms)
     return layers;
   }
 
-  if(!wms.cap.request.getmap.format) {
+  if(!wms.cap.request.format) {
     error_dlg(_("No supported image format found."));
     return layers;
   }
@@ -488,7 +520,7 @@ wms_get_selected_layer(osm2go_platform::Widget *parent, project_t::ref project, 
   const FormatMap &ImageFormats = imageFormats();
   const FormatMap::const_iterator itEnd = ImageFormats.end();
   FormatMap::const_iterator it = std::find_if(std::cbegin(ImageFormats), itEnd,
-                                              find_format_reverse_functor(wms.cap.request.getmap.format));
+                                              find_format_reverse_functor(wms.cap.request.format));
   assert(it != itEnd);
 
   char buf[64];
@@ -503,7 +535,7 @@ wms_get_selected_layer(osm2go_platform::Widget *parent, project_t::ref project, 
                           "&SRS=", srs, "&BBOX=", coords.c_str(),
                           buf, it->first, "&reaspect=false"
                           } };
-  const std::string url = std::accumulate(parts.begin(), parts.end(), wmsUrl(wms, "Map&LAYERS=") + layers);
+  const std::string url = std::accumulate(parts.begin(), parts.end(), wmsUrl(wms.server, "Map&LAYERS=") + layers);
 
   const ExtensionMap &ImageFormatExtensions = imageFormatExtensions();
   ExtensionMap::const_iterator extIt = ImageFormatExtensions.find(it->second);
@@ -598,11 +630,12 @@ wms_import(osm2go_platform::Widget *parent, project_t::ref project)
   project->wms_offset.y = 0;
 
   /* get server from dialog */
-  if(!wms_server_dialog(parent, project->wms_server, wms))
+  std::string srv = wms_server_dialog(parent, project->wms_server);
+  if (srv.empty())
     return std::string();
 
   /* ------------- copy values back into project ---------------- */
-  project->wms_server = wms.server;
+  project->wms_server.swap(srv);
 
   const wms_layer_t::list layers = wms_get_layers(parent, wms);
   if(layers.empty())

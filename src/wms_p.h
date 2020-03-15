@@ -27,13 +27,6 @@
 #include <string>
 #include <vector>
 
-enum WmsImageFormat {
-  WMS_FORMAT_JPG = (1<<0),
-  WMS_FORMAT_JPEG = (1<<1),
-  WMS_FORMAT_PNG = (1<<2),
-  WMS_FORMAT_GIF = (1<<3)
-};
-
 struct wms_llbbox_t {
   explicit wms_llbbox_t()
     : bounds(pos_t(NAN, NAN), pos_t(NAN, NAN)), valid(false) {}
@@ -67,35 +60,6 @@ struct wms_layer_t {
   }
 };
 
-struct wms_getmap_t {
-  wms_getmap_t()
-    : format(0) {}
-  unsigned int format;
-};
-
-struct wms_request_t {
-  wms_getmap_t getmap;
-};
-
-struct wms_cap_t {
-  wms_layer_t::list layers;
-  wms_request_t request;
-};
-
-struct wms_t {
-  wms_t(const std::string &s)
-    : server(s) {}
-
-  std::string server;
-  struct size_t {
-    size_t() : width(0), height(0) {}
-    unsigned int width, height;
-  };
-  size_t size;
-
-  wms_cap_t cap;
-};
-
 bool wms_llbbox_fits(const pos_area &bounds, const wms_llbbox_t &llbbox);
 std::string wms_layer_dialog(osm2go_platform::Widget *parent, const pos_area &bounds, const wms_layer_t::list &layers);
-bool wms_server_dialog(osm2go_platform::Widget *parent, const std::string &wms_server, wms_t &wms);
+std::string wms_server_dialog(osm2go_platform::Widget *parent, const std::string &wms_server);

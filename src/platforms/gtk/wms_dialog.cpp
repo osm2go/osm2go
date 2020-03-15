@@ -359,11 +359,9 @@ wms_server_widget(wms_server_context_t *context)
 
 } // namespace
 
-bool
-wms_server_dialog(osm2go_platform::Widget *parent, const std::string &wms_server, wms_t &wms)
+std::string
+wms_server_dialog(osm2go_platform::Widget *parent, const std::string &wms_server)
 {
-  bool ok = false;
-
   wms_server_context_t context(wms_server,
                                gtk_dialog_new_with_buttons(_("WMS Server Selection"),
                                                            GTK_WINDOW(parent),
@@ -402,21 +400,21 @@ wms_server_dialog(osm2go_platform::Widget *parent, const std::string &wms_server
 
   gtk_widget_show_all(context.dialog);
 
+  std::string ret;
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog))) {
     const wms_server_t *server = get_selection(list_get_selection(context.list));
     if(server != nullptr) {
       /* fetch parameters from selected entry */
       g_debug("WMS: using %s", server->name.c_str());
-      wms.server = server->server;
-      ok = true;
+      ret = server->server;
     } else {
-      ok = !wms.server.empty();
+      ret = wms_server;
     }
   }
 
   gtk_widget_destroy(context.dialog);
 
-  return ok;
+  return ret;
 }
 
 namespace {
