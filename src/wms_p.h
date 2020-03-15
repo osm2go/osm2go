@@ -20,7 +20,6 @@
 #pragma once
 
 #include "pos.h"
-#include "project.h"
 
 #include <map>
 #include <string>
@@ -95,7 +94,6 @@ struct wms_t {
   wms_cap_t cap;
 };
 
-bool wms_llbbox_fits(project_t::ref project, const wms_llbbox_t &llbbox);
-wms_layer_t::list wms_get_layers(project_t::ref project, wms_t &wms);
-std::string wms_layer_dialog(project_t::ref project, const wms_layer_t::list &layers);
+bool wms_llbbox_fits(const pos_area &bounds, const wms_llbbox_t &llbbox);
+std::string wms_layer_dialog(const pos_area &bounds, const wms_layer_t::list &layers);
 bool wms_server_dialog(const std::string &wms_server, wms_t &wms);

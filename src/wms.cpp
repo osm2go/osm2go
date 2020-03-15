@@ -319,11 +319,11 @@ wms_setup_extent(const pos_area &pbounds)
 
 /* ---------------------- use ------------------- */
 
-bool wms_llbbox_fits(project_t::ref project, const wms_llbbox_t &llbbox) {
-  return ((project->bounds.min.lat >= llbbox.bounds.min.lat) &&
-          (project->bounds.min.lon >= llbbox.bounds.min.lon) &&
-          (project->bounds.max.lat <= llbbox.bounds.max.lat) &&
-          (project->bounds.max.lon <= llbbox.bounds.max.lon));
+bool wms_llbbox_fits(const pos_area &bounds, const wms_llbbox_t &llbbox) {
+  return ((bounds.min.lat >= llbbox.bounds.min.lat) &&
+          (bounds.min.lon >= llbbox.bounds.min.lon) &&
+          (bounds.max.lat <= llbbox.bounds.max.lat) &&
+          (bounds.max.lon <= llbbox.bounds.max.lon));
 }
 
 namespace {
@@ -412,15 +412,11 @@ wmsUrl(const wms_t &wms, const char *get)
 
 } // namespace
 
-wms_layer_t::list wms_get_layers(project_t::ref project, wms_t& wms)
+wms_layer_t::list wms_get_layers(wms_t &wms)
 {
   wms_layer_t::list layers;
 
-  /* ------------- copy values back into project ---------------- */
-  project->wms_server = wms.server;
-
   /* ----------- request capabilities -------------- */
-
   const std::string &url = wmsUrl(wms, "Capabilities");
   std::string capmem;
 
@@ -603,11 +599,14 @@ std::string wms_import(project_t::ref project)
   if(!wms_server_dialog(project->wms_server, wms))
     return std::string();
 
-  const wms_layer_t::list layers = wms_get_layers(project, wms);
+  /* ------------- copy values back into project ---------------- */
+  project->wms_server = wms.server;
+
+  const wms_layer_t::list layers = wms_get_layers(wms);
   if(layers.empty())
     return std::string();
 
-  const std::string &l = wms_layer_dialog(project, layers);
+  const std::string &l = wms_layer_dialog(project->bounds, layers);
   if(!l.empty())
     return wms_get_selected_layer(project, wms, l, layers.front().srs);
 

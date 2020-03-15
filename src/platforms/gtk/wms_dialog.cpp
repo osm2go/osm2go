@@ -442,15 +442,15 @@ enum {
 
 struct fitting_layers_functor {
   GtkListStore * const store;
-  project_t::ref project;
-  inline fitting_layers_functor(GtkListStore *s, project_t::ref p)
-    : store(s), project(p) {}
+  const pos_area &bounds;
+  inline fitting_layers_functor(GtkListStore *s, const pos_area &b)
+    : store(s), bounds(b) {}
   void operator()(const wms_layer_t &layer);
 };
 
 void fitting_layers_functor::operator()(const wms_layer_t &layer)
 {
-  if(!layer.llbbox.valid || !wms_llbbox_fits(project, layer.llbbox))
+  if(!layer.llbbox.valid || !wms_llbbox_fits(bounds, layer.llbbox))
     return;
 
   /* Append a row and fill in some data */
@@ -461,13 +461,12 @@ void fitting_layers_functor::operator()(const wms_layer_t &layer)
 }
 
 GtkWidget *
-wms_layer_widget(project_t::ref project, const wms_layer_t::list &layers)
+wms_layer_widget(const pos_area &bounds, const wms_layer_t::list &layers)
 {
   /* build the store */
   std::unique_ptr<GtkListStore, g_object_deleter> store(gtk_list_store_new(LAYER_NUM_COLS,
       G_TYPE_STRING, G_TYPE_STRING));
-  std::for_each(layers.begin(), layers.end(),
-                fitting_layers_functor(store.get(), project));
+  std::for_each(layers.begin(), layers.end(), fitting_layers_functor(store.get(), bounds));
 
   GtkWidget *widget = osm2go_platform::select_widget(GTK_TREE_MODEL(store.get()),
                                                      osm2go_platform::AllowMultiSelection, ',');
@@ -484,9 +483,9 @@ wms_layer_widget(project_t::ref project, const wms_layer_t::list &layers)
 
 }
 
-std::string wms_layer_dialog(project_t::ref project, const wms_layer_t::list &layers)
+std::string wms_layer_dialog(const pos_area &bounds, const wms_layer_t::list &layers)
 {
-  GtkWidget *sel_widget = wms_layer_widget(project, layers);
+  GtkWidget *sel_widget = wms_layer_widget(bounds, layers);
   osm2go_platform::DialogGuard dialog(
 #ifdef FREMANTLE
                                       hildon_picker_dialog_new(GTK_WINDOW(appdata_t::window)));
