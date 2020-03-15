@@ -21,6 +21,8 @@
 
 #include "project.h"
 
+#include <osm2go_platform.h>
+
 #include <string>
 #include <vector>
 
@@ -31,7 +33,7 @@ struct wms_server_t {
   std::string name, server;
 };
 
-std::string wms_import(project_t::ref project);
+std::string wms_import(osm2go_platform::Widget *parent, project_t::ref project);
 std::string wms_find_file(const std::string &project_path);
 void wms_remove_file(project_t &project);
 

@@ -20,7 +20,6 @@
 #include "wms.h"
 #include "wms_p.h"
 
-#include "appdata.h"
 #include "fdguard.h"
 #include "misc.h"
 #include "net_io.h"
@@ -410,9 +409,8 @@ wmsUrl(const wms_t &wms, const char *get)
   return url;
 }
 
-} // namespace
-
-wms_layer_t::list wms_get_layers(wms_t &wms)
+wms_layer_t::list
+wms_get_layers(osm2go_platform::Widget *parent, wms_t &wms)
 {
   wms_layer_t::list layers;
 
@@ -421,7 +419,7 @@ wms_layer_t::list wms_get_layers(wms_t &wms)
   std::string capmem;
 
   /* ----------- parse capabilities -------------- */
-  if(unlikely(!net_io_download_mem(appdata_t::window, url, capmem, _("WMS capabilities")))) {
+  if(unlikely(!net_io_download_mem(parent, url, capmem, _("WMS capabilities")))) {
     error_dlg(_("WMS download failed:\n\nGetCapabilities failed"));
     return layers;
   }
@@ -473,8 +471,9 @@ wms_layer_t::list wms_get_layers(wms_t &wms)
   return layers;
 }
 
-static std::string wms_get_selected_layer(project_t::ref project, wms_t &wms,
-                                          const std::string &layers, const std::string &srss)
+std::string
+wms_get_selected_layer(osm2go_platform::Widget *parent, project_t::ref project, wms_t &wms,
+                       const std::string &layers, const std::string &srss)
 {
   /* get required image size */
   wms.size = wms_setup_extent(project->bounds);
@@ -515,12 +514,14 @@ static std::string wms_get_selected_layer(project_t::ref project, wms_t &wms,
   wms_remove_file(*project);
 
   trstring::native_type wtitle = _("WMS layer");
-  if(!net_io_download_file(appdata_t::window, url, filename, wtitle))
+  if(!net_io_download_file(parent, url, filename, wtitle))
     return std::string();
 
   /* there should be a matching file on disk now */
   return filename;
 }
+
+} // namespace
 
 /* try to load an existing image into map */
 std::string wms_find_file(const std::string &project_path)
@@ -585,7 +586,8 @@ std::vector<wms_server_t *> wms_server_get_default()
   return servers;
 }
 
-std::string wms_import(project_t::ref project)
+std::string
+wms_import(osm2go_platform::Widget *parent, project_t::ref project)
 {
   assert(project);
 
@@ -596,19 +598,19 @@ std::string wms_import(project_t::ref project)
   project->wms_offset.y = 0;
 
   /* get server from dialog */
-  if(!wms_server_dialog(project->wms_server, wms))
+  if(!wms_server_dialog(parent, project->wms_server, wms))
     return std::string();
 
   /* ------------- copy values back into project ---------------- */
   project->wms_server = wms.server;
 
-  const wms_layer_t::list layers = wms_get_layers(wms);
+  const wms_layer_t::list layers = wms_get_layers(parent, wms);
   if(layers.empty())
     return std::string();
 
-  const std::string &l = wms_layer_dialog(project->bounds, layers);
+  const std::string &l = wms_layer_dialog(parent, project->bounds, layers);
   if(!l.empty())
-    return wms_get_selected_layer(project, wms, l, layers.front().srs);
+    return wms_get_selected_layer(parent, project, wms, l, layers.front().srs);
 
   return std::string();
 }

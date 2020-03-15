@@ -20,7 +20,6 @@
 #include <wms.h>
 #include <wms_p.h>
 
-#include <appdata.h>
 #include "list.h"
 #include <map.h>
 #include <misc.h>
@@ -361,13 +360,14 @@ wms_server_widget(wms_server_context_t *context)
 
 } // namespace
 
-bool wms_server_dialog(const std::string &wms_server, wms_t &wms)
+bool
+wms_server_dialog(osm2go_platform::Widget *parent, const std::string &wms_server, wms_t &wms)
 {
   bool ok = false;
 
   wms_server_context_t context(wms_server, &wms,
                                gtk_dialog_new_with_buttons(_("WMS Server Selection"),
-                                                           GTK_WINDOW(appdata_t::window),
+                                                           GTK_WINDOW(parent),
                                                            GTK_DIALOG_MODAL,
                                                            GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                                            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
@@ -487,17 +487,18 @@ wms_layer_widget(const pos_area &bounds, const wms_layer_t::list &layers)
 
 } // namespace
 
-std::string wms_layer_dialog(const pos_area &bounds, const wms_layer_t::list &layers)
+std::string
+wms_layer_dialog(osm2go_platform::Widget *parent, const pos_area &bounds, const wms_layer_t::list &layers)
 {
   GtkWidget *sel_widget = wms_layer_widget(bounds, layers);
   osm2go_platform::DialogGuard dialog(
 #ifdef FREMANTLE
-                                      hildon_picker_dialog_new(GTK_WINDOW(appdata_t::window)));
+                                      hildon_picker_dialog_new(GTK_WINDOW(parent)));
   hildon_picker_dialog_set_selector(HILDON_PICKER_DIALOG(dialog.get()),
                                     HILDON_TOUCH_SELECTOR(sel_widget));
 #else
                                       gtk_dialog_new_with_buttons(_("WMS layer selection"),
-                                              GTK_WINDOW(appdata_t::window),
+                                              GTK_WINDOW(parent),
                                               GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,

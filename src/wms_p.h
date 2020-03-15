@@ -21,6 +21,8 @@
 
 #include "pos.h"
 
+#include <osm2go_platform.h>
+
 #include <map>
 #include <string>
 #include <vector>
@@ -95,5 +97,5 @@ struct wms_t {
 };
 
 bool wms_llbbox_fits(const pos_area &bounds, const wms_llbbox_t &llbbox);
-std::string wms_layer_dialog(const pos_area &bounds, const wms_layer_t::list &layers);
-bool wms_server_dialog(const std::string &wms_server, wms_t &wms);
+std::string wms_layer_dialog(osm2go_platform::Widget *parent, const pos_area &bounds, const wms_layer_t::list &layers);
+bool wms_server_dialog(osm2go_platform::Widget *parent, const std::string &wms_server, wms_t &wms);
