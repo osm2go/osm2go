@@ -130,8 +130,6 @@ server_select_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpo
   return FALSE;
 }
 
-}
-
 const wms_server_t *wms_server_context_t::select_server() const
 {
   if(wms->server.empty())
@@ -148,8 +146,9 @@ const wms_server_t *wms_server_context_t::select_server() const
   return ctx.server;
 }
 
-static void wms_server_selected(wms_server_context_t *context,
-                                const wms_server_t *selected) {
+void
+wms_server_selected(wms_server_context_t *context, const wms_server_t *selected)
+{
   list_button_enable(context->list, LIST_BUTTON_REMOVE, selected != nullptr);
   list_button_enable(context->list, LIST_BUTTON_EDIT, selected != nullptr);
 
@@ -170,7 +169,7 @@ static void wms_server_selected(wms_server_context_t *context,
   gtk_label_set_text(GTK_LABEL(context->server_label), s->c_str());
 }
 
-static void
+void
 wms_server_changed(GtkTreeSelection *selection, gpointer userdata) {
   wms_server_context_t *context = static_cast<wms_server_context_t *>(userdata);
 
@@ -179,7 +178,9 @@ wms_server_changed(GtkTreeSelection *selection, gpointer userdata) {
     wms_server_selected(context, wms_server);
 }
 
-static void on_server_remove(wms_server_context_t *context) {
+void
+on_server_remove(wms_server_context_t *context)
+{
   GtkTreeSelection *selection = list_get_selection(context->list);
   GtkTreeModel     *model;
   GtkTreeIter       iter;
@@ -209,7 +210,9 @@ static void on_server_remove(wms_server_context_t *context) {
   wms_server_selected(context, context->select_server());
 }
 
-static void callback_modified_name(GtkWidget *widget) {
+void
+callback_modified_name(GtkWidget *widget)
+{
   const gchar *name = gtk_entry_get_text(GTK_ENTRY(widget));
 
   /* search all entries except the last (which is the one we are editing) */
@@ -278,8 +281,6 @@ bool wms_server_edit(wms_server_context_t *context, bool edit_name, wms_server_t
   return ret;
 }
 
-namespace {
-
 /* user clicked "edit..." button in the wms server list */
 void
 on_server_edit(wms_server_context_t *context)
@@ -296,8 +297,6 @@ struct store_fill_functor {
   GtkTreeIter operator()(const wms_server_t *srv);
 };
 
-}
-
 GtkTreeIter store_fill_functor::operator()(const wms_server_t *srv)
 {
   GtkTreeIter iter;
@@ -311,8 +310,9 @@ GtkTreeIter store_fill_functor::operator()(const wms_server_t *srv)
 }
 
 /* user clicked "add..." button in the wms server list */
-static void on_server_add(wms_server_context_t *context) {
-
+void
+on_server_add(wms_server_context_t *context)
+{
   std::unique_ptr<wms_server_t> newserver(std::make_unique<wms_server_t>());
   // in case the project has a server set, but the global list is empty,
   // fill the data of the project server
@@ -336,7 +336,9 @@ static void on_server_add(wms_server_context_t *context) {
 }
 
 /* widget to select a wms server from a list */
-static GtkWidget *wms_server_widget(wms_server_context_t *context) {
+GtkWidget *
+wms_server_widget(wms_server_context_t *context)
+{
   std::vector<list_button> buttons;
   buttons.push_back(list_button(_("_Add"), G_CALLBACK(on_server_add)));
   buttons.push_back(list_button(_("_Edit"), G_CALLBACK(on_server_edit)));
@@ -356,6 +358,8 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
 
   return context->list;
 }
+
+} // namespace
 
 bool wms_server_dialog(const std::string &wms_server, wms_t &wms)
 {
@@ -481,7 +485,7 @@ wms_layer_widget(const pos_area &bounds, const wms_layer_t::list &layers)
   return widget;
 }
 
-}
+} // namespace
 
 std::string wms_layer_dialog(const pos_area &bounds, const wms_layer_t::list &layers)
 {
