@@ -393,6 +393,8 @@ set_index_list(HildonTouchSelector *selector, const std::vector<unsigned int> &i
   } else {
     // save the index list for reuse when the dialog is cancelled
     unsigned int *idxlist = static_cast<unsigned int *>(calloc(indexes.size() + 1, sizeof(*idxlist)));
+    if (G_UNLIKELY(idxlist == nullptr))
+      return;
     memcpy(idxlist, indexes.data(), sizeof(*idxlist) * indexes.size());
     // terminate list
     idxlist[indexes.size()] = static_cast<unsigned int>(-1);
