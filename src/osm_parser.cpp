@@ -539,7 +539,6 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
       /* end element must be for the current element */
       assert_cmpnum(xmlTextReaderDepth(reader), 0);
       return osm.release();
-      break;
 
     default:
       break;
