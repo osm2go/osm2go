@@ -11,7 +11,6 @@
 #include <iconbar.h>
 #include <josm_presets.h>
 #include <map.h>
-#include <project.h>
 #include <style.h>
 #include <uicontrol.h>
 #include <wms.h>

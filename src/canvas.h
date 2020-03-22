@@ -25,7 +25,6 @@
 #include <array>
 #include <unordered_map>
 #include <vector>
-#include <unordered_map>
 
 #include <osm2go_cpp.h>
 #include <osm2go_platform.h>
