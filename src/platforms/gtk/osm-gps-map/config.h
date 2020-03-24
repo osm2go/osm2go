@@ -37,6 +37,4 @@
 #define OSM_GPS_MAP_KEY_LEFT        GDK_Left
 #define OSM_GPS_MAP_KEY_RIGHT       GDK_Right
 
-#define OSD_DOUBLE_BUFFER    // render osd/map together offscreen
-
 #endif // CONFIG_H

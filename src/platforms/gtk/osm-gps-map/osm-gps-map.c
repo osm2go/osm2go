@@ -135,9 +135,7 @@ struct _OsmGpsMapPrivate
 
     //the osd controls (if present)
     osm_gps_map_osd_t *osd;
-#ifdef OSD_DOUBLE_BUFFER
     GdkPixmap *dbuf_pixmap;
-#endif
 
 #ifdef OSM_GPS_MAP_KEY_FULLSCREEN
     gboolean fullscreen;
@@ -1530,10 +1528,8 @@ osm_gps_map_dispose (GObject *object)
     if(priv->osd)
         priv->osd->free(priv->osd);
 
-#ifdef OSD_DOUBLE_BUFFER
     if(priv->dbuf_pixmap)
         g_object_unref (priv->dbuf_pixmap);
-#endif
 
     G_OBJECT_CLASS (osm_gps_map_parent_class)->dispose (object);
 }
@@ -1944,7 +1940,6 @@ osm_gps_map_configure(GtkWidget *widget, G_GNUC_UNUSED GdkEventConfigure *event)
     priv->map_x = pixel_x - widget->allocation.width/2;
     priv->map_y = pixel_y - widget->allocation.height/2;
 
-#ifdef OSD_DOUBLE_BUFFER
     if (priv->dbuf_pixmap)
         g_object_unref (priv->dbuf_pixmap);
 
@@ -1953,7 +1948,6 @@ osm_gps_map_configure(GtkWidget *widget, G_GNUC_UNUSED GdkEventConfigure *event)
                         widget->allocation.width,
                         widget->allocation.height,
                         -1);
-#endif
 
     /* the osd needs some references to map internal objects */
     if(priv->osd)
@@ -1975,11 +1969,7 @@ osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event)
 {
     OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
 
-#if defined(OSD_DOUBLE_BUFFER)
     GdkDrawable *drawable = priv->dbuf_pixmap;
-#else
-    GdkDrawable *drawable = widget->window;
-#endif
 
 #ifdef DRAG_DEBUG
     printf("expose, map %d/%d\n", priv->map_x, priv->map_y);
@@ -2057,12 +2047,10 @@ osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event)
     if(priv->osd)
         priv->osd->draw (priv->osd, drawable);
 
-#ifdef OSD_DOUBLE_BUFFER
     gdk_draw_drawable (widget->window,
                        widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
                        priv->dbuf_pixmap,
                        0,0,0,0,-1,-1);
-#endif
 
     return FALSE;
 }
