@@ -110,7 +110,6 @@ struct _OsmGpsMapPrivate
     char *proxy_uri;
 
     //where downloaded tiles are cached
-    char *tile_dir;
     char *cache_dir;
 
     //contains flags indicating the various special characters
@@ -192,7 +191,6 @@ enum
     PROP_AUTO_DOWNLOAD,
     PROP_REPO_URI,
     PROP_PROXY_URI,
-    PROP_TILE_CACHE_DIR,
     PROP_ZOOM,
     PROP_MAX_ZOOM,
     PROP_MIN_ZOOM,
@@ -1466,12 +1464,6 @@ osm_gps_map_setup(OsmGpsMapPrivate *priv) {
 
     const char *fname = osm_gps_map_source_get_friendly_name(priv->map_source);
     if(!fname) fname = "_unknown_";
-
-    if (priv->tile_dir) {
-        //the new cachedir is the given cache dir + the friendly name of the repo_uri
-        priv->cache_dir = g_strjoin(G_DIR_SEPARATOR_S, priv->tile_dir, fname, NULL);
-        g_debug("Adjusting cache dir %s -> %s", priv->tile_dir, priv->cache_dir);
-    }
 }
 
 static GObject *
@@ -1540,7 +1532,6 @@ osm_gps_map_finalize (GObject *object)
     OsmGpsMap *map = OSM_GPS_MAP(object);
     OsmGpsMapPrivate *priv = map->priv;
 
-    g_free(priv->tile_dir);
     g_free(priv->cache_dir);
     g_free(priv->repo_uri);
     g_free(priv->image_format);
@@ -1594,10 +1585,6 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
             } else
                 priv->proxy_uri = NULL;
 
-            break;
-        case PROP_TILE_CACHE_DIR:
-            if ( g_value_get_string(value) )
-                priv->tile_dir = g_value_dup_string (value);
             break;
         case PROP_ZOOM:
             priv->map_zoom = g_value_get_int (value);
@@ -1685,9 +1672,6 @@ osm_gps_map_get_property (GObject *object, guint prop_id, GValue *value, GParamS
             break;
         case PROP_PROXY_URI:
             g_value_set_string(value, priv->proxy_uri);
-            break;
-        case PROP_TILE_CACHE_DIR:
-            g_value_set_string(value, priv->cache_dir);
             break;
         case PROP_ZOOM:
             g_value_set_int(value, priv->map_zoom);
@@ -2123,14 +2107,6 @@ osm_gps_map_class_init (OsmGpsMapClass *klass)
                                      g_param_spec_string ("proxy-uri",
                                                           "proxy uri",
                                                           "http proxy uri on NULL",
-                                                          NULL,
-                                                          G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property (object_class,
-                                     PROP_TILE_CACHE_DIR,
-                                     g_param_spec_string ("tile-cache",
-                                                          "tile cache",
-                                                          "osm local tile cache dir",
                                                           NULL,
                                                           G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 

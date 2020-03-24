@@ -719,7 +719,6 @@ bool area_edit_t::run() {
                                                 "map-source", OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
                                                 "proxy-uri", g_getenv("http_proxy"),
                                                 "auto-center", FALSE,
-                                                "tile-cache", nullptr,
                                                 nullptr));
 
   osm_gps_map_osd_select_init(context.map.widget);
