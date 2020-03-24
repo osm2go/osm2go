@@ -41,9 +41,7 @@
 #include "converter.h"
 #include "osm-gps-map-types.h"
 
-#ifdef USE_CAIRO
 #include <cairo.h>
-#endif
 
 /* the version check macro is not available in all versions of libsoup */
 #if defined(SOUP_CHECK_VERSION)
@@ -630,7 +628,6 @@ osm_gps_map_draw_gps_point (OsmGpsMap *map)
         x = lon2pixel(priv->map_zoom, priv->gps->rlon) - map_x0;
         y = lat2pixel(priv->map_zoom, priv->gps->rlat) - map_y0;
 
-#ifdef USE_CAIRO
         cairo_t *cr = gdk_cairo_create(priv->pixmap);
 
         // draw transparent area
@@ -683,39 +680,6 @@ osm_gps_map_draw_gps_point (OsmGpsMap *map)
                                     y-mr,
                                     mr*2,
                                     mr*2);
-#else
-        GdkGC *marker = gdk_gc_new(priv->pixmap);
-        GdkColor color;
-        color.red = 5000;
-        color.green = 5000;
-        color.blue = 55000;
-        gdk_gc_set_rgb_fg_color(marker, &color);
-        gdk_gc_set_line_attributes(marker, lw, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
-
-        if (r2 > 0) {
-            gdk_draw_arc (priv->pixmap,
-                          marker,
-                          FALSE,            //filled
-                          x-r2, y-r2,       // x,y
-                          r2*2,r2*2,        // width, height
-                          0, 360*64);       // start-end angle 64th, from 3h, anti clockwise
-        }
-        if (r > 0) {
-            gdk_draw_arc (priv->pixmap,
-                          marker,
-                          TRUE,         //filled
-                          x-r, y-r,     // x,y
-                          r*2,r*2,      // width, height
-                          0, 360*64);   // start-end angle 64th, from 3h, anti clockwise
-        }
-
-        g_object_unref(marker);
-        gtk_widget_queue_draw_area (GTK_WIDGET(map),
-                                    x-(mr+lw),
-                                    y-(mr+lw),
-                                    (mr*2)+lw+lw,
-                                    (mr*2)+lw+lw);
-#endif
     }
 }
 
@@ -1136,22 +1100,11 @@ osm_gps_map_print_track(OsmGpsMap *map, GSList *trackpoint_list,
 
     int min_x = 0,min_y = 0,max_x = 0,max_y = 0;
 
-#ifdef USE_CAIRO
     cairo_t *cr = gdk_cairo_create(priv->pixmap);
     cairo_set_line_width (cr, lw);
     cairo_set_source_rgba (cr, r/65535.0, g/65535.0, b/65535.0, 0.6);
     cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
     cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
-#else
-    int last_x = 0, last_y = 0;
-    GdkGC *gc = gdk_gc_new(priv->pixmap);
-    GdkColor color;
-    color.green = b;
-    color.blue = g;
-    color.red = r;
-    gdk_gc_set_rgb_fg_color(gc, &color);
-    gdk_gc_set_line_attributes(gc, lw, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
-#endif
 
     int map_x0 = priv->map_x - EXTRA_BORDER;
     int map_y0 = priv->map_y - EXTRA_BORDER;
@@ -1164,21 +1117,10 @@ osm_gps_map_print_track(OsmGpsMap *map, GSList *trackpoint_list,
 
         // first time through loop
         if (list == trackpoint_list) {
-#ifdef USE_CAIRO
             cairo_move_to(cr, x, y);
-#else
-            last_x = x;
-            last_y = y;
-#endif
         }
 
-#ifdef USE_CAIRO
         cairo_line_to(cr, x, y);
-#else
-        gdk_draw_line (priv->pixmap, gc, x, y, last_x, last_y);
-        last_x = x;
-        last_y = y;
-#endif
 
         max_x = MAX(x,max_x);
         min_x = MIN(x,min_x);
@@ -1193,12 +1135,8 @@ osm_gps_map_print_track(OsmGpsMap *map, GSList *trackpoint_list,
                                 max_x + (lw * 2),
                                 max_y + (lw * 2));
 
-#ifdef USE_CAIRO
     cairo_stroke(cr);
     cairo_destroy(cr);
-#else
-    g_object_unref(gc);
-#endif
 }
 
 /* Prints the gps trip history, and any other tracks */

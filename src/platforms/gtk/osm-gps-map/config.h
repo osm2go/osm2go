@@ -22,8 +22,6 @@
 
 #define ENABLE_OSD
 
-#define USE_CAIRO
-
 #ifdef FREMANTLE
 #include <hildon/hildon-defines.h>
 /* only maemo devices up to version 4 have a fullscreen button */
