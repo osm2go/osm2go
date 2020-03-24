@@ -20,8 +20,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define ENABLE_OSD
-
 #ifdef FREMANTLE
 #include <hildon/hildon-defines.h>
 /* only maemo devices up to version 4 have a fullscreen button */

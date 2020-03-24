@@ -80,13 +80,10 @@ typedef void (*OsmGpsMapBalloonCallback)(cairo_t *, OsmGpsMapRect_t *rect,
 
 void osm_gps_map_add_track (OsmGpsMap *map, GSList *track);
 void osm_gps_map_add_bounds(OsmGpsMap *map, GSList *bounds);
-#ifdef ENABLE_OSD
 void osm_gps_map_register_osd(OsmGpsMap *map, osm_gps_map_osd_t *osd);
 void osm_gps_map_redraw (OsmGpsMap *map);
 osm_gps_map_osd_t *osm_gps_map_osd_get(OsmGpsMap *map);
 void osm_gps_map_repaint (OsmGpsMap *map);
-#endif
-
 
 G_END_DECLS
 

@@ -133,12 +133,10 @@ struct _OsmGpsMapPrivate
     float gps_heading;
     gboolean gps_valid;
 
-#ifdef ENABLE_OSD
     //the osd controls (if present)
     osm_gps_map_osd_t *osd;
 #ifdef OSD_DOUBLE_BUFFER
     GdkPixmap *dbuf_pixmap;
-#endif
 #endif
 
 #ifdef OSM_GPS_MAP_KEY_FULLSCREEN
@@ -1213,13 +1211,11 @@ osm_gps_map_map_redraw (OsmGpsMap *map)
 
     priv->idle_map_redraw = 0;
 
-#ifdef ENABLE_OSD
     /* don't redraw the entire map while the OSD is doing */
     /* some animation or the like. This is to keep the animation */
     /* fluid */
     if (priv->osd->busy(priv->osd))
         return FALSE;
-#endif
 
 #ifdef DRAG_DEBUG
     printf("trying redraw\n");
@@ -1253,11 +1249,9 @@ osm_gps_map_map_redraw (OsmGpsMap *map)
     osm_gps_map_draw_gps_point(map);
     osm_gps_map_print_images(map);
 
-#ifdef ENABLE_OSD
     /* OSD may contain a coordinate/scale, so we may have to re-render it */
     if(priv->osd && OSM_IS_GPS_MAP (priv->osd->widget))
         priv->osd->render (priv->osd);
-#endif
 
     osm_gps_map_purge_cache(map);
     gtk_widget_queue_draw (GTK_WIDGET (map));
@@ -1387,9 +1381,7 @@ osm_gps_map_init (OsmGpsMap *object)
     priv->gps_valid = FALSE;
     priv->gps_heading = OSM_GPS_MAP_INVALID;
 
-#ifdef ENABLE_OSD
     priv->osd = NULL;
-#endif
 
 #ifdef OSM_GPS_MAP_BUTTON_FULLSCREEN
     priv->fullscreen = FALSE;
@@ -1535,14 +1527,12 @@ osm_gps_map_dispose (GObject *object)
 
     g_free(priv->gps);
 
-#ifdef ENABLE_OSD
     if(priv->osd)
         priv->osd->free(priv->osd);
 
 #ifdef OSD_DOUBLE_BUFFER
     if(priv->dbuf_pixmap)
         g_object_unref (priv->dbuf_pixmap);
-#endif
 #endif
 
     G_OBJECT_CLASS (osm_gps_map_parent_class)->dispose (object);
@@ -1771,7 +1761,6 @@ osm_gps_map_button_press (GtkWidget *widget, GdkEventButton *event)
 {
     OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
 
-#ifdef ENABLE_OSD
     /* pressed inside OSD control? */
     if(priv->osd) {
         osd_button_t but =
@@ -1830,7 +1819,6 @@ osm_gps_map_button_press (GtkWidget *widget, GdkEventButton *event)
             return FALSE;
         }
     }
-#endif
 
     priv->drag_counter = 0;
     priv->drag_start_mouse_x = (int) event->x;
@@ -1860,11 +1848,9 @@ osm_gps_map_button_release (GtkWidget *widget, GdkEventButton *event)
 
         osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
     }
-#ifdef ENABLE_OSD
     /* pressed inside OSD control? */
     else if(priv->osd)
         priv->osd->check(priv->osd, FALSE, event->x, event->y);
-#endif
 
 #ifdef DRAG_DEBUG
     printf("dragging done\n");
@@ -1958,8 +1944,6 @@ osm_gps_map_configure(GtkWidget *widget, G_GNUC_UNUSED GdkEventConfigure *event)
     priv->map_x = pixel_x - widget->allocation.width/2;
     priv->map_y = pixel_y - widget->allocation.height/2;
 
-#ifdef ENABLE_OSD
-
 #ifdef OSD_DOUBLE_BUFFER
     if (priv->dbuf_pixmap)
         g_object_unref (priv->dbuf_pixmap);
@@ -1974,7 +1958,6 @@ osm_gps_map_configure(GtkWidget *widget, G_GNUC_UNUSED GdkEventConfigure *event)
     /* the osd needs some references to map internal objects */
     if(priv->osd)
         priv->osd->widget = widget;
-#endif
 
     /* and gc, used for clipping (I think......) */
     if(priv->gc_map)
@@ -1992,7 +1975,7 @@ osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event)
 {
     OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
 
-#if defined(ENABLE_OSD) && defined(OSD_DOUBLE_BUFFER)
+#if defined(OSD_DOUBLE_BUFFER)
     GdkDrawable *drawable = priv->dbuf_pixmap;
 #else
     GdkDrawable *drawable = widget->window;
@@ -2070,7 +2053,6 @@ osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event)
         }
     }
 
-#ifdef ENABLE_OSD
     /* draw new OSD */
     if(priv->osd)
         priv->osd->draw (priv->osd, drawable);
@@ -2080,8 +2062,6 @@ osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event)
                        widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
                        priv->dbuf_pixmap,
                        0,0,0,0,-1,-1);
-#endif
-
 #endif
 
     return FALSE;
@@ -2619,11 +2599,9 @@ osm_gps_map_set_zoom (OsmGpsMap *map, int zoom)
         g_debug("Zoom changed from %d to %d x:%d",
                 zoom_old, priv->map_zoom, priv->map_x);
 
-#ifdef ENABLE_OSD
         /* OSD may contain a scale, so we may have to re-render it */
         if(priv->osd && OSM_IS_GPS_MAP (priv->osd->widget))
             priv->osd->render (priv->osd);
-#endif
 
         osm_gps_map_map_redraw_idle(map);
     }
@@ -2741,11 +2719,9 @@ osm_gps_map_scroll (OsmGpsMap *map, gint dx, gint dy)
     priv->map_y += dy;
     center_coord_update(GTK_WIDGET(map));
 
-#ifdef ENABLE_OSD
     /* OSD may contain a coordinate, so we may have to re-render it */
     if(priv->osd && OSM_IS_GPS_MAP (priv->osd->widget))
         priv->osd->render (priv->osd);
-#endif
 
     osm_gps_map_map_redraw_idle (map);
 }
@@ -2759,7 +2735,6 @@ osm_gps_map_get_scale(OsmGpsMap *map)
     return osm_gps_map_get_scale_at_point(priv->map_zoom, priv->center_rlat, priv->center_rlon);
 }
 
-#ifdef ENABLE_OSD
 
 void
 osm_gps_map_redraw (OsmGpsMap *map)
@@ -2801,5 +2776,3 @@ osm_gps_map_get_gps (OsmGpsMap *map)
 
     return map->priv->gps;
 }
-
-#endif
