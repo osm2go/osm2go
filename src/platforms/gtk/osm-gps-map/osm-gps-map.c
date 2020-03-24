@@ -778,9 +778,7 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
 static gchar *
 tile_filename(guint zoom, guint x, guint y, const gchar *image_format)
 {
-  return g_strdup_printf("%d" G_DIR_SEPARATOR_S "%d" G_DIR_SEPARATOR_S "%d.%s",
-                         zoom, x, y,
-                         image_format);
+  return g_strdup_printf("%x/%x/%x.%s", zoom, x, y, image_format);
 }
 
 static void
