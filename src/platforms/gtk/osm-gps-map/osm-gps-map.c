@@ -237,7 +237,6 @@ static void     inspect_map_uri(OsmGpsMap *map);
 static void     osm_gps_map_print_images (OsmGpsMap *map);
 static void     osm_gps_map_blit_tile(OsmGpsMap *map, GdkPixbuf *pixbuf, int offset_x, int offset_y);
 static void     osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpointer user_data);
-static void     osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redraw);
 static void     osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int offset_y);
 static void     osm_gps_map_fill_tiles_pixel (OsmGpsMap *map);
 static gboolean osm_gps_map_map_redraw (OsmGpsMap *map);
@@ -857,8 +856,17 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
 
 }
 
+static gchar *
+tile_filename(const gchar *cache_dir, guint zoom, guint x, guint y, const gchar *image_format)
+{
+  return g_strdup_printf("%s" G_DIR_SEPARATOR_S "%d" G_DIR_SEPARATOR_S "%d"
+                         G_DIR_SEPARATOR_S "%d.%s",
+                         cache_dir, zoom, x, y,
+                         image_format);
+}
+
 static void
-osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redraw)
+osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redraw, gchar *filename)
 {
     OsmGpsMapPrivate *priv = map->priv;
     tile_download_t *dl = g_new0(tile_download_t,1);
@@ -874,6 +882,7 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redr
         g_debug("Tile already downloading (or missing)");
         g_free(dl->uri);
         g_free(dl);
+        g_free(filename);
     } else {
         dl->folder = g_strdup_printf("%s" G_DIR_SEPARATOR_S
                                      "%d" G_DIR_SEPARATOR_S
@@ -881,10 +890,7 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redr
                             priv->cache_dir,
                             zoom,
                             x);
-        dl->filename = g_strdup_printf("%s%d.%s",
-                            dl->folder,
-                            y,
-                            priv->image_format);
+        dl->filename = filename;
         dl->map = map;
         dl->redraw = redraw;
 
@@ -926,11 +932,7 @@ osm_gps_map_load_cached_tile (OsmGpsMap *map, int zoom, int x, int y)
     OsmGpsMapPrivate *priv = map->priv;
     GdkPixbuf *pixbuf = NULL;
 
-    gchar *filename = g_strdup_printf("%s%c%d%c%d%c%d.%s",
-                priv->cache_dir, G_DIR_SEPARATOR,
-                zoom, G_DIR_SEPARATOR,
-                x, G_DIR_SEPARATOR,
-                y,
+    gchar *filename = tile_filename(priv->cache_dir, zoom, x, y,
                 priv->image_format);
 
     OsmCachedTile *tile = g_hash_table_lookup (priv->tile_cache, filename);
@@ -1029,11 +1031,7 @@ osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int
         return;
     }
 
-    gchar *filename = g_strdup_printf("%s%c%d%c%d%c%d.%s",
-                priv->cache_dir, G_DIR_SEPARATOR,
-                zoom, G_DIR_SEPARATOR,
-                x, G_DIR_SEPARATOR,
-                y,
+    gchar *filename = tile_filename(priv->cache_dir, zoom, x, y,
                 priv->image_format);
 
     /* try to get file from internal cache first */
@@ -1048,8 +1046,10 @@ osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int
     }
     else
     {
-        if (priv->map_auto_download)
-            osm_gps_map_download_tile(map, zoom, x, y, TRUE);
+        if (priv->map_auto_download) {
+            osm_gps_map_download_tile(map, zoom, x, y, TRUE, filename);
+            filename = NULL;
+        }
 
         /* try to render the tile by scaling cached tiles from other zoom
          * levels */
@@ -2603,18 +2603,15 @@ osm_gps_map_download_maps (OsmGpsMap *map, OsmGpsMapPoint *pt1, OsmGpsMapPoint *
                 for(int j=y_1; j<=y_2; j++)
                 {
                     // x = i, y = j
-                    filename = g_strdup_printf("%s%c%d%c%d%c%d.%s",
-                                    priv->cache_dir, G_DIR_SEPARATOR,
-                                    zoom, G_DIR_SEPARATOR,
-                                    i, G_DIR_SEPARATOR,
-                                    j,
+                    filename = tile_filename(priv->cache_dir, zoom, i, j,
                                     priv->image_format);
                     if (!g_file_test(filename, G_FILE_TEST_EXISTS))
                     {
-                        osm_gps_map_download_tile(map, zoom, i, j, FALSE);
+                        osm_gps_map_download_tile(map, zoom, i, j, FALSE, filename);
                         num_tiles++;
+                    } else {
+                      g_free(filename);
                     }
-                    g_free(filename);
                 }
             }
             g_debug("DL @Z:%d = %d tiles",zoom,num_tiles);
