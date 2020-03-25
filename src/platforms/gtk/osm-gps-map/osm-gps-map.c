@@ -342,11 +342,14 @@ static void
 inspect_map_uri(OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
-    priv->uri_format = 0;
 #ifdef DISABLED_MAPS
     priv->the_google = FALSE;
 #endif
 
+    if (G_LIKELY(g_strcmp0(priv->repo_uri, OSM_REPO_URI) == 0)) {
+        priv->uri_format = URI_HAS_X | URI_HAS_Y | URI_HAS_Z;
+    } else {
+    priv->uri_format = 0;
     if (g_strrstr(priv->repo_uri, URI_MARKER_X))
         priv->uri_format |= URI_HAS_X;
 
@@ -387,6 +390,7 @@ inspect_map_uri(OsmGpsMap *map)
 
     g_debug("URI Format: 0x%X (google: %X)", priv->uri_format, priv->the_google);
 #endif
+    }
 }
 
 static gchar *
