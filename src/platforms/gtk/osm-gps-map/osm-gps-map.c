@@ -122,9 +122,6 @@ struct _OsmGpsMapPrivate
 #endif
 
     //gps tracking state
-    gboolean record_trip_history;
-    gboolean show_trip_history;
-    GSList *trip_history;
     OsmGpsMapPoint *gps;
     float gps_heading;
     gboolean gps_valid;
@@ -183,8 +180,6 @@ enum
     PROP_0,
 
     PROP_AUTO_CENTER,
-    PROP_RECORD_TRIP_HISTORY,
-    PROP_SHOW_TRIP_HISTORY,
     PROP_AUTO_DOWNLOAD,
     PROP_REPO_URI,
     PROP_PROXY_URI,
@@ -488,17 +483,6 @@ osm_gps_map_get_scale_at_point(int zoom, float rlat, G_GNUC_UNUSED float rlon)
 {
     /* world at zoom 1 == 512 pixels */
     return cosf(rlat) * M_PI * OSM_EQ_RADIUS / (1<<(7+zoom));
-}
-
-/* clears the trip list and all resources */
-static void
-osm_gps_map_free_trip (OsmGpsMap *map)
-{
-    OsmGpsMapPrivate *priv = map->priv;
-    if (priv->trip_history) {
-        g_slist_free_full(priv->trip_history, g_free);
-        priv->trip_history = NULL;
-    }
 }
 
 /* clears the tracks and all resources */
@@ -1072,9 +1056,6 @@ osm_gps_map_print_tracks (OsmGpsMap *map)
     const unsigned short g = 0;
     const unsigned short b = 0;
 
-    if (priv->show_trip_history)
-        osm_gps_map_print_track(map, priv->trip_history, r, g, b, priv->ui_gps_track_width);
-
     if (priv->tracks)
     {
         GSList* tmp = priv->tracks;
@@ -1302,7 +1283,6 @@ osm_gps_map_init (OsmGpsMap *object)
 
     priv->pixmap = NULL;
 
-    priv->trip_history = NULL;
     priv->gps = g_new0(OsmGpsMapPoint, 1);
     priv->gps_valid = FALSE;
     priv->gps_heading = OSM_GPS_MAP_INVALID;
@@ -1465,7 +1445,6 @@ osm_gps_map_finalize (GObject *object)
     g_free(priv->repo_uri);
     g_free(priv->image_format);
 
-    osm_gps_map_free_trip(map);
     osm_gps_map_free_tracks(map);
     osm_gps_map_free_bounds(map);
 
@@ -1483,12 +1462,6 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
     {
         case PROP_AUTO_CENTER:
             priv->map_auto_center = g_value_get_boolean (value);
-            break;
-        case PROP_RECORD_TRIP_HISTORY:
-            priv->record_trip_history = g_value_get_boolean (value);
-            break;
-        case PROP_SHOW_TRIP_HISTORY:
-            priv->show_trip_history = g_value_get_boolean (value);
             break;
         case PROP_AUTO_DOWNLOAD:
             priv->map_auto_download = g_value_get_boolean (value);
@@ -1586,12 +1559,6 @@ osm_gps_map_get_property (GObject *object, guint prop_id, GValue *value, GParamS
     {
         case PROP_AUTO_CENTER:
             g_value_set_boolean(value, priv->map_auto_center);
-            break;
-        case PROP_RECORD_TRIP_HISTORY:
-            g_value_set_boolean(value, priv->record_trip_history);
-            break;
-        case PROP_SHOW_TRIP_HISTORY:
-            g_value_set_boolean(value, priv->show_trip_history);
             break;
         case PROP_AUTO_DOWNLOAD:
             g_value_set_boolean(value, priv->map_auto_download);
@@ -1996,22 +1963,6 @@ osm_gps_map_class_init (OsmGpsMapClass *klass)
                                      g_param_spec_boolean ("auto-center",
                                                            "auto center",
                                                            "map auto center",
-                                                           TRUE,
-                                                           G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
-
-    g_object_class_install_property (object_class,
-                                     PROP_RECORD_TRIP_HISTORY,
-                                     g_param_spec_boolean ("record-trip-history",
-                                                           "record trip history",
-                                                           "should all gps points be recorded in a trip history",
-                                                           TRUE,
-                                                           G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
-
-    g_object_class_install_property (object_class,
-                                     PROP_SHOW_TRIP_HISTORY,
-                                     g_param_spec_boolean ("show-trip-history",
-                                                           "show trip history",
-                                                           "should the recorded trip history be shown on the map",
                                                            TRUE,
                                                            G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
 
@@ -2542,14 +2493,6 @@ osm_gps_map_gps_add (OsmGpsMap *map, float latitude, float longitude, float head
     int pixel_x = lon2pixel(priv->map_zoom, priv->gps->rlon);
     int pixel_y = lat2pixel(priv->map_zoom, priv->gps->rlat);
 
-    //If trip marker add to list of gps points.
-    if (priv->record_trip_history) {
-        OsmGpsMapPoint *tp = g_new0(OsmGpsMapPoint,1);
-        tp->rlat = priv->gps->rlat;
-        tp->rlon = priv->gps->rlon;
-        priv->trip_history = g_slist_append(priv->trip_history, tp);
-    }
-
     // dont draw anything if we are dragging
     if (priv->dragging) {
         g_debug("Dragging");
@@ -2579,7 +2522,6 @@ osm_gps_map_gps_add (OsmGpsMap *map, float latitude, float longitude, float head
 void
 osm_gps_map_gps_clear (OsmGpsMap *map)
 {
-    osm_gps_map_free_trip(map);
     osm_gps_map_map_redraw_idle(map);
 }
 
