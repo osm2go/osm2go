@@ -116,10 +116,6 @@ struct _OsmGpsMapPrivate
     int uri_format;
     char *repo_uri;
     char *image_format;
-#ifdef DISABLED_MAPS
-    //flag indicating if the map source is located on the google
-    gboolean the_google;
-#endif
 
     //gps tracking state
     OsmGpsMapPoint *gps;
@@ -342,9 +338,7 @@ static void
 inspect_map_uri(OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
-#ifdef DISABLED_MAPS
-    priv->the_google = FALSE;
-#endif
+    priv->uri_format = 0;
 
     if (G_LIKELY(g_strcmp0(priv->repo_uri, OSM_REPO_URI) == 0)) {
         priv->uri_format = URI_HAS_X | URI_HAS_Y | URI_HAS_Z;
@@ -358,38 +352,6 @@ inspect_map_uri(OsmGpsMap *map)
 
     if (g_strrstr(priv->repo_uri, URI_MARKER_Z))
         priv->uri_format |= URI_HAS_Z;
-
-#ifdef URI_MARKER_S
-    if (g_strrstr(priv->repo_uri, URI_MARKER_S))
-        priv->uri_format |= URI_HAS_S;
-#endif
-
-#ifdef URI_MARKER_Q
-    if (g_strrstr(priv->repo_uri, URI_MARKER_Q))
-        priv->uri_format |= URI_HAS_Q;
-#endif
-
-#ifdef URI_MARKER_Q0
-    if (g_strrstr(priv->repo_uri, URI_MARKER_Q0))
-        priv->uri_format |= URI_HAS_Q0;
-#endif
-
-#ifdef URI_MARKER_YS
-    if (g_strrstr(priv->repo_uri, URI_MARKER_YS))
-        priv->uri_format |= URI_HAS_YS;
-#endif
-
-#ifdef URI_MARKER_R
-    if (g_strrstr(priv->repo_uri, URI_MARKER_R))
-        priv->uri_format |= URI_HAS_R;
-#endif
-
-#ifdef DISABLED_MAPS
-    if (g_strrstr(priv->repo_uri, "google.com"))
-        priv->the_google = TRUE;
-
-    g_debug("URI Format: 0x%X (google: %X)", priv->uri_format, priv->the_google);
-#endif
     }
 }
 
@@ -398,9 +360,6 @@ replace_map_uri(OsmGpsMap *map, const gchar *uri, int zoom, int x, int y)
 {
     OsmGpsMapPrivate *priv = map->priv;
     gchar *url = g_strdup(uri);
-#if defined(URI_MARKER_Q) || defined(URI_MARKER_Q0)
-    char location[22];
-#endif
 
     for (unsigned int i = 1; i < URI_FLAG_END; i = i << 1)
     {
@@ -424,45 +383,6 @@ replace_map_uri(OsmGpsMap *map, const gchar *uri, int zoom, int x, int y)
                 url = replace_string(url, URI_MARKER_Z, s);
                 //g_debug("FOUND " URI_MARKER_Z);
                 break;
-#ifdef URI_MARKER_S
-            case URI_HAS_S:
-                g_snprintf(s, sizeof(s), "%d", priv->max_zoom-zoom);
-                url = replace_string(url, URI_MARKER_S, s);
-                //g_debug("FOUND " URI_MARKER_S);
-                break;
-#endif
-#ifdef URI_MARKER_Q
-            case URI_HAS_Q:
-                map_convert_coords_to_quadtree_string(x,y,zoom,location,'t',"qrts");
-                url = replace_string(url, URI_MARKER_Q, location);
-                //g_debug("FOUND " URI_MARKER_Q);
-                break;
-#endif
-#ifdef URI_MARKER_Q0
-            case URI_HAS_Q0:
-                map_convert_coords_to_quadtree_string(x,y,zoom,location,'\0', "0123");
-                url = replace_string(url, URI_MARKER_Q0, location);
-                //g_debug("FOUND " URI_MARKER_Q0);
-                break;
-#endif
-#ifdef URI_MARKER_YS
-            case URI_HAS_YS:
-                //              g_snprintf(s, sizeof(s), "%d", y);
-                //              url = replace_string(url, URI_MARKER_YS, s);
-                g_warning("FOUND " URI_MARKER_YS " NOT IMPLEMENTED");
-                //            retval = g_strdup_printf(repo->url,
-                //                    tilex,
-                //                    (1 << (MAX_ZOOM - zoom)) - tiley - 1,
-                //                    zoom - (MAX_ZOOM - 17));
-                break;
-#endif
-#ifdef URI_MARKER_R
-            case URI_HAS_R:
-                g_snprintf(s, sizeof(s), "%d", g_random_int_range(0,4));
-                url = replace_string(url, URI_MARKER_R, s);
-                //g_debug("FOUND " URI_MARKER_R);
-                break;
-#endif
             default:
                 break;
         }
@@ -796,22 +716,6 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redr
 
         SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, dl->uri);
         if (msg) {
-#ifdef DISABLED_MAPS
-            if (priv->the_google) {
-                //Set maps.google.com as the referrer
-                g_debug("Setting Google Referrer");
-                soup_message_headers_append(msg->request_headers, "Referer", "http://maps.google.com/");
-                //For google satelite also set the appropriate cookie value
-                if (priv->uri_format & URI_HAS_Q) {
-                    const char *cookie = g_getenv("GOOGLE_COOKIE");
-                    if (cookie) {
-                        g_debug("Adding Google Cookie");
-                        soup_message_headers_append(msg->request_headers, "Cookie", cookie);
-                    }
-                }
-            }
-#endif
-
             g_hash_table_insert (priv->tile_queue, dl->uri, msg);
             soup_session_queue_message (priv->soup_session, msg, osm_gps_map_tile_download_complete, dl);
         } else {
@@ -1308,9 +1212,6 @@ osm_gps_map_init (OsmGpsMap *object)
     priv->drag_start_mouse_y = 0;
 
     priv->uri_format = 0;
-#ifdef DISABLED_MAPS
-    priv->the_google = FALSE;
-#endif
 
     priv->map_source = OSM_GPS_MAP_SOURCE_NULL;
 
@@ -2275,30 +2176,10 @@ osm_gps_map_source_get_image_format(OsmGpsMapSource_t source)
     switch(source) {
         case OSM_GPS_MAP_SOURCE_NULL:
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
-#ifdef DISABLED_MAPS
-        case OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER:
-        case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
-        case OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT:
-        case OSM_GPS_MAP_SOURCE_OSMC_TRAILS:
-#endif
             return "png";
-#ifdef DISABLED_MAPS
-        case OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE:
-        case OSM_GPS_MAP_SOURCE_GOOGLE_STREET:
-        case OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE:
-        case OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID:
-        case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_STREET:
-        case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_SATELLITE:
-        case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID:
-        case OSM_GPS_MAP_SOURCE_YAHOO_STREET:
-        case OSM_GPS_MAP_SOURCE_YAHOO_SATELLITE:
-        case OSM_GPS_MAP_SOURCE_YAHOO_HYBRID:
-            return "jpg";
-#endif
         default:
             return "bin";
     }
-    return "bin";
 }
 
 
@@ -2316,26 +2197,6 @@ osm_gps_map_source_get_max_zoom(OsmGpsMapSource_t source)
             return 18;
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
             return OSM_MAX_ZOOM;
-#ifdef DISABLED_MAPS
-        case OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER:
-        case OSM_GPS_MAP_SOURCE_GOOGLE_STREET:
-        case OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID:
-        case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_STREET:
-        case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_SATELLITE:
-        case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID:
-        case OSM_GPS_MAP_SOURCE_YAHOO_STREET:
-        case OSM_GPS_MAP_SOURCE_YAHOO_SATELLITE:
-        case OSM_GPS_MAP_SOURCE_YAHOO_HYBRID:
-            return 17;
-        case OSM_GPS_MAP_SOURCE_OSMC_TRAILS:
-            return 15;
-        case OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE:
-            return 11;
-        case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
-        case OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT:
-        case OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE:
-            return 18;
-#endif
         default:
             return 17;
     }
