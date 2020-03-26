@@ -1591,9 +1591,6 @@ osm_gps_map_button_press (GtkWidget *widget, GdkEventButton *event)
                 break;
 
             default:
-                /* all custom buttons are forwarded to the application */
-                if(priv->osd->cb)
-                    priv->osd->cb(but, priv->osd->data);
                 break;
             }
 

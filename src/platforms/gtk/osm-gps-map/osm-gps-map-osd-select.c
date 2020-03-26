@@ -309,9 +309,6 @@ static osm_gps_map_osd_t osd_select = {
     .free       = osd_free,
     .busy       = osd_busy,
 
-    .cb         = NULL,
-    .data       = NULL,
-
     .priv       = NULL
 };
 

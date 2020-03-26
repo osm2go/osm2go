@@ -68,9 +68,6 @@ typedef struct osm_gps_map_osd_s {
     gboolean(*busy)(struct osm_gps_map_osd_s *);
     void(*free)(struct osm_gps_map_osd_s *);
 
-    OsmGpsMapOsdCallback cb;
-    gpointer data;
-
     gpointer priv;
 } osm_gps_map_osd_t;
 
