@@ -995,7 +995,7 @@ osm_gps_map_print_bounds(OsmGpsMap *map)
 static gboolean
 osm_gps_map_purge_cache_check(G_GNUC_UNUSED gpointer key, gpointer value, gpointer user)
 {
-   return (((OsmCachedTile*)value)->redraw_cycle != ((OsmGpsMapPrivate*)user)->redraw_cycle);
+   return (((OsmCachedTile*)value)->redraw_cycle < GPOINTER_TO_UINT(user));
 }
 
 static void
@@ -1008,7 +1008,8 @@ osm_gps_map_purge_cache (OsmGpsMap *map)
 
    /* run through the cache, and remove the tiles which have not been used
     * during the last redraw operation */
-   g_hash_table_foreach_remove(priv->tile_cache, osm_gps_map_purge_cache_check, priv);
+   g_hash_table_foreach_remove(priv->tile_cache, osm_gps_map_purge_cache_check,
+                               GUINT_TO_POINTER(priv->redraw_cycle - priv->max_tile_cache_size / 2));
 }
 
 static gboolean
