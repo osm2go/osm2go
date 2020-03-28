@@ -2230,21 +2230,6 @@ osm_gps_map_download_maps (OsmGpsMap *map, OsmGpsMapPoint *pt1, OsmGpsMapPoint *
 }
 
 void
-osm_gps_map_get_bbox (OsmGpsMap *map, OsmGpsMapPoint *pt1, OsmGpsMapPoint *pt2)
-{
-    OsmGpsMapPrivate *priv = map->priv;
-
-    if (pt1 && pt2) {
-        pt1->rlat = pixel2lat(priv->map_zoom, priv->map_y);
-        pt1->rlon = pixel2lon(priv->map_zoom, priv->map_x);
-        pt2->rlat = pixel2lat(priv->map_zoom, priv->map_y + GTK_WIDGET(map)->allocation.height);
-        pt2->rlon = pixel2lon(priv->map_zoom, priv->map_x + GTK_WIDGET(map)->allocation.width);
-
-        g_debug("BBOX: %f %f %f %f", pt1->rlat, pt1->rlon, pt2->rlat, pt2->rlon);
-    }
-}
-
-void
 osm_gps_map_set_center_and_zoom (OsmGpsMap *map, float latitude, float longitude, int zoom)
 {
     osm_gps_map_set_center (map, latitude, longitude);
