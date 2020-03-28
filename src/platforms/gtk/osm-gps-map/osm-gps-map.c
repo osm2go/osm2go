@@ -612,30 +612,19 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
         {
             GdkPixbuf *pixbuf = NULL;
 
-            /* if the file was actually stored on disk, we can simply */
-            /* load and decode it from that file */
-            const char *extension = strrchr (dl->filename, '.');
-
             /* parse file directly from memory */
-            if (extension)
+            GdkPixbufLoader *loader = gdk_pixbuf_loader_new_with_type (priv->image_format, NULL);
+            if (!gdk_pixbuf_loader_write (loader, (unsigned char*)msg->response_body->data, msg->response_body->length, NULL))
             {
-                GdkPixbufLoader *loader = gdk_pixbuf_loader_new_with_type (extension+1, NULL);
-                if (!gdk_pixbuf_loader_write (loader, (unsigned char*)msg->response_body->data, msg->response_body->length, NULL))
-                {
-                    g_warning("Error: Decoding of image failed");
-                }
-                gdk_pixbuf_loader_close(loader, NULL);
-
-                pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
-
-                /* give up loader but keep the pixbuf */
-                g_object_ref(pixbuf);
-                g_object_unref(loader);
+                g_warning("Error: Decoding of image failed");
             }
-            else
-            {
-                g_warning("Error: Unable to determine image file format");
-            }
+            gdk_pixbuf_loader_close(loader, NULL);
+
+            pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
+
+            /* give up loader but keep the pixbuf */
+            g_object_ref(pixbuf);
+            g_object_unref(loader);
 
             /* Store the tile into the cache */
             if (G_LIKELY (pixbuf))
@@ -684,9 +673,9 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
 }
 
 static gchar *
-tile_filename(guint zoom, guint x, guint y, const gchar *image_format)
+tile_filename(guint zoom, guint x, guint y)
 {
-  return g_strdup_printf("%x/%x/%x.%s", zoom, x, y, image_format);
+  return g_strdup_printf("%x/%x/%x", zoom, x, y);
 }
 
 static void
@@ -712,7 +701,7 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redr
         dl->map = map;
         dl->redraw = redraw;
 
-        g_debug("Download tile: %d,%d z:%d\n\t%s --> %s", x, y, zoom, dl->uri, dl->filename);
+        g_debug("Download tile: %d,%d z:%d\n\t%s --> %s format %s", x, y, zoom, dl->uri, dl->filename, priv->image_format);
 
         SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, dl->uri);
         if (msg) {
@@ -754,7 +743,7 @@ osm_gps_map_find_bigger_tile (OsmGpsMap *map, int zoom, int x, int y,
     int next_zoom = zoom - 1;
     int next_x = x / 2;
     int next_y = y / 2;
-    gchar *filename = tile_filename(next_zoom, next_x, next_y, map->priv->image_format);
+    gchar *filename = tile_filename(next_zoom, next_x, next_y);
 
     GdkPixbuf *pixbuf = osm_gps_map_load_cached_tile (map, filename);
     g_free(filename);
@@ -813,7 +802,7 @@ osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int
         return;
     }
 
-    gchar *filename = tile_filename(zoom, x, y, priv->image_format);
+    gchar *filename = tile_filename(zoom, x, y);
 
     /* try to get file from internal cache first */
     GdkPixbuf *pixbuf = osm_gps_map_load_cached_tile(map, filename);
@@ -1445,8 +1434,11 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
 
             } } break;
         case PROP_IMAGE_FORMAT:
-            g_free(priv->image_format);
-            priv->image_format = g_value_dup_string (value);
+            if (g_strcmp0(priv->image_format, g_value_get_string(value)) != 0) {
+              g_free(priv->image_format);
+              priv->image_format = g_value_dup_string (value);
+              g_hash_table_remove_all(priv->tile_cache);
+            }
             break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2227,7 +2219,7 @@ osm_gps_map_download_maps (OsmGpsMap *map, OsmGpsMapPoint *pt1, OsmGpsMapPoint *
                 for(int j=y_1; j<=y_2; j++)
                 {
                     // x = i, y = j
-                    gchar *filename = tile_filename(zoom, i, j, priv->image_format);
+                    gchar *filename = tile_filename(zoom, i, j);
                     osm_gps_map_download_tile(map, zoom, i, j, FALSE, filename);
                     num_tiles++;
                 }
