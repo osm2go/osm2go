@@ -113,7 +113,7 @@ struct _OsmGpsMapPrivate
     //the uri string contains, that will be replaced when calculating
     //the uri to download.
     int uri_format;
-    char *repo_uri;
+    const char *repo_uri;
     char *image_format;
 
     //gps tracking state
@@ -176,7 +176,6 @@ enum
 
     PROP_AUTO_CENTER,
     PROP_AUTO_DOWNLOAD,
-    PROP_REPO_URI,
     PROP_PROXY_URI,
     PROP_ZOOM,
     PROP_MAX_ZOOM,
@@ -310,47 +309,12 @@ replace_string(const gchar *src, const gchar *from, const gchar *to)
     return value;
 }
 
-#if defined(URI_MARKER_Q) || defined(URI_MARKER_Q0)
-static void
-map_convert_coords_to_quadtree_string(gint x, gint y, gint zoomlevel,
-                                      gchar *buffer, const gchar initial,
-                                      const gchar *const quadrant)
-{
-    gchar *ptr = buffer;
-
-    if (initial)
-        *ptr++ = initial;
-
-    for(gint n = zoomlevel-1; n >= 0; n--)
-    {
-        gint xbit = (x >> n) & 1;
-        gint ybit = (y >> n) & 1;
-        *ptr++ = quadrant[xbit + 2 * ybit];
-    }
-
-    *ptr++ = '\0';
-}
-#endif
-
 static void
 inspect_map_uri(OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
-    priv->uri_format = 0;
-
-    if (G_LIKELY(g_strcmp0(priv->repo_uri, OSM_REPO_URI) == 0)) {
-        priv->uri_format = URI_HAS_X | URI_HAS_Y | URI_HAS_Z;
-    } else {
-    priv->uri_format = 0;
-    if (g_strrstr(priv->repo_uri, URI_MARKER_X))
-        priv->uri_format |= URI_HAS_X;
-
-    if (g_strrstr(priv->repo_uri, URI_MARKER_Y))
-        priv->uri_format |= URI_HAS_Y;
-
-    if (g_strrstr(priv->repo_uri, URI_MARKER_Z))
-        priv->uri_format |= URI_HAS_Z;
-    }
+    assert(g_strcmp0(priv->repo_uri, OSM_REPO_URI) == 0);
+    priv->uri_format = URI_HAS_X | URI_HAS_Y | URI_HAS_Z;
 }
 
 static gchar *
@@ -1238,10 +1202,7 @@ osm_gps_map_setup(OsmGpsMapPrivate *priv) {
     const gchar *uri = osm_gps_map_source_get_repo_uri(OSM_GPS_MAP_SOURCE_OPENSTREETMAP);
     assert(uri != NULL);
 
-    g_debug("Setting map source from ID");
-    g_free(priv->repo_uri);
-
-    priv->repo_uri = g_strdup(uri);
+    priv->repo_uri = uri;
     g_free(priv->image_format);
     priv->image_format = g_strdup(
         osm_gps_map_source_get_image_format(OSM_GPS_MAP_SOURCE_OPENSTREETMAP));
@@ -1315,7 +1276,6 @@ osm_gps_map_finalize (GObject *object)
     OsmGpsMap *map = OSM_GPS_MAP(object);
     OsmGpsMapPrivate *priv = map->priv;
 
-    g_free(priv->repo_uri);
     g_free(priv->image_format);
 
     osm_gps_map_free_tracks(map);
@@ -1338,9 +1298,6 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
             break;
         case PROP_AUTO_DOWNLOAD:
             priv->map_auto_download = g_value_get_boolean (value);
-            break;
-        case PROP_REPO_URI:
-            priv->repo_uri = g_value_dup_string (value);
             break;
         case PROP_PROXY_URI:
             if ( g_value_get_string(value) ) {
@@ -1414,9 +1371,6 @@ osm_gps_map_get_property (GObject *object, guint prop_id, GValue *value, GParamS
             break;
         case PROP_AUTO_DOWNLOAD:
             g_value_set_boolean(value, priv->map_auto_download);
-            break;
-        case PROP_REPO_URI:
-            g_value_set_string(value, priv->repo_uri);
             break;
         case PROP_PROXY_URI:
             g_value_set_string(value, priv->proxy_uri);
@@ -1819,14 +1773,6 @@ osm_gps_map_class_init (OsmGpsMapClass *klass)
                                                            "map auto download",
                                                            TRUE,
                                                            G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
-
-    g_object_class_install_property (object_class,
-                                     PROP_REPO_URI,
-                                     g_param_spec_string ("repo-uri",
-                                                          "repo uri",
-                                                          "map source tile repository uri",
-                                                          OSM_REPO_URI,
-                                                          G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 
      g_object_class_install_property (object_class,
                                      PROP_PROXY_URI,
