@@ -208,12 +208,6 @@ typedef struct {
 /*
  * Drawing function forward defintions
  */
-static void     osm_gps_map_print_images (OsmGpsMap *map);
-static void     osm_gps_map_blit_tile(OsmGpsMap *map, GdkPixbuf *pixbuf, int offset_x, int offset_y);
-static void     osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpointer user_data);
-static void     osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int offset_y);
-static void     osm_gps_map_fill_tiles_pixel (OsmGpsMap *map);
-static gboolean osm_gps_map_map_redraw (OsmGpsMap *map);
 static void     osm_gps_map_map_redraw_idle (OsmGpsMap *map);
 
 static void
