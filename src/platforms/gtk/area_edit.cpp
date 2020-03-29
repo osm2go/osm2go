@@ -716,7 +716,6 @@ bool area_edit_t::run() {
 
   context.map.needs_redraw = false;
   context.map.widget = OSM_GPS_MAP(g_object_new(OSM_TYPE_GPS_MAP,
-                                                "map-source", OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
                                                 "proxy-uri", g_getenv("http_proxy"),
                                                 "auto-center", FALSE,
                                                 nullptr));

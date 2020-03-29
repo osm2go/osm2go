@@ -25,6 +25,7 @@
 #include "osm-gps-map.h"
 #include "config.h"
 
+#include <assert.h>
 #include <fcntl.h>
 #include <math.h>
 #include <stdio.h>
@@ -32,6 +33,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <cairo.h>
 #include <gdk/gdk.h>
 #include <glib.h>
 #include <glib/gprintf.h>
@@ -40,8 +42,6 @@
 
 #include "converter.h"
 #include "osm-gps-map-types.h"
-
-#include <cairo.h>
 
 /* the version check macro is not available in all versions of libsoup */
 #if defined(SOUP_CHECK_VERSION)
@@ -112,7 +112,6 @@ struct _OsmGpsMapPrivate
     //contains flags indicating the various special characters
     //the uri string contains, that will be replaced when calculating
     //the uri to download.
-    OsmGpsMapSource_t map_source;
     int uri_format;
     char *repo_uri;
     char *image_format;
@@ -190,7 +189,6 @@ enum
     PROP_GPS_TRACK_WIDTH,
     PROP_GPS_POINT_R1,
     PROP_GPS_POINT_R2,
-    PROP_MAP_SOURCE,
     PROP_IMAGE_FORMAT
 };
 
@@ -797,11 +795,6 @@ osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int
 
     g_debug("Load tile %d,%d (%d,%d) z:%d", x, y, offset_x, offset_y, zoom);
 
-    if (priv->map_source == OSM_GPS_MAP_SOURCE_NULL) {
-        osm_gps_map_blit_tile(map, priv->null_tile, offset_x,offset_y);
-        return;
-    }
-
     gchar *filename = tile_filename(zoom, x, y);
 
     /* try to get file from internal cache first */
@@ -1203,8 +1196,6 @@ osm_gps_map_init (OsmGpsMap *object)
 
     priv->uri_format = 0;
 
-    priv->map_source = OSM_GPS_MAP_SOURCE_NULL;
-
     //Change number of concurrent connections option?
 #ifdef USE_SOUP_SESSION_NEW
     priv->soup_session =
@@ -1243,32 +1234,19 @@ osm_gps_map_init (OsmGpsMap *object)
 
 static void
 osm_gps_map_setup(OsmGpsMapPrivate *priv) {
-    //user can specify a map source ID, or a repo URI as the map source
-    const char *uri = osm_gps_map_source_get_repo_uri(OSM_GPS_MAP_SOURCE_NULL);
-    if ( (priv->map_source == OSM_GPS_MAP_SOURCE_NULL) || (g_strcmp0(priv->repo_uri, uri) == 0) ) {
-        g_debug("Using null source");
-        priv->map_source = OSM_GPS_MAP_SOURCE_NULL;
+    //check if the source given is valid
+    const gchar *uri = osm_gps_map_source_get_repo_uri(OSM_GPS_MAP_SOURCE_OPENSTREETMAP);
+    assert(uri != NULL);
 
-        priv->null_tile = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 256, 256);
-        gdk_pixbuf_fill(priv->null_tile, 0xcccccc00);
-    } else {
-        //check if the source given is valid
-        uri = osm_gps_map_source_get_repo_uri(priv->map_source);
-        if (uri) {
-            g_debug("Setting map source from ID");
-            g_free(priv->repo_uri);
+    g_debug("Setting map source from ID");
+    g_free(priv->repo_uri);
 
-            priv->repo_uri = g_strdup(uri);
-            g_free(priv->image_format);
-            priv->image_format = g_strdup(
-                osm_gps_map_source_get_image_format(priv->map_source));
-            priv->max_zoom = osm_gps_map_source_get_max_zoom(priv->map_source);
-            priv->min_zoom = osm_gps_map_source_get_min_zoom(priv->map_source);
-        }
-    }
-
-    const char *fname = osm_gps_map_source_get_friendly_name(priv->map_source);
-    if(!fname) fname = "_unknown_";
+    priv->repo_uri = g_strdup(uri);
+    g_free(priv->image_format);
+    priv->image_format = g_strdup(
+        osm_gps_map_source_get_image_format(OSM_GPS_MAP_SOURCE_OPENSTREETMAP));
+    priv->max_zoom = osm_gps_map_source_get_max_zoom(OSM_GPS_MAP_SOURCE_OPENSTREETMAP);
+    priv->min_zoom = osm_gps_map_source_get_min_zoom(OSM_GPS_MAP_SOURCE_OPENSTREETMAP);
 }
 
 static GObject *
@@ -1409,30 +1387,6 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
         case PROP_GPS_POINT_R2:
             priv->ui_gps_point_outer_radius = g_value_get_int (value);
             break;
-        case PROP_MAP_SOURCE: {
-            int nsource = g_value_get_int(value);
-            if(nsource != ((int)priv->map_source) &&
-               nsource >= OSM_GPS_MAP_SOURCE_NULL &&
-               nsource <= OSM_GPS_MAP_SOURCE_LAST) {
-
-                /* we now have to switch the entire map */
-                priv->map_source = nsource;
-
-                /* flush the ram cache */
-                g_hash_table_remove_all(priv->tile_cache);
-
-                osm_gps_map_setup(priv);
-
-                inspect_map_uri(map);
-
-                /* adjust zoom if necessary */
-                if(priv->map_zoom > priv->max_zoom)
-                    osm_gps_map_set_zoom(map, priv->max_zoom);
-
-                if(priv->map_zoom < priv->min_zoom)
-                    osm_gps_map_set_zoom(map, priv->min_zoom);
-
-            } } break;
         case PROP_IMAGE_FORMAT:
             if (g_strcmp0(priv->image_format, g_value_get_string(value)) != 0) {
               g_free(priv->image_format);
@@ -1499,9 +1453,6 @@ osm_gps_map_get_property (GObject *object, guint prop_id, GValue *value, GParamS
             break;
         case PROP_GPS_POINT_R2:
             g_value_set_int(value, priv->ui_gps_point_outer_radius);
-            break;
-        case PROP_MAP_SOURCE:
-            g_value_set_int(value, priv->map_source);
             break;
         case PROP_IMAGE_FORMAT:
             g_value_set_string(value, priv->image_format);
@@ -1996,16 +1947,6 @@ osm_gps_map_class_init (OsmGpsMapClass *klass)
                                                        G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
 
     g_object_class_install_property (object_class,
-                                     PROP_MAP_SOURCE,
-                                     g_param_spec_int ("map-source",
-                                                       "map source",
-                                                       "map source ID",
-                                                       -1,           /* minimum property value */
-                                                       G_MAXINT,    /* maximum property value */
-                                                       -1,
-                                                       G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
-
-    g_object_class_install_property (object_class,
                                      PROP_IMAGE_FORMAT,
                                      g_param_spec_string ("image-format",
                                                           "image format",
@@ -2019,70 +1960,11 @@ osm_gps_map_source_get_friendly_name(OsmGpsMapSource_t source)
 {
     switch(source)
     {
-        case OSM_GPS_MAP_SOURCE_NULL:
-            return "None";
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
-            return "OpenStreetMap I";
-#ifdef OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER
-        case OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER:
-            return "OpenStreetMap II";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_OPENCYCLEMAP
-        case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
-            return "OpenCycleMap";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT
-        case OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT:
-            return "Public Transport";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_OSMC_TRAILS
-        case OSM_GPS_MAP_SOURCE_OSMC_TRAILS:
-            return "OSMC Trails";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE
-        case OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE:
-            return "Maps-For-Free";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_GOOGLE_STREET
-        case OSM_GPS_MAP_SOURCE_GOOGLE_STREET:
-            return "Google Maps";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE
-        case OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE:
-            return "Google Satellite";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID
-        case OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID:
-            return "Google Hybrid";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_STREET
-        case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_STREET:
-            return "Virtual Earth";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_SATELLITE
-        case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_SATELLITE:
-            return "Virtual Earth Satellite";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID
-        case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID:
-            return "Virtual Earth Hybrid";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_YAHOO_STREET
-        case OSM_GPS_MAP_SOURCE_YAHOO_STREET:
-            return "Yahoo Maps";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_YAHOO_SATELLITE
-        case OSM_GPS_MAP_SOURCE_YAHOO_SATELLITE:
-            return "Yahoo Satellite";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_YAHOO_HYBRID
-        case OSM_GPS_MAP_SOURCE_YAHOO_HYBRID:
-            return "Yahoo Hybrid";
-#endif
+            return "OpenStreetMap";
         default:
-            return NULL;
+            abort();
     }
-    return NULL;
 }
 
 //http://www.internettablettalk.com/forums/showthread.php?t=5209
@@ -2094,81 +1976,21 @@ osm_gps_map_source_get_repo_uri(OsmGpsMapSource_t source)
 {
     switch(source)
     {
-        case OSM_GPS_MAP_SOURCE_NULL:
-            return "none://";
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
             return OSM_REPO_URI;
-#ifdef OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER
-        case OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER:
-            return NULL; /* no longer working "http://tah.openstreetmap.org/Tiles/tile/#Z/#X/#Y.png" */
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_OPENCYCLEMAP
-        case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
-            return "http://c.andy.sandbox.cloudmade.com/tiles/cycle/#Z/#X/#Y.png";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT
-        case OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT:
-            return "http://tile.xn--pnvkarte-m4a.de/tilegen/#Z/#X/#Y.png";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_OSMC_TRAILS
-        case OSM_GPS_MAP_SOURCE_OSMC_TRAILS:
-            return "http://topo.geofabrik.de/trails/#Z/#X/#Y.png";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE
-        case OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE:
-            return "http://maps-for-free.com/layer/relief/z#Z/row#Y/#Z_#X-#Y.jpg";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_GOOGLE_STREET
-        case OSM_GPS_MAP_SOURCE_GOOGLE_STREET:
-            return "http://mt#R.google.com/vt/v=w2.97&x=#X&y=#Y&z=#Z";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE
-        case OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE:
-            return "http://khm#R.google.com/kh?n=404&v=3&t=#Q";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID
-        case OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID:
-            return NULL; /* No longer working  "http://mt#R.google.com/mt?n=404&v=w2t.99&x=#X&y=#Y&zoom=#S" */
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_STREET
-        case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_STREET:
-            return "http://a#R.ortho.tiles.virtualearth.net/tiles/r#W.jpeg?g=50";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_SATELLITE
-        case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_SATELLITE:
-            return "http://a#R.ortho.tiles.virtualearth.net/tiles/a#W.jpeg?g=50";
-#endif
-#ifdef OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID
-        case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID:
-            return "http://a#R.ortho.tiles.virtualearth.net/tiles/h#W.jpeg?g=50";
-#endif
-#if 0
-        case OSM_GPS_MAP_SOURCE_YAHOO_STREET:
-        case OSM_GPS_MAP_SOURCE_YAHOO_SATELLITE:
-        case OSM_GPS_MAP_SOURCE_YAHOO_HYBRID:
-            /* TODO: Implement signed Y, aka U
-             * http://us.maps3.yimg.com/aerial.maps.yimg.com/ximg?v=1.7&t=a&s=256&x=%d&y=%-d&z=%d
-             *  x = tilex,
-             *  y = (1 << (MAX_ZOOM - zoom)) - tiley - 1,
-             *  z = zoom - (MAX_ZOOM - 17));
-             */
-            return NULL;
-#endif
         default:
-            return NULL;
+            abort();
     }
-    return NULL;
 }
 
 const char *
 osm_gps_map_source_get_image_format(OsmGpsMapSource_t source)
 {
     switch(source) {
-        case OSM_GPS_MAP_SOURCE_NULL:
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
             return "png";
         default:
-            return "bin";
+            abort();
     }
 }
 
@@ -2183,14 +2005,11 @@ int
 osm_gps_map_source_get_max_zoom(OsmGpsMapSource_t source)
 {
     switch(source) {
-        case OSM_GPS_MAP_SOURCE_NULL:
-            return 18;
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
             return OSM_MAX_ZOOM;
         default:
-            return 17;
+            abort();
     }
-    return 17;
 }
 
 void

@@ -30,11 +30,8 @@
 G_BEGIN_DECLS
 
 typedef enum {
-    OSM_GPS_MAP_SOURCE_NULL = 0,
     OSM_GPS_MAP_SOURCE_OPENSTREETMAP
 } OsmGpsMapSource_t;
-
-#define OSM_GPS_MAP_SOURCE_LAST  (OSM_GPS_MAP_SOURCE_OPENSTREETMAP)
 
 const char* osm_gps_map_source_get_friendly_name (OsmGpsMapSource_t source);
 const char* osm_gps_map_source_get_repo_uri (OsmGpsMapSource_t source);
