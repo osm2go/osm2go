@@ -112,7 +112,6 @@ struct _OsmGpsMapPrivate
     //contains flags indicating the various special characters
     //the uri string contains, that will be replaced when calculating
     //the uri to download.
-    int uri_format;
     const char *repo_uri;
     char *image_format;
 
@@ -209,7 +208,6 @@ typedef struct {
 /*
  * Drawing function forward defintions
  */
-static void     inspect_map_uri(OsmGpsMap *map);
 static void     osm_gps_map_print_images (OsmGpsMap *map);
 static void     osm_gps_map_blit_tile(OsmGpsMap *map, GdkPixbuf *pixbuf, int offset_x, int offset_y);
 static void     osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpointer user_data);
@@ -283,45 +281,21 @@ replace_string(gchar *src, const gchar *from, const gchar *to)
     return value;
 }
 
-static void
-inspect_map_uri(OsmGpsMap *map)
-{
-    OsmGpsMapPrivate *priv = map->priv;
-    assert(g_strcmp0(priv->repo_uri, OSM_REPO_URI) == 0);
-    priv->uri_format = URI_HAS_X | URI_HAS_Y | URI_HAS_Z;
-}
-
 static gchar *
-replace_map_uri(OsmGpsMap *map, const gchar *uri, int zoom, int x, int y)
+replace_map_uri(const gchar *uri, int zoom, int x, int y)
 {
-    OsmGpsMapPrivate *priv = map->priv;
     gchar *url = g_strdup(uri);
 
-    for (unsigned int i = 1; i < URI_FLAG_END; i = i << 1)
-    {
-        char s[16];
+    char s[16];
 
-        switch(i & priv->uri_format)
-        {
-            case URI_HAS_X:
-                g_snprintf(s, sizeof(s), "%d", x);
-                url = replace_string(url, URI_MARKER_X, s);
-                //g_debug("FOUND " URI_MARKER_X);
-                break;
-            case URI_HAS_Y:
-                g_snprintf(s, sizeof(s), "%d", y);
-                url = replace_string(url, URI_MARKER_Y, s);
-                //g_debug("FOUND " URI_MARKER_Y);
-                break;
-            case URI_HAS_Z:
-                g_snprintf(s, sizeof(s), "%d", zoom);
-                url = replace_string(url, URI_MARKER_Z, s);
-                //g_debug("FOUND " URI_MARKER_Z);
-                break;
-            default:
-                break;
-        }
-    }
+    g_snprintf(s, sizeof(s), "%d", x);
+    url = replace_string(url, URI_MARKER_X, s);
+
+    g_snprintf(s, sizeof(s), "%d", y);
+    url = replace_string(url, URI_MARKER_Y, s);
+
+    g_snprintf(s, sizeof(s), "%d", zoom);
+    url = replace_string(url, URI_MARKER_Z, s);
 
     return url;
 }
@@ -616,7 +590,7 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redr
     tile_download_t *dl = g_new0(tile_download_t,1);
 
     //calculate the uri to download
-    dl->uri = replace_map_uri(map, priv->repo_uri, zoom, x, y);
+    dl->uri = replace_map_uri(priv->repo_uri, zoom, x, y);
 
     //check the tile has not already been queued for download,
     //or has been attempted, and its missing
@@ -1127,8 +1101,6 @@ osm_gps_map_init (OsmGpsMap *object)
     priv->drag_start_mouse_x = 0;
     priv->drag_start_mouse_y = 0;
 
-    priv->uri_format = 0;
-
     //Change number of concurrent connections option?
 #ifdef USE_SOUP_SESSION_NEW
     priv->soup_session =
@@ -1187,8 +1159,6 @@ osm_gps_map_constructor (GType gtype, guint n_properties, GObjectConstructParam 
         G_OBJECT_CLASS(osm_gps_map_parent_class)->constructor(gtype, n_properties, properties);
 
     osm_gps_map_setup(OSM_GPS_MAP_PRIVATE(object));
-
-    inspect_map_uri(OSM_GPS_MAP(object));
 
     return object;
 }
