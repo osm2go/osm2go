@@ -236,76 +236,50 @@ cached_tile_free (OsmCachedTile *tile)
  *
  * Returns:
  *   Returns a pointer to dynamically-allocated memory containing string
- *   with occurences of the text pointed to by 'from' replaced by with the
+ *   with first occurence of the text pointed to by 'from' replaced by with the
  *   text pointed to by 'to'.
  */
 static gchar *
-replace_string(const gchar *src, const gchar *from, const gchar *to)
+replace_string(gchar *src, const gchar *from, const gchar *to)
 {
-    size_t size    = strlen(src) + 1;
     size_t fromlen = strlen(from);
     size_t tolen   = strlen(to);
+    size_t size    = strlen(src) + 1;
 
-    /* Allocate the first chunk with enough for the original string. */
-    gchar *value = g_malloc(size);
+    /* Try to find the search text. */
+    const gchar *match = g_strstr_len(src, size, from);
+    assert(match != NULL);
 
+    /* Allocate the destination buffer. */
+    gchar *value = g_realloc(src, size + tolen - fromlen);
+
+    if (G_UNLIKELY(value == NULL)) {
+      g_free(src);
+      return NULL;
+    }
 
     /* We need to return 'value', so let's make a copy to mess around with. */
     gchar *dst = value;
 
-    if ( value != NULL )
-    {
-        for ( ;; )
-        {
-            /* Try to find the search text. */
-            const gchar *match = g_strstr_len(src, size, from);
-            if ( match != NULL )
-            {
-                /* Find out how many characters to copy up to the 'match'. */
-                size_t count = match - src;
+    /* Find out how many characters to copy up to the 'match'. */
+    size_t count = match - src;
 
+    /*
+     * Nothing to do to the point where we matched. Then
+     * move the source pointer ahead by that amount. And
+     * move the destination pointer ahead by the same amount.
+     */
+    dst += count;
 
-                /* Calculate the total size the string will be after the
-                 * replacement is performed. */
-                size += tolen - fromlen;
+    /*
+     * Now move the remainder of the string to make room for the replacement.
+     */
+    memmove(dst + tolen, value + count + fromlen, size - count - fromlen);
 
-                gchar *temp = g_realloc(value, size);
+    /* Now copy in the replacement text 'to' at the position of
+     * the match. */
+    memcpy(dst, to, tolen);
 
-                /* we'll want to return 'value' eventually, so let's point it
-                 * to the memory that we are now working with.
-                 * And let's not forget to point to the right location in
-                 * the destination as well. */
-                dst = temp + (dst - value);
-                value = temp;
-
-                /*
-                 * Copy from the source to the point where we matched. Then
-                 * move the source pointer ahead by the amount we copied. And
-                 * move the destination pointer ahead by the same amount.
-                 */
-                memmove(dst, src, count);
-                src += count;
-                dst += count;
-
-                /* Now copy in the replacement text 'to' at the position of
-                 * the match. Adjust the source pointer by the text we replaced.
-                 * Adjust the destination pointer by the amount of replacement
-                 * text. */
-                memmove(dst, to, tolen);
-                src += fromlen;
-                dst += tolen;
-            }
-            else
-            {
-                /*
-                 * Copy any remaining part of the string. This includes the null
-                 * termination character.
-                 */
-                strcpy(dst, src);
-                break;
-            }
-        }
-    }
     return value;
 }
 
@@ -326,7 +300,6 @@ replace_map_uri(OsmGpsMap *map, const gchar *uri, int zoom, int x, int y)
     for (unsigned int i = 1; i < URI_FLAG_END; i = i << 1)
     {
         char s[16];
-        char *old = url;
 
         switch(i & priv->uri_format)
         {
@@ -347,10 +320,6 @@ replace_map_uri(OsmGpsMap *map, const gchar *uri, int zoom, int x, int y)
                 break;
             default:
                 break;
-        }
-
-        if (old != url) {
-            g_free(old);
         }
     }
 
