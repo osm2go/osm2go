@@ -90,7 +90,6 @@ struct _OsmGpsMapPrivate
     int map_zoom;
     int max_zoom;
     int min_zoom;
-    gboolean map_auto_center;
     gboolean map_auto_download;
     int map_x;
     int map_y;
@@ -173,7 +172,6 @@ enum
 {
     PROP_0,
 
-    PROP_AUTO_CENTER,
     PROP_AUTO_DOWNLOAD,
     PROP_PROXY_URI,
     PROP_ZOOM,
@@ -1226,9 +1224,6 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
 
     switch (prop_id)
     {
-        case PROP_AUTO_CENTER:
-            priv->map_auto_center = g_value_get_boolean (value);
-            break;
         case PROP_AUTO_DOWNLOAD:
             priv->map_auto_download = g_value_get_boolean (value);
             break;
@@ -1299,9 +1294,6 @@ osm_gps_map_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 
     switch (prop_id)
     {
-        case PROP_AUTO_CENTER:
-            g_value_set_boolean(value, priv->map_auto_center);
-            break;
         case PROP_AUTO_DOWNLOAD:
             g_value_set_boolean(value, priv->map_auto_download);
             break;
@@ -1517,9 +1509,6 @@ osm_gps_map_motion_notify (GtkWidget *widget, GdkEventMotion  *event)
 
     priv->dragging = TRUE;
 
-    if (priv->map_auto_center)
-        g_object_set(G_OBJECT(widget), "auto-center", FALSE, NULL);
-
     priv->drag_mouse_dx = x - priv->drag_start_mouse_x;
     priv->drag_mouse_dy = y - priv->drag_start_mouse_y;
 
@@ -1690,14 +1679,6 @@ osm_gps_map_class_init (OsmGpsMapClass *klass)
     widget_class->button_release_event = osm_gps_map_button_release;
     widget_class->motion_notify_event = osm_gps_map_motion_notify;
     widget_class->scroll_event = osm_gps_map_scroll_event;
-
-    g_object_class_install_property (object_class,
-                                     PROP_AUTO_CENTER,
-                                     g_param_spec_boolean ("auto-center",
-                                                           "auto center",
-                                                           "map auto center",
-                                                           TRUE,
-                                                           G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
 
     g_object_class_install_property (object_class,
                                      PROP_AUTO_DOWNLOAD,
@@ -2027,29 +2008,10 @@ osm_gps_map_gps_add (OsmGpsMap *map, float latitude, float longitude, float head
     priv->gps_valid = TRUE;
     priv->gps_heading = deg2rad(heading);
 
-    // pixel_x,y, offsets
-    int pixel_x = lon2pixel(priv->map_zoom, priv->gps->rlon);
-    int pixel_y = lat2pixel(priv->map_zoom, priv->gps->rlat);
-
     // dont draw anything if we are dragging
     if (priv->dragging) {
         g_debug("Dragging");
         return;
-    }
-
-    //Automatically center the map if the track approaches the edge
-    if(priv->map_auto_center)   {
-        int x = pixel_x - priv->map_x;
-        int y = pixel_y - priv->map_y;
-        int width = GTK_WIDGET(map)->allocation.width;
-        int height = GTK_WIDGET(map)->allocation.height;
-        if( x < (width/2 - width/8)     || x > (width/2 + width/8)  ||
-            y < (height/2 - height/8)   || y > (height/2 + height/8)) {
-
-            priv->map_x = pixel_x - GTK_WIDGET(map)->allocation.width/2;
-            priv->map_y = pixel_y - GTK_WIDGET(map)->allocation.height/2;
-            center_coord_update(GTK_WIDGET(map));
-        }
     }
 
     // this redraws the map (including the gps track, and adjusts the
