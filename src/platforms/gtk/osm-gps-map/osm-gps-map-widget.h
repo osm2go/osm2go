@@ -62,12 +62,9 @@ struct _OsmGpsMap
 
 GType osm_gps_map_get_type (void) G_GNUC_CONST;
 
-void osm_gps_map_download_maps (OsmGpsMap *map, OsmGpsMapPoint *pt1, OsmGpsMapPoint *pt2, int zoom_start, int zoom_end);
 void osm_gps_map_set_center_and_zoom (OsmGpsMap *map, float latitude, float longitude, int zoom);
 void osm_gps_map_set_center (OsmGpsMap *map, float latitude, float longitude);
 int osm_gps_map_set_zoom (OsmGpsMap *map, int zoom);
-void osm_gps_map_scroll (OsmGpsMap *map, gint dx, gint dy);
-float osm_gps_map_get_scale (OsmGpsMap *map);
 void osm_gps_map_track_remove_all (OsmGpsMap *map);
 void osm_gps_map_gps_add (OsmGpsMap *map, float latitude, float longitude, float heading);
 void osm_gps_map_gps_clear (OsmGpsMap *map);

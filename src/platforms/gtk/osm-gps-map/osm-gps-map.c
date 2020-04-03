@@ -299,13 +299,6 @@ my_log_handler (const gchar * log_domain, GLogLevelFlags log_level, const gchar 
         g_log_default_handler (log_domain, log_level, message, user_data);
 }
 
-static float
-osm_gps_map_get_scale_at_point(int zoom, float rlat, G_GNUC_UNUSED float rlon)
-{
-    /* world at zoom 1 == 512 pixels */
-    return cosf(rlat) * M_PI * OSM_EQ_RADIUS / (1<<(7+zoom));
-}
-
 /* clears the tracks and all resources */
 static void
 osm_gps_map_free_tracks (OsmGpsMap *map)
@@ -1873,42 +1866,6 @@ osm_gps_map_source_get_max_zoom(OsmGpsMapSource_t source)
 }
 
 void
-osm_gps_map_download_maps (OsmGpsMap *map, OsmGpsMapPoint *pt1, OsmGpsMapPoint *pt2, int zoom_start, int zoom_end)
-{
-    if (pt1 && pt2)
-    {
-        OsmGpsMapPrivate *priv = map->priv;
-        int num_tiles = 0;
-
-        zoom_end = CLAMP(zoom_end, priv->min_zoom, priv->max_zoom);
-        g_debug("Download maps: z:%d->%d",zoom_start, zoom_end);
-
-        for(int zoom=zoom_start; zoom<=zoom_end; zoom++)
-        {
-            int x_1 = floorf((float)lon2pixel(zoom, pt1->rlon) / (float)TILESIZE);
-            int y_1 = floorf((float)lat2pixel(zoom, pt1->rlat) / (float)TILESIZE);
-
-            int x_2 = floorf((float)lon2pixel(zoom, pt2->rlon) / (float)TILESIZE);
-            int y_2 = floorf((float)lat2pixel(zoom, pt2->rlat) / (float)TILESIZE);
-
-            // loop x1-x2
-            for(int i=x_1; i<=x_2; i++)
-            {
-                // loop y1 - y2
-                for(int j=y_1; j<=y_2; j++)
-                {
-                    // x = i, y = j
-                    gchar *filename = tile_filename(zoom, i, j);
-                    osm_gps_map_download_tile(map, zoom, i, j, FALSE, filename);
-                    num_tiles++;
-                }
-            }
-            g_debug("DL @Z:%d = %d tiles",zoom,num_tiles);
-        }
-    }
-}
-
-void
 osm_gps_map_set_center_and_zoom (OsmGpsMap *map, float latitude, float longitude, int zoom)
 {
     osm_gps_map_set_center (map, latitude, longitude);
@@ -2036,33 +1993,6 @@ osm_gps_map_convert_screen_to_geographic(OsmGpsMap *map, gint pixel_x, gint pixe
 
     return pt;
 }
-
-void
-osm_gps_map_scroll (OsmGpsMap *map, gint dx, gint dy)
-{
-    g_return_if_fail (OSM_IS_GPS_MAP (map));
-    OsmGpsMapPrivate *priv = map->priv;
-
-    priv->map_x += dx;
-    priv->map_y += dy;
-    center_coord_update(GTK_WIDGET(map));
-
-    /* OSD may contain a coordinate, so we may have to re-render it */
-    if(priv->osd && OSM_IS_GPS_MAP (priv->osd->widget))
-        priv->osd->render (priv->osd);
-
-    osm_gps_map_map_redraw_idle (map);
-}
-
-float
-osm_gps_map_get_scale(OsmGpsMap *map)
-{
-    g_return_val_if_fail (OSM_IS_GPS_MAP (map), OSM_GPS_MAP_INVALID);
-    OsmGpsMapPrivate *priv = map->priv;
-
-    return osm_gps_map_get_scale_at_point(priv->map_zoom, priv->center_rlat, priv->center_rlon);
-}
-
 
 void
 osm_gps_map_redraw (OsmGpsMap *map)
