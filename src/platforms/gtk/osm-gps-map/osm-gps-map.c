@@ -581,22 +581,22 @@ static void
 osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redraw, gchar *filename)
 {
     OsmGpsMapPrivate *priv = map->priv;
-    tile_download_t *dl = g_new0(tile_download_t,1);
 
     //calculate the uri to download
-    dl->uri = replace_map_uri(priv->repo_uri, zoom, x, y);
+    gchar *uri = replace_map_uri(priv->repo_uri, zoom, x, y);
 
     //check the tile has not already been queued for download,
     //or has been attempted, and its missing
-    if (g_hash_table_lookup_extended(priv->tile_queue, dl->uri, NULL, NULL) ||
-        g_hash_table_lookup_extended(priv->missing_tiles, dl->uri, NULL, NULL) )
+    if (g_hash_table_lookup_extended(priv->tile_queue, uri, NULL, NULL) ||
+        g_hash_table_lookup_extended(priv->missing_tiles, uri, NULL, NULL) )
     {
         g_debug("Tile already downloading (or missing)");
-        g_free(dl->uri);
-        g_free(dl);
+        g_free(uri);
         g_free(filename);
     } else {
+        tile_download_t *dl = g_new(tile_download_t, 1);
         dl->filename = filename;
+        dl->uri = uri;
         dl->map = map;
         dl->redraw = redraw;
 
