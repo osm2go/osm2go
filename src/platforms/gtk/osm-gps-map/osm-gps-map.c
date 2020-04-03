@@ -1361,7 +1361,7 @@ osm_gps_map_button_press (GtkWidget *widget, GdkEventButton *event)
     /* pressed inside OSD control? */
     if(priv->osd) {
         osd_button_t but =
-            priv->osd->check(priv->osd, TRUE, event->x, event->y);
+            priv->osd->check(priv->osd, event->x, event->y);
 
         if(but != OSD_NONE)
         {
@@ -1444,7 +1444,7 @@ osm_gps_map_button_release (GtkWidget *widget, GdkEventButton *event)
     }
     /* pressed inside OSD control? */
     else if(priv->osd)
-        priv->osd->check(priv->osd, FALSE, event->x, event->y);
+        priv->osd->check(priv->osd, event->x, event->y);
 
 #ifdef DRAG_DEBUG
     printf("dragging done\n");

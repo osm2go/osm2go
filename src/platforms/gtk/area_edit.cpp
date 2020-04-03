@@ -570,7 +570,7 @@ on_map_button_press_event(GtkWidget *widget,
   osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
 
   /* osm-gps-map needs this event to handle the OSD */
-  if(osd->check(osd, TRUE, event->x, event->y) != OSD_NONE)
+  if(osd->check(osd, event->x, event->y) != OSD_NONE)
     return FALSE;
 
   if(osm_gps_map_osd_get_state(map) == TRUE)
@@ -657,7 +657,7 @@ on_map_button_release_event(GtkWidget *widget,
   }
 
   /* osm-gps-map needs this event to handle the OSD */
-  if(osd->check(osd, TRUE, event->x, event->y) != OSD_NONE)
+  if(osd->check(osd, event->x, event->y) != OSD_NONE)
     return FALSE;
 
   /* returning true here disables dragging in osm-gps-map */

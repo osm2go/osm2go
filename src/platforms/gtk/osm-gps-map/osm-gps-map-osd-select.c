@@ -173,7 +173,8 @@ osd_render_zoom(osm_gps_map_osd_t *osd) {
 
 
 static osd_button_t
-osd_check(osm_gps_map_osd_t *osd, G_GNUC_UNUSED gboolean down, gint x, gint y) {
+osd_check(osm_gps_map_osd_t *osd, gint x, gint y)
+{
     osd_priv_t *priv = (osd_priv_t*)osd->priv;
     osd_button_t but = OSD_NONE;
 

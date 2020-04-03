@@ -64,7 +64,7 @@ typedef struct osm_gps_map_osd_s {
 
     void(*render)(struct osm_gps_map_osd_s *);
     void(*draw)(struct osm_gps_map_osd_s *, GdkDrawable *);
-    osd_button_t(*check)(struct osm_gps_map_osd_s *,gboolean,gint, gint);       /* check if x/y lies within OSD */
+    osd_button_t(*check)(struct osm_gps_map_osd_s *,gint, gint);       /* check if x/y lies within OSD */
     gboolean(*busy)(struct osm_gps_map_osd_s *);
     void(*free)(struct osm_gps_map_osd_s *);
 
