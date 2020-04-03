@@ -102,25 +102,6 @@ osd_render_toggle(osm_gps_map_osd_t *osd) {
     cairo_close_path (cr);
     cairo_fill(cr);
 
-#if 0
-#define IBORDER (ICON_BORDER/2)
-#define IRAD    (CRAD/2)
-
-    /* highlight one icon */
-    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.5);
-    cairo_move_to (cr, IBORDER+IRAD, (priv->select_toggle.state?OSD_W:0)+IBORDER);
-    cairo_line_to (cr, OSD_W-IBORDER-IRAD, (priv->select_toggle.state?OSD_W:0)+IBORDER);
-    cairo_arc (cr, OSD_W-IBORDER-IRAD, (priv->select_toggle.state?OSD_W:0)+IBORDER+IRAD, IRAD, -M_PI/2, 0);
-    cairo_line_to (cr, OSD_W-IBORDER, (priv->select_toggle.state?OSD_W:0)+OSD_W-IBORDER-IRAD);
-    cairo_arc (cr, OSD_W-IBORDER-IRAD, (priv->select_toggle.state?OSD_W:0)+OSD_W-IBORDER-IRAD, IRAD, 0, M_PI/2);
-    cairo_line_to (cr, IBORDER+IRAD, (priv->select_toggle.state?OSD_W:0)+OSD_W-IBORDER);
-    cairo_arc (cr, IBORDER+IRAD, (priv->select_toggle.state?OSD_W:0)+OSD_W-IBORDER-IRAD, IRAD, M_PI/2, M_PI);
-    cairo_line_to (cr, IBORDER, (priv->select_toggle.state?OSD_W:0)+OSD_W-IBORDER-IRAD);
-    cairo_arc (cr, IBORDER+IRAD, (priv->select_toggle.state?OSD_W:0)+IBORDER+IRAD, IRAD, M_PI, -M_PI/2);
-    cairo_close_path (cr);
-    cairo_fill(cr);
-#endif
-
     /* draw select icon on top */
     cairo_set_line_width (cr, ICON_LINE_W);
 
