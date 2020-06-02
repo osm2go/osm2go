@@ -41,6 +41,8 @@
 #include <libsoup/soup.h>
 
 #include "converter.h"
+#include "osm-gps-map-point.h"
+#include "osm-gps-map-source.h"
 #include "osm-gps-map-types.h"
 
 /* the version check macro is not available in all versions of libsoup */

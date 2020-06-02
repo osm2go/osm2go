@@ -26,7 +26,7 @@
 #define _OSM_GPS_MAP_TYPES_H_
 
 #include <gdk/gdk.h>
-#include "osm-gps-map.h"
+#include "osm-gps-map-point.h"
 
 #define TILESIZE 256
 #define MAX_ZOOM 20
