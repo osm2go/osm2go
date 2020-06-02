@@ -23,7 +23,6 @@
  */
 
 #include "osm-gps-map.h"
-#include "config.h"
 
 #include <assert.h>
 #include <fcntl.h>
@@ -57,6 +56,18 @@
 #define EXTRA_BORDER (TILESIZE / 2)
 
 #define OSM_GPS_MAP_SCROLL_STEP 10
+
+#ifdef FREMANTLE
+#include <hildon/hildon-defines.h>
+/* only maemo devices up to version 4 have a fullscreen button */
+#define OSM_GPS_MAP_KEY_FULLSCREEN  'f'
+#define OSM_GPS_MAP_KEY_ZOOMIN      HILDON_HARDKEY_INCREASE
+#define OSM_GPS_MAP_KEY_ZOOMOUT     HILDON_HARDKEY_DECREASE
+#else
+#define OSM_GPS_MAP_KEY_FULLSCREEN  GDK_F11
+#define OSM_GPS_MAP_KEY_ZOOMIN      '+'
+#define OSM_GPS_MAP_KEY_ZOOMOUT     '-'
+#endif
 
 #include <gdk/gdkkeysyms.h>
 

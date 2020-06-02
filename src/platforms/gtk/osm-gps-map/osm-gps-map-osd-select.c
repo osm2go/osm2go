@@ -19,7 +19,6 @@
 
 #include "osm-gps-map-osd-select.h"
 
-#include "config.h"
 #include "converter.h"
 #include "osm-gps-map.h"
 

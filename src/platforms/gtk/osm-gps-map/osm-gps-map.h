@@ -25,8 +25,6 @@
 #ifndef _OSM_GPS_MAP_H_
 #define _OSM_GPS_MAP_H_
 
-#include "config.h"
-
 #include <osm-gps-map-widget.h>
 
 #include <glib.h>

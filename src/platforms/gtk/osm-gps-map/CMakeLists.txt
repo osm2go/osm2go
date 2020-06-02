@@ -1,5 +1,4 @@
 add_library(osm-gps-map STATIC
-	config.h
 	converter.c
 	converter.h
 	osm-gps-map.c
