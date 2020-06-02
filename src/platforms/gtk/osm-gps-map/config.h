@@ -32,9 +32,4 @@
 #define OSM_GPS_MAP_KEY_ZOOMOUT     '-'
 #endif
 
-#define OSM_GPS_MAP_KEY_UP          GDK_Up
-#define OSM_GPS_MAP_KEY_DOWN        GDK_Down
-#define OSM_GPS_MAP_KEY_LEFT        GDK_Left
-#define OSM_GPS_MAP_KEY_RIGHT       GDK_Right
-
 #endif // CONFIG_H

@@ -58,20 +58,7 @@
 
 #define OSM_GPS_MAP_SCROLL_STEP 10
 
-/* any defined key enables key support */
-#if (defined(OSM_GPS_MAP_KEY_FULLSCREEN) || \
-     defined(OSM_GPS_MAP_KEY_ZOOMIN) || \
-     defined(OSM_GPS_MAP_KEY_ZOOMOUT) || \
-     defined(OSM_GPS_MAP_KEY_UP) || \
-     defined(OSM_GPS_MAP_KEY_DOWN) || \
-     defined(OSM_GPS_MAP_KEY_LEFT) || \
-     defined(OSM_GPS_MAP_KEY_RIGHT))
-#define OSM_GPS_MAP_KEYS
-#endif
-
-#ifdef OSM_GPS_MAP_KEYS
 #include <gdk/gdkkeysyms.h>
-#endif
 
 #define USER_AGENT "OSM2go " VERSION " (https://github.com/osm2go/osm2go)"
 
@@ -972,7 +959,6 @@ center_coord_update(GtkWidget *widget) {
     priv->center_rlat = pixel2lat(priv->map_zoom, pixel_y);
 }
 
-#ifdef OSM_GPS_MAP_KEYS
 static gboolean
 on_window_key_press(GtkWidget *widget,
 			 GdkEventKey *event, OsmGpsMapPrivate *priv) {
@@ -981,7 +967,6 @@ on_window_key_press(GtkWidget *widget,
 
   // the map handles some keys on its own ...
   switch(event->keyval) {
-#ifdef OSM_GPS_MAP_KEY_FULLSCREEN
   case OSM_GPS_MAP_KEY_FULLSCREEN: {
       GtkWidget *toplevel = gtk_widget_get_toplevel(GTK_WIDGET(widget));
       if(!priv->fullscreen)
@@ -992,57 +977,44 @@ on_window_key_press(GtkWidget *widget,
       priv->fullscreen = !priv->fullscreen;
       handled = TRUE;
       } break;
-#endif
 
-#ifdef OSM_GPS_MAP_KEY_ZOOMIN
   case OSM_GPS_MAP_KEY_ZOOMIN:
       osm_gps_map_set_zoom(OSM_GPS_MAP(widget), priv->map_zoom+1);
       handled = TRUE;
       break;
-#endif
 
-#ifdef OSM_GPS_MAP_KEY_ZOOMOUT
   case OSM_GPS_MAP_KEY_ZOOMOUT:
       osm_gps_map_set_zoom(OSM_GPS_MAP(widget), priv->map_zoom-1);
       handled = TRUE;
       break;
-#endif
 
-#ifdef OSM_GPS_MAP_KEY_UP
-  case OSM_GPS_MAP_KEY_UP:
+  case GDK_Up:
       priv->map_y -= step;
       center_coord_update(widget);
       osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
       handled = TRUE;
       break;
-#endif
 
-#ifdef OSM_GPS_MAP_KEY_DOWN
-  case OSM_GPS_MAP_KEY_DOWN:
+  case GDK_Down:
       priv->map_y += step;
       center_coord_update(widget);
       osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
       handled = TRUE;
       break;
-#endif
 
-#ifdef OSM_GPS_MAP_KEY_LEFT
-  case OSM_GPS_MAP_KEY_LEFT:
+  case GDK_Left:
       priv->map_x -= step;
       center_coord_update(widget);
       osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
       handled = TRUE;
       break;
-#endif
 
-#ifdef OSM_GPS_MAP_KEY_RIGHT
-  case OSM_GPS_MAP_KEY_RIGHT:
+  case GDK_Right:
       priv->map_x += step;
       center_coord_update(widget);
       osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
       handled = TRUE;
       break;
-#endif
 
   default:
       break;
@@ -1050,7 +1022,6 @@ on_window_key_press(GtkWidget *widget,
 
   return handled;
 }
-#endif
 
 static void
 osm_gps_map_init (OsmGpsMap *object)
@@ -1117,10 +1088,8 @@ osm_gps_map_init (OsmGpsMap *object)
 
     g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_MASK, my_log_handler, NULL);
 
-#ifdef OSM_GPS_MAP_KEYS
     g_signal_connect(G_OBJECT(object), "key_press_event",
                      G_CALLBACK(on_window_key_press), priv);
-#endif
 }
 
 static void
