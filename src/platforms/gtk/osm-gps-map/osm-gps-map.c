@@ -115,7 +115,7 @@ struct _OsmGpsMapPrivate
     const char *image_format;
 
     //gps tracking state
-    OsmGpsMapPoint *gps;
+    OsmGpsMapPoint gps;
     float gps_heading;
     gboolean gps_valid;
 
@@ -412,8 +412,8 @@ osm_gps_map_draw_gps_point (OsmGpsMap *map)
 
         int map_x0 = priv->map_x - EXTRA_BORDER;
         int map_y0 = priv->map_y - EXTRA_BORDER;
-        x = lon2pixel(priv->map_zoom, priv->gps->rlon) - map_x0;
-        y = lat2pixel(priv->map_zoom, priv->gps->rlat) - map_y0;
+        x = lon2pixel(priv->map_zoom, priv->gps.rlon) - map_x0;
+        y = lat2pixel(priv->map_zoom, priv->gps.rlat) - map_y0;
 
         cairo_t *cr = gdk_cairo_create(priv->pixmap);
 
@@ -1049,7 +1049,7 @@ osm_gps_map_init (OsmGpsMap *object)
 
     priv->pixmap = NULL;
 
-    priv->gps = g_new0(OsmGpsMapPoint, 1);
+    memset(&priv->gps, 0, sizeof(priv->gps));
     priv->gps_valid = FALSE;
     priv->gps_heading = OSM_GPS_MAP_INVALID;
 
@@ -1161,8 +1161,6 @@ osm_gps_map_dispose (GObject *object)
 
     if (priv->drag_expose != 0)
         g_source_remove (priv->drag_expose);
-
-    g_free(priv->gps);
 
     if(priv->osd)
         priv->osd->free(priv->osd);
@@ -1918,8 +1916,8 @@ osm_gps_map_gps_add (OsmGpsMap *map, float latitude, float longitude, float head
     g_return_if_fail (OSM_IS_GPS_MAP (map));
     OsmGpsMapPrivate *priv = map->priv;
 
-    priv->gps->rlat = deg2rad(latitude);
-    priv->gps->rlon = deg2rad(longitude);
+    priv->gps.rlat = deg2rad(latitude);
+    priv->gps.rlon = deg2rad(longitude);
     priv->gps_valid = TRUE;
     priv->gps_heading = deg2rad(heading);
 
@@ -1990,5 +1988,5 @@ osm_gps_map_get_gps (OsmGpsMap *map)
     if(!map->priv->gps_valid)
         return NULL;
 
-    return map->priv->gps;
+    return &map->priv->gps;
 }
