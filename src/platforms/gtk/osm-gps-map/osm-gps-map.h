@@ -71,10 +71,6 @@ typedef struct osm_gps_map_osd_s {
     gpointer priv;
 } osm_gps_map_osd_t;
 
-typedef void (*OsmGpsMapBalloonCallback)(cairo_t *, OsmGpsMapRect_t *rect,
-                                         gpointer data);
-#define	OSM_GPS_MAP_BALLOON_CALLBACK(f) ((OsmGpsMapBalloonCallback) (f))
-
 void osm_gps_map_add_track (OsmGpsMap *map, GSList *track);
 void osm_gps_map_add_bounds(OsmGpsMap *map, GSList *bounds);
 void osm_gps_map_register_osd(OsmGpsMap *map, osm_gps_map_osd_t *osd);
