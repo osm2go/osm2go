@@ -112,7 +112,7 @@ struct _OsmGpsMapPrivate
     //the uri string contains, that will be replaced when calculating
     //the uri to download.
     const char *repo_uri;
-    char *image_format;
+    const char *image_format;
 
     //gps tracking state
     OsmGpsMapPoint *gps;
@@ -184,8 +184,7 @@ enum
     PROP_TILES_QUEUED,
     PROP_GPS_TRACK_WIDTH,
     PROP_GPS_POINT_R1,
-    PROP_GPS_POINT_R2,
-    PROP_IMAGE_FORMAT
+    PROP_GPS_POINT_R2
 };
 
 #if !GLIB_CHECK_VERSION(2,38,0)
@@ -1129,9 +1128,7 @@ osm_gps_map_setup(OsmGpsMapPrivate *priv) {
     assert(uri != NULL);
 
     priv->repo_uri = uri;
-    g_free(priv->image_format);
-    priv->image_format = g_strdup(
-        osm_gps_map_source_get_image_format(OSM_GPS_MAP_SOURCE_OPENSTREETMAP));
+    priv->image_format = osm_gps_map_source_get_image_format(OSM_GPS_MAP_SOURCE_OPENSTREETMAP);
     priv->max_zoom = osm_gps_map_source_get_max_zoom(OSM_GPS_MAP_SOURCE_OPENSTREETMAP);
     priv->min_zoom = osm_gps_map_source_get_min_zoom(OSM_GPS_MAP_SOURCE_OPENSTREETMAP);
 }
@@ -1198,9 +1195,6 @@ static void
 osm_gps_map_finalize (GObject *object)
 {
     OsmGpsMap *map = OSM_GPS_MAP(object);
-    OsmGpsMapPrivate *priv = map->priv;
-
-    g_free(priv->image_format);
 
     osm_gps_map_free_tracks(map);
     osm_gps_map_free_bounds(map);
@@ -1265,13 +1259,6 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
         case PROP_GPS_POINT_R2:
             priv->ui_gps_point_outer_radius = g_value_get_int (value);
             break;
-        case PROP_IMAGE_FORMAT:
-            if (g_strcmp0(priv->image_format, g_value_get_string(value)) != 0) {
-              g_free(priv->image_format);
-              priv->image_format = g_value_dup_string (value);
-              g_hash_table_remove_all(priv->tile_cache);
-            }
-            break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
             break;
@@ -1325,9 +1312,6 @@ osm_gps_map_get_property (GObject *object, guint prop_id, GValue *value, GParamS
             break;
         case PROP_GPS_POINT_R2:
             g_value_set_int(value, priv->ui_gps_point_outer_radius);
-            break;
-        case PROP_IMAGE_FORMAT:
-            g_value_set_string(value, priv->image_format);
             break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1798,14 +1782,6 @@ osm_gps_map_class_init (OsmGpsMapClass *klass)
                                                        G_MAXINT,    /* maximum property value */
                                                        20,
                                                        G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
-
-    g_object_class_install_property (object_class,
-                                     PROP_IMAGE_FORMAT,
-                                     g_param_spec_string ("image-format",
-                                                          "image format",
-                                                          "map source tile repository image format (jpg, png)",
-                                                          OSM_IMAGE_FORMAT,
-                                                          G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
 
 const char*
