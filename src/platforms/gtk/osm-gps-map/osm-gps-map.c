@@ -130,7 +130,6 @@ struct _OsmGpsMapPrivate
     //additional images or tracks added to the map
     GSList *tracks;
     GSList *bounds;
-    GSList *images;
 
     //Used for storing the joined tiles
     GdkPixmap *pixmap;
@@ -332,70 +331,6 @@ osm_gps_map_free_bounds(OsmGpsMap *map)
         g_slist_free(priv->bounds);
         priv->bounds = NULL;
     }
-}
-
-/* free the poi image lists */
-static void
-osm_gps_map_free_images (OsmGpsMap *map)
-{
-    OsmGpsMapPrivate *priv = map->priv;
-    if (priv->images) {
-        GSList *list;
-        for(list = priv->images; list != NULL; list = list->next)
-        {
-            image_t *im = list->data;
-            g_object_unref(im->image);
-            g_free(im);
-        }
-        g_slist_free(priv->images);
-        priv->images = NULL;
-    }
-}
-
-static void
-osm_gps_map_print_images (OsmGpsMap *map)
-{
-    int min_x = 0,min_y = 0,max_x = 0,max_y = 0;
-    OsmGpsMapPrivate *priv = map->priv;
-
-    int map_x0 = priv->map_x - EXTRA_BORDER;
-    int map_y0 = priv->map_y - EXTRA_BORDER;
-    for(GSList *list = priv->images; list != NULL; list = list->next)
-    {
-        image_t *im = list->data;
-
-        // pixel_x,y, offsets
-        int pixel_x = lon2pixel(priv->map_zoom, im->pt.rlon);
-        int pixel_y = lat2pixel(priv->map_zoom, im->pt.rlat);
-
-        g_debug("Image %dx%d @: %f,%f (%d,%d)",
-                im->w, im->h,
-                im->pt.rlat, im->pt.rlon,
-                pixel_x, pixel_y);
-
-        int x = pixel_x - map_x0;
-        int y = pixel_y - map_y0;
-
-        gdk_draw_pixbuf (
-                         priv->pixmap,
-                         priv->gc_map,
-                         im->image,
-                         0,0,
-                         x-(im->w/2),y-(im->h/2),
-                         im->w,im->h,
-                         GDK_RGB_DITHER_NONE, 0, 0);
-
-        max_x = MAX(x+im->w,max_x);
-        min_x = MIN(x-im->w,min_x);
-        max_y = MAX(y+im->h,max_y);
-        min_y = MIN(y-im->h,min_y);
-    }
-
-    gtk_widget_queue_draw_area (
-                                GTK_WIDGET(map),
-                                min_x + EXTRA_BORDER, min_y + EXTRA_BORDER,
-                                max_x + EXTRA_BORDER, max_y + EXTRA_BORDER);
-
 }
 
 static void
@@ -936,7 +871,6 @@ osm_gps_map_map_redraw (OsmGpsMap *map)
     osm_gps_map_print_bounds(map);
     osm_gps_map_print_tracks(map);
     osm_gps_map_draw_gps_point(map);
-    osm_gps_map_print_images(map);
 
     /* OSD may contain a coordinate/scale, so we may have to re-render it */
     if(priv->osd && OSM_IS_GPS_MAP (priv->osd->widget))
@@ -1061,7 +995,6 @@ osm_gps_map_init (OsmGpsMap *object)
 
     priv->tracks = NULL;
     priv->bounds = NULL;
-    priv->images = NULL;
 
     priv->drag_counter = 0;
     priv->drag_mouse_dx = 0;
@@ -1144,8 +1077,6 @@ osm_gps_map_dispose (GObject *object)
     g_hash_table_destroy(priv->tile_queue);
     g_hash_table_destroy(priv->missing_tiles);
     g_hash_table_destroy(priv->tile_cache);
-
-    osm_gps_map_free_images(map);
 
     if(priv->pixmap)
         g_object_unref (priv->pixmap);
