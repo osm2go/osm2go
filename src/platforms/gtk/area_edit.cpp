@@ -328,35 +328,46 @@ pos_append_rad(GSList *list, pos_float_t lat, pos_float_t lon)
 }
 
 GSList *
-pos_append(GSList *list, pos_float_t lat, pos_float_t lon)
+pos_rad_box(OsmGpsMapPoint start, OsmGpsMapPoint end)
 {
-  return pos_append_rad(list, DEG2RAD(lat), DEG2RAD(lon));
+  GSList *box = pos_append_rad(nullptr, start.rlat, start.rlon);
+  box = pos_append_rad(box, end.rlat,   start.rlon);
+  box = pos_append_rad(box, end.rlat,   end.rlon);
+  box = pos_append_rad(box, start.rlat, end.rlon);
+  box = pos_append_rad(box, start.rlat, start.rlon);
+
+  return box;
+}
+
+GSList *
+pos_box(const pos_area &b)
+{
+  OsmGpsMapPoint start, end;
+
+  start.rlat = DEG2RAD(b.min.lat);
+  start.rlon = DEG2RAD(b.min.lon);
+  end.rlat = DEG2RAD(b.max.lat);
+  end.rlon = DEG2RAD(b.max.lon);
+
+  return pos_rad_box(start, end);
 }
 
 struct add_bounds {
   OsmGpsMap * const map;
   explicit add_bounds(OsmGpsMap *m) : map(m) {}
-  void operator()(const pos_area &b);
+  inline void operator()(const pos_area &b)
+  {
+    osm_gps_map_add_bounds(map, pos_box(b));
+  }
 };
 
-}
+} // namespace
 
 area_edit_t::area_edit_t(gps_state_t *gps, pos_area &b, osm2go_platform::Widget *dlg)
   : gps_state(gps)
   , parent(dlg)
   , bounds(b)
 {
-}
-
-void add_bounds::operator()(const pos_area &b)
-{
-  GSList *box = pos_append(nullptr, b.min.lat, b.min.lon);
-  box = pos_append(box, b.max.lat, b.min.lon);
-  box = pos_append(box, b.max.lat, b.max.lon);
-  box = pos_append(box, b.min.lat, b.max.lon);
-  box = pos_append(box, b.min.lat, b.min.lon);
-
-  osm_gps_map_add_bounds(map, box);
 }
 
 /* the contents of the map tab have been changed */
@@ -403,15 +414,8 @@ static void map_update(area_context_t *context, bool forced) {
     /* ---------- draw border (as a gps track) -------------- */
     osm_gps_map_track_remove_all(context->map.widget);
 
-    if(context->bounds.normalized()) {
-      GSList *box = pos_append(nullptr, context->bounds.min.lat, context->bounds.min.lon);
-      box = pos_append(box, context->bounds.max.lat, context->bounds.min.lon);
-      box = pos_append(box, context->bounds.max.lat, context->bounds.max.lon);
-      box = pos_append(box, context->bounds.min.lat, context->bounds.max.lon);
-      box = pos_append(box, context->bounds.min.lat, context->bounds.min.lon);
-
-      osm_gps_map_add_track(context->map.widget, box);
-    }
+    if(context->bounds.normalized())
+      osm_gps_map_add_track(context->map.widget, pos_box(context->bounds));
   }
 
   // show all other bounds
@@ -596,16 +600,9 @@ on_map_motion_notify_event(GtkWidget *widget,
     /* remove existing marker */
     osm_gps_map_track_remove_all(map);
 
-    OsmGpsMapPoint start = context->map.start;
     OsmGpsMapPoint end = osm_gps_map_convert_screen_to_geographic(map, event->x, event->y);
 
-    GSList *box = pos_append_rad(nullptr, start.rlat, start.rlon);
-    box = pos_append_rad(box, end.rlat,   start.rlon);
-    box = pos_append_rad(box, end.rlat,   end.rlon);
-    box = pos_append_rad(box, start.rlat, end.rlon);
-    box = pos_append_rad(box, start.rlat, start.rlon);
-
-    osm_gps_map_add_track(map, box);
+    osm_gps_map_add_track(map, pos_rad_box(context->map.start, end));
   }
 
   /* returning true here disables dragging in osm-gps-map */
@@ -625,13 +622,7 @@ on_map_button_release_event(GtkWidget *widget,
     OsmGpsMapPoint start = context->map.start;
     OsmGpsMapPoint end = osm_gps_map_convert_screen_to_geographic(map, event->x, event->y);
 
-    GSList *box = pos_append_rad(nullptr, start.rlat, start.rlon);
-    box = pos_append_rad(box, end.rlat,   start.rlon);
-    box = pos_append_rad(box, end.rlat,   end.rlon);
-    box = pos_append_rad(box, start.rlat, end.rlon);
-    box = pos_append_rad(box, start.rlat, start.rlon);
-
-    osm_gps_map_add_track(map, box);
+    osm_gps_map_add_track(map, pos_rad_box(start, end));
 
     if(start.rlat < end.rlat) {
       context->bounds.min.lat = RAD2DEG(start.rlat);
