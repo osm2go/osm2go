@@ -56,8 +56,6 @@ struct _OsmGpsMap
     OsmGpsMapPrivate *priv;
 };
 
-#define OSM_GPS_MAP_INVALID  (0.0/0.0)
-
 GType osm_gps_map_get_type (void) G_GNUC_CONST;
 
 void osm_gps_map_set_center_and_zoom (OsmGpsMap *map, float latitude, float longitude, int zoom);

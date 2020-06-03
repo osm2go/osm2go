@@ -985,7 +985,7 @@ osm_gps_map_init (OsmGpsMap *object)
 
     memset(&priv->gps, 0, sizeof(priv->gps));
     priv->gps_valid = FALSE;
-    priv->gps_heading = OSM_GPS_MAP_INVALID;
+    priv->gps_heading = NAN;
 
     priv->osd = NULL;
 
