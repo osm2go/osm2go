@@ -1814,10 +1814,8 @@ osm_gps_map_add_track (OsmGpsMap *map, GSList *track)
     g_return_if_fail (OSM_IS_GPS_MAP (map));
     OsmGpsMapPrivate *priv = map->priv;
 
-    if (track) {
-        priv->tracks = g_slist_append(priv->tracks, track);
-        osm_gps_map_map_redraw_idle(map);
-    }
+    priv->tracks = g_slist_append(priv->tracks, track);
+    osm_gps_map_map_redraw_idle(map);
 }
 
 void
@@ -1826,10 +1824,8 @@ osm_gps_map_add_bounds(OsmGpsMap *map, GSList *bounds)
     g_return_if_fail (OSM_IS_GPS_MAP (map));
     OsmGpsMapPrivate *priv = map->priv;
 
-    if (bounds) {
-        priv->bounds = g_slist_append(priv->bounds, bounds);
-        osm_gps_map_map_redraw_idle(map);
-    }
+    priv->bounds = g_slist_append(priv->bounds, bounds);
+    osm_gps_map_map_redraw_idle(map);
 }
 
 void

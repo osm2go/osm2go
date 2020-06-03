@@ -65,8 +65,8 @@ typedef struct osm_gps_map_osd_s {
     gpointer priv;
 } osm_gps_map_osd_t;
 
-void osm_gps_map_add_track (OsmGpsMap *map, GSList *track);
-void osm_gps_map_add_bounds(OsmGpsMap *map, GSList *bounds);
+void osm_gps_map_add_track (OsmGpsMap *map, GSList *track) __attribute__((nonnull(2)));
+void osm_gps_map_add_bounds(OsmGpsMap *map, GSList *bounds) __attribute__((nonnull(2)));
 void osm_gps_map_register_osd(OsmGpsMap *map, osm_gps_map_osd_t *osd);
 void osm_gps_map_redraw (OsmGpsMap *map);
 osm_gps_map_osd_t *osm_gps_map_osd_get(OsmGpsMap *map);
