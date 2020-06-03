@@ -32,10 +32,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct {
-    gint x, y, w, h;
-} OsmGpsMapRect_t;
-
 typedef enum {
     OSD_NONE = 0,
     OSD_BG,
