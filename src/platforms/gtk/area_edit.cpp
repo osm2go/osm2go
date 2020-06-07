@@ -361,18 +361,9 @@ struct add_bounds {
   }
 };
 
-} // namespace
-
-area_edit_t::area_edit_t(gps_state_t *gps, pos_area &b, osm2go_platform::Widget *dlg)
-  : gps_state(gps)
-  , parent(dlg)
-  , bounds(b)
-{
-}
-
 /* the contents of the map tab have been changed */
-static void map_update(area_context_t *context, bool forced) {
-
+void map_update(area_context_t *context, bool forced)
+{
   /* map is first tab (page 0) */
   if(!forced && !current_tab_is(context, TAB_LABEL_MAP)) {
     g_debug("schedule map redraw");
@@ -423,13 +414,15 @@ static void map_update(area_context_t *context, bool forced) {
   context->map.needs_redraw = false;
 }
 
-static gboolean on_map_configure(area_context_t *context) {
+gboolean on_map_configure(area_context_t *context)
+{
   map_update(context, false);
   return FALSE;
 }
 
 /* the contents of the direct tab have been changed */
-static void direct_update(area_context_t *context) {
+void direct_update(area_context_t *context)
+{
   pos_lat_entry_set(context->direct.minlat, context->bounds.min.lat);
   pos_lon_entry_set(context->direct.minlon, context->bounds.min.lon);
   pos_lat_entry_set(context->direct.maxlat, context->bounds.max.lat);
@@ -437,7 +430,8 @@ static void direct_update(area_context_t *context) {
 }
 
 /* update the contents of the extent tab */
-static void extent_update(area_context_t *context) {
+void extent_update(area_context_t *context)
+{
   pos_float_t center_lat = context->bounds.centerLat();
   pos_float_t center_lon = context->bounds.centerLon();
 
@@ -454,7 +448,8 @@ static void extent_update(area_context_t *context) {
   pos_dist_entry_set(context->extent.height, height, context->extent.is_mil);
 }
 
-static void callback_modified_direct(area_context_t *context) {
+void callback_modified_direct(area_context_t *context)
+{
   /* direct is second tab (page 1) */
   if(!current_tab_is(context, TAB_LABEL_DIRECT))
     return;
@@ -473,7 +468,8 @@ static void callback_modified_direct(area_context_t *context) {
   map_update(context, false);
 }
 
-static void callback_modified_extent(area_context_t *context) {
+void callback_modified_extent(area_context_t *context)
+{
   /* extent is third tab (page 2) */
   if(!current_tab_is(context, TAB_LABEL_EXTENT))
     return;
@@ -504,7 +500,8 @@ static void callback_modified_extent(area_context_t *context) {
   map_update(context, false);
 }
 
-static void callback_modified_unit(area_context_t *context) {
+void callback_modified_unit(area_context_t *context)
+{
   /* get current values */
   double height = pos_dist_get(context->extent.height, context->extent.is_mil);
   double width  = pos_dist_get(context->extent.width, context->extent.is_mil);
@@ -518,7 +515,8 @@ static void callback_modified_unit(area_context_t *context) {
 }
 
 #ifdef HAS_MAEMO_MAPPER
-static void callback_fetch_mm_clicked(area_context_t *context) {
+void callback_fetch_mm_clicked(area_context_t *context)
+{
   dbus_mm_pos_t mmpos;
   if(!dbus_mm_set_position(&mmpos)) {
     error_dlg(_("Unable to communicate with Maemo Mapper. "
@@ -565,9 +563,9 @@ static void callback_fetch_mm_clicked(area_context_t *context) {
 }
 #endif
 
-static gboolean
-on_map_button_press_event(GtkWidget *widget,
-			  GdkEventButton *event, area_context_t *context) {
+gboolean
+on_map_button_press_event(GtkWidget *widget, GdkEventButton *event, area_context_t *context)
+{
   OsmGpsMap *map = OSM_GPS_MAP(widget);
   osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
 
@@ -587,9 +585,9 @@ on_map_button_press_event(GtkWidget *widget,
   return TRUE;
 }
 
-static gboolean
-on_map_motion_notify_event(GtkWidget *widget,
-			   GdkEventMotion  *event, area_context_t *context) {
+gboolean
+on_map_motion_notify_event(GtkWidget *widget, GdkEventMotion  *event, area_context_t *context)
+{
   OsmGpsMap *map = OSM_GPS_MAP(widget);
 
   if(!std::isnan(context->map.start.rlon) &&
@@ -607,10 +605,9 @@ on_map_motion_notify_event(GtkWidget *widget,
   return osm_gps_map_osd_get_state(map) == TRUE ? FALSE : TRUE;
 }
 
-static gboolean
-on_map_button_release_event(GtkWidget *widget,
-			    GdkEventButton *event, area_context_t *context) {
-
+gboolean
+on_map_button_release_event(GtkWidget *widget, GdkEventButton *event, area_context_t *context)
+{
   OsmGpsMap *map = OSM_GPS_MAP(widget);
   osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
 
@@ -656,7 +653,8 @@ on_map_button_release_event(GtkWidget *widget,
 /* updating the map while the user manually changes some coordinates */
 /* may confuse the map. so we delay those updates until the map tab */
 /* is becoming visible */
-static void on_page_switch(GtkNotebook *nb, GtkWidget *pg, guint pgnum, area_context_t *context) {
+void on_page_switch(GtkNotebook *nb, GtkWidget *pg, guint pgnum, area_context_t *context)
+{
 #ifdef FREMANTLE
   // the pages of the normal notebook are not used on FREMANTLE, so the sender
   // widget is not the one the one that can be queried for the actual title
@@ -669,7 +667,8 @@ static void on_page_switch(GtkNotebook *nb, GtkWidget *pg, guint pgnum, area_con
     map_update(context, true);
 }
 
-static gboolean map_gps_update(gpointer data) {
+gboolean map_gps_update(gpointer data)
+{
   area_context_t *context = static_cast<area_context_t *>(data);
 
   pos_t pos = context->area.gps_state->get_pos();
@@ -681,6 +680,15 @@ static gboolean map_gps_update(gpointer data) {
     osm_gps_map_gps_clear(context->map.widget);
 
   return TRUE;
+}
+
+} // namespace
+
+area_edit_t::area_edit_t(gps_state_t *gps, pos_area &b, osm2go_platform::Widget *dlg)
+  : gps_state(gps)
+  , parent(dlg)
+  , bounds(b)
+{
 }
 
 bool area_edit_t::run() {
