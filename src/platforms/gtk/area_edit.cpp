@@ -382,24 +382,23 @@ static void map_update(area_context_t *context, bool forced) {
 
   g_debug("do map redraw");
 
+  osm_gps_map_track_remove_all(context->map.widget);
   /* check if the position is invalid */
+  pos_t pos;
+  int zoom;
   if(!context->bounds.valid()) {
     /* no coordinates given: display around the current GPS position if available */
-    pos_t pos = context->area.gps_state->get_pos();
-    int zoom = 12;
-    if(!pos.valid()) {
+    pos = context->area.gps_state->get_pos();
+    if(pos.valid()) {
+      zoom = 12;
+    } else {
       /* no GPS position available: display the entire world */
       pos.lat = 0.0;
       pos.lon = 0.0;
       zoom = 1;
     }
-
-    osm_gps_map_set_center_and_zoom(context->map.widget, pos.lat, pos.lon, zoom);
-    osm_gps_map_track_remove_all(context->map.widget);
   } else {
-
-    osm_gps_map_set_center(context->map.widget, context->bounds.centerLat(),
-                           context->bounds.centerLon());
+    pos = context->bounds.center();
 
     /* we know the widgets pixel size, we know the required real size, */
     /* we want the zoom! */
@@ -408,15 +407,14 @@ static void map_update(area_context_t *context, bool forced) {
     double hzoom = wd->allocation.width  / context->bounds.lonDist();
 
     /* use smallest zoom, so everything fits on screen */
-    osm_gps_map_set_zoom(context->map.widget,
-                         log2((45.0 / 32.0) * std::min(vzoom, hzoom)) - 1);
+    zoom = log2((45.0 / 32.0) * std::min(vzoom, hzoom)) - 1;
 
     /* ---------- draw border (as a gps track) -------------- */
-    osm_gps_map_track_remove_all(context->map.widget);
-
     if(context->bounds.normalized())
       osm_gps_map_add_track(context->map.widget, pos_box(context->bounds));
   }
+
+  osm_gps_map_set_center_and_zoom(context->map.widget, pos.lat, pos.lon, zoom);
 
   // show all other bounds
   std::for_each(context->area.other_bounds.begin(), context->area.other_bounds.end(),
