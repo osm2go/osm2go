@@ -161,6 +161,7 @@ struct _OsmGpsMapPrivate
 
 typedef struct
 {
+    guint64 hash;
     GdkPixbuf *pixbuf;
     /* We keep track of the number of the redraw cycle this tile was last used,
      * so that osm_gps_map_purge_cache() can remove the older ones */
@@ -195,8 +196,8 @@ G_DEFINE_TYPE_WITH_PRIVATE (OsmGpsMap, osm_gps_map, GTK_TYPE_DRAWING_AREA);
 typedef struct {
     /* The details of the tile to download */
     char *uri;
-    char *filename;
     OsmGpsMap *map;
+    guint64 hashkey;
     /* whether to redraw the map when the tile arrives */
     gboolean redraw;
 } tile_download_t;
@@ -454,22 +455,19 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
             if (G_LIKELY (pixbuf))
             {
                 OsmCachedTile *tile = g_slice_new (OsmCachedTile);
+                tile->hash = dl->hashkey;
                 tile->pixbuf = pixbuf;
                 tile->redraw_cycle = priv->redraw_cycle;
                 /* if the tile is already in the cache (it could be one
                  * rendered from another zoom level), it will be
                  * overwritten */
-                g_hash_table_insert (priv->tile_cache, dl->filename, tile);
-                /* NULL-ify dl->filename so that it won't be freed, as
-                 * we are using it as a key in the hash table */
-                dl->filename = NULL;
+                g_hash_table_insert (priv->tile_cache, &tile->hash, tile);
             }
             osm_gps_map_map_redraw_idle (map);
         }
         g_hash_table_remove(priv->tile_queue, dl->uri);
 
         g_free(dl->uri);
-        g_free(dl->filename);
         g_free(dl);
     }
     else
@@ -492,18 +490,24 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
             return;
         }
     }
-
-
 }
 
-static gchar *
-tile_filename(guint zoom, guint x, guint y)
+static guint64
+tile_hash(guint zoom, guint x, guint y)
 {
-  return g_strdup_printf("%x/%x/%x", zoom, x, y);
+  guint64 ret = zoom; // zoom is 1..19, so it fits in 5 bits. Move it to top byte
+  ret <<= 56;
+
+  // for the other coordinates they would use 2**zoom bits, so just distribute them
+  // evenly in the remaining space
+  ret |= (((guint64)y) << 28);
+  ret |= x;
+
+  return ret;
 }
 
 static void
-osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redraw, gchar *filename)
+osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redraw)
 {
     OsmGpsMapPrivate *priv = map->priv;
 
@@ -517,15 +521,14 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redr
     {
         g_debug("Tile already downloading (or missing)");
         g_free(uri);
-        g_free(filename);
     } else {
         tile_download_t *dl = g_new(tile_download_t, 1);
-        dl->filename = filename;
+        dl->hashkey = tile_hash(zoom, x, y);
         dl->uri = uri;
         dl->map = map;
         dl->redraw = redraw;
 
-        g_debug("Download tile: %d,%d z:%d\n\t%s --> %s format %s", x, y, zoom, dl->uri, dl->filename, priv->image_format);
+        g_debug("Download tile: %d,%d z:%d\n\t%s", x, y, zoom, dl->uri);
 
         SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, dl->uri);
         if (msg) {
@@ -534,19 +537,19 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redr
         } else {
             g_warning("Could not create soup message");
             g_free(dl->uri);
-            g_free(dl->filename);
             g_free(dl);
         }
     }
 }
 
 static GdkPixbuf *
-osm_gps_map_load_cached_tile (OsmGpsMap *map, const gchar *filename)
+osm_gps_map_load_cached_tile (OsmGpsMap *map, int zoom, int x, int y)
 {
     OsmGpsMapPrivate *priv = map->priv;
     GdkPixbuf *pixbuf = NULL;
 
-    OsmCachedTile *tile = g_hash_table_lookup (priv->tile_cache, filename);
+    guint64 hash = tile_hash(zoom, x, y);
+    OsmCachedTile *tile = g_hash_table_lookup (priv->tile_cache, &hash);
 
     /* set/update the redraw_cycle timestamp on the tile */
     if (tile)
@@ -567,10 +570,8 @@ osm_gps_map_find_bigger_tile (OsmGpsMap *map, int zoom, int x, int y,
     int next_zoom = zoom - 1;
     int next_x = x / 2;
     int next_y = y / 2;
-    gchar *filename = tile_filename(next_zoom, next_x, next_y);
 
-    GdkPixbuf *pixbuf = osm_gps_map_load_cached_tile (map, filename);
-    g_free(filename);
+    GdkPixbuf *pixbuf = osm_gps_map_load_cached_tile (map, next_zoom, next_x, next_y);
     if (pixbuf)
         *zoom_found = next_zoom;
     else
@@ -621,22 +622,18 @@ osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int
 
     g_debug("Load tile %d,%d (%d,%d) z:%d", x, y, offset_x, offset_y, zoom);
 
-    gchar *filename = tile_filename(zoom, x, y);
-
     /* try to get file from internal cache first */
-    GdkPixbuf *pixbuf = osm_gps_map_load_cached_tile(map, filename);
+    GdkPixbuf *pixbuf = osm_gps_map_load_cached_tile(map, zoom, x, y);
 
     if(pixbuf)
     {
-        g_debug("Found tile %s", filename);
         osm_gps_map_blit_tile(map, pixbuf, offset_x,offset_y);
         g_object_unref (pixbuf);
     }
     else
     {
         if (priv->map_auto_download) {
-            osm_gps_map_download_tile(map, zoom, x, y, TRUE, filename);
-            filename = NULL;
+            osm_gps_map_download_tile(map, zoom, x, y, TRUE);
         }
 
         /* try to render the tile by scaling cached tiles from other zoom
@@ -661,7 +658,6 @@ osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int
                                 TRUE, offset_x, offset_y, TILESIZE, TILESIZE);
         }
     }
-    g_free(filename);
 }
 
 static void
@@ -1020,8 +1016,8 @@ osm_gps_map_init (OsmGpsMap *object)
     priv->missing_tiles = g_hash_table_new (g_str_hash, g_str_equal);
 
     /* memory cache for most recently used tiles */
-    priv->tile_cache = g_hash_table_new_full (g_str_hash, g_str_equal,
-                                              g_free, (GDestroyNotify)cached_tile_free);
+    priv->tile_cache = g_hash_table_new_full (g_int64_hash, g_int64_equal,
+                                              NULL, (GDestroyNotify)cached_tile_free);
     priv->max_tile_cache_size = 20;
 
     gtk_widget_add_events (GTK_WIDGET (object),
