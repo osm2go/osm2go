@@ -567,10 +567,9 @@ gboolean
 on_map_button_press_event(GtkWidget *widget, GdkEventButton *event, area_context_t *context)
 {
   OsmGpsMap *map = OSM_GPS_MAP(widget);
-  osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
 
   /* osm-gps-map needs this event to handle the OSD */
-  if(osd->check(osd, event->x, event->y) != OSD_NONE)
+  if(osm_gps_map_osd_check(map, event->x, event->y) != OSD_NONE)
     return FALSE;
 
   if(osm_gps_map_osd_get_state(map) == TRUE)
@@ -609,7 +608,6 @@ gboolean
 on_map_button_release_event(GtkWidget *widget, GdkEventButton *event, area_context_t *context)
 {
   OsmGpsMap *map = OSM_GPS_MAP(widget);
-  osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
 
   if(!std::isnan(context->map.start.rlon) &&
      !std::isnan(context->map.start.rlat)) {
@@ -643,7 +641,7 @@ on_map_button_release_event(GtkWidget *widget, GdkEventButton *event, area_conte
   }
 
   /* osm-gps-map needs this event to handle the OSD */
-  if(osd->check(osd, event->x, event->y) != OSD_NONE)
+  if(osm_gps_map_osd_check(map, event->x, event->y) != OSD_NONE)
     return FALSE;
 
   /* returning true here disables dragging in osm-gps-map */

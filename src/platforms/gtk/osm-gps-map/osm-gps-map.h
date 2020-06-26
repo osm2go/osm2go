@@ -47,25 +47,10 @@ typedef enum {
 typedef void (*OsmGpsMapOsdCallback)(osd_button_t but, gpointer data);
 #define	OSM_GPS_MAP_OSD_CALLBACK(f) ((OsmGpsMapOsdCallback) (f))
 
-/* the osd structure mainly contains various callbacks */
-/* required to draw and update the OSD */
-typedef struct osm_gps_map_osd_s {
-    GtkWidget *widget;   // the main map widget (to get its stlye info)
-
-    void(*render)(struct osm_gps_map_osd_s *);
-    void(*draw)(struct osm_gps_map_osd_s *, GdkDrawable *);
-    osd_button_t(*check)(struct osm_gps_map_osd_s *,gint, gint);       /* check if x/y lies within OSD */
-    gboolean(*busy)(struct osm_gps_map_osd_s *);
-    void(*free)(struct osm_gps_map_osd_s *);
-
-    gpointer priv;
-} osm_gps_map_osd_t;
-
 void osm_gps_map_add_track (OsmGpsMap *map, GSList *track) __attribute__((nonnull(2)));
 void osm_gps_map_add_bounds(OsmGpsMap *map, GSList *bounds) __attribute__((nonnull(2)));
-void osm_gps_map_register_osd(OsmGpsMap *map, osm_gps_map_osd_t *osd);
 void osm_gps_map_redraw (OsmGpsMap *map);
-osm_gps_map_osd_t *osm_gps_map_osd_get(OsmGpsMap *map);
+osd_button_t osm_gps_map_osd_check(OsmGpsMap *map, gint x, gint y);
 void osm_gps_map_repaint (OsmGpsMap *map);
 
 G_END_DECLS

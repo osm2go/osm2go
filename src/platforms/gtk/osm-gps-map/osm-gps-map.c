@@ -40,6 +40,7 @@
 #include <libsoup/soup.h>
 
 #include "converter.h"
+#include "osm-gps-map-osd-select.h"
 #include "osm-gps-map-point.h"
 #include "osm-gps-map-source.h"
 #include "osm-gps-map-types.h"
@@ -1882,6 +1883,13 @@ osm_gps_map_osd_get(OsmGpsMap *map)
 {
     g_return_val_if_fail (OSM_IS_GPS_MAP (map), NULL);
     return map->priv->osd;
+}
+
+osd_button_t
+osm_gps_map_osd_check(OsmGpsMap *map, gint x, gint y)
+{
+    g_return_val_if_fail (OSM_IS_GPS_MAP (map), OSD_NONE);
+    return map->priv->osd->check(map->priv->osd, x, y);
 }
 
 void
