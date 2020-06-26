@@ -1113,8 +1113,7 @@ static void
 osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
     g_return_if_fail (OSM_IS_GPS_MAP (object));
-    OsmGpsMap *map = OSM_GPS_MAP(object);
-    OsmGpsMapPrivate *priv = map->priv;
+    OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(object);
 
     switch (prop_id)
     {
@@ -1176,8 +1175,7 @@ static void
 osm_gps_map_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
     g_return_if_fail (OSM_IS_GPS_MAP (object));
-    OsmGpsMap *map = OSM_GPS_MAP(object);
-    OsmGpsMapPrivate *priv = map->priv;
+    OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(object);
 
     switch (prop_id)
     {
