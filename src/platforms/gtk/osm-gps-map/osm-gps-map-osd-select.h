@@ -31,16 +31,9 @@ extern "C" {
 
 struct osd_priv_s;
 
-/* the osd structure mainly contains various callbacks */
-/* required to draw and update the OSD */
-typedef struct osm_gps_map_osd_s {
-    struct osd_priv_s *priv;
-} osm_gps_map_osd_t;
-
-void osm_gps_map_osd_select_init(OsmGpsMap *map);
+struct osd_priv_s *osm_gps_map_osd_select_init(void);
 gboolean osm_gps_map_osd_get_state(OsmGpsMap *map);
-void osm_gps_map_register_osd(OsmGpsMap *map, osm_gps_map_osd_t *osd);
-osm_gps_map_osd_t *osm_gps_map_osd_get(OsmGpsMap *map);
+struct osd_priv_s *osm_gps_map_osd_get(OsmGpsMap *map);
 
 void osm_gps_map_osd_render(struct osd_priv_s *priv);
 void osm_gps_map_osd_draw(struct osd_priv_s *priv, GtkWidget * widget, GdkDrawable *drawable);

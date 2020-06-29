@@ -172,9 +172,8 @@ osd_button_t
 osm_gps_map_osd_check(OsmGpsMap *map, gint x, gint y)
 {
     g_return_val_if_fail (OSM_IS_GPS_MAP (map), OSD_NONE);
-    osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
 
-    osd_priv_t *priv = osd->priv;
+    osd_priv_t *priv = osm_gps_map_osd_get(map);
     osd_button_t but = OSD_NONE;
     GtkWidget *widget = GTK_WIDGET(map);
 
@@ -270,25 +269,19 @@ osm_gps_map_osd_free(struct osd_priv_s *priv)
     g_free(priv);
 }
 
-static osm_gps_map_osd_t osd_select = {
-    .priv       = NULL
-};
-
-void
-osm_gps_map_osd_select_init(OsmGpsMap *map)
+struct osd_priv_s *
+osm_gps_map_osd_select_init(void)
 {
-    osd_priv_t *priv = osd_select.priv = g_new0(osd_priv_t, 1);
+    osd_priv_t *priv = g_new0(osd_priv_t, 1);
 
     priv->select_toggle.state = TRUE;
 
-    osm_gps_map_register_osd(map, &osd_select);
+    return priv;
 }
 
 gboolean
 osm_gps_map_osd_get_state(OsmGpsMap *map) {
-    osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
-    g_return_val_if_fail (osd, FALSE);
-    osd_priv_t *priv = (osd_priv_t *)(osd->priv);
+    osd_priv_t *priv = osm_gps_map_osd_get(map);
     g_return_val_if_fail (priv, FALSE);
 
     return priv->select_toggle.state;
