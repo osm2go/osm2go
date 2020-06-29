@@ -276,18 +276,11 @@ osd_free(osm_gps_map_osd_t *osd)
     g_free(priv);
 }
 
-static gboolean
-osd_busy(G_GNUC_UNUSED osm_gps_map_osd_t *osd)
-{
-    return FALSE;
-}
-
 static osm_gps_map_osd_t osd_select = {
     .draw       = osd_draw,
     .check      = osd_check,
     .render     = osd_render,
     .free       = osd_free,
-    .busy       = osd_busy,
 
     .priv       = NULL
 };

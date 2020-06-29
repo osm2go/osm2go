@@ -832,12 +832,6 @@ osm_gps_map_map_redraw (OsmGpsMap *map)
 
     priv->idle_map_redraw = 0;
 
-    /* don't redraw the entire map while the OSD is doing */
-    /* some animation or the like. This is to keep the animation */
-    /* fluid */
-    if (priv->osd->busy(priv->osd))
-        return FALSE;
-
 #ifdef DRAG_DEBUG
     printf("trying redraw\n");
 #endif
