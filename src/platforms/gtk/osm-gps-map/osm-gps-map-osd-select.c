@@ -40,7 +40,7 @@
 #define ICON_LINE_W  (OSD_W/20)
 
 //the osd controls
-typedef struct {
+typedef struct osd_priv_s {
     struct {
         cairo_surface_t *surface;
         gboolean state;
@@ -168,11 +168,13 @@ osd_render_zoom(osd_priv_t *priv)
     cairo_destroy(cr);
 }
 
-
-static osd_button_t
-osd_check(osm_gps_map_osd_t *osd, OsmGpsMap *map, gint x, gint y)
+osd_button_t
+osm_gps_map_osd_check(OsmGpsMap *map, gint x, gint y)
 {
-    osd_priv_t *priv = (osd_priv_t*)osd->priv;
+    g_return_val_if_fail (OSM_IS_GPS_MAP (map), OSD_NONE);
+    osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
+
+    osd_priv_t *priv = osd->priv;
     osd_button_t but = OSD_NONE;
     GtkWidget *widget = GTK_WIDGET(map);
 
@@ -212,11 +214,9 @@ osd_check(osm_gps_map_osd_t *osd, OsmGpsMap *map, gint x, gint y)
     return but;
 }
 
-static void
-osd_render(osm_gps_map_osd_t *osd)
+void
+osm_gps_map_osd_render(struct osd_priv_s *priv)
 {
-    osd_priv_t *priv = (osd_priv_t*)osd->priv;
-
     /* this function is actually called pretty often since the */
     /* OSD contents may have changed (due to a coordinate/zoom change). */
     /* The different OSD parts have to make sure that they don't */
@@ -237,13 +237,11 @@ osd_render(osm_gps_map_osd_t *osd)
     }
 }
 
-static void
-osd_draw(osm_gps_map_osd_t *osd, GtkWidget * widget, GdkDrawable *drawable)
+void
+osm_gps_map_osd_draw(struct osd_priv_s *priv, GtkWidget * widget, GdkDrawable *drawable)
 {
-    osd_priv_t *priv = (osd_priv_t*)osd->priv;
-
     if(!priv->select_toggle.surface)
-        osd_render(osd);
+        osm_gps_map_osd_render(priv);
 
     // now draw this onto the original context
     cairo_t *cr = gdk_cairo_create(drawable);
@@ -260,11 +258,9 @@ osd_draw(osm_gps_map_osd_t *osd, GtkWidget * widget, GdkDrawable *drawable)
     cairo_destroy(cr);
 }
 
-static void
-osd_free(osm_gps_map_osd_t *osd)
+void
+osm_gps_map_osd_free(struct osd_priv_s *priv)
 {
-    osd_priv_t *priv = (osd_priv_t *)(osd->priv);
-
     if(priv->select_toggle.surface)
         cairo_surface_destroy(priv->select_toggle.surface);
 
@@ -275,15 +271,9 @@ osd_free(osm_gps_map_osd_t *osd)
 }
 
 static osm_gps_map_osd_t osd_select = {
-    .draw       = osd_draw,
-    .check      = osd_check,
-    .render     = osd_render,
-    .free       = osd_free,
-
     .priv       = NULL
 };
 
-/* this is the only function that's externally visible */
 void
 osm_gps_map_osd_select_init(OsmGpsMap *map)
 {

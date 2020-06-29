@@ -864,7 +864,7 @@ osm_gps_map_map_redraw (OsmGpsMap *map)
     osm_gps_map_draw_gps_point(map);
 
     /* OSD may contain a coordinate/scale, so we may have to re-render it */
-    priv->osd->render (priv->osd);
+    osm_gps_map_osd_render(priv->osd->priv);
 
     osm_gps_map_purge_cache(map);
     gtk_widget_queue_draw (GTK_WIDGET (map));
@@ -1083,8 +1083,10 @@ osm_gps_map_dispose (GObject *object)
     if (priv->drag_expose != 0)
         g_source_remove (priv->drag_expose);
 
-    if(priv->osd)
-        priv->osd->free(priv->osd);
+    if(priv->osd) {
+        osm_gps_map_osd_free(priv->osd->priv);
+        priv->osd->priv = NULL;
+    }
 
     if(priv->dbuf_pixmap)
         g_object_unref (priv->dbuf_pixmap);
@@ -1243,8 +1245,7 @@ osm_gps_map_button_press (GtkWidget *widget, GdkEventButton *event)
 
     /* pressed inside OSD control? */
     if(priv->osd) {
-        osd_button_t but =
-            priv->osd->check(priv->osd, OSM_GPS_MAP(widget), event->x, event->y);
+        osd_button_t but = osm_gps_map_osd_check(OSM_GPS_MAP(widget), event->x, event->y);
 
         if(but != OSD_NONE)
         {
@@ -1327,7 +1328,7 @@ osm_gps_map_button_release (GtkWidget *widget, GdkEventButton *event)
     }
     /* pressed inside OSD control? */
     else if(priv->osd)
-        priv->osd->check(priv->osd, OSM_GPS_MAP(widget), event->x, event->y);
+        osm_gps_map_osd_check(OSM_GPS_MAP(widget), event->x, event->y);
 
 #ifdef DRAG_DEBUG
     printf("dragging done\n");
@@ -1519,7 +1520,7 @@ osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event)
 
     /* draw new OSD */
     if(priv->osd)
-        priv->osd->draw (priv->osd, widget, drawable);
+        osm_gps_map_osd_draw(priv->osd->priv, widget, drawable);
 
     gdk_draw_drawable (widget->window,
                        widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
@@ -1784,7 +1785,7 @@ osm_gps_map_set_zoom (OsmGpsMap *map, int zoom)
                 zoom_old, priv->map_zoom, priv->map_x);
 
         /* OSD may contain a scale, so we may have to re-render it */
-        priv->osd->render (priv->osd);
+        osm_gps_map_osd_render(priv->osd->priv);
 
         osm_gps_map_map_redraw_idle(map);
     }
@@ -1871,13 +1872,6 @@ osm_gps_map_osd_get(OsmGpsMap *map)
 {
     g_return_val_if_fail (OSM_IS_GPS_MAP (map), NULL);
     return map->priv->osd;
-}
-
-osd_button_t
-osm_gps_map_osd_check(OsmGpsMap *map, gint x, gint y)
-{
-    g_return_val_if_fail (OSM_IS_GPS_MAP (map), OSD_NONE);
-    return map->priv->osd->check(map->priv->osd, map, x, y);
 }
 
 void

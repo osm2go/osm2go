@@ -29,21 +29,22 @@
 extern "C" {
 #endif
 
+struct osd_priv_s;
+
 /* the osd structure mainly contains various callbacks */
 /* required to draw and update the OSD */
 typedef struct osm_gps_map_osd_s {
-    void(*render)(struct osm_gps_map_osd_s *);
-    void(*draw)(struct osm_gps_map_osd_s *, GtkWidget *, GdkDrawable *);
-    osd_button_t(*check)(struct osm_gps_map_osd_s *, OsmGpsMap *, gint, gint);       /* check if x/y lies within OSD */
-    void(*free)(struct osm_gps_map_osd_s *);
-
-    gpointer priv;
+    struct osd_priv_s *priv;
 } osm_gps_map_osd_t;
 
 void osm_gps_map_osd_select_init(OsmGpsMap *map);
 gboolean osm_gps_map_osd_get_state(OsmGpsMap *map);
 void osm_gps_map_register_osd(OsmGpsMap *map, osm_gps_map_osd_t *osd);
 osm_gps_map_osd_t *osm_gps_map_osd_get(OsmGpsMap *map);
+
+void osm_gps_map_osd_render(struct osd_priv_s *priv);
+void osm_gps_map_osd_draw(struct osd_priv_s *priv, GtkWidget * widget, GdkDrawable *drawable);
+void osm_gps_map_osd_free(struct osd_priv_s *priv);
 
 #ifdef __cplusplus
 }
