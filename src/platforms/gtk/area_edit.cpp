@@ -714,8 +714,6 @@ bool area_edit_t::run() {
                                                 "proxy-uri", g_getenv("http_proxy"),
                                                 nullptr));
 
-  osm_gps_map_osd_select_init(context.map.widget);
-
   g_signal_connect_swapped(context.map.widget, "configure-event",
                            G_CALLBACK(on_map_configure), &context);
   g_signal_connect(context.map.widget, "button-press-event",

@@ -172,14 +172,15 @@ osd_render_zoom(osm_gps_map_osd_t *osd) {
 
 
 static osd_button_t
-osd_check(osm_gps_map_osd_t *osd, gint x, gint y)
+osd_check(osm_gps_map_osd_t *osd, OsmGpsMap *map, gint x, gint y)
 {
     osd_priv_t *priv = (osd_priv_t*)osd->priv;
     osd_button_t but = OSD_NONE;
+    GtkWidget *widget = GTK_WIDGET(map);
 
-    y -= (osd->widget->allocation.height - OSD_H)/2;
+    y -= (widget->allocation.height - OSD_H)/2;
 
-    if(x < osd->widget->allocation.width/2) {
+    if(x < widget->allocation.width/2) {
         if(y >= 0 && y <= OSD_H && x >= 0 && x <= OSD_W) {
             if(y < OSD_W)
                 but = OSD_IN;
@@ -187,14 +188,14 @@ osd_check(osm_gps_map_osd_t *osd, gint x, gint y)
                 but = OSD_OUT;
         }
     } else {
-        x -= osd->widget->allocation.width - OSD_W;
+        x -= widget->allocation.width - OSD_W;
 
         if(y >= 0 && y <= OSD_H && x >= 0 && x <= OSD_W) {
             if(y < OSD_W) {
                 if(priv->select_toggle.state) {
                     priv->select_toggle.state = FALSE;
                     osd_render_toggle(osd);
-                    osm_gps_map_repaint(OSM_GPS_MAP(osd->widget));
+                    osm_gps_map_repaint(map);
                 }
 
                 but = OSD_SELECT;
@@ -202,7 +203,7 @@ osd_check(osm_gps_map_osd_t *osd, gint x, gint y)
                 if(!priv->select_toggle.state) {
                     priv->select_toggle.state = TRUE;
                     osd_render_toggle(osd);
-                    osm_gps_map_repaint(OSM_GPS_MAP(osd->widget));
+                    osm_gps_map_repaint(map);
                 }
 
                 but = OSD_DRAG;
@@ -239,7 +240,7 @@ osd_render(osm_gps_map_osd_t *osd)
 }
 
 static void
-osd_draw(osm_gps_map_osd_t *osd, GdkDrawable *drawable)
+osd_draw(osm_gps_map_osd_t *osd, GtkWidget * widget, GdkDrawable *drawable)
 {
     osd_priv_t *priv = (osd_priv_t*)osd->priv;
 
@@ -250,12 +251,12 @@ osd_draw(osm_gps_map_osd_t *osd, GdkDrawable *drawable)
     cairo_t *cr = gdk_cairo_create(drawable);
 
     cairo_set_source_surface(cr, priv->select_toggle.surface,
-                             osd->widget->allocation.width - OSD_W,
-                             (osd->widget->allocation.height - OSD_H)/2);
+                             widget->allocation.width - OSD_W,
+                             (widget->allocation.height - OSD_H)/2);
     cairo_paint(cr);
 
     cairo_set_source_surface(cr, priv->zoom.surface, 0,
-                             (osd->widget->allocation.height - OSD_H)/2);
+                             (widget->allocation.height - OSD_H)/2);
     cairo_paint(cr);
 
     cairo_destroy(cr);
@@ -282,8 +283,6 @@ osd_busy(G_GNUC_UNUSED osm_gps_map_osd_t *osd)
 }
 
 static osm_gps_map_osd_t osd_select = {
-    .widget     = NULL,
-
     .draw       = osd_draw,
     .check      = osd_check,
     .render     = osd_render,
