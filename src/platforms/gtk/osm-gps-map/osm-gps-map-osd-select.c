@@ -76,9 +76,8 @@ static void render_arrow(cairo_t *cr, int angle) {
 }
 
 static void
-osd_render_toggle(osm_gps_map_osd_t *osd) {
-    osd_priv_t *priv = (osd_priv_t*)osd->priv;
-
+osd_render_toggle(osd_priv_t *priv)
+{
     g_assert(priv->select_toggle.surface != NULL);
 
     /* first fill with transparency */
@@ -128,9 +127,8 @@ osd_render_toggle(osm_gps_map_osd_t *osd) {
 }
 
 static void
-osd_render_zoom(osm_gps_map_osd_t *osd) {
-    osd_priv_t *priv = (osd_priv_t*)osd->priv;
-
+osd_render_zoom(osd_priv_t *priv)
+{
     g_assert(priv->zoom.surface != NULL);
 
     /* first fill with transparency */
@@ -194,7 +192,7 @@ osd_check(osm_gps_map_osd_t *osd, OsmGpsMap *map, gint x, gint y)
             if(y < OSD_W) {
                 if(priv->select_toggle.state) {
                     priv->select_toggle.state = FALSE;
-                    osd_render_toggle(osd);
+                    osd_render_toggle(priv);
                     osm_gps_map_repaint(map);
                 }
 
@@ -202,7 +200,7 @@ osd_check(osm_gps_map_osd_t *osd, OsmGpsMap *map, gint x, gint y)
             } else {
                 if(!priv->select_toggle.state) {
                     priv->select_toggle.state = TRUE;
-                    osd_render_toggle(osd);
+                    osd_render_toggle(priv);
                     osm_gps_map_repaint(map);
                 }
 
@@ -228,14 +226,14 @@ osd_render(osm_gps_map_osd_t *osd)
         priv->select_toggle.surface =
             cairo_image_surface_create(CAIRO_FORMAT_ARGB32, OSD_W, OSD_H);
 
-        osd_render_toggle(osd);
+        osd_render_toggle(priv);
     }
 
     if(!priv->zoom.surface) {
         priv->zoom.surface =
             cairo_image_surface_create(CAIRO_FORMAT_ARGB32, OSD_W, OSD_H);
 
-        osd_render_zoom(osd);
+        osd_render_zoom(priv);
     }
 }
 
