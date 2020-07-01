@@ -3,32 +3,32 @@ target_include_directories(osm2go_lib
 			${CMAKE_CURRENT_SOURCE_DIR})
 
 target_sources(osm2go_lib PRIVATE
-	${CMAKE_CURRENT_SOURCE_DIR}/about.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/area_edit.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/icon.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/iconbar.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/josm_presets_button.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/info.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/list.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/list.h
-	${CMAKE_CURRENT_SOURCE_DIR}/MainUiGtk.h
-	${CMAKE_CURRENT_SOURCE_DIR}/map_gtk.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/map_gtk.h
-	${CMAKE_CURRENT_SOURCE_DIR}/net_io_curl.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/notifications.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/osm2go_i18n.h
-	${CMAKE_CURRENT_SOURCE_DIR}/osm2go_platform.h
-	${CMAKE_CURRENT_SOURCE_DIR}/osm2go_platform_gtk.h
-	${CMAKE_CURRENT_SOURCE_DIR}/osm_upload_dialog.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/platform.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/project_widgets.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/relation_edit.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/settings.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/statusbar.h
-	${CMAKE_CURRENT_SOURCE_DIR}/style_widgets.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/style_widgets.h
-	${CMAKE_CURRENT_SOURCE_DIR}/uicontrol.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/wms_dialog.cpp
+	about.cpp
+	area_edit.cpp
+	icon.cpp
+	iconbar.cpp
+	josm_presets_button.cpp
+	info.cpp
+	list.cpp
+	list.h
+	MainUiGtk.h
+	map_gtk.cpp
+	map_gtk.h
+	net_io_curl.cpp
+	notifications.cpp
+	osm2go_i18n.h
+	osm2go_platform.h
+	osm2go_platform_gtk.h
+	osm_upload_dialog.cpp
+	platform.cpp
+	project_widgets.cpp
+	relation_edit.cpp
+	settings.cpp
+	statusbar.h
+	style_widgets.cpp
+	style_widgets.h
+	uicontrol.cpp
+	wms_dialog.cpp
 )
 
 set(TR1_DIR_ADDED FALSE)
@@ -122,7 +122,7 @@ endif ()
 
 pkg_check_modules(GooCanvas REQUIRED IMPORTED_TARGET goocanvas)
 target_sources(osm2go_lib PRIVATE
-	src/platforms/gtk/canvas_goocanvas.cpp
+	canvas_goocanvas.cpp
 )
 target_link_libraries(osm2go_lib PRIVATE PkgConfig::GooCanvas)
 

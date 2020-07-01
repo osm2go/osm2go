@@ -4,10 +4,10 @@ endif ()
 
 # maemo uses dbus for ipc with maemo mapper
 target_sources(osm2go_lib PRIVATE
-	${CMAKE_CURRENT_SOURCE_DIR}/dbus.c
-	${CMAKE_CURRENT_SOURCE_DIR}/dbus.h
-	${CMAKE_CURRENT_SOURCE_DIR}/platform.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/statusbar.cpp
+	dbus.c
+	dbus.h
+	platform.cpp
+	statusbar.cpp
 )
 
 target_include_directories(osm2go_lib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
@@ -27,7 +27,7 @@ set(ICON " Maemo icon ${ICONNAME}\nXB-Maemo-Icon-26:\n${ICON}")
 configure_file(${osm2go_SOURCE_DIR}/debian/control.in ${osm2go_BINARY_DIR}/debian/control @ONLY)
 
 if (libLocation_FOUND)
-	target_sources(osm2go_lib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/gps_liblocation.cpp)
+	target_sources(osm2go_lib PRIVATE gps_liblocation.cpp)
 endif ()
 
 install(DIRECTORY

@@ -1,14 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
-foreach(p IN ITEMS CMP0071 CMP0073 CMP0074 CMP0075 CMP0076 CMP0077 CMP0079)
-	if (POLICY ${p})
-		cmake_policy(SET ${p} NEW)
-	endif ()
-endforeach()
-if (POLICY CMP0076)
-	cmake_policy(SET CMP0076 OLD)
-endif ()
-
 project(osm2go VERSION 0.9.16 LANGUAGES C CXX)
 
 include(CMakePushCheckState)
