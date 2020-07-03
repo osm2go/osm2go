@@ -436,8 +436,6 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
 
         if (dl->redraw)
         {
-            GdkPixbuf *pixbuf = NULL;
-
             /* parse file directly from memory */
             GdkPixbufLoader *loader = gdk_pixbuf_loader_new_with_type (priv->image_format, NULL);
             if (!gdk_pixbuf_loader_write (loader, (unsigned char*)msg->response_body->data, msg->response_body->length, NULL))
@@ -446,7 +444,7 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
             }
             gdk_pixbuf_loader_close(loader, NULL);
 
-            pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
+            GdkPixbuf *pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
 
             /* give up loader but keep the pixbuf */
             g_object_ref(pixbuf);
