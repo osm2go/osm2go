@@ -490,6 +490,8 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
             soup_session_requeue_message(session, msg);
             return;
         }
+        g_free(dl->uri);
+        g_free(dl);
     }
 }
 
