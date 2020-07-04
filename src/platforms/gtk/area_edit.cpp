@@ -240,6 +240,12 @@ current_tab_is(GtkNotebook *nb, GtkWidget *w, const char *str)
 }
 
 bool
+current_tab_is(GtkNotebook *nb, int page_num, const char *str)
+{
+  return current_tab_is(nb, gtk_notebook_get_nth_page(nb, page_num), str);
+}
+
+bool
 current_tab_is(area_context_t *context, const char *str)
 {
   GtkNotebook *nb = osm2go_platform::notebook_get_gtk_notebook(context->notebook);
@@ -249,7 +255,7 @@ current_tab_is(area_context_t *context, const char *str)
   if(page_num < 0)
     return false;
 
-  return current_tab_is(nb, gtk_notebook_get_nth_page(nb, page_num), str);
+  return current_tab_is(nb, page_num, str);
 }
 
 inline gchar *
@@ -640,16 +646,25 @@ on_map_button_release_event(GtkWidget *widget, GdkEventButton *event, area_conte
 /* is becoming visible */
 void on_page_switch(GtkNotebook *nb, GtkWidget *pg, guint pgnum, area_context_t *context)
 {
+  if(!context->map.needs_redraw)
+    return;
+
 #ifdef FREMANTLE
   // the pages of the normal notebook are not used on FREMANTLE, so the sender
   // widget is not the one that can be queried for the actual title
-  pg = gtk_notebook_get_nth_page(nb, pgnum);
+# define SWITCH_PARAM pgnum
+# define UNUSED_SWITCH_PARAM pg
 #else
-  (void)pgnum;
+# define SWITCH_PARAM pg
+# define UNUSED_SWITCH_PARAM pgnum
 #endif
+  (void)UNUSED_SWITCH_PARAM;
+  if (!current_tab_is(nb, SWITCH_PARAM, TAB_LABEL_MAP))
+    return;
+#undef UNUSED_SWITCH_PARAM
+#undef SWITCH_PARAM
 
-  if(context->map.needs_redraw && current_tab_is(nb, pg, TAB_LABEL_MAP))
-    map_update(context, true);
+  map_update(context, true);
 }
 
 gboolean map_gps_update(gpointer data)
