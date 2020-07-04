@@ -112,6 +112,16 @@ struct pos_area {
   inline bool operator!=(const pos_area &other) const noexcept
   { return !operator==(other); }
 
+  static inline pos_area normalized(const pos_t &mi, const pos_t &ma)
+  {
+    pos_area ret(mi, ma);
+    if (ret.min.lat > ret.max.lat)
+      std::swap(ret.max.lat, ret.min.lat);
+    if (ret.min.lon > ret.max.lon)
+      std::swap(ret.max.lon, ret.min.lon);
+    return ret;
+  }
+
   /**
    * @brief returns a string representation of min.lon + ',' + min.lat + ',' + max.lon + ',' + max.lat
    */

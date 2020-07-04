@@ -199,6 +199,9 @@ static void testLoad(const std::string &tmpdir, const char *osmfile)
     project->bounds.max.lat = 0.6;
     project->bounds.max.lon = 0.6;
 
+    assert(project->bounds == pos_area::normalized(project->bounds.min, project->bounds.max));
+    assert(project->bounds == pos_area::normalized(project->bounds.max, project->bounds.min));
+
     size_t msgs = (i + 1) / 2;
     switch (msgs) {
     case 3:

@@ -617,21 +617,8 @@ on_map_button_release_event(GtkWidget *widget, GdkEventButton *event, area_conte
 
     osm_gps_map_add_track(map, pos_rad_box(start, end));
 
-    if(start.rlat < end.rlat) {
-      context->bounds.min.lat = RAD2DEG(start.rlat);
-      context->bounds.max.lat = RAD2DEG(end.rlat);
-    } else {
-      context->bounds.min.lat = RAD2DEG(end.rlat);
-      context->bounds.max.lat = RAD2DEG(start.rlat);
-    }
-
-    if(start.rlon < end.rlon) {
-      context->bounds.min.lon = RAD2DEG(start.rlon);
-      context->bounds.max.lon = RAD2DEG(end.rlon);
-    } else {
-      context->bounds.min.lon = RAD2DEG(end.rlon);
-      context->bounds.max.lon = RAD2DEG(start.rlon);
-    }
+    context->bounds = pos_area::normalized(pos_t(RAD2DEG(start.rlat), RAD2DEG(start.rlon)),
+                                           pos_t(RAD2DEG(end.rlat),   RAD2DEG(end.rlon)));
 
     area_main_update(context);
     direct_update(context);
