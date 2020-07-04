@@ -642,7 +642,7 @@ void on_page_switch(GtkNotebook *nb, GtkWidget *pg, guint pgnum, area_context_t 
 {
 #ifdef FREMANTLE
   // the pages of the normal notebook are not used on FREMANTLE, so the sender
-  // widget is not the one the one that can be queried for the actual title
+  // widget is not the one that can be queried for the actual title
   pg = gtk_notebook_get_nth_page(nb, pgnum);
 #else
   (void)pgnum;
