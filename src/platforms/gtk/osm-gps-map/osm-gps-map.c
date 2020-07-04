@@ -199,8 +199,6 @@ typedef struct {
     char *uri;
     OsmGpsMap *map;
     guint64 hashkey;
-    /* whether to redraw the map when the tile arrives */
-    gboolean redraw;
 } tile_download_t;
 
 /*
@@ -434,36 +432,34 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
         OsmGpsMap *map = OSM_GPS_MAP(dl->map);
         OsmGpsMapPrivate *priv = map->priv;
 
-        if (dl->redraw)
+        /* parse file directly from memory */
+        GdkPixbufLoader *loader = gdk_pixbuf_loader_new_with_type (priv->image_format, NULL);
+        if (!gdk_pixbuf_loader_write (loader, (unsigned char*)msg->response_body->data, msg->response_body->length, NULL))
         {
-            /* parse file directly from memory */
-            GdkPixbufLoader *loader = gdk_pixbuf_loader_new_with_type (priv->image_format, NULL);
-            if (!gdk_pixbuf_loader_write (loader, (unsigned char*)msg->response_body->data, msg->response_body->length, NULL))
-            {
-                g_warning("Error: Decoding of image failed");
-            }
-            gdk_pixbuf_loader_close(loader, NULL);
-
-            GdkPixbuf *pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
-
-            /* give up loader but keep the pixbuf */
-            g_object_ref(pixbuf);
-            g_object_unref(loader);
-
-            /* Store the tile into the cache */
-            if (G_LIKELY (pixbuf))
-            {
-                OsmCachedTile *tile = g_slice_new (OsmCachedTile);
-                tile->hash = dl->hashkey;
-                tile->pixbuf = pixbuf;
-                tile->redraw_cycle = priv->redraw_cycle;
-                /* if the tile is already in the cache (it could be one
-                 * rendered from another zoom level), it will be
-                 * overwritten */
-                g_hash_table_insert (priv->tile_cache, &tile->hash, tile);
-            }
-            osm_gps_map_map_redraw_idle (map);
+            g_warning("Error: Decoding of image failed");
         }
+        gdk_pixbuf_loader_close(loader, NULL);
+
+        GdkPixbuf *pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
+
+        /* give up loader but keep the pixbuf */
+        g_object_ref(pixbuf);
+        g_object_unref(loader);
+
+        /* Store the tile into the cache */
+        if (G_LIKELY (pixbuf))
+        {
+            OsmCachedTile *tile = g_slice_new (OsmCachedTile);
+            tile->hash = dl->hashkey;
+            tile->pixbuf = pixbuf;
+            tile->redraw_cycle = priv->redraw_cycle;
+            /* if the tile is already in the cache (it could be one
+             * rendered from another zoom level), it will be
+             * overwritten */
+            g_hash_table_insert (priv->tile_cache, &tile->hash, tile);
+        }
+        osm_gps_map_map_redraw_idle (map);
+
         g_hash_table_remove(priv->tile_queue, dl->uri);
 
         g_free(dl->uri);
@@ -508,7 +504,7 @@ tile_hash(guint zoom, guint x, guint y)
 }
 
 static void
-osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redraw)
+osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y)
 {
     OsmGpsMapPrivate *priv = map->priv;
 
@@ -527,7 +523,6 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redr
         dl->hashkey = tile_hash(zoom, x, y);
         dl->uri = uri;
         dl->map = map;
-        dl->redraw = redraw;
 
         g_debug("Download tile: %d,%d z:%d\n\t%s", x, y, zoom, dl->uri);
 
@@ -634,7 +629,7 @@ osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int
     else
     {
         if (priv->map_auto_download) {
-            osm_gps_map_download_tile(map, zoom, x, y, TRUE);
+            osm_gps_map_download_tile(map, zoom, x, y);
         }
 
         /* try to render the tile by scaling cached tiles from other zoom
