@@ -673,10 +673,9 @@ gboolean map_gps_update(gpointer data)
 
   pos_t pos = context->area.gps_state->get_pos();
 
-  if(pos.valid()) {
-    g_object_set(context->map.widget, "gps-track-highlight-radius", 0, nullptr);
+  if(pos.valid())
     osm_gps_map_gps_add(context->map.widget, pos.lat, pos.lon, NAN);
-  } else
+  else
     osm_gps_map_gps_clear(context->map.widget);
 
   return TRUE;

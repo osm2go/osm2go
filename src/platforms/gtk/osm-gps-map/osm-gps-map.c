@@ -91,7 +91,6 @@ struct _OsmGpsMapPrivate
     int map_zoom;
     int max_zoom;
     int min_zoom;
-    gboolean map_auto_download;
     int map_x;
     int map_y;
 
@@ -152,7 +151,6 @@ struct _OsmGpsMapPrivate
     //for customizing the redering of the gps track
     int ui_gps_track_width;
     int ui_gps_point_inner_radius;
-    int ui_gps_point_outer_radius;
 
     guint is_disposed : 1;
     guint dragging : 1;
@@ -173,7 +171,6 @@ enum
 {
     PROP_0,
 
-    PROP_AUTO_DOWNLOAD,
     PROP_PROXY_URI,
     PROP_ZOOM,
     PROP_MAX_ZOOM,
@@ -182,10 +179,8 @@ enum
     PROP_LONGITUDE,
     PROP_MAP_X,
     PROP_MAP_Y,
-    PROP_TILES_QUEUED,
     PROP_GPS_TRACK_WIDTH,
-    PROP_GPS_POINT_R1,
-    PROP_GPS_POINT_R2
+    PROP_GPS_POINT_R1
 };
 
 #if !GLIB_CHECK_VERSION(2,38,0)
@@ -342,8 +337,7 @@ osm_gps_map_draw_gps_point (OsmGpsMap *map)
     if (priv->gps_valid) {
         int x, y;
         int r = priv->ui_gps_point_inner_radius;
-        int r2 = priv->ui_gps_point_outer_radius;
-        int mr = MAX(3*r,r2);
+        int mr = 3*r;
 
         int map_x0 = priv->map_x - EXTRA_BORDER;
         int map_y0 = priv->map_y - EXTRA_BORDER;
@@ -351,18 +345,6 @@ osm_gps_map_draw_gps_point (OsmGpsMap *map)
         y = lat2pixel(priv->map_zoom, priv->gps.rlat) - map_y0;
 
         cairo_t *cr = gdk_cairo_create(priv->pixmap);
-
-        // draw transparent area
-        if (r2 > 0) {
-            cairo_set_line_width (cr, 1.5);
-            cairo_set_source_rgba (cr, 0.75, 0.75, 0.75, 0.4);
-            cairo_arc (cr, x, y, r2, 0, 2 * M_PI);
-            cairo_fill (cr);
-            // draw transparent area border
-            cairo_set_source_rgba (cr, 0.55, 0.55, 0.55, 0.4);
-            cairo_arc (cr, x, y, r2, 0, 2 * M_PI);
-            cairo_stroke(cr);
-        }
 
         // draw ball gradient
         if (r > 0) {
@@ -628,9 +610,7 @@ osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int
     }
     else
     {
-        if (priv->map_auto_download) {
-            osm_gps_map_download_tile(map, zoom, x, y);
-        }
+        osm_gps_map_download_tile(map, zoom, x, y);
 
         /* try to render the tile by scaling cached tiles from other zoom
          * levels */
@@ -1108,9 +1088,6 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
 
     switch (prop_id)
     {
-        case PROP_AUTO_DOWNLOAD:
-            priv->map_auto_download = g_value_get_boolean (value);
-            break;
         case PROP_PROXY_URI:
             if ( g_value_get_string(value) ) {
                 priv->proxy_uri = g_value_dup_string (value);
@@ -1153,9 +1130,6 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
         case PROP_GPS_POINT_R1:
             priv->ui_gps_point_inner_radius = g_value_get_int (value);
             break;
-        case PROP_GPS_POINT_R2:
-            priv->ui_gps_point_outer_radius = g_value_get_int (value);
-            break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
             break;
@@ -1170,9 +1144,6 @@ osm_gps_map_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 
     switch (prop_id)
     {
-        case PROP_AUTO_DOWNLOAD:
-            g_value_set_boolean(value, priv->map_auto_download);
-            break;
         case PROP_PROXY_URI:
             g_value_set_string(value, priv->proxy_uri);
             break;
@@ -1197,17 +1168,11 @@ osm_gps_map_get_property (GObject *object, guint prop_id, GValue *value, GParamS
         case PROP_MAP_Y:
             g_value_set_int(value, priv->map_y);
             break;
-        case PROP_TILES_QUEUED:
-            g_value_set_int(value, g_hash_table_size(priv->tile_queue));
-            break;
         case PROP_GPS_TRACK_WIDTH:
             g_value_set_int(value, priv->ui_gps_track_width);
             break;
         case PROP_GPS_POINT_R1:
             g_value_set_int(value, priv->ui_gps_point_inner_radius);
-            break;
-        case PROP_GPS_POINT_R2:
-            g_value_set_int(value, priv->ui_gps_point_outer_radius);
             break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1548,14 +1513,6 @@ osm_gps_map_class_init (OsmGpsMapClass *klass)
     widget_class->motion_notify_event = osm_gps_map_motion_notify;
     widget_class->scroll_event = osm_gps_map_scroll_event;
 
-    g_object_class_install_property (object_class,
-                                     PROP_AUTO_DOWNLOAD,
-                                     g_param_spec_boolean ("auto-download",
-                                                           "auto download",
-                                                           "map auto download",
-                                                           TRUE,
-                                                           G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
-
      g_object_class_install_property (object_class,
                                      PROP_PROXY_URI,
                                      g_param_spec_string ("proxy-uri",
@@ -1635,16 +1592,6 @@ osm_gps_map_class_init (OsmGpsMapClass *klass)
                                                        G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 
     g_object_class_install_property (object_class,
-                                     PROP_TILES_QUEUED,
-                                     g_param_spec_int ("tiles-queued",
-                                                       "tiles-queued",
-                                                       "number of tiles currently waiting to download",
-                                                       G_MININT, /* minimum property value */
-                                                       G_MAXINT, /* maximum property value */
-                                                       0,
-                                                       G_PARAM_READABLE));
-
-    g_object_class_install_property (object_class,
                                      PROP_GPS_TRACK_WIDTH,
                                      g_param_spec_int ("gps-track-width",
                                                        "gps-track-width",
@@ -1662,16 +1609,6 @@ osm_gps_map_class_init (OsmGpsMapClass *klass)
                                                        0,           /* minimum property value */
                                                        G_MAXINT,    /* maximum property value */
                                                        10,
-                                                       G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
-
-    g_object_class_install_property (object_class,
-                                     PROP_GPS_POINT_R2,
-                                     g_param_spec_int ("gps-track-highlight-radius",
-                                                       "gps-track-highlight-radius",
-                                                       "radius of the gps point highlight circle",
-                                                       0,           /* minimum property value */
-                                                       G_MAXINT,    /* maximum property value */
-                                                       20,
                                                        G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
 }
 
