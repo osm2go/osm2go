@@ -172,11 +172,6 @@ enum
     PROP_0,
 
     PROP_PROXY_URI,
-    PROP_ZOOM,
-    PROP_MAX_ZOOM,
-    PROP_MIN_ZOOM,
-    PROP_LATITUDE,
-    PROP_LONGITUDE,
     PROP_MAP_X,
     PROP_MAP_Y
 };
@@ -1104,15 +1099,6 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
                 priv->proxy_uri = NULL;
 
             break;
-        case PROP_ZOOM:
-            priv->map_zoom = g_value_get_int (value);
-            break;
-        case PROP_MAX_ZOOM:
-            priv->max_zoom = g_value_get_int (value);
-            break;
-        case PROP_MIN_ZOOM:
-            priv->min_zoom = g_value_get_int (value);
-            break;
         case PROP_MAP_X:
             priv->map_x = g_value_get_int (value);
             center_coord_update(GTK_WIDGET(object));
@@ -1137,21 +1123,6 @@ osm_gps_map_get_property (GObject *object, guint prop_id, GValue *value, GParamS
     {
         case PROP_PROXY_URI:
             g_value_set_string(value, priv->proxy_uri);
-            break;
-        case PROP_ZOOM:
-            g_value_set_int(value, priv->map_zoom);
-            break;
-        case PROP_MAX_ZOOM:
-            g_value_set_int(value, priv->max_zoom);
-            break;
-        case PROP_MIN_ZOOM:
-            g_value_set_int(value, priv->min_zoom);
-            break;
-        case PROP_LATITUDE:
-            g_value_set_float(value, rad2deg(priv->center_rlat));
-            break;
-        case PROP_LONGITUDE:
-            g_value_set_float(value, rad2deg(priv->center_rlon));
             break;
         case PROP_MAP_X:
             g_value_set_int(value, priv->map_x);
@@ -1505,56 +1476,6 @@ osm_gps_map_class_init (OsmGpsMapClass *klass)
                                                           "http proxy uri on NULL",
                                                           NULL,
                                                           G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property (object_class,
-                                     PROP_ZOOM,
-                                     g_param_spec_int ("zoom",
-                                                       "zoom",
-                                                       "zoom level",
-                                                       MIN_ZOOM, /* minimum property value */
-                                                       MAX_ZOOM, /* maximum property value */
-                                                       3,
-                                                       G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property (object_class,
-                                     PROP_MAX_ZOOM,
-                                     g_param_spec_int ("max-zoom",
-                                                       "max zoom",
-                                                       "maximum zoom level",
-                                                       MIN_ZOOM, /* minimum property value */
-                                                       MAX_ZOOM, /* maximum property value */
-                                                       OSM_MAX_ZOOM,
-                                                       G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property (object_class,
-                                     PROP_MIN_ZOOM,
-                                     g_param_spec_int ("min-zoom",
-                                                       "min zoom",
-                                                       "minimum zoom level",
-                                                       MIN_ZOOM, /* minimum property value */
-                                                       MAX_ZOOM, /* maximum property value */
-                                                       OSM_MIN_ZOOM,
-                                                       G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property (object_class,
-                                     PROP_LATITUDE,
-                                     g_param_spec_float ("latitude",
-                                                         "latitude",
-                                                         "latitude in degrees",
-                                                         -90.0, /* minimum property value */
-                                                         90.0, /* maximum property value */
-                                                         0,
-                                                         G_PARAM_READABLE));
-
-    g_object_class_install_property (object_class,
-                                     PROP_LONGITUDE,
-                                     g_param_spec_float ("longitude",
-                                                         "longitude",
-                                                         "longitude in degrees",
-                                                         -180.0, /* minimum property value */
-                                                         180.0, /* maximum property value */
-                                                         0,
-                                                         G_PARAM_READABLE));
 
     g_object_class_install_property (object_class,
                                      PROP_MAP_X,

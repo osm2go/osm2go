@@ -29,8 +29,6 @@
 #include "osm-gps-map-point.h"
 
 #define TILESIZE 256
-#define MAX_ZOOM 20
-#define MIN_ZOOM 0
 
 #ifdef FREMANTLE
 #define OSM_REPO_URI        "http://tile.openstreetmap.org/#Z/#X/#Y.png"
