@@ -82,6 +82,11 @@ static void g_slist_free_full(GSList *list, GDestroyNotify free_func)
 }
 #endif
 
+#define MAX_TILE_CACHE_SIZE 20
+//for customizing the redering of the gps track
+#define UI_GPS_TRACK_WIDTH 4
+#define UI_GPS_POINT_INNER_RADIUS 10
+
 struct _OsmGpsMapPrivate
 {
     GHashTable *tile_queue;
@@ -98,7 +103,6 @@ struct _OsmGpsMapPrivate
     gfloat center_rlat;
     gfloat center_rlon;
 
-    guint max_tile_cache_size;
     /* Incremented at each redraw */
     guint redraw_cycle;
     /* ID of the idle redraw operation */
@@ -148,10 +152,6 @@ struct _OsmGpsMapPrivate
     int drag_start_map_y;
     guint drag_expose;
 
-    //for customizing the redering of the gps track
-    int ui_gps_track_width;
-    int ui_gps_point_inner_radius;
-
     guint is_disposed : 1;
     guint dragging : 1;
 };
@@ -178,9 +178,7 @@ enum
     PROP_LATITUDE,
     PROP_LONGITUDE,
     PROP_MAP_X,
-    PROP_MAP_Y,
-    PROP_GPS_TRACK_WIDTH,
-    PROP_GPS_POINT_R1
+    PROP_MAP_Y
 };
 
 #if !GLIB_CHECK_VERSION(2,38,0)
@@ -336,7 +334,7 @@ osm_gps_map_draw_gps_point (OsmGpsMap *map)
     //incase we get called before we have got a gps point
     if (priv->gps_valid) {
         int x, y;
-        int r = priv->ui_gps_point_inner_radius;
+        int r = UI_GPS_POINT_INNER_RADIUS;
         int mr = 3*r;
 
         int map_x0 = priv->map_x - EXTRA_BORDER;
@@ -749,7 +747,7 @@ osm_gps_map_print_tracks (OsmGpsMap *map)
         GSList* tmp = priv->tracks;
         while (tmp != NULL)
         {
-            osm_gps_map_print_track(map, tmp->data, r, g, b, priv->ui_gps_track_width);
+            osm_gps_map_print_track(map, tmp->data, r, g, b, UI_GPS_TRACK_WIDTH);
             tmp = g_slist_next(tmp);
         }
     }
@@ -767,7 +765,7 @@ osm_gps_map_print_bounds(OsmGpsMap *map)
     GSList* tmp = priv->bounds;
     while (tmp != NULL)
     {
-        osm_gps_map_print_track(map, tmp->data, r, g, b, priv->ui_gps_track_width / 2);
+        osm_gps_map_print_track(map, tmp->data, r, g, b, UI_GPS_TRACK_WIDTH / 2);
         tmp = g_slist_next(tmp);
     }
 }
@@ -783,13 +781,13 @@ osm_gps_map_purge_cache (OsmGpsMap *map)
 {
    OsmGpsMapPrivate *priv = map->priv;
 
-   if (g_hash_table_size (priv->tile_cache) < priv->max_tile_cache_size)
+   if (g_hash_table_size (priv->tile_cache) < MAX_TILE_CACHE_SIZE)
        return;
 
    /* run through the cache, and remove the tiles which have not been used
     * during the last redraw operation */
    g_hash_table_foreach_remove(priv->tile_cache, osm_gps_map_purge_cache_check,
-                               GUINT_TO_POINTER(priv->redraw_cycle - priv->max_tile_cache_size / 2));
+                               GUINT_TO_POINTER(priv->redraw_cycle - MAX_TILE_CACHE_SIZE / 2));
 }
 
 static gboolean
@@ -985,7 +983,6 @@ osm_gps_map_init (OsmGpsMap *object)
     /* memory cache for most recently used tiles */
     priv->tile_cache = g_hash_table_new_full (g_int64_hash, g_int64_equal,
                                               NULL, (GDestroyNotify)cached_tile_free);
-    priv->max_tile_cache_size = 20;
 
     gtk_widget_add_events (GTK_WIDGET (object),
                            GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
@@ -1124,12 +1121,6 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
             priv->map_y = g_value_get_int (value);
             center_coord_update(GTK_WIDGET(object));
             break;
-        case PROP_GPS_TRACK_WIDTH:
-            priv->ui_gps_track_width = g_value_get_int (value);
-            break;
-        case PROP_GPS_POINT_R1:
-            priv->ui_gps_point_inner_radius = g_value_get_int (value);
-            break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
             break;
@@ -1167,12 +1158,6 @@ osm_gps_map_get_property (GObject *object, guint prop_id, GValue *value, GParamS
             break;
         case PROP_MAP_Y:
             g_value_set_int(value, priv->map_y);
-            break;
-        case PROP_GPS_TRACK_WIDTH:
-            g_value_set_int(value, priv->ui_gps_track_width);
-            break;
-        case PROP_GPS_POINT_R1:
-            g_value_set_int(value, priv->ui_gps_point_inner_radius);
             break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1590,26 +1575,6 @@ osm_gps_map_class_init (OsmGpsMapClass *klass)
                                                        G_MAXINT, /* maximum property value */
                                                        515,
                                                        G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property (object_class,
-                                     PROP_GPS_TRACK_WIDTH,
-                                     g_param_spec_int ("gps-track-width",
-                                                       "gps-track-width",
-                                                       "width of the lines drawn for the gps track",
-                                                       1,           /* minimum property value */
-                                                       G_MAXINT,    /* maximum property value */
-                                                       4,
-                                                       G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
-
-    g_object_class_install_property (object_class,
-                                     PROP_GPS_POINT_R1,
-                                     g_param_spec_int ("gps-track-point-radius",
-                                                       "gps-track-point-radius",
-                                                       "radius of the gps point inner circle",
-                                                       0,           /* minimum property value */
-                                                       G_MAXINT,    /* maximum property value */
-                                                       10,
-                                                       G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
 }
 
 const char*
