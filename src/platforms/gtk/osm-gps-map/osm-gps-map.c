@@ -446,8 +446,10 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
         if (msg->status_code == SOUP_STATUS_NOT_FOUND)
         {
             OsmGpsMapPrivate *priv = OSM_GPS_MAP(dl->map)->priv;
+            guint64 *hashkey = g_malloc(sizeof(*hashkey));
+            *hashkey = dl->hashkey;
 
-            g_hash_table_insert(priv->missing_tiles, dl->uri, NULL);
+            g_hash_table_insert(priv->missing_tiles, hashkey, NULL);
             g_hash_table_remove(priv->tile_queue, dl->uri);
         }
         else if (msg->status_code == SOUP_STATUS_CANCELLED)
@@ -485,17 +487,18 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y)
 
     //calculate the uri to download
     gchar *uri = replace_map_uri(priv->repo_uri, zoom, x, y);
+    guint64 hashkey = tile_hash(zoom, x, y);
 
     //check the tile has not already been queued for download,
     //or has been attempted, and its missing
     if (g_hash_table_lookup_extended(priv->tile_queue, uri, NULL, NULL) ||
-        g_hash_table_lookup_extended(priv->missing_tiles, uri, NULL, NULL) )
+        g_hash_table_lookup_extended(priv->missing_tiles, &hashkey, NULL, NULL))
     {
         g_debug("Tile already downloading (or missing)");
         g_free(uri);
     } else {
         tile_download_t *dl = g_new(tile_download_t, 1);
-        dl->hashkey = tile_hash(zoom, x, y);
+        dl->hashkey = hashkey;
         dl->uri = uri;
         dl->map = map;
 
@@ -986,9 +989,8 @@ osm_gps_map_init (OsmGpsMap *object)
     //Hash table which maps tile d/l URIs to SoupMessage requests
     priv->tile_queue = g_hash_table_new (g_str_hash, g_str_equal);
 
-    //Some mapping providers (Google) have varying degrees of tiles at multiple
-    //zoom levels
-    priv->missing_tiles = g_hash_table_new (g_str_hash, g_str_equal);
+    priv->missing_tiles = g_hash_table_new_full (g_int64_hash, g_int64_equal,
+                                                 g_free, NULL);
 
     /* memory cache for most recently used tiles */
     priv->tile_cache = g_hash_table_new_full (g_int64_hash, g_int64_equal,
