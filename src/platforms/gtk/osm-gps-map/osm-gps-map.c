@@ -110,7 +110,6 @@ struct _OsmGpsMapPrivate
 
     //how we download tiles
     SoupSession *soup_session;
-    char *proxy_uri;
 
     //contains flags indicating the various special characters
     //the uri string contains, that will be replaced when calculating
@@ -171,7 +170,6 @@ enum
 {
     PROP_0,
 
-    PROP_PROXY_URI,
     PROP_MAP_X,
     PROP_MAP_Y
 };
@@ -968,6 +966,21 @@ osm_gps_map_init (OsmGpsMap *object)
         soup_session_async_new_with_options(SOUP_SESSION_USER_AGENT,
                                             USER_AGENT, NULL);
 #endif
+
+    const gchar *prx = g_getenv("http_proxy");
+    if (prx != NULL) {
+#ifndef G_VALUE_INIT
+#define G_VALUE_INIT  { 0, { { 0 } } }
+#endif
+        GValue val = G_VALUE_INIT;
+
+        SoupURI* uri = soup_uri_new(prx);
+        g_value_init(&val, SOUP_TYPE_URI);
+        g_value_take_boxed(&val, uri);
+
+        g_object_set_property(G_OBJECT(priv->soup_session),SOUP_SESSION_PROXY_URI,&val);
+    }
+
     //Hash table which maps tile d/l URIs to SoupMessage requests
     priv->tile_queue = g_hash_table_new (g_str_hash, g_str_equal);
 
@@ -1080,25 +1093,6 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
 
     switch (prop_id)
     {
-        case PROP_PROXY_URI:
-            if ( g_value_get_string(value) ) {
-                priv->proxy_uri = g_value_dup_string (value);
-                g_debug("Setting proxy server: %s", priv->proxy_uri);
-
-#ifndef G_VALUE_INIT
-#define G_VALUE_INIT  { 0, { { 0 } } }
-#endif
-                GValue val = G_VALUE_INIT;
-
-                SoupURI* uri = soup_uri_new(priv->proxy_uri);
-                g_value_init(&val, SOUP_TYPE_URI);
-                g_value_take_boxed(&val, uri);
-
-                g_object_set_property(G_OBJECT(priv->soup_session),SOUP_SESSION_PROXY_URI,&val);
-            } else
-                priv->proxy_uri = NULL;
-
-            break;
         case PROP_MAP_X:
             priv->map_x = g_value_get_int (value);
             center_coord_update(GTK_WIDGET(object));
@@ -1121,9 +1115,6 @@ osm_gps_map_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 
     switch (prop_id)
     {
-        case PROP_PROXY_URI:
-            g_value_set_string(value, priv->proxy_uri);
-            break;
         case PROP_MAP_X:
             g_value_set_int(value, priv->map_x);
             break;
@@ -1468,14 +1459,6 @@ osm_gps_map_class_init (OsmGpsMapClass *klass)
     widget_class->button_release_event = osm_gps_map_button_release;
     widget_class->motion_notify_event = osm_gps_map_motion_notify;
     widget_class->scroll_event = osm_gps_map_scroll_event;
-
-     g_object_class_install_property (object_class,
-                                     PROP_PROXY_URI,
-                                     g_param_spec_string ("proxy-uri",
-                                                          "proxy uri",
-                                                          "http proxy uri on NULL",
-                                                          NULL,
-                                                          G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 
     g_object_class_install_property (object_class,
                                      PROP_MAP_X,

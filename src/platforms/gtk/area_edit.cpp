@@ -712,7 +712,6 @@ bool area_edit_t::run() {
 
   context.map.needs_redraw = false;
   context.map.widget = OSM_GPS_MAP(g_object_new(OSM_TYPE_GPS_MAP,
-                                                "proxy-uri", g_getenv("http_proxy"),
                                                 nullptr));
 
   g_signal_connect_swapped(context.map.widget, "configure-event",
