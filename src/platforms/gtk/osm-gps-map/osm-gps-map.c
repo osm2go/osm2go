@@ -218,14 +218,14 @@ replace_string(gchar *src, const gchar *from, const gchar *to)
 {
     size_t fromlen = strlen(from);
     size_t tolen   = strlen(to);
-    size_t size    = strlen(src) + 1;
 
     /* Try to find the search text. */
-    const gchar *match = g_strstr_len(src, size, from);
+    const char *match = strstr(src, from);
     assert(match != NULL);
 
     /* Allocate the destination buffer. */
-    gchar *value = g_realloc(src, size + tolen - fromlen);
+    size_t size  = strlen(src);
+    gchar *value = g_realloc(src, size + 1 + tolen - fromlen);
 
     if (G_UNLIKELY(value == NULL)) {
       g_free(src);
@@ -247,8 +247,10 @@ replace_string(gchar *src, const gchar *from, const gchar *to)
 
     /*
      * Now move the remainder of the string to make room for the replacement.
+     * If pattern and replacement have the same length, do nothing.
      */
-    memmove(dst + tolen, value + count + fromlen, size - count - fromlen);
+    if (tolen != fromlen)
+      memmove(dst + tolen, dst + fromlen, size - count - fromlen);
 
     /* Now copy in the replacement text 'to' at the position of
      * the match. */
