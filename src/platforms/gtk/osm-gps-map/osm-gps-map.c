@@ -435,7 +435,7 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
         }
         osm_gps_map_map_redraw_idle (map);
 
-        g_hash_table_remove(priv->tile_queue, dl->uri);
+        g_hash_table_remove(priv->tile_queue, &dl->hashkey);
 
         g_free(dl->uri);
         g_free(dl);
@@ -450,7 +450,7 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
             *hashkey = dl->hashkey;
 
             g_hash_table_insert(priv->missing_tiles, hashkey, NULL);
-            g_hash_table_remove(priv->tile_queue, dl->uri);
+            g_hash_table_remove(priv->tile_queue, hashkey);
         }
         else if (msg->status_code == SOUP_STATUS_CANCELLED)
         {
@@ -486,27 +486,25 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y)
     OsmGpsMapPrivate *priv = map->priv;
 
     //calculate the uri to download
-    gchar *uri = replace_map_uri(priv->repo_uri, zoom, x, y);
     guint64 hashkey = tile_hash(zoom, x, y);
 
     //check the tile has not already been queued for download,
     //or has been attempted, and its missing
-    if (g_hash_table_lookup_extended(priv->tile_queue, uri, NULL, NULL) ||
+    if (g_hash_table_lookup_extended(priv->tile_queue, &hashkey, NULL, NULL) ||
         g_hash_table_lookup_extended(priv->missing_tiles, &hashkey, NULL, NULL))
     {
         g_debug("Tile already downloading (or missing)");
-        g_free(uri);
     } else {
         tile_download_t *dl = g_new(tile_download_t, 1);
         dl->hashkey = hashkey;
-        dl->uri = uri;
+        dl->uri = replace_map_uri(priv->repo_uri, zoom, x, y);
         dl->map = map;
 
         g_debug("Download tile: %d,%d z:%d\n\t%s", x, y, zoom, dl->uri);
 
         SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, dl->uri);
         if (msg) {
-            g_hash_table_insert (priv->tile_queue, dl->uri, msg);
+            g_hash_table_insert (priv->tile_queue, &dl->hashkey, msg);
             soup_session_queue_message (priv->soup_session, msg, osm_gps_map_tile_download_complete, dl);
         } else {
             g_warning("Could not create soup message");
@@ -987,7 +985,7 @@ osm_gps_map_init (OsmGpsMap *object)
     }
 
     //Hash table which maps tile d/l URIs to SoupMessage requests
-    priv->tile_queue = g_hash_table_new (g_str_hash, g_str_equal);
+    priv->tile_queue = g_hash_table_new (g_int64_hash, g_int64_equal);
 
     priv->missing_tiles = g_hash_table_new_full (g_int64_hash, g_int64_equal,
                                                  g_free, NULL);
