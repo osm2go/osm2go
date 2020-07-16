@@ -1166,7 +1166,7 @@ public:
 
 #if __cplusplus >= 201703L
 #include <string_view>
-typedef std::vector<std::pair<std::string_view, std::string_view> > rtable_type;
+typedef std::vector<std::pair<std::string_view, std::string_view>> rtable_type;
 #else
 typedef std::vector<std::pair<std::string, std::string> > rtable_type;
 #endif
