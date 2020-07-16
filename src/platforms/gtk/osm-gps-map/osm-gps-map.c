@@ -133,9 +133,6 @@ struct _OsmGpsMapPrivate
     GdkPixmap *pixmap;
     GdkGC *gc_map;
 
-    //The tile painted when one cannot be found
-    GdkPixbuf *null_tile;
-
     //For tracking click and drag
     int drag_counter;
     int drag_mouse_dx;
@@ -1052,9 +1049,6 @@ osm_gps_map_dispose (GObject *object)
 
     if(priv->pixmap)
         g_object_unref (priv->pixmap);
-
-    if (priv->null_tile)
-        g_object_unref (priv->null_tile);
 
     if(priv->gc_map)
         g_object_unref(priv->gc_map);
