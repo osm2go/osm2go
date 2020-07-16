@@ -50,6 +50,8 @@
 /* limit of square kilometers above the warning is enabled */
 #define WARN_OVER  5.0
 
+namespace {
+
 /**
  * @brief parse a latitude value from an input widget
  * @param widget the input widget
@@ -58,7 +60,8 @@
  *
  * If the function returns false, lat will not be modified.
  */
-static bool pos_lat_get(GtkWidget *widget, pos_float_t &lat) {
+bool pos_lat_get(GtkWidget *widget, pos_float_t &lat)
+{
   const char *p = gtk_entry_get_text(GTK_ENTRY(widget));
   pos_float_t t = g_strtod(p, nullptr);
   bool ret = pos_lat_valid(t);
@@ -67,7 +70,8 @@ static bool pos_lat_get(GtkWidget *widget, pos_float_t &lat) {
   return ret;
 }
 
-static void table_attach(GtkTable *table, GtkWidget *widget, int x, int y) {
+void table_attach(GtkTable *table, GtkWidget *widget, int x, int y)
+{
   gtk_table_attach_defaults(table, widget, x, x + 1, y, y + 1);
 }
 
@@ -79,7 +83,8 @@ static void table_attach(GtkTable *table, GtkWidget *widget, int x, int y) {
  *
  * If the function returns false, lon will not be modified.
  */
-static bool pos_lon_get(GtkWidget *widget, pos_float_t &lon) {
+bool pos_lon_get(GtkWidget *widget, pos_float_t &lon)
+{
   const char *p = gtk_entry_get_text(GTK_ENTRY(widget));
   pos_float_t t = g_strtod(p, nullptr);
   bool ret = pos_lon_valid(t);
@@ -88,17 +93,20 @@ static bool pos_lon_get(GtkWidget *widget, pos_float_t &lon) {
   return ret;
 }
 
-static void mark(GtkWidget *widget, bool valid) {
+void mark(GtkWidget *widget, bool valid)
+{
   gtk_widget_set_state(widget, valid ? GTK_STATE_NORMAL : GTK_STATE_PRELIGHT);
 }
 
-static void callback_modified_lat(GtkWidget *widget) {
+void callback_modified_lat(GtkWidget *widget)
+{
   pos_float_t tmp;
   mark(widget, pos_lat_get(widget, tmp));
 }
 
 /* a entry that is colored red when being "active" */
-static GtkWidget *pos_lat_entry_new(pos_float_t lat) {
+GtkWidget *pos_lat_entry_new(pos_float_t lat)
+{
   GtkWidget *widget = osm2go_platform::entry_new();
   gtk_widget_modify_text(widget, GTK_STATE_PRELIGHT, osm2go_platform::invalid_text_color());
 
@@ -111,13 +119,15 @@ static GtkWidget *pos_lat_entry_new(pos_float_t lat) {
   return widget;
 }
 
-static void callback_modified_lon(GtkWidget *widget) {
+void callback_modified_lon(GtkWidget *widget)
+{
   pos_float_t tmp;
   mark(widget, pos_lon_get(widget, tmp));
 }
 
 /* a entry that is colored red when filled with invalid coordinate */
-static GtkWidget *pos_lon_entry_new(pos_float_t lon) {
+GtkWidget *pos_lon_entry_new(pos_float_t lon)
+{
   GtkWidget *widget = osm2go_platform::entry_new();
   gtk_widget_modify_text(widget, GTK_STATE_PRELIGHT, osm2go_platform::invalid_text_color());
 
@@ -130,19 +140,22 @@ static GtkWidget *pos_lon_entry_new(pos_float_t lon) {
   return widget;
 }
 
-static void pos_lat_entry_set(GtkWidget *entry, pos_float_t lat) {
+void pos_lat_entry_set(GtkWidget *entry, pos_float_t lat)
+{
   char str[32];
   pos_lat_str(str, sizeof(str), lat);
   gtk_entry_set_text(GTK_ENTRY(entry), str);
 }
 
-static void pos_lon_entry_set(GtkWidget *entry, pos_float_t lon) {
+void pos_lon_entry_set(GtkWidget *entry, pos_float_t lon)
+{
   char str[32];
   pos_lon_str(str, sizeof(str), lon);
   gtk_entry_set_text(GTK_ENTRY(entry), str);
 }
 
-static void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, bool is_mil) {
+void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, bool is_mil)
+{
   char str[32] = "---";
   if(!std::isnan(dist)) {
     /* is this to be displayed as miles? */
@@ -154,12 +167,11 @@ static void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, bool is_mil) 
   gtk_entry_set_text(GTK_ENTRY(entry), str);
 }
 
-static pos_float_t pos_dist_get(GtkWidget *widget, bool is_mil) {
+pos_float_t pos_dist_get(GtkWidget *widget, bool is_mil)
+{
   const gchar *p = gtk_entry_get_text(GTK_ENTRY(widget));
   return g_strtod(p, nullptr) * (is_mil?KMPMIL:1.0);
 }
-
-namespace {
 
 struct area_context_t {
   explicit area_context_t(area_edit_t &a, GtkWidget *dlg);
