@@ -120,15 +120,10 @@ struct _OsmGpsMapPrivate
     //gps tracking state
     OsmGpsMapPoint gps;
     float gps_heading;
-    gboolean gps_valid;
 
     //the osd controls (if present)
     struct osd_priv_s *osd;
     GdkPixmap *dbuf_pixmap;
-
-#ifdef OSM_GPS_MAP_KEY_FULLSCREEN
-    gboolean fullscreen;
-#endif
 
     //additional images or tracks added to the map
     GSList *tracks;
@@ -151,8 +146,13 @@ struct _OsmGpsMapPrivate
     int drag_start_map_y;
     guint drag_expose;
 
-    guint is_disposed : 1;
-    guint dragging : 1;
+    gboolean gps_valid : 2;
+#ifdef OSM_GPS_MAP_KEY_FULLSCREEN
+    gboolean fullscreen : 2;
+#endif
+
+    gboolean is_disposed : 2;
+    gboolean dragging : 2;
 };
 
 #define OSM_GPS_MAP_PRIVATE(o)  (OSM_GPS_MAP (o)->priv)
