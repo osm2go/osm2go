@@ -1,3 +1,11 @@
+if (MAEMO_FOUND)
+	pkg_check_modules(Hildon REQUIRED IMPORTED_TARGET hildon-1)
+else ()
+	find_package(GTK2 2.24 REQUIRED)
+endif ()
+
+add_subdirectory(osm-gps-map)
+
 target_include_directories(osm2go_lib
 		PUBLIC
 			${CMAKE_CURRENT_SOURCE_DIR})
@@ -37,6 +45,7 @@ function(add_compat_header hdr)
 	# directory exists so we know that the include has been added
 	if (NOT TR1_DIR_ADDED)
 		target_include_directories(osm2go_lib PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/tr1wrappers_bin)
+		target_include_directories(osm-gps-map PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/tr1wrappers_bin)
 		set(TR1_DIR_ADDED TRUE PARENT_SCOPE)
 	endif ()
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tr1wrappers/${hdr}
@@ -130,7 +139,6 @@ pkg_check_modules(GConf2 REQUIRED IMPORTED_TARGET gconf-2.0)
 target_link_libraries(osm2go_lib PRIVATE PkgConfig::GConf2)
 
 if (MAEMO_FOUND)
-	pkg_check_modules(Hildon REQUIRED IMPORTED_TARGET hildon-1)
 	pkg_check_modules(Osso REQUIRED IMPORTED_TARGET libosso)
 	pkg_check_modules(libLocation REQUIRED IMPORTED_TARGET liblocation)
 
@@ -150,8 +158,6 @@ if (MAEMO_FOUND)
 	# SVG icons do not work on my N900
 	set(USE_SVG_ICONS_DEFAULT Off PARENT_SCOPE)
 else ()
-	find_package(GTK2 2.24 REQUIRED)
-
 	pkg_check_modules(LibGPS REQUIRED IMPORTED_TARGET libgps)
 	target_link_libraries(osm2go_lib PRIVATE PkgConfig::LibGPS)
 
@@ -165,7 +171,6 @@ else ()
 endif ()
 target_compile_definitions(osm2go_lib PUBLIC GTK_DISABLE_DEPRECATED)
 
-add_subdirectory(osm-gps-map)
 target_link_libraries(osm2go_lib PRIVATE osm-gps-map)
 
 add_executable(osm2go

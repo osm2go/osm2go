@@ -26,11 +26,13 @@
 
 #include <cassert>
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
+#include <unordered_set>
 
 #include <cairo.h>
 #include <gdk/gdk.h>
@@ -92,7 +94,7 @@ static void g_slist_free_full(GSList *list, GDestroyNotify free_func)
 struct _OsmGpsMapPrivate
 {
     GHashTable *tile_queue;
-    GHashTable *missing_tiles;
+    std::unordered_set<uint64_t> *missing_tiles;
     GHashTable *tile_cache;
 
     int map_zoom;
@@ -447,11 +449,9 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
         if (msg->status_code == SOUP_STATUS_NOT_FOUND)
         {
             OsmGpsMapPrivate *priv = OSM_GPS_MAP(dl->map)->priv;
-            guint64 *hashkey = static_cast<guint64 *>(g_malloc(sizeof(*hashkey)));
-            *hashkey = dl->hashkey;
 
-            g_hash_table_insert(priv->missing_tiles, hashkey, nullptr);
-            g_hash_table_remove(priv->tile_queue, hashkey);
+            priv->missing_tiles->insert(dl->hashkey);
+            g_hash_table_remove(priv->tile_queue, &dl->hashkey);
         }
         else if (msg->status_code == SOUP_STATUS_CANCELLED)
         {
@@ -492,7 +492,7 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y)
     //check the tile has not already been queued for download,
     //or has been attempted, and its missing
     if (g_hash_table_lookup_extended(priv->tile_queue, &hashkey, nullptr, nullptr) ||
-        g_hash_table_lookup_extended(priv->missing_tiles, &hashkey, nullptr, nullptr))
+        priv->missing_tiles->find(hashkey) != priv->missing_tiles->end())
     {
         g_debug("Tile already downloading (or missing)");
     } else {
@@ -990,8 +990,7 @@ osm_gps_map_init (OsmGpsMap *object)
     //Hash table which maps tile d/l URIs to SoupMessage requests
     priv->tile_queue = g_hash_table_new (g_int64_hash, g_int64_equal);
 
-    priv->missing_tiles = g_hash_table_new_full (g_int64_hash, g_int64_equal,
-                                                 g_free, nullptr);
+    priv->missing_tiles = new std::unordered_set<uint64_t>();
 
     /* memory cache for most recently used tiles */
     priv->tile_cache = g_hash_table_new_full (g_int64_hash, g_int64_equal,
@@ -1052,7 +1051,7 @@ osm_gps_map_dispose (GObject *object)
     g_object_unref(priv->soup_session);
 
     g_hash_table_destroy(priv->tile_queue);
-    g_hash_table_destroy(priv->missing_tiles);
+    delete priv->missing_tiles;
     g_hash_table_destroy(priv->tile_cache);
 
     if(priv->pixmap)
