@@ -24,12 +24,12 @@
 
 #include "osm-gps-map.h"
 
-#include <assert.h>
+#include <cassert>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <fcntl.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
 #include <cairo.h>
@@ -44,6 +44,8 @@
 #include "osm-gps-map-point.h"
 #include "osm-gps-map-source.h"
 #include "osm-gps-map-types.h"
+
+#include <osm2go_cpp.h>
 
 /* the version check macro is not available in all versions of libsoup */
 #if defined(SOUP_CHECK_VERSION)
@@ -77,7 +79,7 @@
 #if !GLIB_CHECK_VERSION(2,28,0)
 static void g_slist_free_full(GSList *list, GDestroyNotify free_func)
 {
-  g_slist_foreach(list, (GFunc) free_func, NULL);
+  g_slist_foreach(list, (GFunc) free_func, nullptr);
   g_slist_free(list);
 }
 #endif
@@ -143,9 +145,9 @@ struct _OsmGpsMapPrivate
     int drag_start_map_y;
     guint drag_expose;
 
-    gboolean gps_valid : 2;
+    bool gps_valid;
 #ifdef OSM_GPS_MAP_KEY_FULLSCREEN
-    gboolean fullscreen : 2;
+    bool fullscreen;
 #endif
 
     gboolean is_disposed : 2;
@@ -218,15 +220,15 @@ replace_string(gchar *src, const gchar *from, const gchar *to)
 
     /* Try to find the search text. */
     const char *match = strstr(src, from);
-    assert(match != NULL);
+    assert(match != nullptr);
 
     /* Allocate the destination buffer. */
     size_t size  = strlen(src);
-    gchar *value = g_realloc(src, size + 1 + tolen - fromlen);
+    gchar *value = static_cast<gchar *>(g_realloc(src, size + 1 + tolen - fromlen));
 
-    if (G_UNLIKELY(value == NULL)) {
+    if (G_UNLIKELY(value == nullptr)) {
       g_free(src);
-      return NULL;
+      return nullptr;
     }
 
     /* We need to return 'value', so let's make a copy to mess around with. */
@@ -290,13 +292,13 @@ osm_gps_map_free_tracks (OsmGpsMap *map)
     if (priv->tracks)
     {
         GSList* tmp = priv->tracks;
-        while (tmp != NULL)
+        while (tmp != nullptr)
         {
-            g_slist_free_full(tmp->data, g_free);
+            g_slist_free_full(static_cast<GSList *>(tmp->data), g_free);
             tmp = g_slist_next(tmp);
         }
         g_slist_free(priv->tracks);
-        priv->tracks = NULL;
+        priv->tracks = nullptr;
     }
 }
 
@@ -308,13 +310,13 @@ osm_gps_map_free_bounds(OsmGpsMap *map)
     if (priv->bounds)
     {
         GSList* tmp = priv->bounds;
-        while (tmp != NULL)
+        while (tmp != nullptr)
         {
-            g_slist_free_full(tmp->data, g_free);
+            g_slist_free_full(static_cast<GSList *>(tmp->data), g_free);
             tmp = g_slist_next(tmp);
         }
         g_slist_free(priv->bounds);
-        priv->bounds = NULL;
+        priv->bounds = nullptr;
     }
 }
 
@@ -339,7 +341,7 @@ osm_gps_map_draw_gps_point (OsmGpsMap *map)
         // draw ball gradient
         if (r > 0) {
             // draw direction arrow
-            if(!isnan(priv->gps_heading))
+            if(!std::isnan(priv->gps_heading))
             {
                 cairo_move_to (cr, x-r*cos(priv->gps_heading), y-r*sin(priv->gps_heading));
                 cairo_line_to (cr, x+3*r*sin(priv->gps_heading), y-3*r*cos(priv->gps_heading));
@@ -405,12 +407,12 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
         OsmGpsMapPrivate *priv = map->priv;
 
         /* parse file directly from memory */
-        GdkPixbufLoader *loader = gdk_pixbuf_loader_new_with_type (priv->image_format, NULL);
-        if (!gdk_pixbuf_loader_write (loader, (unsigned char*)msg->response_body->data, msg->response_body->length, NULL))
+        GdkPixbufLoader *loader = gdk_pixbuf_loader_new_with_type (priv->image_format, nullptr);
+        if (!gdk_pixbuf_loader_write (loader, (unsigned char*)msg->response_body->data, msg->response_body->length, nullptr))
         {
             g_warning("Error: Decoding of image failed");
         }
-        gdk_pixbuf_loader_close(loader, NULL);
+        gdk_pixbuf_loader_close(loader, nullptr);
 
         GdkPixbuf *pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
 
@@ -443,10 +445,10 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
         if (msg->status_code == SOUP_STATUS_NOT_FOUND)
         {
             OsmGpsMapPrivate *priv = OSM_GPS_MAP(dl->map)->priv;
-            guint64 *hashkey = g_malloc(sizeof(*hashkey));
+            guint64 *hashkey = static_cast<guint64 *>(g_malloc(sizeof(*hashkey)));
             *hashkey = dl->hashkey;
 
-            g_hash_table_insert(priv->missing_tiles, hashkey, NULL);
+            g_hash_table_insert(priv->missing_tiles, hashkey, nullptr);
             g_hash_table_remove(priv->tile_queue, hashkey);
         }
         else if (msg->status_code == SOUP_STATUS_CANCELLED)
@@ -487,8 +489,8 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y)
 
     //check the tile has not already been queued for download,
     //or has been attempted, and its missing
-    if (g_hash_table_lookup_extended(priv->tile_queue, &hashkey, NULL, NULL) ||
-        g_hash_table_lookup_extended(priv->missing_tiles, &hashkey, NULL, NULL))
+    if (g_hash_table_lookup_extended(priv->tile_queue, &hashkey, nullptr, nullptr) ||
+        g_hash_table_lookup_extended(priv->missing_tiles, &hashkey, nullptr, nullptr))
     {
         g_debug("Tile already downloading (or missing)");
     } else {
@@ -515,16 +517,16 @@ static GdkPixbuf *
 osm_gps_map_load_cached_tile (OsmGpsMap *map, int zoom, int x, int y)
 {
     OsmGpsMapPrivate *priv = map->priv;
-    GdkPixbuf *pixbuf = NULL;
+    GdkPixbuf *pixbuf = nullptr;
 
     guint64 hash = tile_hash(zoom, x, y);
-    OsmCachedTile *tile = g_hash_table_lookup (priv->tile_cache, &hash);
+    OsmCachedTile *tile = static_cast<OsmCachedTile *>(g_hash_table_lookup(priv->tile_cache, &hash));
 
     /* set/update the redraw_cycle timestamp on the tile */
     if (tile)
     {
         tile->redraw_cycle = priv->redraw_cycle;
-        pixbuf = g_object_ref (tile->pixbuf);
+        pixbuf = static_cast<GdkPixbuf *>(g_object_ref(tile->pixbuf));
     }
 
     return pixbuf;
@@ -534,7 +536,7 @@ static GdkPixbuf *
 osm_gps_map_find_bigger_tile (OsmGpsMap *map, int zoom, int x, int y,
                               int *zoom_found)
 {
-    if (zoom == 0) return NULL;
+    if (zoom == 0) return nullptr;
 
     int next_zoom = zoom - 1;
     int next_x = x / 2;
@@ -556,7 +558,7 @@ osm_gps_map_render_missing_tile_upscaled (OsmGpsMap *map, int zoom,
     int zoom_big;
 
     GdkPixbuf *big = osm_gps_map_find_bigger_tile (map, zoom, x, y, &zoom_big);
-    if (!big) return NULL;
+    if (!big) return nullptr;
 
     g_debug ("Found bigger tile (zoom = %d, wanted = %d)", zoom_big, zoom);
 
@@ -564,7 +566,7 @@ osm_gps_map_render_missing_tile_upscaled (OsmGpsMap *map, int zoom,
     int zoom_diff = zoom - zoom_big;
     int area_size = TILESIZE >> zoom_diff;
     if (area_size == 0)
-      return NULL;
+      return nullptr;
     int modulo = 1 << zoom_diff;
     int area_x = (x % modulo) * area_size;
     int area_y = (y % modulo) * area_size;
@@ -695,9 +697,9 @@ osm_gps_map_print_track(OsmGpsMap *map, GSList *trackpoint_list,
 
     int map_x0 = priv->map_x - EXTRA_BORDER;
     int map_y0 = priv->map_y - EXTRA_BORDER;
-    for(const GSList *list = trackpoint_list; list != NULL; list = list->next)
+    for(const GSList *list = trackpoint_list; list != nullptr; list = list->next)
     {
-        const OsmGpsMapPoint *tp = list->data;
+        const OsmGpsMapPoint *tp = static_cast<const OsmGpsMapPoint *>(list->data);
 
         int x = lon2pixel(priv->map_zoom, tp->rlon) - map_x0;
         int y = lat2pixel(priv->map_zoom, tp->rlat) - map_y0;
@@ -738,9 +740,9 @@ osm_gps_map_print_tracks (OsmGpsMap *map)
     if (priv->tracks)
     {
         GSList* tmp = priv->tracks;
-        while (tmp != NULL)
+        while (tmp != nullptr)
         {
-            osm_gps_map_print_track(map, tmp->data, r, g, b, UI_GPS_TRACK_WIDTH);
+            osm_gps_map_print_track(map, static_cast<GSList *>(tmp->data), r, g, b, UI_GPS_TRACK_WIDTH);
             tmp = g_slist_next(tmp);
         }
     }
@@ -756,9 +758,9 @@ osm_gps_map_print_bounds(OsmGpsMap *map)
     const unsigned short b = 0xab * 256;
 
     GSList* tmp = priv->bounds;
-    while (tmp != NULL)
+    while (tmp != nullptr)
     {
-        osm_gps_map_print_track(map, tmp->data, r, g, b, UI_GPS_TRACK_WIDTH / 2);
+        osm_gps_map_print_track(map, static_cast<GSList *>(tmp->data), r, g, b, UI_GPS_TRACK_WIDTH / 2);
         tmp = g_slist_next(tmp);
     }
 }
@@ -927,28 +929,28 @@ on_window_key_press(GtkWidget *widget,
 static void
 osm_gps_map_init (OsmGpsMap *object)
 {
-    OsmGpsMapPrivate *priv;
+    OsmGpsMapPrivate *priv = static_cast<OsmGpsMapPrivate *>(
 
 #if !GLIB_CHECK_VERSION(2,38,0)
-    priv = G_TYPE_INSTANCE_GET_PRIVATE (object, OSM_TYPE_GPS_MAP, OsmGpsMapPrivate);
+      G_TYPE_INSTANCE_GET_PRIVATE (object, OSM_TYPE_GPS_MAP, OsmGpsMapPrivate));
 #else
-    priv = osm_gps_map_get_instance_private(object);
+      osm_gps_map_get_instance_private(object));
 #endif
 
     object->priv = priv;
 
-    priv->pixmap = NULL;
+    priv->pixmap = nullptr;
 
     memset(&priv->gps, 0, sizeof(priv->gps));
-    priv->gps_valid = FALSE;
+    priv->gps_valid = false;
     priv->gps_heading = NAN;
 
 #ifdef OSM_GPS_MAP_BUTTON_FULLSCREEN
-    priv->fullscreen = FALSE;
+    priv->fullscreen = false;
 #endif
 
-    priv->tracks = NULL;
-    priv->bounds = NULL;
+    priv->tracks = nullptr;
+    priv->bounds = nullptr;
 
     priv->drag_counter = 0;
     priv->drag_mouse_dx = 0;
@@ -960,15 +962,15 @@ osm_gps_map_init (OsmGpsMap *object)
 #ifdef USE_SOUP_SESSION_NEW
     priv->soup_session =
         soup_session_new_with_options(SOUP_SESSION_USER_AGENT,
-                                      USER_AGENT, NULL);
+                                      USER_AGENT, nullptr);
 #else
     priv->soup_session =
         soup_session_async_new_with_options(SOUP_SESSION_USER_AGENT,
-                                            USER_AGENT, NULL);
+                                            USER_AGENT, nullptr);
 #endif
 
     const gchar *prx = g_getenv("http_proxy");
-    if (prx != NULL) {
+    if (prx != nullptr) {
 #ifndef G_VALUE_INIT
 #define G_VALUE_INIT  { 0, { { 0 } } }
 #endif
@@ -985,11 +987,11 @@ osm_gps_map_init (OsmGpsMap *object)
     priv->tile_queue = g_hash_table_new (g_int64_hash, g_int64_equal);
 
     priv->missing_tiles = g_hash_table_new_full (g_int64_hash, g_int64_equal,
-                                                 g_free, NULL);
+                                                 g_free, nullptr);
 
     /* memory cache for most recently used tiles */
     priv->tile_cache = g_hash_table_new_full (g_int64_hash, g_int64_equal,
-                                              NULL, (GDestroyNotify)cached_tile_free);
+                                              nullptr, (GDestroyNotify)cached_tile_free);
 
     gtk_widget_add_events (GTK_WIDGET (object),
                            GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
@@ -997,7 +999,7 @@ osm_gps_map_init (OsmGpsMap *object)
                            GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK);
     GTK_WIDGET_SET_FLAGS (object, GTK_CAN_FOCUS);
 
-    g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_MASK, my_log_handler, NULL);
+    g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_MASK, my_log_handler, nullptr);
 
     g_signal_connect(G_OBJECT(object), "key_press_event",
                      G_CALLBACK(on_window_key_press), priv);
@@ -1009,7 +1011,7 @@ static void
 osm_gps_map_setup(OsmGpsMapPrivate *priv) {
     //check if the source given is valid
     const gchar *uri = osm_gps_map_source_get_repo_uri(OSM_GPS_MAP_SOURCE_OPENSTREETMAP);
-    assert(uri != NULL);
+    assert(uri != nullptr);
 
     priv->repo_uri = uri;
     priv->image_format = osm_gps_map_source_get_image_format(OSM_GPS_MAP_SOURCE_OPENSTREETMAP);
@@ -1061,7 +1063,7 @@ osm_gps_map_dispose (GObject *object)
 
     if(priv->osd) {
         osm_gps_map_osd_free(priv->osd);
-        priv->osd = NULL;
+        priv->osd = nullptr;
     }
 
     if(priv->dbuf_pixmap)
@@ -1160,28 +1162,28 @@ osm_gps_map_button_press (GtkWidget *widget, GdkEventButton *event)
             case OSD_UP:
                 priv->map_y -= step;
                 center_coord_update(widget);
-                g_object_set(G_OBJECT(widget), "auto-center", FALSE, NULL);
+                g_object_set(G_OBJECT(widget), "auto-center", FALSE, nullptr);
                 osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
                 break;
 
             case OSD_DOWN:
                 priv->map_y += step;
                 center_coord_update(widget);
-                g_object_set(G_OBJECT(widget), "auto-center", FALSE, NULL);
+                g_object_set(G_OBJECT(widget), "auto-center", FALSE, nullptr);
                 osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
                 break;
 
             case OSD_LEFT:
                 priv->map_x -= step;
                 center_coord_update(widget);
-                g_object_set(G_OBJECT(widget), "auto-center", FALSE, NULL);
+                g_object_set(G_OBJECT(widget), "auto-center", FALSE, nullptr);
                 osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
                 break;
 
             case OSD_RIGHT:
                 priv->map_x += step;
                 center_coord_update(widget);
-                g_object_set(G_OBJECT(widget), "auto-center", FALSE, NULL);
+                g_object_set(G_OBJECT(widget), "auto-center", FALSE, nullptr);
                 osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
                 break;
 
@@ -1251,7 +1253,7 @@ osm_gps_map_map_expose (GtkWidget *widget)
     OsmGpsMapPrivate *priv = OSM_GPS_MAP(widget)->priv;
 
     priv->drag_expose = 0;
-    osm_gps_map_expose (widget, NULL);
+    osm_gps_map_expose (widget, nullptr);
     return FALSE;
 }
 
@@ -1268,7 +1270,7 @@ osm_gps_map_motion_notify (GtkWidget *widget, GdkEventMotion  *event)
     {
         x = event->x;
         y = event->y;
-        state = event->state;
+        state = static_cast<GdkModifierType>(event->state);
     }
 
     // are we being dragged
@@ -1464,7 +1466,7 @@ osm_gps_map_class_init (OsmGpsMapClass *klass)
                                                        G_MININT, /* minimum property value */
                                                        G_MAXINT, /* maximum property value */
                                                        890,
-                                                       G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+                                                       static_cast<GParamFlags>(G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY)));
 
     g_object_class_install_property (object_class,
                                      PROP_MAP_Y,
@@ -1474,7 +1476,7 @@ osm_gps_map_class_init (OsmGpsMapClass *klass)
                                                        G_MININT, /* minimum property value */
                                                        G_MAXINT, /* maximum property value */
                                                        515,
-                                                       G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+                                                       static_cast<GParamFlags>(G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY)));
 }
 
 const char*
@@ -1626,7 +1628,7 @@ osm_gps_map_gps_add (OsmGpsMap *map, float latitude, float longitude, float head
 
     priv->gps.rlat = deg2rad(latitude);
     priv->gps.rlon = deg2rad(longitude);
-    priv->gps_valid = TRUE;
+    priv->gps_valid = true;
     priv->gps_heading = deg2rad(heading);
 
     // dont draw anything if we are dragging
@@ -1667,23 +1669,23 @@ osm_gps_map_redraw (OsmGpsMap *map)
 struct osd_priv_s *
 osm_gps_map_osd_get(OsmGpsMap *map)
 {
-    g_return_val_if_fail (OSM_IS_GPS_MAP (map), NULL);
+    g_return_val_if_fail (OSM_IS_GPS_MAP (map), nullptr);
     return map->priv->osd;
 }
 
 void
 osm_gps_map_repaint (OsmGpsMap *map)
 {
-    osm_gps_map_expose (GTK_WIDGET(map), NULL);
+    osm_gps_map_expose (GTK_WIDGET(map), nullptr);
 }
 
 OsmGpsMapPoint *
 osm_gps_map_get_gps (OsmGpsMap *map)
 {
-    g_return_val_if_fail (OSM_IS_GPS_MAP (map), NULL);
+    g_return_val_if_fail (OSM_IS_GPS_MAP (map), nullptr);
 
     if(!map->priv->gps_valid)
-        return NULL;
+        return nullptr;
 
     return &map->priv->gps;
 }

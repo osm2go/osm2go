@@ -1,7 +1,7 @@
 add_library(osm-gps-map STATIC
 	converter.c
 	converter.h
-	osm-gps-map.c
+	osm-gps-map.cpp
 	osm-gps-map.h
 	osm-gps-map-point.h
 	osm-gps-map-source.h
@@ -30,6 +30,9 @@ else ()
 	)
 endif ()
 
-set_property(SOURCE osm-gps-map.c APPEND PROPERTY COMPILE_DEFINITIONS VERSION="${PROJECT_VERSION}")
+set_property(SOURCE osm-gps-map.cpp APPEND PROPERTY COMPILE_DEFINITIONS VERSION="${PROJECT_VERSION}")
 
-target_include_directories(osm-gps-map INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(osm-gps-map
+	INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
+	PRIVATE ${osm2go_BINARY_DIR}
+)
