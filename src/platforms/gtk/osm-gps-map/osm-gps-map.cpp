@@ -179,6 +179,8 @@ G_DEFINE_TYPE (OsmGpsMap, osm_gps_map, GTK_TYPE_DRAWING_AREA);
 G_DEFINE_TYPE_WITH_PRIVATE (OsmGpsMap, osm_gps_map, GTK_TYPE_DRAWING_AREA);
 #endif
 
+namespace {
+
 typedef struct {
     /* The details of the tile to download */
     char *uri;
@@ -189,9 +191,9 @@ typedef struct {
 /*
  * Drawing function forward defintions
  */
-static void     osm_gps_map_map_redraw_idle (OsmGpsMap *map);
+void osm_gps_map_map_redraw_idle (OsmGpsMap *map);
 
-static void
+void
 cached_tile_free (OsmCachedTile *tile)
 {
     g_object_unref (tile->pixbuf);
@@ -212,7 +214,7 @@ cached_tile_free (OsmCachedTile *tile)
  *   with first occurence of the text pointed to by 'from' replaced by with the
  *   text pointed to by 'to'.
  */
-static gchar *
+gchar *
 replace_string(gchar *src, const gchar *from, const gchar *to)
 {
     size_t fromlen = strlen(from);
@@ -258,7 +260,7 @@ replace_string(gchar *src, const gchar *from, const gchar *to)
     return value;
 }
 
-static gchar *
+gchar *
 replace_map_uri(const gchar *uri, int zoom, int x, int y)
 {
     gchar *url = g_strdup(uri);
@@ -277,7 +279,7 @@ replace_map_uri(const gchar *uri, int zoom, int x, int y)
     return url;
 }
 
-static void
+void
 my_log_handler (const gchar * log_domain, GLogLevelFlags log_level, const gchar * message, gpointer user_data)
 {
     if (!(log_level & G_LOG_LEVEL_DEBUG) || ENABLE_DEBUG)
@@ -285,7 +287,7 @@ my_log_handler (const gchar * log_domain, GLogLevelFlags log_level, const gchar 
 }
 
 /* clears the tracks and all resources */
-static void
+void
 osm_gps_map_free_tracks (OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
@@ -303,7 +305,7 @@ osm_gps_map_free_tracks (OsmGpsMap *map)
 }
 
 /* clears the bounds and all resources */
-static void
+void
 osm_gps_map_free_bounds(OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
@@ -320,7 +322,7 @@ osm_gps_map_free_bounds(OsmGpsMap *map)
     }
 }
 
-static void
+void
 osm_gps_map_draw_gps_point (OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
@@ -379,7 +381,7 @@ osm_gps_map_draw_gps_point (OsmGpsMap *map)
     }
 }
 
-static void
+void
 osm_gps_map_blit_tile(OsmGpsMap *map, GdkPixbuf *pixbuf, int offset_x, int offset_y)
 {
     OsmGpsMapPrivate *priv = map->priv;
@@ -396,7 +398,7 @@ osm_gps_map_blit_tile(OsmGpsMap *map, GdkPixbuf *pixbuf, int offset_x, int offse
                      GDK_RGB_DITHER_NONE, 0, 0);
 }
 
-static void
+void
 osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpointer user_data)
 {
     tile_download_t *dl = (tile_download_t *)user_data;
@@ -465,7 +467,7 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
     }
 }
 
-static guint64
+guint64
 tile_hash(guint zoom, guint x, guint y)
 {
   guint64 ret = zoom; // zoom is 1..19, so it fits in 5 bits. Move it to top byte
@@ -479,7 +481,7 @@ tile_hash(guint zoom, guint x, guint y)
   return ret;
 }
 
-static void
+void
 osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y)
 {
     OsmGpsMapPrivate *priv = map->priv;
@@ -513,7 +515,7 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y)
     }
 }
 
-static GdkPixbuf *
+GdkPixbuf *
 osm_gps_map_load_cached_tile (OsmGpsMap *map, int zoom, int x, int y)
 {
     OsmGpsMapPrivate *priv = map->priv;
@@ -532,7 +534,7 @@ osm_gps_map_load_cached_tile (OsmGpsMap *map, int zoom, int x, int y)
     return pixbuf;
 }
 
-static GdkPixbuf *
+GdkPixbuf *
 osm_gps_map_find_bigger_tile (OsmGpsMap *map, int zoom, int x, int y,
                               int *zoom_found)
 {
@@ -551,7 +553,7 @@ osm_gps_map_find_bigger_tile (OsmGpsMap *map, int zoom, int x, int y,
     return pixbuf;
 }
 
-static GdkPixbuf *
+GdkPixbuf *
 osm_gps_map_render_missing_tile_upscaled (OsmGpsMap *map, int zoom,
                                           int x, int y)
 {
@@ -579,14 +581,14 @@ osm_gps_map_render_missing_tile_upscaled (OsmGpsMap *map, int zoom,
     return pixbuf;
 }
 
-static GdkPixbuf *
+GdkPixbuf *
 osm_gps_map_render_missing_tile (OsmGpsMap *map, int zoom, int x, int y)
 {
     /* maybe TODO: render from downscaled tiles, if the following fails */
     return osm_gps_map_render_missing_tile_upscaled (map, zoom, x, y);
 }
 
-static void
+void
 osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int offset_y)
 {
     OsmGpsMapPrivate *priv = map->priv;
@@ -629,7 +631,7 @@ osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int
     }
 }
 
-static void
+void
 osm_gps_map_fill_tiles_pixel (OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
@@ -680,7 +682,7 @@ osm_gps_map_fill_tiles_pixel (OsmGpsMap *map)
     }
 }
 
-static void
+void
 osm_gps_map_print_track(OsmGpsMap *map, GSList *trackpoint_list,
                         unsigned short r, unsigned short g, unsigned short b,
                         int lw)
@@ -729,7 +731,7 @@ osm_gps_map_print_track(OsmGpsMap *map, GSList *trackpoint_list,
 }
 
 /* Prints the gps trip history, and any other tracks */
-static void
+void
 osm_gps_map_print_tracks (OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
@@ -749,7 +751,7 @@ osm_gps_map_print_tracks (OsmGpsMap *map)
 }
 
 /* Prints the bound rectangles */
-static void
+void
 osm_gps_map_print_bounds(OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
@@ -765,13 +767,13 @@ osm_gps_map_print_bounds(OsmGpsMap *map)
     }
 }
 
-static gboolean
+gboolean
 osm_gps_map_purge_cache_check(G_GNUC_UNUSED gpointer key, gpointer value, gpointer user)
 {
    return (((OsmCachedTile*)value)->redraw_cycle < GPOINTER_TO_UINT(user));
 }
 
-static void
+void
 osm_gps_map_purge_cache (OsmGpsMap *map)
 {
    OsmGpsMapPrivate *priv = map->priv;
@@ -785,7 +787,7 @@ osm_gps_map_purge_cache (OsmGpsMap *map)
                                GUINT_TO_POINTER(priv->redraw_cycle - MAX_TILE_CACHE_SIZE / 2));
 }
 
-static gboolean
+gboolean
 osm_gps_map_map_redraw (OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
@@ -840,7 +842,7 @@ osm_gps_map_map_redraw (OsmGpsMap *map)
     return FALSE;
 }
 
-static void
+void
 osm_gps_map_map_redraw_idle (OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
@@ -849,7 +851,7 @@ osm_gps_map_map_redraw_idle (OsmGpsMap *map)
         priv->idle_map_redraw = g_idle_add ((GSourceFunc)osm_gps_map_map_redraw, map);
 }
 
-static void
+void
 center_coord_update(GtkWidget *widget) {
     OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
 
@@ -862,7 +864,7 @@ center_coord_update(GtkWidget *widget) {
     priv->center_rlat = pixel2lat(priv->map_zoom, pixel_y);
 }
 
-static gboolean
+gboolean
 on_window_key_press(GtkWidget *widget,
 			 GdkEventKey *event, OsmGpsMapPrivate *priv) {
   gboolean handled = FALSE;
@@ -925,6 +927,8 @@ on_window_key_press(GtkWidget *widget,
 
   return handled;
 }
+
+} // namespace
 
 static void
 osm_gps_map_init (OsmGpsMap *object)
@@ -1007,7 +1011,9 @@ osm_gps_map_init (OsmGpsMap *object)
     priv->osd = osm_gps_map_osd_select_init();
 }
 
-static void
+namespace {
+
+void
 osm_gps_map_setup(OsmGpsMapPrivate *priv) {
     //check if the source given is valid
     const gchar *uri = osm_gps_map_source_get_repo_uri(OSM_GPS_MAP_SOURCE_OPENSTREETMAP);
@@ -1019,7 +1025,7 @@ osm_gps_map_setup(OsmGpsMapPrivate *priv) {
     priv->min_zoom = osm_gps_map_source_get_min_zoom(OSM_GPS_MAP_SOURCE_OPENSTREETMAP);
 }
 
-static GObject *
+GObject *
 osm_gps_map_constructor (GType gtype, guint n_properties, GObjectConstructParam *properties)
 {
     //Always chain up to the parent constructor
@@ -1031,7 +1037,7 @@ osm_gps_map_constructor (GType gtype, guint n_properties, GObjectConstructParam 
     return object;
 }
 
-static void
+void
 osm_gps_map_dispose (GObject *object)
 {
     OsmGpsMap *map = OSM_GPS_MAP(object);
@@ -1072,7 +1078,7 @@ osm_gps_map_dispose (GObject *object)
     G_OBJECT_CLASS (osm_gps_map_parent_class)->dispose (object);
 }
 
-static void
+void
 osm_gps_map_finalize (GObject *object)
 {
     OsmGpsMap *map = OSM_GPS_MAP(object);
@@ -1083,7 +1089,7 @@ osm_gps_map_finalize (GObject *object)
     G_OBJECT_CLASS (osm_gps_map_parent_class)->finalize (object);
 }
 
-static void
+void
 osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
     g_return_if_fail (OSM_IS_GPS_MAP (object));
@@ -1105,7 +1111,7 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
     }
 }
 
-static void
+void
 osm_gps_map_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
     g_return_if_fail (OSM_IS_GPS_MAP (object));
@@ -1125,7 +1131,7 @@ osm_gps_map_get_property (GObject *object, guint prop_id, GValue *value, GParamS
     }
 }
 
-static gboolean
+gboolean
 osm_gps_map_scroll_event (GtkWidget *widget, GdkEventScroll  *event)
 {
     OsmGpsMap *map = OSM_GPS_MAP(widget);
@@ -1143,7 +1149,7 @@ osm_gps_map_scroll_event (GtkWidget *widget, GdkEventScroll  *event)
     return FALSE;
 }
 
-static gboolean
+gboolean
 osm_gps_map_button_press (GtkWidget *widget, GdkEventButton *event)
 {
     OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
@@ -1212,7 +1218,7 @@ osm_gps_map_button_press (GtkWidget *widget, GdkEventButton *event)
     return FALSE;
 }
 
-static gboolean
+gboolean
 osm_gps_map_button_release (GtkWidget *widget, GdkEventButton *event)
 {
     OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
@@ -1244,7 +1250,7 @@ osm_gps_map_button_release (GtkWidget *widget, GdkEventButton *event)
     return FALSE;
 }
 
-static gboolean
+gboolean
 osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event);
 
 static gboolean
@@ -1257,7 +1263,7 @@ osm_gps_map_map_expose (GtkWidget *widget)
     return FALSE;
 }
 
-static gboolean
+gboolean
 osm_gps_map_motion_notify (GtkWidget *widget, GdkEventMotion  *event)
 {
     int x, y;
@@ -1302,7 +1308,7 @@ osm_gps_map_motion_notify (GtkWidget *widget, GdkEventMotion  *event)
     return FALSE;
 }
 
-static gboolean
+gboolean
 osm_gps_map_configure(GtkWidget *widget, G_GNUC_UNUSED GdkEventConfigure *event)
 {
     OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
@@ -1344,7 +1350,7 @@ osm_gps_map_configure(GtkWidget *widget, G_GNUC_UNUSED GdkEventConfigure *event)
     return FALSE;
 }
 
-static gboolean
+gboolean
 osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event)
 {
     OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
@@ -1434,6 +1440,8 @@ osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event)
 
     return FALSE;
 }
+
+} // namespace
 
 static void
 osm_gps_map_class_init (OsmGpsMapClass *klass)
