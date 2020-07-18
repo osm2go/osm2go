@@ -448,7 +448,7 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
         g_warning("Error downloading tile: %d - %s", msg->status_code, msg->reason_phrase);
         if (msg->status_code == SOUP_STATUS_NOT_FOUND)
         {
-            OsmGpsMapPrivate *priv = OSM_GPS_MAP(dl->map)->priv;
+            OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(dl->map);
 
             priv->missing_tiles->insert(dl->hashkey);
             g_hash_table_remove(priv->tile_queue, &dl->hashkey);
@@ -1039,8 +1039,7 @@ osm_gps_map_constructor (GType gtype, guint n_properties, GObjectConstructParam 
 void
 osm_gps_map_dispose (GObject *object)
 {
-    OsmGpsMap *map = OSM_GPS_MAP(object);
-    OsmGpsMapPrivate *priv = map->priv;
+    OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(object);
 
     if (priv->is_disposed)
         return;
@@ -1255,7 +1254,7 @@ osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event);
 static gboolean
 osm_gps_map_map_expose (GtkWidget *widget)
 {
-    OsmGpsMapPrivate *priv = OSM_GPS_MAP(widget)->priv;
+    OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
 
     priv->drag_expose = 0;
     osm_gps_map_expose (widget, nullptr);
