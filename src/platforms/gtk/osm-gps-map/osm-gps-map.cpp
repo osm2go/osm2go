@@ -24,6 +24,7 @@
 
 #include "osm-gps-map.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstdint>
@@ -32,6 +33,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
+#include <unordered_map>
 #include <unordered_set>
 
 #include <cairo.h>
@@ -91,11 +93,21 @@ static void g_slist_free_full(GSList *list, GDestroyNotify free_func)
 #define UI_GPS_TRACK_WIDTH 4
 #define UI_GPS_POINT_INNER_RADIUS 10
 
+struct OsmCachedTile
+{
+    GdkPixbuf *pixbuf;
+    /* We keep track of the number of the redraw cycle this tile was last used,
+     * so that osm_gps_map_purge_cache() can remove the older ones */
+    guint redraw_cycle;
+};
+
+typedef std::unordered_map<uint64_t, OsmCachedTile *> tile_cache_t;
+
 struct _OsmGpsMapPrivate
 {
     GHashTable *tile_queue;
     std::unordered_set<uint64_t> *missing_tiles;
-    GHashTable *tile_cache;
+    tile_cache_t *tile_cache;
 
     int map_zoom;
     int max_zoom;
@@ -158,15 +170,6 @@ struct _OsmGpsMapPrivate
 
 #define OSM_GPS_MAP_PRIVATE(o)  (OSM_GPS_MAP (o)->priv)
 
-typedef struct
-{
-    guint64 hash;
-    GdkPixbuf *pixbuf;
-    /* We keep track of the number of the redraw cycle this tile was last used,
-     * so that osm_gps_map_purge_cache() can remove the older ones */
-    guint redraw_cycle;
-} OsmCachedTile;
-
 enum
 {
     PROP_0,
@@ -187,7 +190,7 @@ typedef struct {
     /* The details of the tile to download */
     char *uri;
     OsmGpsMap *map;
-    guint64 hashkey;
+    uint64_t hashkey;
 } tile_download_t;
 
 /*
@@ -196,10 +199,10 @@ typedef struct {
 void osm_gps_map_map_redraw_idle (OsmGpsMap *map);
 
 void
-cached_tile_free (OsmCachedTile *tile)
+cached_tile_free(tile_cache_t::value_type &v)
 {
-    g_object_unref (tile->pixbuf);
-    g_slice_free (OsmCachedTile, tile);
+    g_object_unref(v.second->pixbuf);
+    g_slice_free(OsmCachedTile, v.second);
 }
 
 /*
@@ -428,13 +431,15 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
         if (G_LIKELY (pixbuf))
         {
             OsmCachedTile *tile = g_slice_new (OsmCachedTile);
-            tile->hash = dl->hashkey;
             tile->pixbuf = pixbuf;
             tile->redraw_cycle = priv->redraw_cycle;
             /* if the tile is already in the cache (it could be one
              * rendered from another zoom level), it will be
              * overwritten */
-            g_hash_table_insert (priv->tile_cache, &tile->hash, tile);
+            tile_cache_t::iterator it = priv->tile_cache->find(dl->hashkey);
+            if (it != priv->tile_cache->end())
+              cached_tile_free(*it);
+            (*priv->tile_cache)[dl->hashkey] = tile;
         }
         osm_gps_map_map_redraw_idle (map);
 
@@ -467,15 +472,15 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
     }
 }
 
-guint64
+uint64_t
 tile_hash(guint zoom, guint x, guint y)
 {
-  guint64 ret = zoom; // zoom is 1..19, so it fits in 5 bits. Move it to top byte
+  uint64_t ret = zoom; // zoom is 1..19, so it fits in 5 bits. Move it to top byte
   ret <<= 56;
 
   // for the other coordinates they would use 2**zoom bits, so just distribute them
   // evenly in the remaining space
-  ret |= (((guint64)y) << 28);
+  ret |= (static_cast<uint64_t>(y) << 28);
   ret |= x;
 
   return ret;
@@ -521,12 +526,13 @@ osm_gps_map_load_cached_tile (OsmGpsMap *map, int zoom, int x, int y)
     OsmGpsMapPrivate *priv = map->priv;
     GdkPixbuf *pixbuf = nullptr;
 
-    guint64 hash = tile_hash(zoom, x, y);
-    OsmCachedTile *tile = static_cast<OsmCachedTile *>(g_hash_table_lookup(priv->tile_cache, &hash));
+    uint64_t hash = tile_hash(zoom, x, y);
+    tile_cache_t::iterator it = priv->tile_cache->find(hash);
 
     /* set/update the redraw_cycle timestamp on the tile */
-    if (tile)
+    if (it != priv->tile_cache->end())
     {
+        OsmCachedTile *tile = it->second;
         tile->redraw_cycle = priv->redraw_cycle;
         pixbuf = static_cast<GdkPixbuf *>(g_object_ref(tile->pixbuf));
     }
@@ -767,24 +773,33 @@ osm_gps_map_print_bounds(OsmGpsMap *map)
     }
 }
 
-gboolean
-osm_gps_map_purge_cache_check(G_GNUC_UNUSED gpointer key, gpointer value, gpointer user)
-{
-   return (((OsmCachedTile*)value)->redraw_cycle < GPOINTER_TO_UINT(user));
-}
+
+struct tile_purge_check {
+  const unsigned int m_limit;
+  explicit inline tile_purge_check(unsigned int limit) : m_limit(limit) {}
+  inline bool operator()(const tile_cache_t::value_type &p) const {
+    return p.second->redraw_cycle < m_limit;
+  }
+};
+
 
 void
 osm_gps_map_purge_cache (OsmGpsMap *map)
 {
    OsmGpsMapPrivate *priv = map->priv;
+   const tile_purge_check fc(priv->redraw_cycle - MAX_TILE_CACHE_SIZE / 2);
+   tile_cache_t &tc = *priv->tile_cache;
 
-   if (g_hash_table_size (priv->tile_cache) < MAX_TILE_CACHE_SIZE)
-       return;
+   if (tc.size() < MAX_TILE_CACHE_SIZE)
+     return;
 
    /* run through the cache, and remove the tiles which have not been used
     * during the last redraw operation */
-   g_hash_table_foreach_remove(priv->tile_cache, osm_gps_map_purge_cache_check,
-                               GUINT_TO_POINTER(priv->redraw_cycle - MAX_TILE_CACHE_SIZE / 2));
+   for (tile_cache_t::iterator it = std::find_if(tc.begin(), tc.end(), fc); it != tc.end();
+                               it = std::find_if(it, tc.end(), fc)) {
+       cached_tile_free(*it);
+       it = tc.erase(it);
+   }
 }
 
 gboolean
@@ -993,8 +1008,7 @@ osm_gps_map_init (OsmGpsMap *object)
     priv->missing_tiles = new std::unordered_set<uint64_t>();
 
     /* memory cache for most recently used tiles */
-    priv->tile_cache = g_hash_table_new_full (g_int64_hash, g_int64_equal,
-                                              nullptr, (GDestroyNotify)cached_tile_free);
+    priv->tile_cache = new tile_cache_t();
 
     gtk_widget_add_events (GTK_WIDGET (object),
                            GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
@@ -1051,7 +1065,8 @@ osm_gps_map_dispose (GObject *object)
 
     g_hash_table_destroy(priv->tile_queue);
     delete priv->missing_tiles;
-    g_hash_table_destroy(priv->tile_cache);
+    std::for_each(priv->tile_cache->begin(), priv->tile_cache->end(), cached_tile_free);
+    delete priv->tile_cache;
 
     if(priv->pixmap)
         g_object_unref (priv->pixmap);
