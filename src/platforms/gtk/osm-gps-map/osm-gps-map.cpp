@@ -25,6 +25,7 @@
 #include "osm-gps-map.h"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstdint>
@@ -32,6 +33,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <fcntl.h>
+#include <string>
 #include <unistd.h>
 #include <unordered_map>
 #include <unordered_set>
@@ -39,8 +41,6 @@
 #include <cairo.h>
 #include <gdk/gdk.h>
 #include <glib.h>
-#include <glib/gprintf.h>
-#include <glib/gstdio.h>
 #include <libsoup/soup.h>
 
 #include "converter.h"
@@ -205,81 +205,33 @@ cached_tile_free(tile_cache_t::value_type &v)
     g_slice_free(OsmCachedTile, v.second);
 }
 
-/*
- * Description:
- *   Find and replace text within a string.
- *
- * Parameters:
- *   src  (in) - pointer to source string
- *   from (in) - pointer to search text
- *   to   (in) - pointer to replacement text
- *
- * Returns:
- *   Returns a pointer to dynamically-allocated memory containing string
- *   with first occurence of the text pointed to by 'from' replaced by with the
- *   text pointed to by 'to'.
- */
-gchar *
-replace_string(gchar *src, const gchar *from, const gchar *to)
-{
-    size_t fromlen = strlen(from);
-    size_t tolen   = strlen(to);
+struct url_pattern_replace {
+  explicit inline url_pattern_replace(std::string &u): url(u) {}
+  std::string &url;
 
-    /* Try to find the search text. */
-    const char *match = strstr(src, from);
-    assert(match != nullptr);
+  void operator()(const std::pair<const char *, int> &p)
+  {
+      char s[16];
 
-    /* Allocate the destination buffer. */
-    size_t size  = strlen(src);
-    gchar *value = static_cast<gchar *>(g_realloc(src, size + 1 + tolen - fromlen));
+      g_snprintf(s, sizeof(s), "%d", p.second);
+      std::string::size_type pos = url.find(p.first);
+      if (G_LIKELY(pos != std::string::npos))
+          url.replace(pos, strlen(p.first), s);
+  }
+};
 
-    if (G_UNLIKELY(value == nullptr)) {
-      g_free(src);
-      return nullptr;
-    }
-
-    /* We need to return 'value', so let's make a copy to mess around with. */
-    gchar *dst = value;
-
-    /* Find out how many characters to copy up to the 'match'. */
-    size_t count = match - src;
-
-    /*
-     * Nothing to do to the point where we matched. Then
-     * move the source pointer ahead by that amount. And
-     * move the destination pointer ahead by the same amount.
-     */
-    dst += count;
-
-    /*
-     * Now move the remainder of the string to make room for the replacement.
-     * If pattern and replacement have the same length, do nothing.
-     */
-    if (tolen != fromlen)
-      memmove(dst + tolen, dst + fromlen, size - count - fromlen);
-
-    /* Now copy in the replacement text 'to' at the position of
-     * the match. */
-    memcpy(dst, to, tolen);
-
-    return value;
-}
-
-gchar *
+std::string
 replace_map_uri(const gchar *uri, int zoom, int x, int y)
 {
-    gchar *url = g_strdup(uri);
+    std::string url = uri;
 
-    char s[16];
+    const std::array<std::pair<const char *, int>, 3> patterns = { {
+        std::pair<const char *, int>(URI_MARKER_X, x),
+        std::pair<const char *, int>(URI_MARKER_Y, y),
+        std::pair<const char *, int>(URI_MARKER_Z, zoom)
+    } };
 
-    g_snprintf(s, sizeof(s), "%d", x);
-    url = replace_string(url, URI_MARKER_X, s);
-
-    g_snprintf(s, sizeof(s), "%d", y);
-    url = replace_string(url, URI_MARKER_Y, s);
-
-    g_snprintf(s, sizeof(s), "%d", zoom);
-    url = replace_string(url, URI_MARKER_Z, s);
+    std::for_each(patterns.begin(), patterns.end(), url_pattern_replace(url));
 
     return url;
 }
@@ -503,7 +455,7 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y)
     } else {
         tile_download_t *dl = g_new(tile_download_t, 1);
         dl->hashkey = hashkey;
-        dl->uri = replace_map_uri(priv->repo_uri, zoom, x, y);
+        dl->uri = g_strdup(replace_map_uri(priv->repo_uri, zoom, x, y).c_str());
         dl->map = map;
 
         g_debug("Download tile: %d,%d z:%d\n\t%s", x, y, zoom, dl->uri);
