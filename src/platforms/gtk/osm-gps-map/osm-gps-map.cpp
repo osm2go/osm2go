@@ -33,6 +33,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <fcntl.h>
+#include <memory>
 #include <string>
 #include <unistd.h>
 #include <unordered_map>
@@ -50,6 +51,7 @@
 #include "osm-gps-map-types.h"
 
 #include <osm2go_cpp.h>
+#include <osm2go_stl.h>
 
 /* the version check macro is not available in all versions of libsoup */
 #if defined(SOUP_CHECK_VERSION)
@@ -186,12 +188,14 @@ G_DEFINE_TYPE_WITH_PRIVATE (OsmGpsMap, osm_gps_map, GTK_TYPE_DRAWING_AREA);
 
 namespace {
 
-typedef struct {
+class tile_download_t {
+public:
+    tile_download_t(const char *uri_pattern, OsmGpsMap *m, unsigned int z, unsigned int x, unsigned int y);
     /* The details of the tile to download */
-    char *uri;
-    OsmGpsMap *map;
-    uint64_t hashkey;
-} tile_download_t;
+    const std::string uri;
+    const uint64_t hashkey;
+    OsmGpsMap * const map;
+};
 
 /*
  * Drawing function forward defintions
@@ -358,7 +362,7 @@ osm_gps_map_blit_tile(OsmGpsMap *map, GdkPixbuf *pixbuf, int offset_x, int offse
 void
 osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpointer user_data)
 {
-    tile_download_t *dl = (tile_download_t *)user_data;
+    std::unique_ptr<tile_download_t> dl(static_cast<tile_download_t *>(user_data));
 
     if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code))
     {
@@ -396,9 +400,6 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
         osm_gps_map_map_redraw_idle (map);
 
         g_hash_table_remove(priv->tile_queue, &dl->hashkey);
-
-        g_free(dl->uri);
-        g_free(dl);
     }
     else
     {
@@ -417,10 +418,9 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
         else
         {
             soup_session_requeue_message(session, msg);
+            dl.release();
             return;
         }
-        g_free(dl->uri);
-        g_free(dl);
     }
 }
 
@@ -438,6 +438,13 @@ tile_hash(guint zoom, guint x, guint y)
   return ret;
 }
 
+tile_download_t::tile_download_t(const char *uri_pattern, OsmGpsMap *m, unsigned int z, unsigned int x, unsigned int y)
+    : uri(replace_map_uri(uri_pattern, z, x, y))
+    , hashkey(tile_hash(z, x, y))
+    , map(m)
+{
+}
+
 void
 osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y)
 {
@@ -453,21 +460,17 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y)
     {
         g_debug("Tile already downloading (or missing)");
     } else {
-        tile_download_t *dl = g_new(tile_download_t, 1);
-        dl->hashkey = hashkey;
-        dl->uri = g_strdup(replace_map_uri(priv->repo_uri, zoom, x, y).c_str());
-        dl->map = map;
+        tile_download_t *dl = new tile_download_t(priv->repo_uri, map, zoom, x, y);
 
-        g_debug("Download tile: %d,%d z:%d\n\t%s", x, y, zoom, dl->uri);
+        g_debug("Download tile: %d,%d z:%d\n\t%s", x, y, zoom, dl->uri.c_str());
 
-        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, dl->uri);
+        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, dl->uri.c_str());
         if (msg) {
-            g_hash_table_insert (priv->tile_queue, &dl->hashkey, msg);
+            g_hash_table_insert (priv->tile_queue, const_cast<uint64_t *>(&dl->hashkey), msg);
             soup_session_queue_message (priv->soup_session, msg, osm_gps_map_tile_download_complete, dl);
         } else {
             g_warning("Could not create soup message");
-            g_free(dl->uri);
-            g_free(dl);
+            delete dl;
         }
     }
 }

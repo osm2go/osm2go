@@ -35,4 +35,5 @@ set_property(SOURCE osm-gps-map.cpp APPEND PROPERTY COMPILE_DEFINITIONS VERSION=
 target_include_directories(osm-gps-map
 	INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
 	PRIVATE ${osm2go_BINARY_DIR}
+		${osm2go_SOURCE_DIR}/src
 )
