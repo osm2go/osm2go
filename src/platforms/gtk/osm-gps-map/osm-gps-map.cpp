@@ -126,6 +126,8 @@ struct _OsmGpsMapPrivate
     /* ID of the idle redraw operation */
     guint idle_map_redraw;
 
+    guint log_handler; ///< registered id of the log handler
+
     //how we download tiles
     SoupSession *soup_session;
 
@@ -971,7 +973,7 @@ osm_gps_map_init (OsmGpsMap *object)
                            GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK);
     GTK_WIDGET_SET_FLAGS (object, GTK_CAN_FOCUS);
 
-    g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_MASK, my_log_handler, nullptr);
+    priv->log_handler = g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_MASK, my_log_handler, nullptr);
 
     g_signal_connect(G_OBJECT(object), "key_press_event",
                      G_CALLBACK(on_window_key_press), priv);
@@ -1042,6 +1044,8 @@ osm_gps_map_dispose (GObject *object)
 
     if(priv->dbuf_pixmap)
         g_object_unref (priv->dbuf_pixmap);
+
+    g_log_remove_handler(G_LOG_DOMAIN, priv->log_handler);
 
     G_OBJECT_CLASS (osm_gps_map_parent_class)->dispose (object);
 }
