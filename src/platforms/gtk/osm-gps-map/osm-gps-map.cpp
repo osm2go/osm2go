@@ -126,7 +126,9 @@ struct _OsmGpsMapPrivate
     /* ID of the idle redraw operation */
     guint idle_map_redraw;
 
+#if ENABLE_DEBUG == 0
     guint log_handler; ///< registered id of the log handler
+#endif
 
     //how we download tiles
     SoupSession *soup_session;
@@ -242,12 +244,13 @@ replace_map_uri(const gchar *uri, int zoom, int x, int y)
     return url;
 }
 
+#if ENABLE_DEBUG == 0
 void
-my_log_handler (const gchar * log_domain, GLogLevelFlags log_level, const gchar * message, gpointer user_data)
+my_log_handler (const gchar * log_domain G_GNUC_UNUSED, GLogLevelFlags log_level, const gchar * message G_GNUC_UNUSED, gpointer user_data G_GNUC_UNUSED)
 {
-    if (!(log_level & G_LOG_LEVEL_DEBUG) || ENABLE_DEBUG)
-        g_log_default_handler (log_domain, log_level, message, user_data);
+    assert(log_level & G_LOG_LEVEL_DEBUG);
 }
+#endif
 
 /* clears the tracks and all resources */
 void
@@ -973,7 +976,9 @@ osm_gps_map_init (OsmGpsMap *object)
                            GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK);
     GTK_WIDGET_SET_FLAGS (object, GTK_CAN_FOCUS);
 
-    priv->log_handler = g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_MASK, my_log_handler, nullptr);
+#if ENABLE_DEBUG == 0
+    priv->log_handler = g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, my_log_handler, nullptr);
+#endif
 
     g_signal_connect(G_OBJECT(object), "key_press_event",
                      G_CALLBACK(on_window_key_press), priv);
@@ -1045,7 +1050,9 @@ osm_gps_map_dispose (GObject *object)
     if(priv->dbuf_pixmap)
         g_object_unref (priv->dbuf_pixmap);
 
+#if ENABLE_DEBUG == 0
     g_log_remove_handler(G_LOG_DOMAIN, priv->log_handler);
+#endif
 
     G_OBJECT_CLASS (osm_gps_map_parent_class)->dispose (object);
 }
