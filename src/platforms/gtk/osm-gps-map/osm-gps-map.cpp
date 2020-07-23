@@ -103,11 +103,12 @@ struct OsmCachedTile
     guint redraw_cycle;
 };
 
+typedef std::unordered_map<uint64_t, SoupMessage *> tile_queue_t;
 typedef std::unordered_map<uint64_t, OsmCachedTile *> tile_cache_t;
 
 struct _OsmGpsMapPrivate
 {
-    GHashTable *tile_queue;
+    tile_queue_t *tile_queue;
     std::unordered_set<uint64_t> *missing_tiles;
     tile_cache_t *tile_cache;
 
@@ -368,12 +369,19 @@ void
 osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpointer user_data)
 {
     std::unique_ptr<tile_download_t> dl(static_cast<tile_download_t *>(user_data));
+    if (msg->status_code == SOUP_STATUS_CANCELLED)
+    {
+        // do not try to remove this from the tile_queue, as the map is in state of destruction
+        // and can't be dereferenced anymore. The queue is deleted anyway, so stale entries there
+        // do not hurt.
+        return;
+    }
+
+    OsmGpsMap *map = OSM_GPS_MAP(dl->map);
+    OsmGpsMapPrivate *priv = map->priv;
 
     if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code))
     {
-        OsmGpsMap *map = OSM_GPS_MAP(dl->map);
-        OsmGpsMapPrivate *priv = map->priv;
-
         /* parse file directly from memory */
         GdkPixbufLoader *loader = gdk_pixbuf_loader_new_with_type (priv->image_format, nullptr);
         if (!gdk_pixbuf_loader_write (loader, (unsigned char*)msg->response_body->data, msg->response_body->length, nullptr))
@@ -403,22 +411,13 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
             (*priv->tile_cache)[dl->hashkey] = tile;
         }
         osm_gps_map_map_redraw_idle (map);
-
-        g_hash_table_remove(priv->tile_queue, &dl->hashkey);
     }
     else
     {
         g_warning("Error downloading tile: %d - %s", msg->status_code, msg->reason_phrase);
         if (msg->status_code == SOUP_STATUS_NOT_FOUND)
         {
-            OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(dl->map);
-
             priv->missing_tiles->insert(dl->hashkey);
-            g_hash_table_remove(priv->tile_queue, &dl->hashkey);
-        }
-        else if (msg->status_code == SOUP_STATUS_CANCELLED)
-        {
-            ;//application exiting
         }
         else
         {
@@ -427,6 +426,7 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
             return;
         }
     }
+    priv->tile_queue->erase(dl->hashkey);
 }
 
 uint64_t
@@ -460,7 +460,7 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y)
 
     //check the tile has not already been queued for download,
     //or has been attempted, and its missing
-    if (g_hash_table_lookup_extended(priv->tile_queue, &hashkey, nullptr, nullptr) ||
+    if (priv->tile_queue->find(hashkey) != priv->tile_queue->end() ||
         priv->missing_tiles->find(hashkey) != priv->missing_tiles->end())
     {
         g_debug("Tile already downloading (or missing)");
@@ -471,7 +471,7 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y)
 
         SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, dl->uri.c_str());
         if (msg) {
-            g_hash_table_insert (priv->tile_queue, const_cast<uint64_t *>(&dl->hashkey), msg);
+            (*priv->tile_queue)[dl->hashkey] = msg;
             soup_session_queue_message (priv->soup_session, msg, osm_gps_map_tile_download_complete, dl);
         } else {
             g_warning("Could not create soup message");
@@ -963,7 +963,7 @@ osm_gps_map_init (OsmGpsMap *object)
     }
 
     //Hash table which maps tile d/l URIs to SoupMessage requests
-    priv->tile_queue = g_hash_table_new (g_int64_hash, g_int64_equal);
+    priv->tile_queue = new tile_queue_t();
 
     priv->missing_tiles = new std::unordered_set<uint64_t>();
 
@@ -1025,7 +1025,9 @@ osm_gps_map_dispose (GObject *object)
     soup_session_abort(priv->soup_session);
     g_object_unref(priv->soup_session);
 
-    g_hash_table_destroy(priv->tile_queue);
+    // tile_queue contents are SoupMessage objects, which should have been removed by
+    // soup_session_abort() before
+    delete priv->tile_queue;
     delete priv->missing_tiles;
     std::for_each(priv->tile_cache->begin(), priv->tile_cache->end(), cached_tile_free);
     delete priv->tile_cache;
