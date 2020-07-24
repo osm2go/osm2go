@@ -47,6 +47,10 @@ typedef enum {
 typedef void (*OsmGpsMapOsdCallback)(osd_button_t but, gpointer data);
 #define	OSM_GPS_MAP_OSD_CALLBACK(f) ((OsmGpsMapOsdCallback) (f))
 
+/**
+ * @brief add the area of the active project
+ * The previous area marker is removed. map takes ownership of track.
+ */
 void osm_gps_map_add_track (OsmGpsMap *map, GSList *track) __attribute__((nonnull(2)));
 void osm_gps_map_add_bounds(OsmGpsMap *map, GSList *bounds) __attribute__((nonnull(2)));
 void osm_gps_map_redraw (OsmGpsMap *map);

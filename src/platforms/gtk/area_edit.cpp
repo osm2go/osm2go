@@ -609,10 +609,6 @@ on_map_motion_notify_event(GtkWidget *widget, GdkEventMotion  *event, area_conte
 
   if(!std::isnan(context->map.start.rlon) &&
      !std::isnan(context->map.start.rlat)) {
-
-    /* remove existing marker */
-    osm_gps_map_track_remove_all(map);
-
     OsmGpsMapPoint end = osm_gps_map_convert_screen_to_geographic(map, event->x, event->y);
 
     osm_gps_map_add_track(map, pos_rad_box(context->map.start, end));

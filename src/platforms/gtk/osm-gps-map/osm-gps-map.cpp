@@ -258,17 +258,8 @@ void
 osm_gps_map_free_tracks (OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
-    if (priv->tracks)
-    {
-        GSList* tmp = priv->tracks;
-        while (tmp != nullptr)
-        {
-            g_slist_free_full(static_cast<GSList *>(tmp->data), g_free);
-            tmp = g_slist_next(tmp);
-        }
-        g_slist_free(priv->tracks);
-        priv->tracks = nullptr;
-    }
+    g_slist_free_full(priv->tracks, g_free);
+    priv->tracks = nullptr;
 }
 
 /* clears the bounds and all resources */
@@ -707,12 +698,7 @@ osm_gps_map_print_tracks (OsmGpsMap *map)
 
     if (priv->tracks)
     {
-        GSList* tmp = priv->tracks;
-        while (tmp != nullptr)
-        {
-            osm_gps_map_print_track(map, static_cast<GSList *>(tmp->data), r, g, b, UI_GPS_TRACK_WIDTH);
-            tmp = g_slist_next(tmp);
-        }
+        osm_gps_map_print_track(map, priv->tracks, r, g, b, UI_GPS_TRACK_WIDTH);
     }
 }
 
@@ -1586,7 +1572,8 @@ osm_gps_map_add_track (OsmGpsMap *map, GSList *track)
     g_return_if_fail (OSM_IS_GPS_MAP (map));
     OsmGpsMapPrivate *priv = map->priv;
 
-    priv->tracks = g_slist_append(priv->tracks, track);
+    g_slist_free_full(priv->tracks, g_free);
+    priv->tracks = track;
     osm_gps_map_map_redraw_idle(map);
 }
 
