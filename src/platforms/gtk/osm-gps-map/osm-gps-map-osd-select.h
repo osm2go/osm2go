@@ -22,9 +22,6 @@
 
 #include "osm-gps-map.h"
 
-#define OSD_SELECT   OSD_CUSTOM
-#define OSD_DRAG     OSD_CUSTOM+1
-
 #ifdef __cplusplus
 extern "C" {
 #endif

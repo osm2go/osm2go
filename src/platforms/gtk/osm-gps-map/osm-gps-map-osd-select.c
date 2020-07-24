@@ -26,6 +26,9 @@
 #include <math.h>    // M_PI/cos()
 #include <stdlib.h>  // abs
 
+#define OSD_SELECT   OSD_CUSTOM
+#define OSD_DRAG     OSD_CUSTOM+1
+
 #ifdef FREMANTLE
 #define OSD_W 80
 #else
