@@ -666,9 +666,9 @@ osm_gps_map_print_track(OsmGpsMap *map, GSList *trackpoint_list,
         // first time through loop
         if (list == trackpoint_list) {
             cairo_move_to(cr, x, y);
+        } else {
+            cairo_line_to(cr, x, y);
         }
-
-        cairo_line_to(cr, x, y);
 
         max_x = MAX(x,max_x);
         min_x = MIN(x,min_x);
