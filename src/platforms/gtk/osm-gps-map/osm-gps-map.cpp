@@ -607,14 +607,13 @@ osm_gps_map_fill_tiles_pixel (OsmGpsMap *map)
 
 void
 osm_gps_map_print_track(OsmGpsMap *map, const std::pair<OsmGpsMapPoint, OsmGpsMapPoint> &trackpoint_list,
-                        unsigned short r, unsigned short g, unsigned short b,
-                        int lw)
+                        const std::array<double, 3> &colors, int lw)
 {
     OsmGpsMapPrivate *priv = map->priv;
 
     cairo_t *cr = gdk_cairo_create(priv->pixmap);
     cairo_set_line_width (cr, lw);
-    cairo_set_source_rgba (cr, r/65535.0, g/65535.0, b/65535.0, 0.6);
+    cairo_set_source_rgba (cr, colors.at(0), colors.at(1), colors.at(2), 0.6);
     cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
     cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
 
@@ -661,14 +660,14 @@ osm_gps_map_print_track(OsmGpsMap *map, const std::pair<OsmGpsMapPoint, OsmGpsMa
 }
 
 struct box_drawer {
-  const unsigned short r, g, b;
+  const std::array<double, 3> &colors;
   const int width;
   OsmGpsMap * const map;
-  inline box_drawer(OsmGpsMap *m, unsigned short _r, unsigned short _g, unsigned short _b, int w)
-    : r(_r), g(_g), b(_b), width(w), map(m) {}
+  inline box_drawer(OsmGpsMap *m, const std::array<double, 3> &cols, int w)
+    : colors(cols), width(w), map(m) {}
   inline void operator()(const std::pair<OsmGpsMapPoint, OsmGpsMapPoint> &v) const
   {
-    osm_gps_map_print_track(map, v, r, g, b, width);
+    osm_gps_map_print_track(map, v, colors, width);
   }
 };
 
@@ -677,15 +676,13 @@ void
 osm_gps_map_print_tracks (OsmGpsMap *map)
 {
     const std::pair<OsmGpsMapPoint, OsmGpsMapPoint> &rect = map->priv->track;
-    const unsigned short r = 60000;
-    const unsigned short g = 0;
-    const unsigned short b = 0;
+    const std::array<double, 3> colors = { { 60000 / 65535.0, 0, 0 } };
 
     // allow one coordinate to be the same here, so the user will get a visual feedback
     // even if dragging the area around and having only a line for the moment
     if (rect.first.rlat != rect.second.rlat || rect.first.rlon != rect.second.rlon)
     {
-        osm_gps_map_print_track(map, rect, r, g, b, UI_GPS_TRACK_WIDTH);
+        osm_gps_map_print_track(map, rect, colors, UI_GPS_TRACK_WIDTH);
     }
 }
 
@@ -694,9 +691,10 @@ void
 osm_gps_map_print_bounds(OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
+    const std::array<double, 3> colors = { { 0x6400 / 65535.0, 0x7d00 / 65535.0, 0xab00 / 65535.0 } };
 
     std::for_each(priv->bounds->begin(), priv->bounds->end(),
-                  box_drawer(map, 0x64 * 256, 0x7d * 256, 0xab * 256, UI_GPS_TRACK_WIDTH / 2));
+                  box_drawer(map, colors, UI_GPS_TRACK_WIDTH / 2));
 }
 
 
