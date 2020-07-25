@@ -51,7 +51,7 @@ typedef void (*OsmGpsMapOsdCallback)(osd_button_t but, gpointer data);
  * @brief add the area of the active project
  * The previous area marker is removed. map takes ownership of track.
  */
-void osm_gps_map_add_track (OsmGpsMap *map, GSList *track) __attribute__((nonnull(2)));
+void osm_gps_map_add_track (OsmGpsMap *map, GSList *track);
 void osm_gps_map_add_bounds(OsmGpsMap *map, GSList *bounds) __attribute__((nonnull(2)));
 void osm_gps_map_redraw (OsmGpsMap *map);
 osd_button_t osm_gps_map_osd_check(OsmGpsMap *map, gint x, gint y);

@@ -391,7 +391,7 @@ void map_update(area_context_t *context, bool forced)
 
   g_debug("do map redraw");
 
-  osm_gps_map_track_remove_all(context->map.widget);
+  GSList *boundtrack = nullptr;
   /* check if the position is invalid */
   pos_t pos;
   int zoom;
@@ -420,8 +420,9 @@ void map_update(area_context_t *context, bool forced)
 
     /* ---------- draw border (as a gps track) -------------- */
     if(context->bounds.normalized())
-      osm_gps_map_add_track(context->map.widget, pos_box(context->bounds));
+      boundtrack = pos_box(context->bounds);
   }
+  osm_gps_map_add_track(context->map.widget, boundtrack);
 
   osm_gps_map_set_center_and_zoom(context->map.widget, pos.lat, pos.lon, zoom);
 
@@ -594,7 +595,7 @@ on_map_button_press_event(GtkWidget *widget, GdkEventButton *event, area_context
     return FALSE;
 
   /* remove existing marker */
-  osm_gps_map_track_remove_all(map);
+  osm_gps_map_add_track(map, nullptr);
 
   /* and remember this location as the start */
   context->map.start = osm_gps_map_convert_screen_to_geographic(map, event->x, event->y);

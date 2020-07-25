@@ -1588,15 +1588,6 @@ osm_gps_map_add_bounds(OsmGpsMap *map, GSList *bounds)
 }
 
 void
-osm_gps_map_track_remove_all (OsmGpsMap *map)
-{
-    g_return_if_fail (OSM_IS_GPS_MAP (map));
-
-    osm_gps_map_free_tracks(map);
-    osm_gps_map_map_redraw_idle(map);
-}
-
-void
 osm_gps_map_gps_add (OsmGpsMap *map, float latitude, float longitude, float heading)
 {
     g_return_if_fail (OSM_IS_GPS_MAP (map));
