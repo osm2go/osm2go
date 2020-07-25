@@ -30,6 +30,12 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#ifdef __cplusplus
+
+#include <utility>
+
+#endif
+
 G_BEGIN_DECLS
 
 typedef enum {
@@ -47,12 +53,14 @@ typedef enum {
 typedef void (*OsmGpsMapOsdCallback)(osd_button_t but, gpointer data);
 #define	OSM_GPS_MAP_OSD_CALLBACK(f) ((OsmGpsMapOsdCallback) (f))
 
+#ifdef __cplusplus
 /**
  * @brief add the area of the active project
  * The previous area marker is removed. map takes ownership of track.
  */
-void osm_gps_map_add_track (OsmGpsMap *map, GSList *track);
-void osm_gps_map_add_bounds(OsmGpsMap *map, GSList *bounds) __attribute__((nonnull(2)));
+void osm_gps_map_add_track (OsmGpsMap *map, const std::pair<OsmGpsMapPoint, OsmGpsMapPoint> &track);
+void osm_gps_map_add_bounds(OsmGpsMap *map, const std::pair<OsmGpsMapPoint, OsmGpsMapPoint> &bounds);
+#endif
 void osm_gps_map_redraw (OsmGpsMap *map);
 osd_button_t osm_gps_map_osd_check(OsmGpsMap *map, gint x, gint y);
 void osm_gps_map_repaint (OsmGpsMap *map);

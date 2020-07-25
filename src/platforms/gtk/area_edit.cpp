@@ -336,28 +336,13 @@ void area_main_update(area_context_t *context)
     gtk_widget_hide(context->warning);
 }
 
-GSList *
-pos_append_rad(GSList *list, pos_float_t lat, pos_float_t lon)
-{
-  OsmGpsMapPoint *coo = g_new(OsmGpsMapPoint, 1);
-  coo->rlat = lat;
-  coo->rlon = lon;
-  return g_slist_append(list, coo);
-}
-
-GSList *
+std::pair<OsmGpsMapPoint, OsmGpsMapPoint>
 pos_rad_box(OsmGpsMapPoint start, OsmGpsMapPoint end)
 {
-  GSList *box = pos_append_rad(nullptr, start.rlat, start.rlon);
-  box = pos_append_rad(box, end.rlat,   start.rlon);
-  box = pos_append_rad(box, end.rlat,   end.rlon);
-  box = pos_append_rad(box, start.rlat, end.rlon);
-  box = pos_append_rad(box, start.rlat, start.rlon);
-
-  return box;
+  return std::pair<OsmGpsMapPoint, OsmGpsMapPoint>(start, end);
 }
 
-GSList *
+std::pair<OsmGpsMapPoint, OsmGpsMapPoint>
 pos_box(const pos_area &b)
 {
   OsmGpsMapPoint start, end;
@@ -391,7 +376,8 @@ void map_update(area_context_t *context, bool forced)
 
   g_debug("do map redraw");
 
-  GSList *boundtrack = nullptr;
+  OsmGpsMapPoint none = { 0, 0 };
+  std::pair<OsmGpsMapPoint, OsmGpsMapPoint> boundtrack(none, none);
   /* check if the position is invalid */
   pos_t pos;
   int zoom;
@@ -595,7 +581,8 @@ on_map_button_press_event(GtkWidget *widget, GdkEventButton *event, area_context
     return FALSE;
 
   /* remove existing marker */
-  osm_gps_map_add_track(map, nullptr);
+  OsmGpsMapPoint none = { 0, 0 };
+  osm_gps_map_add_track(map, std::pair<OsmGpsMapPoint, OsmGpsMapPoint>(none, none));
 
   /* and remember this location as the start */
   context->map.start = osm_gps_map_convert_screen_to_geographic(map, event->x, event->y);

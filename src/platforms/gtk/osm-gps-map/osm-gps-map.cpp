@@ -38,6 +38,7 @@
 #include <unistd.h>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 #include <cairo.h>
 #include <gdk/gdk.h>
@@ -81,14 +82,6 @@
 #include <gdk/gdkkeysyms.h>
 
 #define USER_AGENT "OSM2go " VERSION " (https://github.com/osm2go/osm2go)"
-
-#if !GLIB_CHECK_VERSION(2,28,0)
-static void g_slist_free_full(GSList *list, GDestroyNotify free_func)
-{
-  g_slist_foreach(list, (GFunc) free_func, nullptr);
-  g_slist_free(list);
-}
-#endif
 
 #define MAX_TILE_CACHE_SIZE 20
 //for customizing the redering of the gps track
@@ -149,8 +142,8 @@ struct _OsmGpsMapPrivate
     GdkPixmap *dbuf_pixmap;
 
     //additional images or tracks added to the map
-    GSList *tracks;
-    GSList *bounds;
+    std::pair<OsmGpsMapPoint, OsmGpsMapPoint> track;
+    std::vector<std::pair<OsmGpsMapPoint, OsmGpsMapPoint> > *bounds;
 
     //Used for storing the joined tiles
     GdkPixmap *pixmap;
@@ -252,33 +245,6 @@ my_log_handler (const gchar * log_domain G_GNUC_UNUSED, GLogLevelFlags log_level
     assert(log_level & G_LOG_LEVEL_DEBUG);
 }
 #endif
-
-/* clears the tracks and all resources */
-void
-osm_gps_map_free_tracks (OsmGpsMap *map)
-{
-    OsmGpsMapPrivate *priv = map->priv;
-    g_slist_free_full(priv->tracks, g_free);
-    priv->tracks = nullptr;
-}
-
-/* clears the bounds and all resources */
-void
-osm_gps_map_free_bounds(OsmGpsMap *map)
-{
-    OsmGpsMapPrivate *priv = map->priv;
-    if (priv->bounds)
-    {
-        GSList* tmp = priv->bounds;
-        while (tmp != nullptr)
-        {
-            g_slist_free_full(static_cast<GSList *>(tmp->data), g_free);
-            tmp = g_slist_next(tmp);
-        }
-        g_slist_free(priv->bounds);
-        priv->bounds = nullptr;
-    }
-}
 
 void
 osm_gps_map_draw_gps_point (OsmGpsMap *map)
@@ -640,13 +606,11 @@ osm_gps_map_fill_tiles_pixel (OsmGpsMap *map)
 }
 
 void
-osm_gps_map_print_track(OsmGpsMap *map, GSList *trackpoint_list,
+osm_gps_map_print_track(OsmGpsMap *map, const std::pair<OsmGpsMapPoint, OsmGpsMapPoint> &trackpoint_list,
                         unsigned short r, unsigned short g, unsigned short b,
                         int lw)
 {
     OsmGpsMapPrivate *priv = map->priv;
-
-    int min_x = 0,min_y = 0,max_x = 0,max_y = 0;
 
     cairo_t *cr = gdk_cairo_create(priv->pixmap);
     cairo_set_line_width (cr, lw);
@@ -654,27 +618,36 @@ osm_gps_map_print_track(OsmGpsMap *map, GSList *trackpoint_list,
     cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
     cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
 
-    int map_x0 = priv->map_x - EXTRA_BORDER;
-    int map_y0 = priv->map_y - EXTRA_BORDER;
-    for(const GSList *list = trackpoint_list; list != nullptr; list = list->next)
+    // screen offsets
+    const int map_x0 = priv->map_x - EXTRA_BORDER;
+    const int map_y0 = priv->map_y - EXTRA_BORDER;
+
+    // the edge coordinates of the rectangle
+    const int pix_x0 = lon2pixel(priv->map_zoom, trackpoint_list.first.rlon) - map_x0;
+    const int pix_y0 = lat2pixel(priv->map_zoom, trackpoint_list.first.rlat) - map_y0;
+    const int pix_x1 = lon2pixel(priv->map_zoom, trackpoint_list.second.rlon) - map_x0;
+    const int pix_y1 = lat2pixel(priv->map_zoom, trackpoint_list.second.rlat) - map_y0;
+
+    // now construct a rectangle from the coordinates
+    const std::array<std::pair<int, int>, 4> coords = { {
+      std::pair<int, int>(pix_x0, pix_y0),
+      std::pair<int, int>(pix_x1, pix_y0),
+      std::pair<int, int>(pix_x1, pix_y1),
+      std::pair<int, int>(pix_x0, pix_y1)
+    }};
+
+    // the first line drawn is now the line from last corner to first one
+    cairo_move_to(cr, coords.back().first, coords.back().second);
+
+    for(unsigned int i = 0; i < coords.size(); i++)
     {
-        const OsmGpsMapPoint *tp = static_cast<const OsmGpsMapPoint *>(list->data);
-
-        int x = lon2pixel(priv->map_zoom, tp->rlon) - map_x0;
-        int y = lat2pixel(priv->map_zoom, tp->rlat) - map_y0;
-
-        // first time through loop
-        if (list == trackpoint_list) {
-            cairo_move_to(cr, x, y);
-        } else {
-            cairo_line_to(cr, x, y);
-        }
-
-        max_x = MAX(x,max_x);
-        min_x = MIN(x,min_x);
-        max_y = MAX(y,max_y);
-        min_y = MIN(y,min_y);
+        cairo_line_to(cr, coords[i].first, coords[i].second);
     }
+
+    const int min_x = std::min(pix_x0, pix_x1);
+    const int min_y = std::min(pix_y0, pix_y1);
+    const int max_x = std::max(pix_x0, pix_x1);
+    const int max_y = std::max(pix_y0, pix_y1);
 
     gtk_widget_queue_draw_area (
                                 GTK_WIDGET(map),
@@ -687,18 +660,32 @@ osm_gps_map_print_track(OsmGpsMap *map, GSList *trackpoint_list,
     cairo_destroy(cr);
 }
 
+struct box_drawer {
+  const unsigned short r, g, b;
+  const int width;
+  OsmGpsMap * const map;
+  inline box_drawer(OsmGpsMap *m, unsigned short _r, unsigned short _g, unsigned short _b, int w)
+    : r(_r), g(_g), b(_b), width(w), map(m) {}
+  inline void operator()(const std::pair<OsmGpsMapPoint, OsmGpsMapPoint> &v) const
+  {
+    osm_gps_map_print_track(map, v, r, g, b, width);
+  }
+};
+
 /* Prints the gps trip history, and any other tracks */
 void
 osm_gps_map_print_tracks (OsmGpsMap *map)
 {
-    OsmGpsMapPrivate *priv = map->priv;
+    const std::pair<OsmGpsMapPoint, OsmGpsMapPoint> &rect = map->priv->track;
     const unsigned short r = 60000;
     const unsigned short g = 0;
     const unsigned short b = 0;
 
-    if (priv->tracks)
+    // allow one coordinate to be the same here, so the user will get a visual feedback
+    // even if dragging the area around and having only a line for the moment
+    if (rect.first.rlat != rect.second.rlat || rect.first.rlon != rect.second.rlon)
     {
-        osm_gps_map_print_track(map, priv->tracks, r, g, b, UI_GPS_TRACK_WIDTH);
+        osm_gps_map_print_track(map, rect, r, g, b, UI_GPS_TRACK_WIDTH);
     }
 }
 
@@ -707,16 +694,9 @@ void
 osm_gps_map_print_bounds(OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
-    const unsigned short r = 0x64 * 256;
-    const unsigned short g = 0x7d * 256;
-    const unsigned short b = 0xab * 256;
 
-    GSList* tmp = priv->bounds;
-    while (tmp != nullptr)
-    {
-        osm_gps_map_print_track(map, static_cast<GSList *>(tmp->data), r, g, b, UI_GPS_TRACK_WIDTH / 2);
-        tmp = g_slist_next(tmp);
-    }
+    std::for_each(priv->bounds->begin(), priv->bounds->end(),
+                  box_drawer(map, 0x64 * 256, 0x7d * 256, 0xab * 256, UI_GPS_TRACK_WIDTH / 2));
 }
 
 
@@ -914,8 +894,9 @@ osm_gps_map_init (OsmGpsMap *object)
     priv->fullscreen = false;
 #endif
 
-    priv->tracks = nullptr;
-    priv->bounds = nullptr;
+    memset(&priv->track.first, 0, sizeof(priv->track.first));
+    priv->track.second = priv->track.first;
+    priv->bounds = new std::vector<std::pair<OsmGpsMapPoint, OsmGpsMapPoint> >();
 
     priv->drag_counter = 0;
     priv->drag_mouse_dx = 0;
@@ -1050,8 +1031,7 @@ osm_gps_map_finalize (GObject *object)
 {
     OsmGpsMap *map = OSM_GPS_MAP(object);
 
-    osm_gps_map_free_tracks(map);
-    osm_gps_map_free_bounds(map);
+    delete map->priv->bounds;
 
     G_OBJECT_CLASS (osm_gps_map_parent_class)->finalize (object);
 }
@@ -1567,23 +1547,22 @@ osm_gps_map_set_zoom (OsmGpsMap *map, int zoom)
 }
 
 void
-osm_gps_map_add_track (OsmGpsMap *map, GSList *track)
+osm_gps_map_add_track(OsmGpsMap *map, const std::pair<OsmGpsMapPoint, OsmGpsMapPoint> &track)
 {
     g_return_if_fail (OSM_IS_GPS_MAP (map));
     OsmGpsMapPrivate *priv = map->priv;
 
-    g_slist_free_full(priv->tracks, g_free);
-    priv->tracks = track;
+    priv->track = track;
     osm_gps_map_map_redraw_idle(map);
 }
 
 void
-osm_gps_map_add_bounds(OsmGpsMap *map, GSList *bounds)
+osm_gps_map_add_bounds(OsmGpsMap *map, const std::pair<OsmGpsMapPoint, OsmGpsMapPoint> &bounds)
 {
     g_return_if_fail (OSM_IS_GPS_MAP (map));
     OsmGpsMapPrivate *priv = map->priv;
 
-    priv->bounds = g_slist_append(priv->bounds, bounds);
+    priv->bounds->push_back(bounds);
     osm_gps_map_map_redraw_idle(map);
 }
 
