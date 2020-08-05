@@ -171,28 +171,33 @@ osd_render_zoom(osd_priv_t *priv)
     cairo_destroy(cr);
 }
 
+static int
+in_range(int i, int x, int a)
+{
+    return (i <= x && x <= a) ? 1 : 0;
+}
+
 osd_button_t
 osm_gps_map_osd_check(OsmGpsMap *map, gint x, gint y)
 {
     g_return_val_if_fail (OSM_IS_GPS_MAP (map), OSD_NONE);
 
     osd_priv_t *priv = osm_gps_map_osd_get(map);
-    osd_button_t but = OSD_NONE;
     GtkWidget *widget = GTK_WIDGET(map);
 
     y -= (widget->allocation.height - OSD_H)/2;
 
     if(x < widget->allocation.width/2) {
-        if(y >= 0 && y <= OSD_H && x >= 0 && x <= OSD_W) {
+        if(in_range(0, y, OSD_H) && in_range(0, x, OSD_W)) {
             if(y < OSD_W)
-                but = OSD_IN;
+                return OSD_IN;
             else
-                but = OSD_OUT;
+                return OSD_OUT;
         }
     } else {
         x -= widget->allocation.width - OSD_W;
 
-        if(y >= 0 && y <= OSD_H && x >= 0 && x <= OSD_W) {
+        if(in_range(0, y, OSD_H) && in_range(0, x, OSD_W)) {
             if(y < OSD_W) {
                 if(priv->select_toggle.state) {
                     priv->select_toggle.state = FALSE;
@@ -200,7 +205,7 @@ osm_gps_map_osd_check(OsmGpsMap *map, gint x, gint y)
                     osm_gps_map_repaint(map);
                 }
 
-                but = OSD_SELECT;
+                return OSD_SELECT;
             } else {
                 if(!priv->select_toggle.state) {
                     priv->select_toggle.state = TRUE;
@@ -208,12 +213,12 @@ osm_gps_map_osd_check(OsmGpsMap *map, gint x, gint y)
                     osm_gps_map_repaint(map);
                 }
 
-                but = OSD_DRAG;
+                return OSD_DRAG;
             }
         }
     }
 
-    return but;
+    return OSD_NONE;
 }
 
 void
