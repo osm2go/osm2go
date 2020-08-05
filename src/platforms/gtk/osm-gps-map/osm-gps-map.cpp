@@ -164,8 +164,8 @@ struct _OsmGpsMapPrivate
     bool fullscreen;
 #endif
 
-    gboolean is_disposed : 2;
-    gboolean dragging : 2;
+    bool is_disposed;
+    bool dragging;
 };
 
 #define OSM_GPS_MAP_PRIVATE(o)  (OSM_GPS_MAP (o)->priv)
@@ -985,7 +985,7 @@ osm_gps_map_dispose (GObject *object)
     if (priv->is_disposed)
         return;
 
-    priv->is_disposed = TRUE;
+    priv->is_disposed = true;
 
     soup_session_abort(priv->soup_session);
     g_object_unref(priv->soup_session);
@@ -1170,7 +1170,7 @@ osm_gps_map_button_release (GtkWidget *widget, GdkEventButton *event)
 
     if (priv->dragging)
     {
-        priv->dragging = FALSE;
+        priv->dragging = false;
 
         priv->map_x = priv->drag_start_map_x;
         priv->map_y = priv->drag_start_map_y;
@@ -1240,7 +1240,7 @@ osm_gps_map_motion_notify (GtkWidget *widget, GdkEventMotion  *event)
 
     priv->drag_counter++;
 
-    priv->dragging = TRUE;
+    priv->dragging = true;
 
     priv->drag_mouse_dx = x - priv->drag_start_mouse_x;
     priv->drag_mouse_dy = y - priv->drag_start_mouse_y;
