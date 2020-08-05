@@ -30,18 +30,19 @@
 
 #define TILESIZE 256
 
-#ifdef FREMANTLE
-#define OSM_REPO_URI        "http://tile.openstreetmap.org/#Z/#X/#Y.png"
-#else
-#define OSM_REPO_URI        "https://tile.openstreetmap.org/#Z/#X/#Y.png"
-#endif
-#define OSM_MIN_ZOOM        1
-#define OSM_MAX_ZOOM        19
-#define OSM_IMAGE_FORMAT    "png"
-
 #define URI_MARKER_X    "#X"
 #define URI_MARKER_Y    "#Y"
 #define URI_MARKER_Z    "#Z"
+
+#ifdef FREMANTLE
+#define OSM_REPO_PROTOCOL   "http://"
+#else
+#define OSM_REPO_PROTOCOL   "https://"
+#endif
+#define OSM_REPO_URI        OSM_REPO_PROTOCOL "tile.openstreetmap.org/" URI_MARKER_Z "/" URI_MARKER_X "/" URI_MARKER_Y ".png"
+#define OSM_MIN_ZOOM        1
+#define OSM_MAX_ZOOM        19
+#define OSM_IMAGE_FORMAT    "png"
 
 #define URI_HAS_X   (1 << 0)
 #define URI_HAS_Y   (1 << 1)
