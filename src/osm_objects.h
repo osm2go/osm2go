@@ -46,12 +46,12 @@ public:
     return tag_t(k, v, true);
   }
 
-  inline bool is_creator_tag() const noexcept
-  { return is_creator_tag(key); }
-
-  static bool is_creator_tag(const char *key) noexcept;
-  static inline bool is_no_creator(const tag_t &tag) noexcept
-  { return !is_creator_tag(tag.key); }
+  inline bool is_discardable() const noexcept
+  { return is_discardable(key); }
+  static bool is_discardable(const char *key) noexcept;
+  // also inversion to be able to use it directly as predicate
+  static inline bool is_non_discardable(const tag_t &tag) noexcept
+  { return !tag.is_discardable(); }
 
   /**
    * @brief compare if the keys are identical
@@ -101,7 +101,7 @@ public:
   /**
    * @brief check if any tag that is not "created_by" is present
    */
-  bool hasNonCreatorTags() const noexcept;
+  bool hasNonDiscardableTags() const noexcept;
 
   /**
    * @brief check if any tag that is not "created_by" or "source" is present

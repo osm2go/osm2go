@@ -24,6 +24,7 @@
 
 #include "osm_objects.h"
 
+#include "discarded.h"
 #include "osm_p.h"
 
 #include "osm2go_annotations.h"
@@ -44,9 +45,24 @@ tag_t::tag_t(const char *k, const char *v)
 {
 }
 
-bool tag_t::is_creator_tag(const char *key) noexcept
+namespace {
+
+struct find_discardable_key {
+  explicit find_discardable_key(const char *k) : key(k) {}
+  const char * const key;
+
+  inline bool operator()(const char *otherkey) const
+  {
+    return strcmp(key, otherkey) == 0;
+  }
+};
+
+} // namespace
+
+bool tag_t::is_discardable(const char *key) noexcept
 {
-  return (strcasecmp(key, "created_by") == 0);
+  return std::find_if(discardable_tags.begin(), discardable_tags.end(),
+                      find_discardable_key(key)) != discardable_tags.end();
 }
 
 tag_list_t::~tag_list_t()
@@ -59,18 +75,18 @@ bool tag_list_t::empty() const noexcept
   return contents == nullptr || contents->empty();
 }
 
-bool tag_list_t::hasNonCreatorTags() const noexcept
+bool tag_list_t::hasNonDiscardableTags() const noexcept
 {
   if(empty())
     return false;
 
   const std::vector<tag_t>::const_iterator itEnd = contents->end();
-  return std::find_if(std::cbegin(*contents), itEnd, tag_t::is_no_creator) != itEnd;
+  return std::find_if(std::cbegin(*contents), itEnd, tag_t::is_non_discardable) != itEnd;
 }
 
 static bool isRealTag(const tag_t &tag)
 {
-  return !tag.is_creator_tag() && strcmp(tag.key, "source") != 0;
+  return !tag.is_discardable() && strcmp(tag.key, "source") != 0;
 }
 
 bool tag_list_t::hasRealTags() const noexcept
@@ -183,7 +199,7 @@ class tag_fill_functor {
 public:
   explicit inline tag_fill_functor(std::vector<tag_t> &t) : tags(t) {}
   void operator()(const osm_t::TagMap::value_type &p) {
-    if(unlikely(tag_t::is_creator_tag(p.first.c_str())))
+    if(unlikely(tag_t::is_discardable(p.first.c_str())))
       return;
 
     tags.push_back(tag_t(p.first.c_str(), p.second.c_str()));

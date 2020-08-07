@@ -533,9 +533,9 @@ bool tag_list_t::merge(tag_list_t &other)
   for(std::vector<tag_t>::iterator srcIt = other.contents->begin();
       srcIt != itEnd; srcIt++) {
     tag_t &src = *srcIt;
-    /* don't copy "created_by" tag or tags that already */
-    /* exist in identical form */
-    if(!src.is_creator_tag() && !contains(tag_match_functor(src, true))) {
+    /* don't copy discardable tags or tags that already
+     * exist in identical form */
+    if(!src.is_discardable() && !contains(tag_match_functor(src, true))) {
       /* check if same key but with different value is present */
       if(!conflict)
         conflict = contains(tag_match_functor(src, false));
@@ -549,13 +549,13 @@ bool tag_list_t::merge(tag_list_t &other)
   return conflict;
 }
 
-struct check_creator_tag {
+struct check_discardable_tag {
   inline bool operator()(const tag_t tag) {
-    return tag.is_creator_tag();
+    return tag.is_discardable();
   }
   inline bool operator()(const osm_t::TagMap::value_type tag)
   {
-    return tag_t::is_creator_tag(tag.first.c_str());
+    return tag_t::is_discardable(tag.first.c_str());
   }
 };
 
@@ -576,7 +576,7 @@ public:
  */
 template<typename T>
 static std::optional<bool> tag_list_compare_base(const tag_list_t &list, const std::vector<tag_t> *contents,
-                           const T &other, std::vector<tag_t>::const_iterator &t1cit)
+                           const T &other, unsigned int &t1discardables)
 {
   if(list.empty() && other.empty())
     return false;
@@ -587,31 +587,25 @@ static std::optional<bool> tag_list_compare_base(const tag_list_t &list, const s
   // further checks need to be done for the end result.
   const typename T::const_iterator t2start = other.begin();
   const typename T::const_iterator t2End = other.end();
-  bool t2HasCreator = (std::find_if(t2start, t2End, check_creator_tag()) != t2End);
+  unsigned int t2discardables = std::count_if(t2start, t2End, check_discardable_tag());
   if(list.empty())
-    return t2HasCreator ? (other.size() != 1) : !other.empty();
+    return (other.size() != t2discardables);
 
   /* first check list length, otherwise deleted tags are hard to detect */
   std::vector<tag_t>::size_type ocnt = contents->size();
   const std::vector<tag_t>::const_iterator t1End = contents->end();
-  t1cit = std::find_if(std::cbegin(*contents), t1End, check_creator_tag());
+  t1discardables = std::count_if(std::cbegin(*contents), t1End, check_discardable_tag());
 
-  if(t2HasCreator)
-    ocnt++;
-
-  // ocnt can't become negative here as it was checked before that contents is not empty
-  if(t1cit != t1End)
-    ocnt--;
-
-  if (other.size() != ocnt)
+  // the result can't become negative here as it was checked before that contents is not empty
+  if (other.size() - t2discardables != ocnt - t1discardables)
     return true;
 
   return std::optional<bool>();
 }
 
 bool tag_list_t::operator!=(const std::vector<tag_t> &t2) const {
-  std::vector<tag_t>::const_iterator t1cit;
-  std::optional<bool> r = tag_list_compare_base(*this, contents, t2, t1cit);
+  unsigned int t1discardables;
+  std::optional<bool> r = tag_list_compare_base(*this, contents, t2, t1discardables);
   if(r)
     return *r;
 
@@ -622,8 +616,10 @@ bool tag_list_t::operator!=(const std::vector<tag_t> &t2) const {
   const std::vector<tag_t>::const_iterator t1End = contents->end();
 
   for (; t1it != t1End; t1it++) {
-    if (t1it == t1cit)
+    if (t1discardables && t1it->is_discardable()) {
+      t1discardables--; // do a countdown to avoid needless string compares
       continue;
+    }
     const tag_t &ntag = *t1it;
 
     const std::vector<tag_t>::const_iterator it = std::find_if(t2start, t2End,
@@ -641,8 +637,8 @@ bool tag_list_t::operator!=(const std::vector<tag_t> &t2) const {
 }
 
 bool tag_list_t::operator!=(const osm_t::TagMap &t2) const {
-  std::vector<tag_t>::const_iterator t1cit;
-  std::optional<bool> r = tag_list_compare_base(*this, contents, t2, t1cit);
+  unsigned int t1discardables;
+  std::optional<bool> r = tag_list_compare_base(*this, contents, t2, t1discardables);
   if(r)
     return *r;
 
@@ -650,8 +646,10 @@ bool tag_list_t::operator!=(const osm_t::TagMap &t2) const {
   const std::vector<tag_t>::const_iterator t1End = contents->end();
 
   for (; t1it != t1End; t1it++) {
-    if (t1it == t1cit)
+    if (t1discardables && t1it->is_discardable()) {
+      t1discardables--; // do a countdown to avoid needless string compares
       continue;
+    }
     const tag_t &ntag = *t1it;
 
     std::pair<osm_t::TagMap::const_iterator, osm_t::TagMap::const_iterator> its = t2.equal_range(ntag.key);
@@ -839,8 +837,10 @@ class tag_to_xml {
 public:
   explicit inline tag_to_xml(xmlNodePtr n, bool k = false) : node(n), keep_created(k) {}
   void operator()(const tag_t &tag) {
-    /* skip "created_by" tags as they aren't needed anymore with api 0.6 */
-    if(likely(keep_created || !tag.is_creator_tag())) {
+    /* skip discardable tags, see https://wiki.openstreetmap.org/wiki/Discardable_tags */
+    if(likely(!tag.is_discardable() ||
+       /* allow to explicitely keep "created_by", which will be used in changeset tags */
+       (keep_created && strcmp(tag.key, "created_by") == 0))) {
       xmlNodePtr tag_node = xmlNewChild(node, nullptr, BAD_CAST "tag", nullptr);
       xmlNewProp(tag_node, BAD_CAST "k", BAD_CAST tag.key);
       xmlNewProp(tag_node, BAD_CAST "v", BAD_CAST tag.value);
@@ -1097,7 +1097,7 @@ void osm_unref_way_free::operator()(node_t* node)
   node->ways--;
 
   /* this node must only be part of this way */
-  if(!node->ways && !node->tags.hasNonCreatorTags()) {
+  if(!node->ways && !node->tags.hasNonDiscardableTags()) {
     /* delete this node, but don't let this actually affect the */
     /* associated ways as the only such way is the one we are currently */
     /* deleting */
@@ -1492,7 +1492,7 @@ class tag_vector_copy_functor {
 public:
   explicit inline tag_vector_copy_functor(std::vector<tag_t> &t) : tags(t) {}
   void operator()(const tag_t &otag) {
-    if(unlikely(otag.is_creator_tag()))
+    if(unlikely(otag.is_discardable()))
       return;
 
     tags.push_back(otag);

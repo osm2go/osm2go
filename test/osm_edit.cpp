@@ -38,7 +38,7 @@ std::vector<tag_t> ab_with_creator()
   std::vector<tag_t> ntags;
 
   tag_t cr_by = tag_t::uncached("created_by", "test");
-  assert(cr_by.is_creator_tag());
+  assert(cr_by.is_discardable());
   ntags.push_back(cr_by);
   ntags.push_back(tag_t("a", "aa"));
   ntags.push_back(tag_t("b", "bb"));
@@ -75,16 +75,16 @@ void test_trivial()
   assert(!tags.hasTagCollisions());
   assert_null(tags.singleTag());
   tag_t cr_by("created_by", "test");
-  assert(cr_by.is_creator_tag());
+  assert(cr_by.is_discardable());
   std::vector<tag_t> ntags(1, cr_by);
   tags.replace(std::move(ntags));
   assert(!tags.hasRealTags());
-  assert(!tags.hasNonCreatorTags());
+  assert(!tags.hasNonDiscardableTags());
   assert(!tags.hasTagCollisions());
   // only trivial tag
   assert_null(tags.singleTag());
   tag_t src("source", "test");
-  assert(!src.is_creator_tag());
+  assert(!src.is_discardable());
   ntags.clear();
   ntags.push_back(cr_by);
   ntags.push_back(src);
@@ -92,7 +92,18 @@ void test_trivial()
   // still only trivial tags
   assert_null(tags.singleTag());
   assert(!tags.hasRealTags());
-  assert(tags.hasNonCreatorTags());
+  assert(tags.hasNonDiscardableTags());
+  assert(!tags.hasTagCollisions());
+  // another discardable
+  tag_t tiger("tiger:source", "foobar");
+  ntags.clear();
+  ntags.push_back(cr_by);
+  ntags.push_back(src);
+  ntags.push_back(tiger);
+  tags.replace(std::move(ntags));
+  assert_null(tags.singleTag());
+  assert(!tags.hasRealTags());
+  assert(tags.hasNonDiscardableTags());
   assert(!tags.hasTagCollisions());
 
   std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
@@ -173,7 +184,7 @@ void test_taglist()
 
   // a list with only created_by must still be considered empty
   tag_t cr_by(const_cast<char *>("created_by"), const_cast<char *>("test"));
-  assert(cr_by.is_creator_tag());
+  assert(cr_by.is_discardable());
   ntags.push_back(cr_by);
   assert(tags == ntags);
   assert(!(tags != ntags));
@@ -283,6 +294,10 @@ void test_taglist()
   assert(tags == ntags);
   std::rotate(ntags.begin(), std::next(ntags.begin()), ntags.end());
   assert(tags == ntags);
+  // other discardable tags shouldn't change identity
+  tag_t tiger("tiger:source", "foobar");
+  ntags.push_back(tiger);
+  assert(tags == ntags);
 
   ntags.clear();
   tags.clear();
@@ -334,7 +349,7 @@ void test_replace()
   assert(node.tags.empty());
 
   osm_t::TagMap::value_type cr_by("created_by", "test");
-  assert(tag_t::is_creator_tag(cr_by.first.c_str()));
+  assert(tag_t::is_discardable(cr_by.first.c_str()));
   nstags.insert(cr_by);
   node.updateTags(nstags);
   assert(node.flags == 0);

@@ -81,8 +81,8 @@ static void changed(GtkTreeSelection *, gpointer user_data) {
 
     // WARNING: for whatever reason, key CAN be NULL on N900
 
-    /* you just cannot delete or edit the "created_by" tag */
-    if(unlikely(key != nullptr && tag_t::is_creator_tag(key)))
+    /* you just cannot delete or edit the discardable tags */
+    if(unlikely(key != nullptr && tag_t::is_discardable(key)))
       selected = false;
   }
 
