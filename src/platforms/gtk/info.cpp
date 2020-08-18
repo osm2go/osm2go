@@ -620,15 +620,30 @@ static trstring objid(const object_t &object)
 
   switch(object.type) {
   case object_t::NODE:
-    msgtpl = trstring("Node #%1");
+    if (object.obj->isNew())
+      msgtpl = trstring("Node #%1 (new)");
+    else if (object.obj->isDirty())
+      msgtpl = trstring("Node #%1 (modified)");
+    else
+      msgtpl = trstring("Node #%1");
     break;
 
   case object_t::WAY:
-    msgtpl = trstring("Way #%1");
+    if (object.obj->isNew())
+      msgtpl = trstring("Way #%1 (new)");
+    else if (object.obj->isDirty())
+      msgtpl = trstring("Way #%1 (modified)");
+    else
+      msgtpl = trstring("Way #%1");
     break;
 
   case object_t::RELATION:
-    msgtpl = trstring("Relation #%1");
+    if (object.obj->isNew())
+      msgtpl = trstring("Relation #%1 (new)");
+    else if (object.obj->isDirty())
+      msgtpl = trstring("Relation #%1 (modified)");
+    else
+      msgtpl = trstring("Relation #%1");
     break;
 
   default:
