@@ -28,11 +28,11 @@ namespace {
 
 class MainUiDummy : public MainUi {
 public:
-  MainUiDummy() : MainUi(), msg(nullptr) {}
+  MainUiDummy() : MainUi(), hasMessage(false) {}
   void setActionEnable(menu_items, bool) override
   { abort(); }
-  void showNotification(const char *message, unsigned int flags) override;
-  const char *msg;
+  void showNotification(trstring::native_type_arg message, unsigned int flags) override;
+  bool hasMessage;
 };
 
 } // namespace
@@ -44,11 +44,11 @@ appdata_t::appdata_t()
 {
 }
 
-void MainUiDummy::showNotification(const char *message, unsigned int)
+void MainUiDummy::showNotification(trstring::native_type_arg message, unsigned int)
 {
-  assert(msg == nullptr);
-  printf("%s: %s", __PRETTY_FUNCTION__, message);
-  msg = message;
+  assert(!hasMessage);
+  printf("%s: %s", __PRETTY_FUNCTION__, static_cast<const char *>(message));
+  hasMessage = true;
 }
 
 static char tmpdir[32] = "/tmp/osm2go_api_dl_XXXXXX";
@@ -179,9 +179,9 @@ static void upload_none()
   appdata.project->osm->uploadPolicy = osm_t::Upload_Normal;
 
   // nothing to upload
-  assert(static_cast<MainUiDummy *>(appdata.uicontrol.get())->msg == nullptr);
+  assert(!static_cast<MainUiDummy *>(appdata.uicontrol.get())->hasMessage);
   osm_upload(appdata);
-  assert(static_cast<MainUiDummy *>(appdata.uicontrol.get())->msg != nullptr);
+  assert(static_cast<MainUiDummy *>(appdata.uicontrol.get())->hasMessage);
 }
 
 int main(int argc, char **argv)

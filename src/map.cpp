@@ -348,7 +348,7 @@ void map_t::item_deselect() {
   }
 
   /* remove statusbar message */
-  appdata.uicontrol->showNotification(nullptr);
+  appdata.uicontrol->showNotification(trstring::native_type());
 
   /* disable/enable icons in icon bar */
   appdata.iconbar->map_item_selected(object_t());
@@ -1742,7 +1742,7 @@ void map_t::detail_change(float detail, trstring::native_type_arg banner_msg)
   clear(MAP_LAYER_OBJECTS_ONLY);
   paint();
 
-  appdata.uicontrol->showNotification(nullptr, MainUi::Busy);
+  appdata.uicontrol->showNotification(trstring::native_type(), MainUi::Busy);
 }
 
 void map_t::detail_increase() {

@@ -542,8 +542,8 @@ static bool project_load_inner(appdata_t &appdata, std::unique_ptr<project_t> &p
   /* save the name of the project for the perferences */
   settings_t::instance()->project = appdata.project->name;
 
-  appdata.uicontrol->showNotification(nullptr, MainUi::Busy);
-  appdata.uicontrol->showNotification(nullptr);
+  appdata.uicontrol->showNotification(trstring::native_type(), MainUi::Busy);
+  appdata.uicontrol->showNotification(trstring::native_type());
 
   return true;
 }

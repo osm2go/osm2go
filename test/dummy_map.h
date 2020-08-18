@@ -25,7 +25,7 @@ public:
     else
       abort();
   }
-  void showNotification(const char *, unsigned int) override
+  void showNotification(trstring::native_type_arg, unsigned int) override
   { abort(); }
   const char *msg;
 };

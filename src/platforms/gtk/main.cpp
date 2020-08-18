@@ -220,7 +220,7 @@ cb_menu_download(appdata_t *appdata) {
       diff_restore(appdata->project, appdata->uicontrol.get());
       appdata->map->paint();
     }
-    appdata->uicontrol->showNotification(nullptr, MainUi::Busy);
+    appdata->uicontrol->showNotification(trstring::native_type(), MainUi::Busy);
   }
 
   appdata->map->set_autosave(true);

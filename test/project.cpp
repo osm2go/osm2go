@@ -36,14 +36,14 @@ public:
   MainUiDummy() : MainUi() {}
   void setActionEnable(menu_items, bool) override
   { abort(); }
-  void showNotification(const char *message, unsigned int flags) override;
+  void showNotification(trstring::native_type_arg message, unsigned int flags) override;
   std::vector<std::string> messages;
 };
 
-void MainUiDummy::showNotification(const char *message, unsigned int)
+void MainUiDummy::showNotification(trstring::native_type_arg message, unsigned int)
 {
-  printf("%s: %s\n", __PRETTY_FUNCTION__, message);
-  messages.push_back(message);
+  printf("%s: %s\n", __PRETTY_FUNCTION__, static_cast<const char *>(message));
+  messages.push_back(message.toStdString());
 }
 
 } // namespace

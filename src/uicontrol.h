@@ -20,7 +20,8 @@
 #pragma once
 
 class statusbar_t;
-class trstring;
+
+#include <osm2go_i18n.h>
 
 class MainUi {
 protected:
@@ -69,7 +70,7 @@ public:
    *
    * message may be nullptr to clear the current message.
    */
-  virtual void showNotification(const char *message, unsigned int flags = NoFlags);
+  virtual void showNotification(trstring::native_type_arg message, unsigned int flags = NoFlags);
 
   /**
    * @overload

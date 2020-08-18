@@ -136,13 +136,13 @@ void MainUiGtk::setActionEnable(menu_items item, bool en)
   gtk_widget_set_sensitive(menu_item(item), en ? TRUE : FALSE);
 }
 
-void MainUi::showNotification(const char *message, unsigned int flags)
+void MainUi::showNotification(trstring::native_type_arg message, unsigned int flags)
 {
   statusbar_t *statusbar = static_cast<MainUiGtk *>(this)->statusBar();
   if (flags & Brief) {
     statusbar->banner_show_info(message);
   } else if (flags & Busy) {
-    if (message == nullptr)
+    if (message.isEmpty())
       statusbar->banner_busy_stop();
     else
       statusbar->banner_busy_start(message);
