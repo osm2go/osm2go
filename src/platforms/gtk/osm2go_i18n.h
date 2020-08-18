@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <locale.h>
 #include <libintl.h>
 #include <string>
@@ -50,7 +51,7 @@ public:
 #undef TRSTRING_NATIVE_TYPE_IS_TRSTRING
 
   explicit inline trstring() : std::string() {}
-  explicit inline trstring(const char *s) : std::string(gettext(s)) {}
+  explicit inline trstring(const char *s) __attribute__((nonnull(2))) : std::string(gettext(s)) {}
 #if __cplusplus >= 201103L
   // catch if one passes a constant nullptr as argument
   trstring(std::nullptr_t) = delete;
@@ -61,14 +62,17 @@ public:
     : std::string(trstring(msg).argn("%n", std::to_string(n), std::string(msg).find("%n"))) { }
 
   trstring arg(const std::string &a) const;
-  inline trstring arg(const char *a) const
+  inline trstring arg(const char *a) const __attribute__((nonnull(2)))
   { return arg(std::string(a)); }
-  inline trstring arg(char *a) const
+  inline trstring arg(char *a) const __attribute__((nonnull(2)))
   { return arg(std::string(a)); }
   inline trstring arg(const trstring &a) const
   { return arg(static_cast<std::string>(a)); }
   inline trstring arg(native_type a) const
-  { return arg(static_cast<const char *>(a)); }
+  {
+    assert(!a.isEmpty());
+    return arg(static_cast<const char *>(a));
+  }
   template<typename T> inline trstring arg(T l) const
   { return arg(std::to_string(l)); }
 
