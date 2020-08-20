@@ -87,6 +87,17 @@ checkTextMatch()
   assert_cmpnum(w_kvf.matches(osm_t::TagMap()), -1);
 }
 
+std::vector<std::string>
+numbered(size_t num)
+{
+  std::vector<std::string> ret;
+
+  for (size_t i = 0; i < num; i++)
+    ret.push_back(std::to_string(i));
+
+  return ret;
+}
+
 void
 checkComboMatch()
 {
@@ -166,6 +177,31 @@ checkComboMatch()
   assert_cmpnum(w_kvf.matches(VECTOR_ONE(tag_testkey_other)), -1);
   assert_cmpnum(w_kvf.matches(VECTOR_ONE(tag_testkey_testtext)), 1);
   assert_cmpnum(w_kvf.matches(osm_t::TagMap()), -1);
+
+  // check that invalid list, i.e. too few display_values, are detected and corrected
+  values = backup;
+  std::vector<std::string> dvalues = numbered(values.size() - 1);
+  presets_element_combo w_2few_dvals(tag_testkey_testtext.first,
+                             "visual text",
+                             values.front(),
+                             "keyvalue!", values, dvalues, true);
+
+  assert_cmpnum(w_2few_dvals.values.size(), w_2few_dvals.display_values.size());
+  assert(w_2few_dvals.values == backup);
+  for (size_t i = 0; i < dvalues.size(); i++)
+    assert_cmpstr(w_2few_dvals.display_values.at(i), dvalues.at(i));
+  assert_cmpstr(w_2few_dvals.display_values.at(dvalues.size()), backup.back());
+
+  dvalues = numbered(values.size() + 1);
+  presets_element_combo w_2much_dvals(tag_testkey_testtext.first,
+                             "visual text",
+                             values.front(),
+                             "keyvalue!", values, dvalues, true);
+
+  assert_cmpnum(w_2much_dvals.values.size(), w_2much_dvals.display_values.size());
+  assert(w_2much_dvals.values == backup);
+  for (size_t i = 0; i < backup.size(); i++)
+    assert_cmpstr(w_2much_dvals.display_values.at(i), dvalues.at(i));
 }
 
 void

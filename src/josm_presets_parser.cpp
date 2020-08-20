@@ -1318,6 +1318,21 @@ presets_element_selectable::presets_element_selectable(presets_element_type_t t,
   , display_values(std::move(dvals))
   , editable(canEdit)
 {
+  if (!display_values.empty()) {
+    size_t dsz = display_values.size();
+    const size_t vsz = values.size();
+    // catch mismatches of the array sizes
+    if (unlikely(dsz < vsz)) {
+      printf("WARNING: got %zu values, but %zu display_values, filling with values\n", vsz, dsz);
+      // simply use the values as display_values as it would have happened on empty display_values list
+      while (dsz < vsz)
+        display_values.push_back(values[dsz++]);
+    } else if (unlikely(dsz > vsz)) {
+      // drop the superfluous values at the back
+      printf("WARNING: got %zu values, but %zu display_values, truncating\n", vsz, dsz);
+      display_values.resize(vsz);
+    }
+  }
 }
 
 std::vector<std::string> presets_element_selectable::split_string(const char *str, const char delimiter)
