@@ -992,10 +992,12 @@ osm_gps_map_dispose (GObject *object)
 
     // tile_queue contents are SoupMessage objects, which should have been removed by
     // soup_session_abort() before
-    delete priv->tile_queue;
-    delete priv->missing_tiles;
+    priv->tile_queue->clear();
+    priv->missing_tiles->clear();
     std::for_each(priv->tile_cache->begin(), priv->tile_cache->end(), cached_tile_free);
-    delete priv->tile_cache;
+    priv->tile_cache->clear();
+
+    priv->bounds->clear();
 
     if(priv->pixmap)
         g_object_unref (priv->pixmap);
@@ -1009,10 +1011,8 @@ osm_gps_map_dispose (GObject *object)
     if (priv->drag_expose != 0)
         g_source_remove (priv->drag_expose);
 
-    if(priv->osd) {
+    if(priv->osd)
         osm_gps_map_osd_free(priv->osd);
-        priv->osd = nullptr;
-    }
 
     if(priv->dbuf_pixmap)
         g_object_unref (priv->dbuf_pixmap);
@@ -1027,9 +1027,14 @@ osm_gps_map_dispose (GObject *object)
 void
 osm_gps_map_finalize (GObject *object)
 {
-    OsmGpsMap *map = OSM_GPS_MAP(object);
+    OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(object);
 
-    delete map->priv->bounds;
+    delete priv->bounds;
+
+    g_free(priv->osd);
+    delete priv->tile_queue;
+    delete priv->missing_tiles;
+    delete priv->tile_cache;
 
     G_OBJECT_CLASS (osm_gps_map_parent_class)->finalize (object);
 }

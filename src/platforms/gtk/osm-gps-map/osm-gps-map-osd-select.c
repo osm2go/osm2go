@@ -268,13 +268,15 @@ osm_gps_map_osd_draw(struct osd_priv_s *priv, GtkWidget * widget, GdkDrawable *d
 void
 osm_gps_map_osd_free(struct osd_priv_s *priv)
 {
-    if(priv->select_toggle.surface)
+    if(priv->select_toggle.surface) {
         cairo_surface_destroy(priv->select_toggle.surface);
+        priv->select_toggle.surface = NULL;
+    }
 
-    if(priv->zoom.surface)
+    if(priv->zoom.surface) {
         cairo_surface_destroy(priv->zoom.surface);
-
-    g_free(priv);
+        priv->zoom.surface = NULL;
+    }
 }
 
 struct osd_priv_s *
