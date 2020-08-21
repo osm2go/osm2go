@@ -1011,8 +1011,7 @@ osm_gps_map_dispose (GObject *object)
     if (priv->drag_expose != 0)
         g_source_remove (priv->drag_expose);
 
-    if(priv->osd)
-        osm_gps_map_osd_free(priv->osd);
+    osm_gps_map_osd_free(priv->osd);
 
     if(priv->dbuf_pixmap)
         g_object_unref (priv->dbuf_pixmap);
@@ -1105,58 +1104,56 @@ osm_gps_map_button_press (GtkWidget *widget, GdkEventButton *event)
     OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
 
     /* pressed inside OSD control? */
-    if(priv->osd) {
-        osd_button_t but = osm_gps_map_osd_check(OSM_GPS_MAP(widget), event->x, event->y);
+    osd_button_t but = osm_gps_map_osd_check(OSM_GPS_MAP(widget), event->x, event->y);
 
-        if(but != OSD_NONE)
-        {
-            int step =
-                GTK_WIDGET(widget)->allocation.width/OSM_GPS_MAP_SCROLL_STEP;
-            priv->drag_counter = -1;
+    if(but != OSD_NONE)
+    {
+        int step =
+            GTK_WIDGET(widget)->allocation.width/OSM_GPS_MAP_SCROLL_STEP;
+        priv->drag_counter = -1;
 
-            switch(but) {
-            case OSD_UP:
-                priv->map_y -= step;
-                center_coord_update(widget);
-                g_object_set(G_OBJECT(widget), "auto-center", FALSE, nullptr);
-                osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
-                break;
+        switch(but) {
+        case OSD_UP:
+            priv->map_y -= step;
+            center_coord_update(widget);
+            g_object_set(G_OBJECT(widget), "auto-center", FALSE, nullptr);
+            osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
+            break;
 
-            case OSD_DOWN:
-                priv->map_y += step;
-                center_coord_update(widget);
-                g_object_set(G_OBJECT(widget), "auto-center", FALSE, nullptr);
-                osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
-                break;
+        case OSD_DOWN:
+            priv->map_y += step;
+            center_coord_update(widget);
+            g_object_set(G_OBJECT(widget), "auto-center", FALSE, nullptr);
+            osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
+            break;
 
-            case OSD_LEFT:
-                priv->map_x -= step;
-                center_coord_update(widget);
-                g_object_set(G_OBJECT(widget), "auto-center", FALSE, nullptr);
-                osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
-                break;
+        case OSD_LEFT:
+            priv->map_x -= step;
+            center_coord_update(widget);
+            g_object_set(G_OBJECT(widget), "auto-center", FALSE, nullptr);
+            osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
+            break;
 
-            case OSD_RIGHT:
-                priv->map_x += step;
-                center_coord_update(widget);
-                g_object_set(G_OBJECT(widget), "auto-center", FALSE, nullptr);
-                osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
-                break;
+        case OSD_RIGHT:
+            priv->map_x += step;
+            center_coord_update(widget);
+            g_object_set(G_OBJECT(widget), "auto-center", FALSE, nullptr);
+            osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
+            break;
 
-            case OSD_IN:
-                osm_gps_map_set_zoom(OSM_GPS_MAP(widget), priv->map_zoom+1);
-                break;
+        case OSD_IN:
+            osm_gps_map_set_zoom(OSM_GPS_MAP(widget), priv->map_zoom+1);
+            break;
 
-            case OSD_OUT:
-                osm_gps_map_set_zoom(OSM_GPS_MAP(widget), priv->map_zoom-1);
-                break;
+        case OSD_OUT:
+            osm_gps_map_set_zoom(OSM_GPS_MAP(widget), priv->map_zoom-1);
+            break;
 
-            default:
-                break;
-            }
-
-            return FALSE;
+        default:
+            break;
         }
+
+        return FALSE;
     }
 
     priv->drag_counter = 0;
@@ -1188,7 +1185,7 @@ osm_gps_map_button_release (GtkWidget *widget, GdkEventButton *event)
         osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
     }
     /* pressed inside OSD control? */
-    else if(priv->osd)
+    else
         osm_gps_map_osd_check(OSM_GPS_MAP(widget), event->x, event->y);
 
 #ifdef DRAG_DEBUG
@@ -1380,8 +1377,7 @@ osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event)
     }
 
     /* draw new OSD */
-    if(priv->osd)
-        osm_gps_map_osd_draw(priv->osd, widget, drawable);
+    osm_gps_map_osd_draw(priv->osd, widget, drawable);
 
     gdk_draw_drawable (widget->window,
                        widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
