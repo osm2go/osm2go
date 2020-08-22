@@ -25,9 +25,6 @@
 #ifndef _OSM_GPS_MAP_TYPES_H_
 #define _OSM_GPS_MAP_TYPES_H_
 
-#include <gdk/gdk.h>
-#include "osm-gps-map-point.h"
-
 #define TILESIZE 256
 
 #define URI_MARKER_X    "#X"
@@ -51,25 +48,5 @@
 
 /* equatorial radius in meters */
 #define OSM_EQ_RADIUS   (6378137.0)
-
-typedef struct {
-    int x1;
-    int y1;
-    int x2;
-    int y2;
-} bbox_pixel_t;
-
-typedef struct {
-    int x;
-    int y;
-    int zoom;
-} tile_t;
-
-typedef struct {
-    OsmGpsMapPoint pt;
-    GdkPixbuf *image;
-    int w;
-    int h;
-} image_t;
 
 #endif /* _OSM_GPS_MAP_TYPES_H_ */
