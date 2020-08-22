@@ -53,6 +53,7 @@
 
 #include <osm2go_cpp.h>
 #include <osm2go_stl.h>
+#include "../osm2go_platform_gtk.h"
 
 /* the version check macro is not available in all versions of libsoup */
 #if defined(SOUP_CHECK_VERSION)
@@ -482,7 +483,7 @@ osm_gps_map_render_missing_tile_upscaled (OsmGpsMap *map, int zoom,
 {
     int zoom_big;
 
-    GdkPixbuf *big = osm_gps_map_find_bigger_tile (map, zoom, x, y, &zoom_big);
+    std::unique_ptr<GdkPixbuf, g_object_deleter> big(osm_gps_map_find_bigger_tile(map, zoom, x, y, &zoom_big));
     if (!big) return nullptr;
 
     g_debug ("Found bigger tile (zoom = %d, wanted = %d)", zoom_big, zoom);
@@ -495,13 +496,9 @@ osm_gps_map_render_missing_tile_upscaled (OsmGpsMap *map, int zoom,
     int modulo = 1 << zoom_diff;
     int area_x = (x % modulo) * area_size;
     int area_y = (y % modulo) * area_size;
-    GdkPixbuf *area = gdk_pixbuf_new_subpixbuf (big, area_x, area_y,
-                                     area_size, area_size);
-    g_object_unref (big);
-    GdkPixbuf *pixbuf = gdk_pixbuf_scale_simple (area, TILESIZE, TILESIZE,
-                                      GDK_INTERP_NEAREST);
-    g_object_unref (area);
-    return pixbuf;
+    std::unique_ptr<GdkPixbuf, g_object_deleter> area(gdk_pixbuf_new_subpixbuf(big.get(), area_x, area_y,
+                                     area_size, area_size));
+    return gdk_pixbuf_scale_simple(area.get(), TILESIZE, TILESIZE, GDK_INTERP_NEAREST);
 }
 
 GdkPixbuf *
@@ -519,12 +516,11 @@ osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int
     g_debug("Load tile %d,%d (%d,%d) z:%d", x, y, offset_x, offset_y, zoom);
 
     /* try to get file from internal cache first */
-    GdkPixbuf *pixbuf = osm_gps_map_load_cached_tile(map, zoom, x, y);
+    std::unique_ptr<GdkPixbuf, g_object_deleter> pixbuf(osm_gps_map_load_cached_tile(map, zoom, x, y));
 
     if(pixbuf)
     {
-        osm_gps_map_blit_tile(map, pixbuf, offset_x,offset_y);
-        g_object_unref (pixbuf);
+        osm_gps_map_blit_tile(map, pixbuf.get(), offset_x, offset_y);
     }
     else
     {
@@ -532,17 +528,16 @@ osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int
 
         /* try to render the tile by scaling cached tiles from other zoom
          * levels */
-        pixbuf = osm_gps_map_render_missing_tile (map, zoom, x, y);
+        pixbuf.reset(osm_gps_map_render_missing_tile(map, zoom, x, y));
         if (pixbuf)
         {
             gdk_draw_pixbuf (priv->pixmap,
                              priv->gc_map,
-                             pixbuf,
+                             pixbuf.get(),
                              0,0,
                              offset_x,offset_y,
                              TILESIZE,TILESIZE,
                              GDK_RGB_DITHER_NONE, 0, 0);
-            g_object_unref (pixbuf);
         }
         else
         {
