@@ -798,6 +798,94 @@ center_coord_update(GtkWidget *widget) {
     priv->center_rlat = pixel2lat(priv->map_zoom, pixel_y);
 }
 
+const char*
+osm_gps_map_source_get_repo_uri(OsmGpsMapSource_t source)
+{
+    switch(source)
+    {
+        case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
+            return OSM_REPO_URI;
+        default:
+            abort();
+    }
+}
+
+const char *
+osm_gps_map_source_get_image_format(OsmGpsMapSource_t source)
+{
+    switch(source) {
+        case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
+            return "png";
+        default:
+            abort();
+    }
+}
+
+int
+osm_gps_map_source_get_min_zoom(G_GNUC_UNUSED OsmGpsMapSource_t source)
+{
+    return 1;
+}
+
+int
+osm_gps_map_source_get_max_zoom(OsmGpsMapSource_t source)
+{
+    switch(source) {
+        case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
+            return OSM_MAX_ZOOM;
+        default:
+            abort();
+    }
+}
+
+void
+osm_gps_map_set_center (OsmGpsMap *map, float latitude, float longitude)
+{
+    g_return_if_fail (OSM_IS_GPS_MAP (map));
+    OsmGpsMapPrivate *priv = map->priv;
+
+    priv->center_rlat = deg2rad(latitude);
+    priv->center_rlon = deg2rad(longitude);
+
+    // pixel_x,y, offsets
+    int pixel_x = lon2pixel(priv->map_zoom, priv->center_rlon);
+    int pixel_y = lat2pixel(priv->map_zoom, priv->center_rlat);
+
+    priv->map_x = pixel_x - GTK_WIDGET(map)->allocation.width/2;
+    priv->map_y = pixel_y - GTK_WIDGET(map)->allocation.height/2;
+
+    osm_gps_map_map_redraw_idle(map);
+}
+
+int
+osm_gps_map_set_zoom (OsmGpsMap *map, int zoom)
+{
+    g_return_val_if_fail (OSM_IS_GPS_MAP (map), 0);
+    OsmGpsMapPrivate *priv = map->priv;
+
+    if (zoom != priv->map_zoom)
+    {
+        int width_center  = GTK_WIDGET(map)->allocation.width / 2;
+        int height_center = GTK_WIDGET(map)->allocation.height / 2;
+
+        int zoom_old = priv->map_zoom;
+        //constrain zoom min_zoom -> max_zoom
+        priv->map_zoom = CLAMP(zoom, priv->min_zoom, priv->max_zoom);
+
+        priv->map_x = lon2pixel(priv->map_zoom, priv->center_rlon) - width_center;
+        priv->map_y = lat2pixel(priv->map_zoom, priv->center_rlat) - height_center;
+
+        g_debug("Zoom changed from %d to %d x:%d",
+                zoom_old, priv->map_zoom, priv->map_x);
+
+        /* OSD may contain a scale, so we may have to re-render it */
+        osm_gps_map_osd_render(priv->osd);
+
+        osm_gps_map_map_redraw_idle(map);
+    }
+    return priv->map_zoom;
+}
+
 gboolean
 on_window_key_press(GtkWidget *widget,
 			 GdkEventKey *event, OsmGpsMapPrivate *priv) {
@@ -1431,116 +1519,11 @@ osm_gps_map_class_init (OsmGpsMapClass *klass)
                                                        static_cast<GParamFlags>(G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY)));
 }
 
-const char*
-osm_gps_map_source_get_friendly_name(OsmGpsMapSource_t source)
-{
-    switch(source)
-    {
-        case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
-            return "OpenStreetMap";
-        default:
-            abort();
-    }
-}
-
-//http://www.internettablettalk.com/forums/showthread.php?t=5209
-//https://garage.maemo.org/plugins/scmsvn/viewcvs.php/trunk/src/maps.c?root=maemo-mapper&view=markup
-//http://www.ponies.me.uk/maps/GoogleTileUtils.java
-//http://www.mgmaps.com/cache/MapTileCacher.perl
-const char*
-osm_gps_map_source_get_repo_uri(OsmGpsMapSource_t source)
-{
-    switch(source)
-    {
-        case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
-            return OSM_REPO_URI;
-        default:
-            abort();
-    }
-}
-
-const char *
-osm_gps_map_source_get_image_format(OsmGpsMapSource_t source)
-{
-    switch(source) {
-        case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
-            return "png";
-        default:
-            abort();
-    }
-}
-
-
-int
-osm_gps_map_source_get_min_zoom(G_GNUC_UNUSED OsmGpsMapSource_t source)
-{
-    return 1;
-}
-
-int
-osm_gps_map_source_get_max_zoom(OsmGpsMapSource_t source)
-{
-    switch(source) {
-        case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
-            return OSM_MAX_ZOOM;
-        default:
-            abort();
-    }
-}
-
 void
 osm_gps_map_set_center_and_zoom (OsmGpsMap *map, float latitude, float longitude, int zoom)
 {
     osm_gps_map_set_center (map, latitude, longitude);
     osm_gps_map_set_zoom (map, zoom);
-}
-
-void
-osm_gps_map_set_center (OsmGpsMap *map, float latitude, float longitude)
-{
-    g_return_if_fail (OSM_IS_GPS_MAP (map));
-    OsmGpsMapPrivate *priv = map->priv;
-
-    priv->center_rlat = deg2rad(latitude);
-    priv->center_rlon = deg2rad(longitude);
-
-    // pixel_x,y, offsets
-    int pixel_x = lon2pixel(priv->map_zoom, priv->center_rlon);
-    int pixel_y = lat2pixel(priv->map_zoom, priv->center_rlat);
-
-    priv->map_x = pixel_x - GTK_WIDGET(map)->allocation.width/2;
-    priv->map_y = pixel_y - GTK_WIDGET(map)->allocation.height/2;
-
-    osm_gps_map_map_redraw_idle(map);
-}
-
-int
-osm_gps_map_set_zoom (OsmGpsMap *map, int zoom)
-{
-    g_return_val_if_fail (OSM_IS_GPS_MAP (map), 0);
-    OsmGpsMapPrivate *priv = map->priv;
-
-    if (zoom != priv->map_zoom)
-    {
-        int width_center  = GTK_WIDGET(map)->allocation.width / 2;
-        int height_center = GTK_WIDGET(map)->allocation.height / 2;
-
-        int zoom_old = priv->map_zoom;
-        //constrain zoom min_zoom -> max_zoom
-        priv->map_zoom = CLAMP(zoom, priv->min_zoom, priv->max_zoom);
-
-        priv->map_x = lon2pixel(priv->map_zoom, priv->center_rlon) - width_center;
-        priv->map_y = lat2pixel(priv->map_zoom, priv->center_rlat) - height_center;
-
-        g_debug("Zoom changed from %d to %d x:%d",
-                zoom_old, priv->map_zoom, priv->map_x);
-
-        /* OSD may contain a scale, so we may have to re-render it */
-        osm_gps_map_osd_render(priv->osd);
-
-        osm_gps_map_map_redraw_idle(map);
-    }
-    return priv->map_zoom;
 }
 
 void
