@@ -72,12 +72,10 @@ void statusbar_gtk::banner_busy_stop() {
 }
 
 void statusbar_gtk::banner_show_info(const char *text) {
-  banner_busy_stop();
   brief(text, true);
 }
 
 void statusbar_gtk::banner_busy_start(const char *text) {
-  banner_busy_stop();
   brief(text, false);
   gtk_widget_set_sensitive(appdata_t::window, FALSE);
   gtk_grab_add(GTK_WIDGET(widget));
@@ -127,7 +125,7 @@ void statusbar_gtk::clear_message()
 
 void statusbar_gtk::brief(const char *msg, bool timeout)
 {
-  clear_message();
+  banner_busy_stop();
   g_debug("%s: %s", __PRETTY_FUNCTION__, msg);
   statusbar_highlight(this, true);
   brief_mid = gtk_statusbar_push(widget, cid, msg);
