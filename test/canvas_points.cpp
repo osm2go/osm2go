@@ -108,21 +108,17 @@ void testToBottom()
   assert(search1 == line || search1 == line2);
 
   // now the other one must be on top
-  canvas->item_to_bottom(search1);
-  canvas_item_t *search2 = canvas->get_item_at(lpos_t(3, 6));
+  canvas_item_t *search2 = canvas->get_next_item_at(lpos_t(3, 6), search1);
   assert(search2 == line || search2 == line2);
   assert(search1 != search2);
 
   // and back to the first
-  canvas->item_to_bottom(search2);
-  canvas_item_t *search3 = canvas->get_item_at(lpos_t(3, 6));
+  canvas_item_t *search3 = canvas->get_next_item_at(lpos_t(3, 6), search2);
   assert(search1 == search3);
 
-  canvas->item_to_bottom(search3);
-  search3 = canvas->get_item_at(lpos_t(3, 6));
+  search3 = canvas->get_next_item_at(lpos_t(3, 6), search3);
   assert(search2 == search3);
-  canvas->item_to_bottom(search3);
-  search3 = canvas->get_item_at(lpos_t(3, 6));
+  search3 = canvas->get_next_item_at(lpos_t(3, 6), search3);
   assert(search1 == search3);
 
   // now the polygon should be the item
@@ -130,8 +126,7 @@ void testToBottom()
   assert(bgpoly == search3);
 
   // there is only one item at that position, so it should be returned again
-  canvas->item_to_bottom(search3);
-  search3 = canvas->get_item_at(lpos_t(15, 1));
+  search3 = canvas->get_next_item_at(lpos_t(15, 1), search3);
   assert(bgpoly == search3);
 
   // outside of everything

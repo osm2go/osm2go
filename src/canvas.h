@@ -164,7 +164,20 @@ public:
   void move_background(int x, int y);
 
   void erase(unsigned int group_mask);
+
+  /**
+   * @brief get the top item at the given position
+   */
   canvas_item_t *get_item_at(lpos_t pos) const;
+
+  /**
+   * @brief get the item at the given position that is below the oldtop item
+   *
+   * The oldtop item is pushed to the bottom of the list, and the return value
+   * is the new top item.
+   */
+  canvas_item_t *get_next_item_at(lpos_t pos, canvas_item_t *oldtop) const;
+
   /**
    * @brief set new zoom level
    * @param zoom the intended zoom level
@@ -192,7 +205,6 @@ public:
    */
   osm2go_platform::screenpos scroll_step(const osm2go_platform::screenpos &d);
   void set_bounds(lpos_t min, lpos_t max);
-  void item_to_bottom(canvas_item_t *item);
 
   /***** creating items ******/
   canvas_item_circle *circle_new(canvas_group_t group, lpos_t c, float radius, int border,

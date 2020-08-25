@@ -636,10 +636,9 @@ static void map_free_map_item_chains(appdata_t &appdata) {
   }
 }
 
-/* get the item at position x, y */
-map_item_t *map_t::item_at(lpos_t pos) {
-  canvas_item_t *item = canvas->get_item_at(pos);
-
+map_item_t *
+map_t::item_at(canvas_item_t *item)
+{
   if(item == nullptr) {
     printf("  there's no item\n");
     return nullptr;
@@ -661,9 +660,16 @@ map_item_t *map_t::item_at(lpos_t pos) {
   return map_item;
 }
 
+/* get the item at position x, y */
+map_item_t *map_t::item_at(lpos_t pos)
+{
+  return item_at(canvas->get_item_at(pos));
+}
+
 /* get the real item (no highlight) at x, y */
-void map_t::pen_down_item() {
-  pen_down.on_item = item_at(canvas->window2world(pen_down.at));
+void map_t::pen_down_item(canvas_item_t *citem)
+{
+  pen_down.on_item = item_at(citem);
 
   if(pen_down.on_item == nullptr)
     return;
@@ -890,7 +896,7 @@ void map_t::button_press(const osm2go_platform::screenpos &p)
   pen_down.drag = false;     // don't assume drag yet
 
   /* determine wether this press was on an item */
-  pen_down_item();
+  pen_down_item(canvas->get_item_at(canvas->window2world(pen_down.at)));
 
   /* check if the clicked item is a highlighted node as the user */
   /* might want to drag that */
@@ -949,10 +955,8 @@ void map_t::button_release(const osm2go_platform::screenpos &p)
         if(selected.item == nullptr) {
           printf("  item has no visible representation to push\n");
         } else {
-          canvas->item_to_bottom(selected.item);
-
           /* update clicked item, to correctly handle the click */
-          pen_down_item();
+          pen_down_item(canvas->get_next_item_at(canvas->window2world(pen_down.at), selected.item));
 
           map_handle_click(this);
         }

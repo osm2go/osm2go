@@ -443,6 +443,13 @@ canvas_item_t *canvas_t::get_item_at(lpos_t pos) const {
   return static_cast<canvas_item_t *>(item->data);
 }
 
+canvas_item_t *canvas_t::get_next_item_at(lpos_t pos, canvas_item_t *oldtop) const
+{
+  goo_canvas_item_lower(static_cast<GooCanvasItem *>(oldtop), nullptr);
+
+  return get_item_at(pos);
+}
+
 canvas_item_circle *canvas_t::circle_new(canvas_group_t group, lpos_t c,
                                     float radius, int border,
                                     color_t fill_col, color_t border_col) {
@@ -564,11 +571,6 @@ canvas_item_circle::set_radius(float radius)
                "radius-x", static_cast<gdouble>(radius),
                "radius-y", static_cast<gdouble>(radius),
                nullptr);
-}
-
-void canvas_t::item_to_bottom(canvas_item_t *item) {
-  GooCanvasItem *gitem = static_cast<GooCanvasItem *>(item);
-  goo_canvas_item_lower(gitem, nullptr);
 }
 
 void canvas_item_t::set_zoom_max(float zoom_max) {

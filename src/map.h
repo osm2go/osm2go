@@ -182,6 +182,15 @@ public:
 
 private:
   void detail_change(float detail, trstring::native_type_arg banner_msg);
+
+  /**
+   * @brief update the item that was clicked on
+   * @param citem the canvas item that was selected
+   */
+  void pen_down_item(canvas_item_t *citem);
+
+  map_item_t *item_at(canvas_item_t *item);
+
 public:
   void detail_increase();
   void detail_decrease();
@@ -189,8 +198,6 @@ public:
 
   /* various functions required by map_edit */
   map_item_t *item_at(lpos_t pos);
-
-  void pen_down_item();
 
   /**
    * @brief get the current touchnode and remove the screen item
