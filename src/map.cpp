@@ -348,7 +348,7 @@ void map_t::item_deselect() {
   }
 
   /* remove statusbar message */
-  appdata.uicontrol->showNotification(trstring::native_type());
+  appdata.uicontrol->clearNotification(MainUi::ClearNormal);
 
   /* disable/enable icons in icon bar */
   appdata.iconbar->map_item_selected(object_t());
@@ -1252,7 +1252,10 @@ void map_t::set_action(map_action_t act) {
   appdata.iconbar->map_action_idle(idle, selected.object);
   appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_WMS_ADJUST, idle);
 
-  appdata.uicontrol->showNotification(statusbar_text);
+  if (statusbar_text.isEmpty())
+    appdata.uicontrol->clearNotification(MainUi::ClearNormal);
+  else
+    appdata.uicontrol->showNotification(statusbar_text);
 }
 
 
@@ -1746,7 +1749,7 @@ void map_t::detail_change(float detail, trstring::native_type_arg banner_msg)
   clear(MAP_LAYER_OBJECTS_ONLY);
   paint();
 
-  appdata.uicontrol->showNotification(trstring::native_type(), MainUi::Busy);
+  appdata.uicontrol->clearNotification(MainUi::Busy);
 }
 
 void map_t::detail_increase() {

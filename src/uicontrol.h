@@ -58,17 +58,17 @@ public:
     NoFlags = 0,
     Brief = 1, ///< the message automatically disappears
     Highlight = 2,
-    Busy = 4 ///< cleared by nullptr + Busy or when setting any other message
+    Busy = 4, ///< automatically cleared when setting any other message
+    ClearNormal = 8, ///< clear non-busy messages
+    ClearBoth = Busy | ClearNormal
   };
 
   virtual void setActionEnable(menu_items item, bool en) = 0;
 
   /**
    * @brief show a non-dialog notification message to the user
-   * @param message the text to show
+   * @param message the text to show, must not be empty
    * @param flags flags to control notification behavior
-   *
-   * message may be nullptr to clear the current message.
    */
   virtual void showNotification(trstring::native_type_arg message, unsigned int flags = NoFlags);
 
@@ -76,6 +76,11 @@ public:
    * @overload
    */
   void showNotification(const trstring &message, unsigned int flags = NoFlags);
+
+  /**
+   * @brief clear the given type of messages
+   */
+  void clearNotification(NotificationFlags flags);
 
   /**
    * @brief show a modal about box

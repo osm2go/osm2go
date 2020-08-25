@@ -139,21 +139,27 @@ void MainUiGtk::setActionEnable(menu_items item, bool en)
 void MainUi::showNotification(trstring::native_type_arg message, unsigned int flags)
 {
   statusbar_t *statusbar = static_cast<MainUiGtk *>(this)->statusBar();
-  if (flags & Brief) {
+  assert(!message.isEmpty());
+  if (flags & Brief)
     statusbar->banner_show_info(message);
-  } else if (flags & Busy) {
-    if (message.isEmpty())
-      statusbar->banner_busy_stop();
-    else
-      statusbar->banner_busy_start(message);
-  } else {
+  else if (flags & Busy)
+    statusbar->banner_busy_start(message);
+  else
     statusbar->set(message, flags & Highlight);
-  }
 }
 
 void MainUi::showNotification(const trstring &message, unsigned int flags)
 {
   showNotification(static_cast<const gchar *>(message), flags);
+}
+
+void MainUi::clearNotification(NotificationFlags flags)
+{
+  statusbar_t *statusbar = static_cast<MainUiGtk *>(this)->statusBar();
+  if (flags & Busy)
+    statusbar->banner_busy_stop();
+  if (flags & ClearNormal)
+    statusbar->set(nullptr, false);
 }
 
 GtkWidget *MainUiGtk::addMenu(GtkWidget *item)
