@@ -89,11 +89,10 @@ void statusbar_fremantle::banner_show_info(const char *text) {
  */
 
 void statusbar_fremantle::banner_busy_start(const char *text) {
-  GtkWidget *win = appdata_t::window;
-  if(G_UNLIKELY(win == nullptr))
+  if(G_UNLIKELY(appdata_t::window == nullptr))
     return;
-  setBanner(hildon_banner_show_progress(win, nullptr, text));
-  gtk_widget_set_sensitive(win, FALSE);
+  setBanner(hildon_banner_show_progress(appdata_t::window, nullptr, text));
+  gtk_widget_set_sensitive(appdata_t::window, FALSE);
   gtk_grab_add(widget);
   osm2go_platform::process_events();
 }
