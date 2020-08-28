@@ -176,32 +176,73 @@ double osm2go_platform::string_to_double(const char *str)
     return NAN;
 }
 
-std::string trstring::argn(const char spattern[3], const std::string &a, std::string::size_type pos) const
-{
-  std::string smsg = *this;
+namespace {
 
+/**
+ * @brief helper to replace a given placeholder by the pattern
+ */
+std::string trstring_argn(std::string smsg, const char spattern[3], const char *a, size_t alen, std::string::size_type pos)
+{
   while (pos != std::string::npos) {
-    smsg.replace(pos, 2, a);
-    pos = smsg.find(spattern, pos + a.size(), 2);
+    smsg.replace(pos, 2, a, alen);
+    pos = smsg.find(spattern, pos + alen, 2);
   }
 
-  return trstring(smsg);
+  return smsg;
+}
+
+struct placeholderReturn {
+  placeholderReturn() { spattern[0] = '%'; spattern[1] = '1'; spattern[2] = '\0'; }
+  // increase as needed
+  char spattern[3];
+  std::string::size_type pos;
+};
+
+placeholderReturn
+placeholderPosition(const std::string &str)
+{
+  placeholderReturn ret;
+  ret.pos = str.find(ret.spattern, 0, 2);
+
+  // just the simple way, only support one char long placeholder indexes
+  for (int i = 2; i < 10 && ret.pos == std::string::npos; i++) {
+    ret.spattern[1] = '0' + i;
+    ret.pos = str.find(ret.spattern, 0, 2);
+  }
+
+  if(unlikely(ret.pos == std::string::npos))
+    g_debug("no placeholder found in string: '%s'", str.c_str());
+
+  return ret;
+}
+
+} // namespace
+
+trstring::trstring(const char *msg, const char *, int n)
+{
+  const std::string nstr = std::to_string(n);
+
+  const trstring msgStr(msg);
+
+  std::string::size_type replacePos = msgStr.find("%n");
+  if (unlikely(replacePos == std::string::npos))
+    g_debug("no number placeholder found in string: '%s'", msg);
+
+  static_cast<std::string &>(*this) = trstring_argn(msgStr, "%n", nstr.c_str(), nstr.size(), replacePos);
 }
 
 trstring trstring::arg(const std::string &a) const
 {
-  // increase as needed
-  char spattern[3] = "%1";
-  std::string::size_type pos = find(spattern, 0, 2);
-  for (int i = 2; i < 5 && pos == std::string::npos; i++) {
-    spattern[1] = '0' + i;
-    pos = find(spattern, 0, 2);
-  }
+  placeholderReturn pos = placeholderPosition(*this);
 
-  if(unlikely(pos == std::string::npos))
-    g_debug("no placeholder found in string: '%s'", c_str());
+  return trstring(trstring_argn(*this, pos.spattern, a.c_str(), a.size(), pos.pos));
+}
 
-  return trstring(argn(spattern, a, pos));
+trstring trstring::arg(const char *a) const
+{
+  placeholderReturn pos = placeholderPosition(*this);
+
+  return trstring(trstring_argn(*this, pos.spattern, a, strlen(a), pos.pos));
 }
 
 #ifndef FREMANTLE

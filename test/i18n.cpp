@@ -28,6 +28,9 @@ int main()
   foo = trstring("%1 %n %2", nullptr, 2).arg("a").arg("b");
   assert_cmpstr(foo.toStdString(), "a 2 b");
 
+  foo = trstring("%1 %2", nullptr, 2).arg("a").arg("b");
+  assert_cmpstr(foo.toStdString(), "a b");
+
   item_id_t id = 0x100000011LL;
   foo = trstring("id: %1#").arg(id);
   assert_cmpstr(foo.toStdString(), "id: 4294967313#");

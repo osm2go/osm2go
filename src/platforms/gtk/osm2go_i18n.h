@@ -31,8 +31,11 @@ typedef char gchar;
 #define _(String) gettext(String)
 
 class trstring : private std::string {
+#if __cplusplus >= 201103L
+  explicit inline trstring(std::string &&s) : std::string(std::move(s)) {}
+#else
   explicit inline trstring(const std::string &s) : std::string(s) {}
-  std::string argn(const char spattern[3], const std::string &a, std::string::size_type pos) const;
+#endif
 public:
   class native_type {
     const char *value;
@@ -40,7 +43,11 @@ public:
 #if __cplusplus >= 201103L
     // catch if one passes a constant nullptr as argument
     native_type(std::nullptr_t) = delete;
+    native_type(native_type &&) = default;
+    native_type &operator=(native_type &&) = default;
 #endif
+    native_type(const native_type &other) : value(other.value) {}
+    native_type &operator=(const native_type &other) { value = other.value; return *this; }
     inline native_type(const char *v = nullptr) : value(v) {}
     inline bool isEmpty() const { return value == nullptr; }
     inline void clear() { value = nullptr; }
@@ -58,14 +65,12 @@ public:
   trstring(std::nullptr_t, const char *, int) = delete;
   trstring arg(std::nullptr_t) = delete;
 #endif
-  trstring(const char *msg, const char *, int n) __attribute__((nonnull(2)))
-    : std::string(trstring(msg).argn("%n", std::to_string(n), std::string(msg).find("%n"))) { }
+  trstring(const char *msg, const char *, int n) __attribute__((nonnull(2)));
 
   trstring arg(const std::string &a) const;
-  inline trstring arg(const char *a) const __attribute__((nonnull(2)))
-  { return arg(std::string(a)); }
+  trstring arg(const char *a) const __attribute__((nonnull(2)));
   inline trstring arg(char *a) const __attribute__((nonnull(2)))
-  { return arg(std::string(a)); }
+  { return arg(static_cast<const char *>(a)); }
   inline trstring arg(const trstring &a) const
   { return arg(static_cast<std::string>(a)); }
   inline trstring arg(native_type a) const
