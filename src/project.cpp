@@ -499,7 +499,7 @@ static bool project_load_inner(appdata_t &appdata, std::unique_ptr<project_t> &p
   /* check if OSM data is valid */
   osm2go_platform::process_events();
   trstring::native_type errmsg = appdata.project->osm->sanity_check();
-  if(unlikely(errmsg != nullptr)) {
+  if(unlikely(!errmsg.isEmpty())) {
     error_dlg(errmsg);
     printf("project/osm sanity checks failed (%s), unloading project\n", errmsg.toStdString().c_str());
 
