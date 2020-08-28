@@ -56,6 +56,12 @@ namespace {
 class trstring_or_key {
 #ifdef TRSTRING_NATIVE_TYPE_IS_TRSTRING
   trstring::native_type tval;
+#else
+  struct {
+    inline void clear() const {}
+    inline bool isEmpty() const { return true; }
+    inline std::string toStdString() const { return std::string(); }
+  } tval;
 #endif
   const char *kval;
 public:
@@ -72,30 +78,19 @@ public:
 
   inline trstring_or_key &operator=(const char *k)
   {
-#ifdef TRSTRING_NATIVE_TYPE_IS_TRSTRING
     tval.clear();
-#endif
     kval = k;
     return *this;
   }
 
   inline operator bool() const
   {
-    return
-#ifdef TRSTRING_NATIVE_TYPE_IS_TRSTRING
-        !tval.isEmpty() ||
-#endif
-        kval != nullptr;
+    return !tval.isEmpty() || kval != nullptr;
   }
 
   inline operator std::string() const
   {
-    return kval != nullptr ? kval :
-#ifdef TRSTRING_NATIVE_TYPE_IS_TRSTRING
-        tval.toStdString();
-#else
-        std::string();
-#endif
+    return kval != nullptr ? kval : tval.toStdString();
   }
 };
 
