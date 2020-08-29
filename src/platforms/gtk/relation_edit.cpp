@@ -68,8 +68,6 @@ enum {
   RELITEM_NUM_COLS
 };
 
-}
-
 relitem_context_t::relitem_context_t(object_t &o, const presets_items *pr, osm_t::ref os)
   : item(o)
   , presets(pr)
@@ -78,8 +76,6 @@ relitem_context_t::relitem_context_t(object_t &o, const presets_items *pr, osm_t
   , selection(nullptr)
 {
 }
-
-namespace {
 
 struct entry_insert_text {
   GtkWidget * const entry;
@@ -281,8 +277,6 @@ struct relation_list_insert_functor {
   void operator()(std::pair<item_id_t, relation_t *> pair);
 };
 
-}
-
 void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *> pair)
 {
   const relation_t * const relation = pair.second;
@@ -317,7 +311,9 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
   }
 }
 
-static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
+GtkWidget *
+relation_item_list_widget(relitem_context_t &context)
+{
   GtkTreeView *view = osm2go_platform::tree_view_new();
 
 #ifdef FREMANTLE
@@ -380,6 +376,8 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
   return osm2go_platform::scrollable_container(GTK_WIDGET(view));
 }
 
+}
+
 void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
                                 osm_t::ref osm, object_t &object) {
   relitem_context_t context(object, presets, osm);
@@ -406,6 +404,8 @@ void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
 
 /* -------------------- global relation list ----------------- */
 
+namespace {
+
 enum {
   RELATION_COL_TYPE = 0,
   RELATION_COL_NAME,
@@ -414,7 +414,9 @@ enum {
   RELATION_NUM_COLS
 };
 
-static relation_t *get_selected_relation(relation_context_t *context) {
+relation_t *
+get_selected_relation(relation_context_t *context)
+{
   GtkTreeSelection *selection;
   GtkTreeModel     *model;
   GtkTreeIter       iter;
@@ -428,9 +430,9 @@ static relation_t *get_selected_relation(relation_context_t *context) {
   return nullptr;
 }
 
-static void relation_list_selected(GtkWidget *list,
-				   relation_t *selected) {
-
+void
+relation_list_selected(GtkWidget *list, relation_t *selected)
+{
   list_button_enable(list, LIST_BUTTON_USER0,
 		     (selected != nullptr) && (!selected->members.empty()));
   list_button_enable(list, LIST_BUTTON_USER1,
@@ -440,8 +442,9 @@ static void relation_list_selected(GtkWidget *list,
   list_button_enable(list, LIST_BUTTON_EDIT, selected != nullptr);
 }
 
-static void
-relation_list_changed(GtkTreeSelection *selection, gpointer userdata) {
+void
+relation_list_changed(GtkTreeSelection *selection, gpointer userdata)
+{
   GtkWidget *list = static_cast<relation_context_t *>(userdata)->list;
   GtkTreeModel *model = nullptr;
   GtkTreeIter iter;
@@ -486,9 +489,9 @@ enum {
   MEMBER_NUM_COLS
 };
 
-static gboolean
-member_list_selection_func(GtkTreeSelection *, GtkTreeModel *model,
-                           GtkTreePath *path, gboolean, gpointer) {
+gboolean
+member_list_selection_func(GtkTreeSelection *, GtkTreeModel *model, GtkTreePath *path, gboolean, gpointer)
+{
   GtkTreeIter iter;
 
   if(gtk_tree_model_get_iter(model, &iter, path) == TRUE) {
@@ -530,7 +533,9 @@ void members_list_functor::operator()(const member_t &member)
                                     -1);
 }
 
-static GtkWidget *member_list_widget(member_context_t &context) {
+GtkWidget *
+member_list_widget(member_context_t &context)
+{
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
   GtkTreeView * const view = osm2go_platform::tree_view_new();
 
@@ -593,6 +598,8 @@ static GtkWidget *member_list_widget(member_context_t &context) {
   return vbox;
 }
 
+} // namespace
+
 void relation_show_members(GtkWidget *parent, const relation_t *relation, osm_t::ref osm) {
   member_context_t mcontext(relation, osm, parent);
 
@@ -610,8 +617,12 @@ void relation_show_members(GtkWidget *parent, const relation_t *relation, osm_t:
   gtk_widget_destroy(mcontext.dialog);
 }
 
+namespace {
+
 /* user clicked "members" button in relation list */
-static void on_relation_members(relation_context_t *context) {
+void
+on_relation_members(relation_context_t *context)
+{
   relation_t *sel = get_selected_relation(context);
 
   if(sel != nullptr)
@@ -619,7 +630,9 @@ static void on_relation_members(relation_context_t *context) {
 }
 
 /* user clicked "select" button in relation list */
-static void on_relation_select(relation_context_t *context, GtkWidget *but) {
+void
+on_relation_select(relation_context_t *context, GtkWidget *but)
+{
   relation_t *sel = get_selected_relation(context);
   context->map->item_deselect();
 
@@ -636,8 +649,9 @@ static void on_relation_select(relation_context_t *context, GtkWidget *but) {
   }
 }
 
-
-static void on_relation_add(relation_context_t *context) {
+void
+on_relation_add(relation_context_t *context)
+{
   /* create a new relation */
 
   std::unique_ptr<relation_t> relation(std::make_unique<relation_t>(0));
@@ -669,7 +683,7 @@ struct relation_edit_context {
   GtkWidget *list;
 };
 
-static gboolean
+gboolean
 relation_edit_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer data)
 {
   const relation_edit_context * const context = static_cast<relation_edit_context *>(data);
@@ -693,7 +707,9 @@ relation_edit_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpo
 }
 
 /* user clicked "edit..." button in relation list */
-static void on_relation_edit(relation_context_t *context) {
+void
+on_relation_edit(relation_context_t *context)
+{
   relation_t *sel = get_selected_relation(context);
   if(sel == nullptr)
     return;
@@ -710,7 +726,9 @@ static void on_relation_edit(relation_context_t *context) {
 }
 
 /* remove the selected relation */
-static void on_relation_remove(relation_context_t *context) {
+void
+on_relation_remove(relation_context_t *context)
+{
   relation_t *sel = get_selected_relation(context);
   if(sel == nullptr)
     return;
@@ -762,7 +780,9 @@ void relation_list_widget_functor::operator()(const relation_t *rel)
                                     -1);
 }
 
-static GtkWidget *relation_list_widget(relation_context_t &context) {
+GtkWidget *
+relation_list_widget(relation_context_t &context)
+{
   std::vector<list_view_column> columns;
   columns.push_back(list_view_column(_("Type"),    0));
   columns.push_back(list_view_column(_("Name"),    LIST_FLAG_ELLIPSIZE));
@@ -797,6 +817,8 @@ static GtkWidget *relation_list_widget(relation_context_t &context) {
   relation_list_selected(context.list, nullptr);
 
   return context.list;
+}
+
 }
 
 /* a global view on all relations */

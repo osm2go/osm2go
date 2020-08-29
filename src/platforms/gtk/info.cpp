@@ -66,9 +66,9 @@ public:
   void update_collisions(const std::string &k);
 };
 
-}
-
-static void changed(GtkTreeSelection *, gpointer user_data) {
+void
+changed(GtkTreeSelection *, gpointer user_data)
+{
   GtkWidget *list = static_cast<info_tag_context_t *>(user_data)->list;
 
   GtkTreeModel *model;
@@ -97,7 +97,7 @@ struct update_collisions_context {
   const osm_t::TagMap &tags;
 };
 
-static gboolean
+gboolean
 update_collisions_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer data)
 {
   const update_collisions_context * const ctx = static_cast<update_collisions_context *>(data);
@@ -114,13 +114,6 @@ update_collisions_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter,
   return FALSE;
 }
 
-void info_tag_context_t::update_collisions(const std::string &k)
-{
-  update_collisions_context ctx(k, tags);
-
-  gtk_tree_model_foreach(GTK_TREE_MODEL(store.get()), update_collisions_foreach, &ctx);
-}
-
 struct value_match_functor {
   const std::string &value;
   explicit inline value_match_functor(const std::string &v) : value(v) {}
@@ -129,7 +122,9 @@ struct value_match_functor {
   }
 };
 
-static void on_tag_remove(info_tag_context_t *context) {
+void
+on_tag_remove(info_tag_context_t *context)
+{
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
@@ -168,7 +163,8 @@ struct key_context {
   const std::string &initial;
 };
 
-static void callback_modified_key(GtkWidget *key, const key_context *context)
+void
+callback_modified_key(GtkWidget *key, const key_context *context)
 {
   const char *txt = gtk_entry_get_text(GTK_ENTRY(key));
   GtkDialog *dialog = GTK_DIALOG(gtk_widget_get_toplevel(key));
@@ -188,7 +184,8 @@ static void callback_modified_key(GtkWidget *key, const key_context *context)
   gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_ACCEPT, en);
 }
 
-static gboolean cb_value_focus_in(GtkEntry *value, GdkEventFocus *, GtkEntry *key)
+gboolean
+cb_value_focus_in(GtkEntry *value, GdkEventFocus *, GtkEntry *key)
 {
   const gchar *nk = gtk_entry_get_text(GTK_ENTRY(key));
   GtkEntry *ventry = GTK_ENTRY(value);
@@ -215,8 +212,8 @@ static gboolean cb_value_focus_in(GtkEntry *value, GdkEventFocus *, GtkEntry *ke
  * @return if the tag was actually modified
  * @retval false the tag is the same as before
  */
-static bool tag_edit(GtkWindow *window, std::string &k, std::string &v,
-                     const osm_t::TagMap &otherkeys)
+bool
+tag_edit(GtkWindow *window, std::string &k, std::string &v, const osm_t::TagMap &otherkeys)
 {
   osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Edit Tag"), window, GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
@@ -280,7 +277,7 @@ struct select_item_context {
   GtkWidget * const list;
 };
 
-static gboolean
+gboolean
 select_item_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer data)
 {
   const select_item_context * const context = static_cast<select_item_context *>(data);
@@ -299,13 +296,17 @@ select_item_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpoin
   return FALSE;
 }
 
-static void select_item(const std::string &k, const std::string &v, info_tag_context_t *context) {
+void
+select_item(const std::string &k, const std::string &v, info_tag_context_t *context)
+{
   select_item_context ctx(k, v, context->list);
 
   gtk_tree_model_foreach(GTK_TREE_MODEL(context->store.get()), select_item_foreach, &ctx);
 }
 
-static void on_tag_edit(info_tag_context_t *context) {
+void
+on_tag_edit(info_tag_context_t *context)
+{
   GtkTreeModel *model;
   GtkTreeIter iter;
 
@@ -373,7 +374,9 @@ static void on_tag_edit(info_tag_context_t *context) {
   }
 }
 
-static bool replace_with_last(const info_tag_context_t *context, const osm_t::TagMap &ntags) {
+bool
+replace_with_last(const info_tag_context_t *context, const osm_t::TagMap &ntags)
+{
   // if all tags of the object are part of the new tag list no information will be lost
   if(osm_t::tagSubset(context->tags, ntags))
     return true;
@@ -385,7 +388,9 @@ static bool replace_with_last(const info_tag_context_t *context, const osm_t::Ta
                 MISC_AGAIN_ID_OVERWRITE_TAGS, context->dialog.get());
 }
 
-static void on_tag_last(info_tag_context_t *context) {
+void
+on_tag_last(info_tag_context_t *context)
+{
   const osm_t::TagMap &ntags = context->object.type == object_t::NODE ?
                                context->map->last_node_tags :
                                context->map->last_way_tags;
@@ -401,8 +406,9 @@ static void on_tag_last(info_tag_context_t *context) {
   changed(sel, context);
 }
 
-static GtkTreeIter store_append(GtkListStore *store, const std::string &key,
-                                const std::string &value, bool collision) {
+GtkTreeIter
+store_append(GtkListStore *store, const std::string &key, const std::string &value, bool collision)
+{
   GtkTreeIter iter;
   gtk_list_store_insert_with_values(store, &iter, -1,
                                     TAG_COL_KEY,       key.c_str(),
@@ -412,7 +418,9 @@ static GtkTreeIter store_append(GtkListStore *store, const std::string &key,
   return iter;
 }
 
-static void on_tag_add(info_tag_context_t *context) {
+void
+on_tag_add(info_tag_context_t *context)
+{
   std::string k, v;
 
   if(!tag_edit(context->dialog, k, v, context->m_tags))
@@ -436,28 +444,22 @@ struct tag_replace_functor {
   }
 };
 
-static void store_fill(GtkListStore *store, const osm_t::TagMap &tags)
+void
+store_fill(GtkListStore *store, const osm_t::TagMap &tags)
 {
   std::for_each(tags.begin(), tags.end(), tag_replace_functor(store, tags));
 }
 
-void tag_context_t::info_tags_replace(const osm_t::TagMap &ntags)
+void
+on_relations(info_tag_context_t *context)
 {
-  info_tag_context_t *ictx = static_cast<info_tag_context_t *>(this);
-  GtkListStore *store = ictx->store.get();
-  gtk_list_store_clear(store);
-
-  ictx->m_tags = ntags;
-
-  store_fill(store, tags);
-}
-
-static void on_relations(info_tag_context_t *context) {
   relation_membership_dialog(context->dialog.get(), context->presets,
                              context->osm, context->object);
 }
 
-static GtkWidget *tag_widget(info_tag_context_t &context) {
+GtkWidget *
+tag_widget(info_tag_context_t &context)
+{
   /* setup both columns */
   std::vector<list_view_column> columns;
   columns.push_back(list_view_column(_("Key"),   LIST_FLAG_ELLIPSIZE|LIST_FLAG_CAN_HIGHLIGHT, TAG_COL_COLLISION));
@@ -496,16 +498,22 @@ static GtkWidget *tag_widget(info_tag_context_t &context) {
   return context.list;
 }
 
-static void on_relation_members(GtkWidget *, const info_tag_context_t *context) {
+void
+on_relation_members(GtkWidget *, const info_tag_context_t *context)
+{
   assert_cmpnum(context->object.type, object_t::RELATION);
   relation_show_members(context->dialog.get(), context->object.relation, context->osm);
 }
 
-static void table_attach(GtkWidget *table, GtkWidget *child, int x, int y) {
+void
+table_attach(GtkWidget *table, GtkWidget *child, int x, int y)
+{
   gtk_table_attach_defaults(GTK_TABLE(table), child, x, x+1, y, y+1);
 }
 
-static GtkWidget *details_widget(const info_tag_context_t &context, bool big) {
+GtkWidget *
+details_widget(const info_tag_context_t &context, bool big)
+{
   GtkWidget *table = gtk_table_new(big?4:2, 2, FALSE);  // y, x
 
   const std::map<int, std::string>::const_iterator userIt = context.osm->users.find(context.object.obj->user);
@@ -599,7 +607,9 @@ static GtkWidget *details_widget(const info_tag_context_t &context, bool big) {
 #ifdef FREMANTLE
 /* put additional infos into a seperate dialog for fremantle as */
 /* screen space is sparse there */
-static void info_more(const info_tag_context_t &context) {
+void
+info_more(const info_tag_context_t &context)
+{
   osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Object details"),
                                       context.dialog, GTK_DIALOG_MODAL,
                                       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, nullptr));
@@ -613,7 +623,8 @@ static void info_more(const info_tag_context_t &context) {
 }
 #endif
 
-static trstring objid(const object_t &object)
+trstring
+objid(const object_t &object)
 {
   /* use implicit selection if not explicitely given */
   trstring msgtpl;
@@ -652,6 +663,8 @@ static trstring objid(const object_t &object)
 
   return msgtpl.arg(object.obj->id);
 }
+
+} // namespace
 
 /* edit tags of currently selected node or way or of the relation */
 /* given */
@@ -718,6 +731,17 @@ tag_context_t::tag_context_t(const object_t &o, const osm_t::TagMap &t, osm2go_p
 {
 }
 
+void tag_context_t::info_tags_replace(const osm_t::TagMap &ntags)
+{
+  info_tag_context_t *ictx = static_cast<info_tag_context_t *>(this);
+  GtkListStore *store = ictx->store.get();
+  gtk_list_store_clear(store);
+
+  ictx->m_tags = ntags;
+
+  store_fill(store, tags);
+}
+
 info_tag_context_t::info_tag_context_t(map_t *m, osm_t::ref os, presets_items *p, const object_t &o, GtkWidget *dlg)
   : tag_context_t(o, m_tags, dlg)
   , map(m)
@@ -726,4 +750,11 @@ info_tag_context_t::info_tag_context_t(map_t *m, osm_t::ref os, presets_items *p
   , list(nullptr)
   , m_tags(object.obj->tags.asMap())
 {
+}
+
+void info_tag_context_t::update_collisions(const std::string &k)
+{
+  update_collisions_context ctx(k, tags);
+
+  gtk_tree_model_foreach(GTK_TREE_MODEL(store.get()), update_collisions_foreach, &ctx);
 }

@@ -44,7 +44,11 @@
 #include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
 
-static GtkWidget *link_new(const char *url) {
+namespace {
+
+GtkWidget *
+link_new(const char *url)
+{
   GtkWidget *label = gtk_label_new(nullptr);
   std::string str = "<span color=\"" LINK_COLOR "\"><u>" + std::string(url) +
                           "</u></span>";
@@ -58,7 +62,9 @@ static GtkWidget *link_new(const char *url) {
   return eventbox;
 }
 
-static GtkWidget *label_scale(const char *str, double scale_factor) {
+GtkWidget *
+label_scale(const char *str, double scale_factor)
+{
   PangoAttrList *attrs = pango_attr_list_new();
   pango_attr_list_change(attrs, pango_attr_scale_new(scale_factor));
   GtkWidget *label = gtk_label_new(str);
@@ -67,13 +73,16 @@ static GtkWidget *label_scale(const char *str, double scale_factor) {
   return label;
 }
 
-static void
-on_label_realize(GtkWidget *widget) {
+void
+on_label_realize(GtkWidget *widget)
+{
   /* get parent size (which is a container) */
   gtk_widget_set_size_request(widget, widget->parent->allocation.width, -1);
 }
 
-static GtkWidget *label_wrap(const char *str) {
+GtkWidget *
+label_wrap(const char *str)
+{
   GtkWidget *label = gtk_label_new(str);
 
   gtk_label_set_line_wrap_mode(GTK_LABEL(label), PANGO_WRAP_WORD);
@@ -84,7 +93,8 @@ static GtkWidget *label_wrap(const char *str) {
   return label;
 }
 
-static GtkWidget *license_page_new()
+GtkWidget *
+license_page_new()
 {
   GtkWidget *label = label_wrap(nullptr);
 
@@ -121,7 +131,9 @@ static GtkWidget *license_page_new()
 #endif
 }
 
-static GtkWidget *copyright_page_new(icon_t &icons) {
+GtkWidget *
+copyright_page_new(icon_t &icons)
+{
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 
   /* ------------------------ */
@@ -168,17 +180,22 @@ static GtkWidget *copyright_page_new(icon_t &icons) {
 }
 
 /* a label that is left aligned */
-static GtkWidget *left_label(const char *str) {
+GtkWidget *
+left_label(const char *str)
+{
   GtkWidget *widget = gtk_label_new(str);
   gtk_misc_set_alignment(GTK_MISC(widget), 0.0f, 0.5f);
   return widget;
 }
 
-static void author_add(GtkWidget *box, const char *str) {
+void
+author_add(GtkWidget *box, const char *str)
+{
   gtk_box_pack_start(GTK_BOX(box), left_label(str), FALSE, FALSE, 0);
 }
 
-static GtkWidget *authors_page_new()
+GtkWidget *
+authors_page_new()
 {
   GtkWidget *ivbox, *vbox = gtk_vbox_new(FALSE, 16);
 
@@ -233,7 +250,9 @@ static GtkWidget *authors_page_new()
 #endif
 }
 
-static GtkWidget *donate_page_new(icon_t &icons) {
+GtkWidget *
+donate_page_new(icon_t &icons)
+{
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(vbox),
@@ -262,7 +281,9 @@ static GtkWidget *donate_page_new(icon_t &icons) {
   return vbox;
 }
 
-static GtkWidget *bugs_page_new() {
+GtkWidget *
+bugs_page_new()
+{
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(vbox),
@@ -286,6 +307,8 @@ static GtkWidget *bugs_page_new() {
 
   return vbox;
 }
+
+} // namespace
 
 void MainUi::about_box()
 {

@@ -38,8 +38,11 @@
 // declared here so it is available for all lib users (i.e. testcases)
 osm2go_platform::Widget *appdata_t::window;
 
+namespace {
+
 #ifdef FREMANTLE
-static std::string strip_mnemonic(const char *label)
+std::string
+strip_mnemonic(const char *label)
 {
   // remove mnemonic marker
   std::string hlabel = label;
@@ -50,7 +53,7 @@ static std::string strip_mnemonic(const char *label)
 }
 #endif
 
-static GtkWidget *
+GtkWidget *
 create_submenu_item(const char *label)
 {
 #ifdef FREMANTLE
@@ -61,6 +64,20 @@ create_submenu_item(const char *label)
   return gtk_menu_item_new_with_mnemonic(label);
 #endif
 }
+
+GtkWidget *
+create_checkbox_item(const char *label)
+{
+#ifdef FREMANTLE
+  GtkWidget *button = hildon_check_button_new(HILDON_SIZE_AUTO);
+  gtk_button_set_label(GTK_BUTTON(button), strip_mnemonic(label).c_str());
+  return button;
+#else
+  return gtk_check_menu_item_new_with_mnemonic(label);
+#endif
+}
+
+} // namespace
 
 GtkWidget *
 MainUiGtk::createMenuItem(const char *label, const char *icon_name
@@ -82,18 +99,6 @@ MainUiGtk::createMenuItem(const char *label, const char *icon_name
   }
 #endif
   return create_submenu_item(label);
-}
-
-static GtkWidget *
-create_checkbox_item(const char *label)
-{
-#ifdef FREMANTLE
-  GtkWidget *button = hildon_check_button_new(HILDON_SIZE_AUTO);
-  gtk_button_set_label(GTK_BUTTON(button), strip_mnemonic(label).c_str());
-  return button;
-#else
-  return gtk_check_menu_item_new_with_mnemonic(label);
-#endif
 }
 
 MainUiGtk::MainUiGtk()

@@ -60,7 +60,14 @@ public:
   GtkTextView * const logview;
 };
 
+osm_upload_context_gtk::osm_upload_context_gtk(appdata_t &a, project_t::ref p, const char *c, const char *s)
+  : osm_upload_context_t(a, p, c, s)
+  , logbuffer(gtk_text_buffer_new(nullptr))
+  , logview(GTK_TEXT_VIEW(gtk_text_view_new_with_buffer(logbuffer)))
+{
 }
+
+} // namespace
 
 osm_upload_context_t::osm_upload_context_t(appdata_t &a, project_t::ref p, const char *c, const char *s)
   : appdata(a)
@@ -100,27 +107,25 @@ void osm_upload_context_t::append(const trstring &msg, const char *colorname)
   append_str(static_cast<const gchar *>(msg), colorname);
 }
 
-osm_upload_context_gtk::osm_upload_context_gtk(appdata_t &a, project_t::ref p, const char *c, const char *s)
-  : osm_upload_context_t(a, p, c, s)
-  , logbuffer(gtk_text_buffer_new(nullptr))
-  , logview(GTK_TEXT_VIEW(gtk_text_view_new_with_buffer(logbuffer)))
-{
-}
+namespace {
 
-static GtkWidget *table_attach_label_c(GtkWidget *table, const char *str, int x, int y)
+GtkWidget *
+table_attach_label_c(GtkWidget *table, const char *str, int x, int y)
 {
   GtkWidget *label =  gtk_label_new(str);
   gtk_table_attach_defaults(GTK_TABLE(table), label, x, x + 1, y, y + 1);
   return label;
 }
 
-static void table_attach_label_l(GtkWidget *table, int y, const char *str)
+void
+table_attach_label_l(GtkWidget *table, int y, const char *str)
 {
   GtkWidget *label = table_attach_label_c(table, str, 0, y);
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
 }
 
-static void table_attach_int(GtkWidget *table, int x, int y, unsigned int num)
+void
+table_attach_int(GtkWidget *table, int x, int y, unsigned int num)
 {
   char str[G_ASCII_DTOSTR_BUF_SIZE];
   snprintf(str, sizeof(str), "%u", num);
@@ -128,7 +133,9 @@ static void table_attach_int(GtkWidget *table, int x, int y, unsigned int num)
 }
 
 /* comment buffer has been edited, allow upload if the buffer is not empty */
-static void callback_buffer_modified(GtkTextBuffer *buffer, GtkDialog *dialog) {
+void
+callback_buffer_modified(GtkTextBuffer *buffer, GtkDialog *dialog)
+{
   GtkTextIter start, end;
   gtk_text_buffer_get_start_iter(buffer, &start);
   gtk_text_buffer_get_end_iter(buffer, &end);
@@ -137,7 +144,9 @@ static void callback_buffer_modified(GtkTextBuffer *buffer, GtkDialog *dialog) {
                                     (text != nullptr && *text != '\0') ? TRUE : FALSE);
 }
 
-static gboolean cb_focus_in(GtkTextView *view, GdkEventFocus *, GtkTextBuffer *buffer) {
+gboolean
+cb_focus_in(GtkTextView *view, GdkEventFocus *, GtkTextBuffer *buffer)
+{
   gint first_click = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(view), "first_click"));
 
   if(first_click == 1) {
@@ -160,7 +169,8 @@ static void table_insert_count(GtkWidget *table, const osm_t::dirty_t::counter<T
   table_attach_int(table, 4, row, counter.deleted.size());
 }
 
-static void details_table(osm2go_platform::DialogGuard &dialog, const osm_t::dirty_t &dirty)
+void
+details_table(osm2go_platform::DialogGuard &dialog, const osm_t::dirty_t &dirty)
 {
   GtkWidget *table = gtk_table_new(4, 5, TRUE);
 
@@ -185,7 +195,9 @@ static void details_table(osm2go_platform::DialogGuard &dialog, const osm_t::dir
 #ifdef FREMANTLE
 /* put additional infos into a seperate dialog for fremantle as */
 /* screen space is sparse there */
-static void info_more(const osm_t::dirty_t &context, GtkWidget *parent) {
+void
+info_more(const osm_t::dirty_t &context, GtkWidget *parent)
+{
   osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Changeset details"),
                                       GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, nullptr));
@@ -198,6 +210,8 @@ static void info_more(const osm_t::dirty_t &context, GtkWidget *parent) {
   gtk_dialog_run(dialog);
 }
 #endif
+
+} // namespace
 
 void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
 {

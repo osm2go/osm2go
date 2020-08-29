@@ -33,8 +33,12 @@
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
 
+namespace {
+
 #if !GTK_CHECK_VERSION(2, 18, 0)
-static inline gboolean gtk_widget_is_sensitive(const GtkWidget *w) {
+inline gboolean
+gtk_widget_is_sensitive(const GtkWidget *w)
+{
   return (GTK_WIDGET_FLAGS(w) & GTK_SENSITIVE) ? TRUE : FALSE;
 }
 #endif
@@ -46,8 +50,6 @@ static inline gboolean gtk_widget_is_sensitive(const GtkWidget *w) {
 #define TOOL_ICON(a)  a
 #define MENU_ICON(a)  a
 #endif
-
-namespace {
 
 class iconbar_gtk : public iconbar_t {
 public:
@@ -76,34 +78,40 @@ public:
   inline void map_cancel_ok(bool cancelv, bool okv);
 };
 
-}
-
-static void on_info_clicked(map_t *map) {
+void
+on_info_clicked(map_t *map)
+{
   map->info_selected();
 }
 
-static void on_node_add_clicked(map_t *map) {
+void
+on_node_add_clicked(map_t *map)
+{
   map->set_action(MAP_ACTION_NODE_ADD);
 }
 
-static void on_way_add_clicked(map_t *map) {
+void
+on_way_add_clicked(map_t *map)
+{
   map->set_action(MAP_ACTION_WAY_ADD);
 }
 
-static void on_way_node_add_clicked(map_t *map) {
+void
+on_way_node_add_clicked(map_t *map)
+{
   map->set_action(MAP_ACTION_WAY_NODE_ADD);
 }
 
-static void on_way_cut_clicked(map_t *map) {
+void
+on_way_cut_clicked(map_t *map)
+{
   map->set_action(MAP_ACTION_WAY_CUT);
 }
 
 #ifdef FINGER_UI
-static GtkWidget * __attribute__((nonnull(1,3,4,5)))
-                  menu_add(GtkWidget *menu, appdata_t &appdata,
-                           const char *icon_str, const char *menu_str,
-                           GCallback func) {
-
+GtkWidget * __attribute__((nonnull(1,3,4,5)))
+menu_add(GtkWidget *menu, appdata_t &appdata, const char *icon_str, const char *menu_str, GCallback func)
+{
   GtkWidget *item = gtk_image_menu_item_new_with_label(menu_str);
 
   gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
@@ -116,7 +124,9 @@ static GtkWidget * __attribute__((nonnull(1,3,4,5)))
   return item;
 }
 
-static gint on_way_button_press(GtkMenu *menu, GdkEventButton *event) {
+gint
+on_way_button_press(GtkMenu *menu, GdkEventButton *event)
+{
   if(event->type == GDK_BUTTON_PRESS) {
     g_debug("way clicked");
 
@@ -129,17 +139,9 @@ static gint on_way_button_press(GtkMenu *menu, GdkEventButton *event) {
 }
 #endif
 
-/* enable/disable ok and cancel button */
-void iconbar_gtk::map_cancel_ok(bool cancelv, bool okv) {
-  gtk_widget_set_sensitive(ok, okv ? TRUE : FALSE);
-  gtk_widget_set_sensitive(cancel, cancelv ? TRUE : FALSE);
-}
-
-void iconbar_t::map_cancel_ok(bool cancel, bool ok) {
-  static_cast<iconbar_gtk *>(this)->map_cancel_ok(cancel, ok);
-}
-
-static void iconbar_toggle_sel_widgets(iconbar_gtk *iconbar, gboolean value) {
+void
+iconbar_toggle_sel_widgets(iconbar_gtk *iconbar, gboolean value)
+{
   const std::array<GtkWidget *, 2> sel_widgets = { {
     iconbar->trash,
     iconbar->info
@@ -149,7 +151,9 @@ static void iconbar_toggle_sel_widgets(iconbar_gtk *iconbar, gboolean value) {
     gtk_widget_set_sensitive(sel_widgets[i], value);
 }
 
-static void iconbar_toggle_way_widgets(iconbar_gtk *iconbar, bool value, const object_t &selected) {
+void
+iconbar_toggle_way_widgets(iconbar_gtk *iconbar, bool value, const object_t &selected)
+{
   const std::array<GtkWidget *, 2> way_widgets = { {
     iconbar->way_node_add,
     iconbar->way_reverse
@@ -164,6 +168,8 @@ static void iconbar_toggle_way_widgets(iconbar_gtk *iconbar, bool value, const o
   gtk_widget_set_sensitive(iconbar->way_cut,
                            (value && selected.way->node_chain.size() > 2) ? TRUE : FALSE);
 }
+
+} // namespace
 
 void iconbar_t::map_item_selected(const object_t &item) {
   bool selected = item.type != object_t::ILLEGAL;
@@ -218,10 +224,12 @@ bool iconbar_t::isTrashEnabled() const
   return gtk_widget_is_sensitive(static_cast<const iconbar_gtk *>(this)->trash) == TRUE;
 }
 
+namespace {
+
 #ifndef FINGER_UI
-static GtkWidget *icon_add(GtkWidget *vbox, appdata_t &appdata,
-                           const char *icon_str,
-                           void(*func)(map_t *)) {
+GtkWidget *
+icon_add(GtkWidget *vbox, appdata_t &appdata, const char *icon_str, void(*func)(map_t *))
+{
   GtkWidget *but = gtk_button_new();
   GtkWidget *icon = appdata.icons.widget_load(icon_str);
   gtk_button_set_image(GTK_BUTTON(but), icon);
@@ -232,8 +240,9 @@ static GtkWidget *icon_add(GtkWidget *vbox, appdata_t &appdata,
 }
 #endif
 
-static GtkWidget *tool_button_label(icon_t &icons, GtkToolbar *toolbar,
-                                    const char *label_str, const char *icon_str) {
+GtkWidget *
+tool_button_label(icon_t &icons, GtkToolbar *toolbar, const char *label_str, const char *icon_str)
+{
   PangoAttrList *attrs = pango_attr_list_new();
   pango_attr_list_change(attrs, pango_attr_scale_new(PANGO_SCALE_XX_SMALL));
   GtkWidget *label = gtk_label_new(label_str);
@@ -253,11 +262,10 @@ static GtkWidget *tool_button_label(icon_t &icons, GtkToolbar *toolbar,
   return GTK_WIDGET(item);
 }
 
-static GtkWidget *  __attribute__((nonnull(1,3,4,5)))
-                  tool_add(GtkToolbar *toolbar, icon_t &icons,
-                           const char *icon_str, char *tooltip_str,
-                           GCallback func, gpointer context,
-                           bool separator = false) {
+GtkWidget *  __attribute__((nonnull(1,3,4,5)))
+tool_add(GtkToolbar *toolbar, icon_t &icons, const char *icon_str, char *tooltip_str,
+         GCallback func, gpointer context, bool separator = false)
+{
   GtkWidget *item = tool_button_label(icons, toolbar, tooltip_str, icon_str);
 
   g_signal_connect_swapped(item, "clicked", func, context);
@@ -267,6 +275,8 @@ static GtkWidget *  __attribute__((nonnull(1,3,4,5)))
 
   return GTK_WIDGET(item);
 }
+
+} // namespace
 
 iconbar_gtk::iconbar_gtk(appdata_t& appdata)
   : iconbar_t()
@@ -358,6 +368,20 @@ GtkWidget *iconbar_t::create(appdata_t &appdata) {
   iconbar->map_item_selected(object_t());
 
   return GTK_WIDGET(box);
+}
+
+/* enable/disable ok and cancel button */
+void
+iconbar_gtk::map_cancel_ok(bool cancelv, bool okv)
+{
+  gtk_widget_set_sensitive(ok, okv ? TRUE : FALSE);
+  gtk_widget_set_sensitive(cancel, cancelv ? TRUE : FALSE);
+}
+
+void
+iconbar_t::map_cancel_ok(bool cancel, bool ok)
+{
+  static_cast<iconbar_gtk *>(this)->map_cancel_ok(cancel, ok);
 }
 
 #if defined(FINGER_UI)

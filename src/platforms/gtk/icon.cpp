@@ -65,16 +65,15 @@ public:
   BufferMap entries;
 };
 
-}
-
 icon_buffer_item::icon_buffer_item(GdkPixbuf *nbuf)
   : buf(nbuf)
   , use(nbuf != nullptr ? 1 : 0)
 {
 }
 
-static std::string
-icon_file_exists(const std::string &file) {
+std::string
+icon_file_exists(const std::string &file)
+{
 #ifdef USE_SVG_ICONS
   const std::array<const char *, 4> icon_exts = { { ".svg",
 #else
@@ -110,6 +109,8 @@ icon_file_exists(const std::string &file) {
 
   return ret;
 }
+
+} // namespace
 
 icon_item *icon_t::load(const std::string &sname, int limit)
 {
@@ -161,7 +162,11 @@ GdkPixbuf *osm2go_platform::icon_pixmap(const icon_item *icon)
   return static_cast<const icon_buffer_item *>(icon)->buffer();
 }
 
-static inline void icon_destroy_pair(std::pair<const std::string, icon_buffer_item *> &pair) {
+namespace {
+
+inline void
+icon_destroy_pair(std::pair<const std::string, icon_buffer_item *> &pair)
+{
   delete pair.second;
 }
 
@@ -172,6 +177,8 @@ struct find_icon_buf {
     return pair.second == buf;
   }
 };
+
+} // namespace
 
 void icon_t::icon_free(icon_item *buf) {
   //  g_debug("request to free icon %p", buf);
