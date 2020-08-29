@@ -224,13 +224,6 @@ static void on_row_activated(GtkTreeView *treeview,
   }
 }
 
-GtkTreeModel *list_get_model(GtkWidget *list) {
-  list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
-  assert(priv != nullptr);
-
-  return gtk_tree_view_get_model(priv->view);
-}
-
 /* Refocus a GtkTreeView an item specified by iter, unselecting the current
    selection and optionally highlighting the new one. Typically called after
    making an edit to an item with a covering sub-dialog. */
