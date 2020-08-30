@@ -1507,18 +1507,7 @@ void tag_list_t::copy(const tag_list_t &other)
   std::for_each(other.contents->begin(), other.contents->end(), tag_vector_copy_functor(*contents));
 }
 
-class any_relation_member_functor {
-  const object_t &member;
-  std::vector<member_t>::const_iterator &mit;
-public:
-  inline any_relation_member_functor(const object_t &o, std::vector<member_t>::const_iterator &mi)
-    : member(o), mit(mi) {}
-  bool operator()(const std::pair<item_id_t, relation_t *> &it) const
-  {
-    mit = it.second->find_member_object(member);
-    return mit != it.second->members.end();
-  }
-};
+namespace {
 
 class typed_relation_member_functor {
   const member_t member;
@@ -1545,8 +1534,6 @@ public:
            std::find(it.second->members.begin(), it.second->members.end(), member) != it.second->members.end(); }
 };
 
-namespace {
-
 /**
  * @brief remove underscores from string and replace them by spaces
  *
@@ -1570,14 +1557,17 @@ inline std::string __attribute__((nonnull(1))) __attribute__ ((__warn_unused_res
 trstring osm_t::unspecified_name(const object_t &obj) const
 {
   const std::map<item_id_t, relation_t *>::const_iterator itEnd = relations.end();
-  std::vector<member_t>::const_iterator mit, bmit;
+  const char *bmrole = nullptr; // the role "obj" has in the "best" relation
   int rtype = -1; // type of the relation: 3 mp with name, 2 mp, 1 name, 0 anything else
-  std::map<item_id_t, relation_t *>::const_iterator it = std::find_if(relations.begin(), itEnd,
-                                                                      any_relation_member_functor(obj, mit));
-  std::map<item_id_t, relation_t *>::const_iterator best = it;
+  std::map<item_id_t, relation_t *>::const_iterator best = itEnd;
   std::string bname;
 
-  while(it != itEnd && rtype < 3) {
+  for (std::map<item_id_t, relation_t *>::const_iterator it = relations.begin(); it != itEnd && rtype < 3; it++) {
+    // ignore all relations where obj is no member
+    const std::vector<member_t>::const_iterator mit = it->second->find_member_object(obj);
+    if (mit == it->second->members.end())
+      continue;
+
     int nrtype = 0;
     if(it->second->is_multipolygon())
       nrtype += 2;
@@ -1591,34 +1581,30 @@ trstring osm_t::unspecified_name(const object_t &obj) const
       best = it;
       bname.swap(nname);
       clean_underscores_inplace(bname);
-      bmit = mit;
-    }
-
-    it = std::find_if(++it, itEnd, any_relation_member_functor(obj, mit));
-  }
-
-  if(best != itEnd) {
-    std::string brole;
-    if (member_t::has_role(*bmit))
-      brole = clean_underscores(bmit->role);
-
-    if(best->second->is_multipolygon() && !brole.empty()) {
-      return trstring("%1: '%2' of multipolygon '%3'").arg(obj.type_string()).arg(brole).arg(bname);
-    } else {
-      const char *type = best->second->tags.get_value("type");
-      std::string reltype;
-      if (type != nullptr)
-        reltype = clean_underscores(type);
-      else
-        reltype = trstring("relation").toStdString();
-      if(!brole.empty())
-        return trstring("%1: '%2' in %3 '%4'").arg(obj.type_string()).arg(brole).arg(reltype).arg(bname);
-      else
-        return trstring("%1: member of %2 '%3'").arg(obj.type_string()).arg(reltype).arg(bname);
+      bmrole = mit->role;
     }
   }
 
-  return trstring("unspecified %1").arg(obj.type_string());
+  if(best == itEnd)
+    return trstring("unspecified %1").arg(obj.type_string());
+
+  std::string brole;
+  if (bmrole != nullptr)
+    brole = clean_underscores(bmrole);
+
+  if(best->second->is_multipolygon() && !brole.empty())
+    return trstring("%1: '%2' of multipolygon '%3'").arg(obj.type_string()).arg(brole).arg(bname);
+
+  const char *type = best->second->tags.get_value("type");
+  std::string reltype;
+  if (type != nullptr)
+    reltype = clean_underscores(type);
+  else
+    reltype = trstring("relation").toStdString();
+  if(!brole.empty())
+    return trstring("%1: '%2' in %3 '%4'").arg(obj.type_string()).arg(brole).arg(reltype).arg(bname);
+  else
+    return trstring("%1: member of %2 '%3'").arg(obj.type_string()).arg(reltype).arg(bname);
 }
 
 /* try to get an as "speaking" description of the object as possible */

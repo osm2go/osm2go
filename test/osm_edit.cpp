@@ -1878,6 +1878,11 @@ void test_description()
   pt_r->tags.replace(rtags);
   assert_cmpstr(o.get_name(*osm), "way/area: 'foo' in public transport 'Kröp cke'");
 
+  // as well as role entries
+  pt_r->members.clear();
+  pt_r->members.push_back(member_t(object_t(w), "foo_bar"));
+  assert_cmpstr(o.get_name(*osm), "way/area: 'foo bar' in public transport 'Kröp cke'");
+
   // multipolygons take precedence over other relations
   rtags.clear();
   rtags.insert(osm_t::TagMap::value_type("type", "multipolygon"));
