@@ -1683,8 +1683,8 @@ std::string object_t::get_name(const osm_t &osm) const {
          (!strcmp(highway, "unclassified")) ||
          (!strcmp(highway, "residential")) ||
          (!strcmp(highway, "service"))) {
-        ret = highway;
-        ret += " road";
+        // no underscores replacement here because the whitelisted flags above don't have them
+        trstring("%1 road").arg(highway).swap(ret);
         typestr = nullptr;
       }
 
@@ -1749,9 +1749,7 @@ std::string object_t::get_name(const osm_t &osm) const {
   if(name != nullptr) {
     if(ret.empty())
       ret = type_string();
-    ret += ": \"";
-    ret += name;
-    ret += '"';
+    trstring("%1: \"%2\"").arg(ret).arg(name).swap(ret);
   } else if(ret.empty()) {
     // look if this has only one real tag and use that one
     const tag_t *stag = obj->tags.singleTag();
