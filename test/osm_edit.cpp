@@ -1867,10 +1867,16 @@ void test_description()
   assert_cmpstr(o.get_name(*osm), "way/area: 'outer' in relation '<ID #-3>'");
 
   pt_r->members.push_back(member_t(object_t(w)));
-  assert_cmpstr(o.get_name(*osm), "way/area: member of public_transport 'Kröpcke'");
+  assert_cmpstr(o.get_name(*osm), "way/area: member of public transport 'Kröpcke'");
   pt_r->members.clear();
   pt_r->members.push_back(member_t(object_t(w), "foo"));
-  assert_cmpstr(o.get_name(*osm), "way/area: 'foo' in public_transport 'Kröpcke'");
+  assert_cmpstr(o.get_name(*osm), "way/area: 'foo' in public transport 'Kröpcke'");
+
+  // test that underscores in the relation name get also replaced
+  rtags.erase(rtags.findTag("name", "Kröpcke"));
+  rtags.insert(osm_t::TagMap::value_type("name", "Kröp_cke"));
+  pt_r->tags.replace(rtags);
+  assert_cmpstr(o.get_name(*osm), "way/area: 'foo' in public transport 'Kröp cke'");
 
   // multipolygons take precedence over other relations
   rtags.clear();

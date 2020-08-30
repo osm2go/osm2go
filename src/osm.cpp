@@ -1545,6 +1545,28 @@ public:
            std::find(it.second->members.begin(), it.second->members.end(), member) != it.second->members.end(); }
 };
 
+namespace {
+
+/**
+ * @brief remove underscores from string and replace them by spaces
+ *
+ * Tags usually have underscores in them, but to display this to the user a version
+ * with spaces looks nicer.
+ */
+inline void clean_underscores_inplace(std::string &s)
+{
+  std::replace(s.begin(), s.end(), '_', ' ');
+}
+
+inline std::string __attribute__((nonnull(1))) __attribute__ ((__warn_unused_result__)) clean_underscores(const char *s)
+{
+  std::string ret = s;
+  clean_underscores_inplace(ret);
+  return ret;
+}
+
+} // namespace
+
 trstring osm_t::unspecified_name(const object_t &obj) const
 {
   const std::map<item_id_t, relation_t *>::const_iterator itEnd = relations.end();
@@ -1568,6 +1590,7 @@ trstring osm_t::unspecified_name(const object_t &obj) const
       rtype = nrtype;
       best = it;
       bname.swap(nname);
+      clean_underscores_inplace(bname);
       bmit = mit;
     }
 
@@ -1575,20 +1598,26 @@ trstring osm_t::unspecified_name(const object_t &obj) const
   }
 
   if(best != itEnd) {
-    if(best->second->is_multipolygon() && member_t::has_role(*bmit)) {
-      return trstring("%1: '%2' of multipolygon '%3'").arg(obj.type_string()).arg(bmit->role).arg(bname);
+    std::string brole;
+    if (member_t::has_role(*bmit))
+      brole = clean_underscores(bmit->role);
+
+    if(best->second->is_multipolygon() && !brole.empty()) {
+      return trstring("%1: '%2' of multipolygon '%3'").arg(obj.type_string()).arg(brole).arg(bname);
     } else {
-      trstring_or_key reltype(best->second->tags.get_value("type"));
-      if(unlikely(!reltype))
-        reltype = _("relation");
-      if(member_t::has_role(*bmit))
-        return trstring("%1: '%2' in %3 '%4'").arg(obj.type_string()).arg(bmit->role).arg(static_cast<std::string>(reltype)).arg(bname);
+      const char *type = best->second->tags.get_value("type");
+      std::string reltype;
+      if (type != nullptr)
+        reltype = clean_underscores(type);
       else
-        return trstring("%1: member of %2 '%3'").arg(obj.type_string()).arg(static_cast<std::string>(reltype)).arg(bname);
+        reltype = trstring("relation").toStdString();
+      if(!brole.empty())
+        return trstring("%1: '%2' in %3 '%4'").arg(obj.type_string()).arg(brole).arg(reltype).arg(bname);
+      else
+        return trstring("%1: member of %2 '%3'").arg(obj.type_string()).arg(reltype).arg(bname);
     }
   }
 
-  // look if this is part of relations
   return trstring("unspecified %1").arg(obj.type_string());
 }
 
@@ -1731,17 +1760,17 @@ std::string object_t::get_name(const osm_t &osm) const {
     } else {
       // last chance
       const char *bp = obj->tags.get_value("building:part");
-      if(bp != nullptr && strcmp(bp, "yes") == 0) {
-        trstring("building part").swap(ret);
-        return ret;
-      }
-      osm.unspecified_name(*this).swap(ret);
+      trstring tret;
+      if(bp != nullptr && strcmp(bp, "yes") == 0)
+        tret = trstring("building part");
+      else
+        tret = osm.unspecified_name(*this);
+      tret.swap(ret);
+      return ret;
     }
   }
 
-  /* remove underscores from string and replace them by spaces as this is */
-  /* usually nicer */
-  std::replace(ret.begin(), ret.end(), '_', ' ');
+  clean_underscores_inplace(ret);
 
   return ret;
 }
