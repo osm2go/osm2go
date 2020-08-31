@@ -22,9 +22,9 @@
 #include "fdguard.h"
 #include "track.h"
 
+#include <array>
 #include <memory>
 #include <string>
-#include <vector>
 #include <utility>
 
 #include <osm2go_stl.h>
@@ -68,11 +68,11 @@ public:
   static ref instance();
   void save() const;
 
+  typedef std::array<std::pair<const char *, std::string *>, 7> StringKeys;
+  typedef std::array<std::pair<const char *, bool *>, 3> BooleanKeys;
 private:
-  typedef std::vector<std::pair<const char *, std::string *> > StringKeys;
-  StringKeys store_str;
-  typedef std::vector<std::pair<const char *, bool *> > BooleanKeys;
-  BooleanKeys store_bool;
+  const StringKeys store_str;
+  const BooleanKeys store_bool;
 };
 
 /**

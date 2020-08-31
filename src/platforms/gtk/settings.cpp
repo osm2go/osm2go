@@ -37,8 +37,6 @@
 #include "osm2go_platform_gtk.h"
 #include "osm2go_stl.h"
 
-#define ST_ENTRY(a) std::make_pair(#a, &(a))
-
 #define KEYBASE "/apps/" PACKAGE "/"
 static const std::string keybase = KEYBASE;
 const char *api06https = "https://api.openstreetmap.org/api/0.6";
@@ -295,6 +293,49 @@ void settings_t::save() const {
   gconf_client_set_int(client.get(), KEYBASE "wms/count", wms_server.size(), nullptr);
 }
 
+namespace {
+
+#define ST_ENTRY(a) std::make_pair(#a, &(settings.a))
+
+inline settings_t::StringKeys
+st_mapping(settings_t &settings)
+{
+  settings_t::StringKeys sstring = {{
+                /* not user configurable */
+                ST_ENTRY(base_path),
+
+                /* from project.cpp */
+                ST_ENTRY(project),
+
+                /* from osm_api.cpp */
+                ST_ENTRY(server),
+                ST_ENTRY(username),
+                ST_ENTRY(password),
+
+                /* style */
+                ST_ENTRY(style),
+
+                /* main */
+                ST_ENTRY(track_path)
+  }};
+
+  return sstring;
+}
+
+inline settings_t::BooleanKeys
+b_mapping(settings_t &settings)
+{
+  settings_t::BooleanKeys sbool = {{
+               ST_ENTRY(enable_gps),
+               ST_ENTRY(follow_gps),
+               ST_ENTRY(imperial_units)
+  }};
+
+  return sbool;
+}
+
+} // namespace
+
 settings_t::settings_t()
   : base_path_fd(-1)
   , enable_gps(false)
@@ -302,34 +343,9 @@ settings_t::settings_t()
   , imperial_units(false)
   , trackVisibility(DrawAll)
   , first_run_demo(false)
-  , store_str(7)
-  , store_bool(3)
+  , store_str(st_mapping(*this))
+  , store_bool(b_mapping(*this))
 {
-  store_str.clear();
-  store_bool.clear();
-
-  /* not user configurable */
-  store_str.push_back(ST_ENTRY(base_path));
-
-  /* from project.c */
-  store_str.push_back(ST_ENTRY(project));
-
-  /* from osm_api.c */
-  store_str.push_back(ST_ENTRY(server));
-  store_str.push_back(ST_ENTRY(username));
-  store_str.push_back(ST_ENTRY(password));
-
-  /* wms servers are saved seperately */
-
-  /* style */
-  store_str.push_back(ST_ENTRY(style));
-
-  /* main */
-  store_str.push_back(ST_ENTRY(track_path));
-
-  store_bool.push_back(ST_ENTRY(enable_gps));
-  store_bool.push_back(ST_ENTRY(follow_gps));
-  store_bool.push_back(ST_ENTRY(imperial_units));
 }
 
 settings_t::~settings_t()
