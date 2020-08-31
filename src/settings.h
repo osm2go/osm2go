@@ -58,6 +58,7 @@ public:
   std::string track_path;
   bool enable_gps;
   bool follow_gps;
+  bool imperial_units;
   TrackVisibility trackVisibility;
 
   /* set to true if no gconf settings were found */

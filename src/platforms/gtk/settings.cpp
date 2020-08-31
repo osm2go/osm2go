@@ -299,10 +299,11 @@ settings_t::settings_t()
   : base_path_fd(-1)
   , enable_gps(false)
   , follow_gps(false)
+  , imperial_units(false)
   , trackVisibility(DrawAll)
   , first_run_demo(false)
   , store_str(7)
-  , store_bool(2)
+  , store_bool(3)
 {
   store_str.clear();
   store_bool.clear();
@@ -328,6 +329,7 @@ settings_t::settings_t()
 
   store_bool.push_back(ST_ENTRY(enable_gps));
   store_bool.push_back(ST_ENTRY(follow_gps));
+  store_bool.push_back(ST_ENTRY(imperial_units));
 }
 
 settings_t::~settings_t()

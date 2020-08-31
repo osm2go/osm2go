@@ -22,6 +22,7 @@
 #include <gps_state.h>
 #include <misc.h>
 #include <notifications.h>
+#include <settings.h>
 
 #include "osm-gps-map.h"
 #include "osm-gps-map-osd-select.h"
@@ -271,13 +272,20 @@ current_tab_is(area_context_t *context, const char *str)
 }
 
 inline gchar *
-warn_text(double area)
+warn_text(double area, bool imperial_units)
 {
-  return g_strdup_printf(_("The currently selected area is %.02f km² (%.02f mi²) in size. "
-                           "This is more than the recommended %.02f km² (%.02f mi²).\n\n"
-                           "Continuing may result in a big or failing download and low "
-                           "mapping performance in a densly mapped area (e.g. cities)!"),
-                         area, area / (KMPMIL * KMPMIL), WARN_OVER, WARN_OVER / (KMPMIL * KMPMIL));
+  if (unlikely(imperial_units))
+    return g_strdup_printf(_("The currently selected area is %.02f mi² in size. "
+                             "This is more than the recommended %.02f mi².\n\n"
+                             "Continuing may result in a big or failing download and low "
+                             "mapping performance in a densly mapped area (e.g. cities)!"),
+                             area / (KMPMIL * KMPMIL), WARN_OVER / (KMPMIL * KMPMIL));
+  else
+    return g_strdup_printf(_("The currently selected area is %.02f km² in size. "
+                             "This is more than the recommended %.02f km².\n\n"
+                             "Continuing may result in a big or failing download and low "
+                             "mapping performance in a densly mapped area (e.g. cities)!"),
+                             area, WARN_OVER);
 }
 
 void
@@ -285,7 +293,7 @@ on_area_warning_clicked(area_context_t *context)
 {
   double area = selected_area(context);
 
-  g_string msg(warn_text(area));
+  g_string msg(warn_text(area, context->extent.is_mil));
   warning_dlg(msg.get(), context->dialog.get());
 }
 
@@ -298,7 +306,7 @@ area_warning(area_context_t *context)
   double area = selected_area(context);
 
   if(area > WARN_OVER) {
-    g_string text(warn_text(area));
+    g_string text(warn_text(area, context->extent.is_mil));
     const trstring msg = trstring("%1\n\nDo you really want to continue?").arg(text.get());
     text.reset();
     ret = osm2go_platform::yes_no(_("Area size warning!"), msg,
@@ -801,10 +809,13 @@ bool area_edit_t::run() {
   gtk_table_attach_defaults(table,
 			    context.extent.height, 1, 2, 2, 3);
 
+  settings_t::ref settings = settings_t::instance();
+  context.extent.is_mil = settings->imperial_units;
   std::vector<const char *> units(2);
   units[0] = _("mi");
   units[1] = _("km");
-  context.extent.mil_km = osm2go_platform::combo_box_new(_("Unit"), units, 1);
+  context.extent.mil_km = osm2go_platform::combo_box_new(_("Unit"), units,
+                                                         context.extent.is_mil ? 0 : 1);
 
   gtk_table_attach(table, context.extent.mil_km, 2, 3, 1, 3,
 		   static_cast<GtkAttachOptions>(0), static_cast<GtkAttachOptions>(0),
@@ -879,6 +890,8 @@ bool area_edit_t::run() {
       }
     }
   } while(response == GTK_RESPONSE_HELP || response == GTK_RESPONSE_ACCEPT);
+
+  settings->imperial_units = context.extent.is_mil;
 
   return ok;
 }
