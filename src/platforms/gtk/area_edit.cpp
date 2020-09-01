@@ -49,7 +49,8 @@
 #endif
 
 /* limit of square kilometers above the warning is enabled */
-#define WARN_OVER  5.0
+/* should be integral so it can be compared with the preprocessor */
+#define WARN_OVER 5
 
 namespace {
 
@@ -287,7 +288,13 @@ warn_text(double area, bool imperial_units)
                     "Continuing may result in a big or failing download and low "
                     "mapping performance in a densly mapped area (e.g. cities)!")
                     .arg(area, 0, 'f', 2)
+// performance microoptimization, just because we can
+#if WARN_OVER == 5
+                    .arg("5.0");
+#else
+#error assumed optimization now incorrect, please remove the other code
                     .arg(WARN_OVER, 0, 'f', 2);
+#endif
 }
 
 void
