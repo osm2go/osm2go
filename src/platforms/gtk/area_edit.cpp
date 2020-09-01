@@ -271,21 +271,23 @@ current_tab_is(area_context_t *context, const char *str)
   return current_tab_is(nb, page_num, str);
 }
 
-inline gchar *
+inline trstring
 warn_text(double area, bool imperial_units)
 {
   if (unlikely(imperial_units))
-    return g_strdup_printf(_("The currently selected area is %.02f mi² in size. "
-                             "This is more than the recommended %.02f mi².\n\n"
-                             "Continuing may result in a big or failing download and low "
-                             "mapping performance in a densly mapped area (e.g. cities)!"),
-                             area / (KMPMIL * KMPMIL), WARN_OVER / (KMPMIL * KMPMIL));
+    return trstring("The currently selected area is %1 mi² in size. "
+                    "This is more than the recommended %2 mi².\n\n"
+                    "Continuing may result in a big or failing download and low "
+                    "mapping performance in a densly mapped area (e.g. cities)!")
+                    .arg(area / (KMPMIL * KMPMIL), 0, 'f', 2)
+                    .arg(static_cast<float>(WARN_OVER) / (KMPMIL * KMPMIL), 0, 'f', 2);
   else
-    return g_strdup_printf(_("The currently selected area is %.02f km² in size. "
-                             "This is more than the recommended %.02f km².\n\n"
-                             "Continuing may result in a big or failing download and low "
-                             "mapping performance in a densly mapped area (e.g. cities)!"),
-                             area, WARN_OVER);
+    return trstring("The currently selected area is %1 km² in size. "
+                    "This is more than the recommended %2 km².\n\n"
+                    "Continuing may result in a big or failing download and low "
+                    "mapping performance in a densly mapped area (e.g. cities)!")
+                    .arg(area, 0, 'f', 2)
+                    .arg(WARN_OVER, 0, 'f', 2);
 }
 
 void
@@ -293,8 +295,7 @@ on_area_warning_clicked(area_context_t *context)
 {
   double area = selected_area(context);
 
-  g_string msg(warn_text(area, context->extent.is_mil));
-  warning_dlg(msg.get(), context->dialog.get());
+  warning_dlg(warn_text(area, context->extent.is_mil), context->dialog.get());
 }
 
 bool
@@ -306,11 +307,9 @@ area_warning(area_context_t *context)
   double area = selected_area(context);
 
   if(area > WARN_OVER) {
-    g_string text(warn_text(area, context->extent.is_mil));
-    const trstring msg = trstring("%1\n\nDo you really want to continue?").arg(text.get());
-    text.reset();
-    ret = osm2go_platform::yes_no(_("Area size warning!"), msg,
-                 MISC_AGAIN_ID_AREA_TOO_BIG | MISC_AGAIN_FLAG_DONT_SAVE_NO, context->dialog.get());
+    ret = osm2go_platform::yes_no(_("Area size warning!"),
+                                  trstring("%1\n\nDo you really want to continue?").arg(warn_text(area, context->extent.is_mil)),
+                                  MISC_AGAIN_ID_AREA_TOO_BIG | MISC_AGAIN_FLAG_DONT_SAVE_NO, context->dialog.get());
   }
 
   return ret;

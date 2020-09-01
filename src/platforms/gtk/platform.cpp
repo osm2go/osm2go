@@ -245,6 +245,14 @@ trstring trstring::arg(const char *a) const
   return trstring(trstring_argn(*this, pos.spattern, a, strlen(a), pos.pos));
 }
 
+trstring trstring::argFloatHelper(double a) const
+{
+  char buf[64];
+  snprintf(buf, sizeof(buf), "%.02f", a);
+
+  return arg(buf);
+}
+
 #ifndef FREMANTLE
 #define RESPONSE_YES  GTK_RESPONSE_YES
 #define RESPONSE_NO   GTK_RESPONSE_NO

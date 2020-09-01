@@ -28,6 +28,9 @@ int main()
   foo = trstring("%1 %n %2", nullptr, 2).arg("a").arg("b");
   assert_cmpstr(foo.toStdString(), "a 2 b");
 
+  foo = trstring("area %1 km²").arg(5.0, 0, 'f', 2);
+  assert_cmpstr(foo.toStdString(), "area 5.00 km²");
+
   foo = trstring("%1 %2", nullptr, 2).arg("a").arg("b");
   assert_cmpstr(foo.toStdString(), "a b");
 

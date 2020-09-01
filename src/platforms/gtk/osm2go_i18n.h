@@ -36,6 +36,7 @@ class trstring : private std::string {
 #else
   explicit inline trstring(const std::string &s) : std::string(s) {}
 #endif
+  trstring argFloatHelper(double a) const;
 public:
   class native_type {
     const char *value;
@@ -80,6 +81,15 @@ public:
   }
   template<typename T> inline trstring arg(T l) const
   { return arg(std::to_string(l)); }
+
+  inline trstring arg(double a, int fieldWidth = 0, char format = 'g', int precision = -1) const
+  {
+    // I only need this at a single place, so simplify the implementation...
+    assert(fieldWidth == 0);
+    assert(format == 'f');
+    assert(precision == 2);
+    return argFloatHelper(a);
+  }
 
   const std::string &toStdString() const { return *this; }
 
