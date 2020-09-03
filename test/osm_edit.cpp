@@ -1663,6 +1663,8 @@ void test_description()
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("highway", "emergency_access_point"));
   tags.insert(osm_t::TagMap::value_type("ref", "H-112"));
+  // the barrier must not override the highway information
+  tags.insert(osm_t::TagMap::value_type("barrier", "bollard"));
   n->tags.replace(tags);
   assert_cmpstr(o.get_name(*osm), "emergency access point: \"H-112\"");
 

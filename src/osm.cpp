@@ -1620,10 +1620,7 @@ std::string object_t::get_name(const osm_t &osm) const {
   }
 
   /* try to figure out _what_ this is */
-  const std::array<const char *, 5> name_tags = { { "name", "ref", "note", "fix" "me", "sport" } };
-  const char *name = nullptr;
-  for(unsigned int i = 0; name == nullptr && i < name_tags.size(); i++)
-    name = obj->tags.get_value(name_tags[i]);
+  const char *name = obj->tags.get_value("name");
 
   /* search for some kind of "type" */
   const std::array<const char *, 10> type_tags =
@@ -1656,20 +1653,18 @@ std::string object_t::get_name(const osm_t &osm) const {
         name = obj->tags.get_value("addr:housename");
     }
   }
-  if(!typestr && ret.empty())
-    typestr = obj->tags.get_value("emergency");
 
-  /* highways are a little bit difficult */
-  if(ret.empty()) {
+  if(!typestr && ret.empty()) {
     const char *highway = obj->tags.get_value("highway");
-    if(highway != nullptr) {
-      if((!strcmp(highway, "primary")) ||
-         (!strcmp(highway, "secondary")) ||
-         (!strcmp(highway, "tertiary")) ||
-         (!strcmp(highway, "unclassified")) ||
-         (!strcmp(highway, "residential")) ||
-         (!strcmp(highway, "service"))) {
+    if(highway == nullptr) {
+      typestr = obj->tags.get_value("emergency");
+    } else {
+      /* highways are a little bit difficult */
+      if(!strcmp(highway, "primary")     || !strcmp(highway, "secondary") ||
+         !strcmp(highway, "tertiary")    || !strcmp(highway, "unclassified") ||
+         !strcmp(highway, "residential") || !strcmp(highway, "service")) {
         // no underscores replacement here because the whitelisted flags above don't have them
+        assert(strchr(highway, '_') == nullptr);
         trstring("%1 road").arg(highway).swap(ret);
         typestr = nullptr;
       }
@@ -1701,10 +1696,11 @@ std::string object_t::get_name(const osm_t &osm) const {
     }
   }
 
-  if(!typestr) {
+  if(!typestr && ret.empty()) {
     const char *pttype = obj->tags.get_value("public_transport");
     typestr = pttype;
 
+    // for PT objects without name that are part of another PT relation use the name of that one
     if(name == nullptr && pttype != nullptr) {
       const char *ptkey = strcmp(pttype, "stop_position") == 0 ? "stop" :
                           strcmp(pttype, "platform") == 0 ? pttype :
@@ -1717,7 +1713,7 @@ std::string object_t::get_name(const osm_t &osm) const {
     }
   }
 
-  if(ret.empty()) {
+  if(!typestr && ret.empty()) {
     const char *btype = obj->tags.get_value("barrier");
     if(btype != nullptr) {
       if(strcmp("yes", btype) == 0)
@@ -1731,6 +1727,11 @@ std::string object_t::get_name(const osm_t &osm) const {
     assert(ret.empty());
     ret = static_cast<std::string>(typestr);
   }
+
+  // no good name was found so far, just look into some other tags to get a useful description
+  const std::array<const char *, 4> name_tags = { { "ref", "note", "fix" "me", "sport" } };
+  for(unsigned int i = 0; name == nullptr && i < name_tags.size(); i++)
+    name = obj->tags.get_value(name_tags[i]);
 
   if(name != nullptr) {
     if(ret.empty())
