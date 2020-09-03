@@ -552,7 +552,7 @@ void callback_fetch_mm_clicked(area_context_t *context)
   }
 
   /* maemo mapper is fourth tab (page 3) */
-  if(!current_tab_is(context, "M.Mapper"))
+  if(!current_tab_is(context, _("M.Mapper")))
     return;
 
   /* maemo mapper pos data ... */
