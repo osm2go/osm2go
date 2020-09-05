@@ -59,32 +59,19 @@ vmessage(osm2go_platform::Widget *parent, GtkMessageType type, GtkButtonsType bu
   gtk_dialog_run(dialog);
 }
 
-void message_dlg(trstring::native_type title, trstring::native_type msg, GtkWidget *parent)
+void message_dlg(trstring::arg_type title, trstring::arg_type msg, GtkWidget *parent)
 {
-  vmessage(parent, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, title, msg);
+  vmessage(parent, GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
+           static_cast<const gchar *>(static_cast<trstring::native_type>(title)),
+           static_cast<const gchar *>(static_cast<trstring::native_type>(msg)));
 }
 
-void message_dlg(trstring::native_type title, const trstring &msg, GtkWidget *parent)
+void error_dlg(trstring::arg_type msg, GtkWidget *parent)
 {
-  vmessage(parent, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, title, static_cast<const gchar *>(msg));
+  vmessage(parent, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, _("Error"), static_cast<const gchar *>(static_cast<trstring::native_type>(msg)));
 }
 
-void error_dlg(trstring::native_type msg, GtkWidget *parent)
+void warning_dlg(trstring::arg_type msg, GtkWidget *parent)
 {
-  vmessage(parent, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, _("Error"), msg);
-}
-
-void error_dlg(const trstring &msg, GtkWidget *parent)
-{
-  vmessage(parent, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, _("Error"), static_cast<const gchar *>(msg));
-}
-
-void warning_dlg(trstring::native_type msg, GtkWidget *parent)
-{
-  vmessage(parent, GTK_MESSAGE_WARNING, GTK_BUTTONS_CLOSE, _("Warning"), msg);
-}
-
-void warning_dlg(const trstring &msg, GtkWidget *parent)
-{
-  vmessage(parent, GTK_MESSAGE_WARNING, GTK_BUTTONS_CLOSE, _("Warning"), static_cast<const gchar *>(msg));
+  vmessage(parent, GTK_MESSAGE_WARNING, GTK_BUTTONS_CLOSE, _("Warning"), static_cast<const gchar *>(static_cast<trstring::native_type>(msg)));
 }

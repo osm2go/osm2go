@@ -58,6 +58,39 @@ public:
   typedef native_type native_type_arg;
 #undef TRSTRING_NATIVE_TYPE_IS_TRSTRING
 
+  class any_type {
+    friend class trstring;
+
+    const trstring *m_t;
+    native_type m_n;
+  public:
+    inline any_type() : m_t(nullptr) {}
+    inline any_type(native_type a) : m_t(nullptr), m_n(a) {}
+    inline any_type(const char *a) : m_t(nullptr), m_n(a) {}
+    inline any_type(const trstring &a) : m_t(&a) {}
+    inline any_type(const any_type &other) : m_t(other.m_t), m_n(other.m_n) {}
+    inline any_type &operator=(const any_type &other)
+    { m_t = other.m_t; m_n = other.m_n; return *this; }
+
+#if __cplusplus >= 201103L
+    explicit
+#endif
+    inline operator native_type() const
+    {
+      if (m_t != nullptr)
+        return m_t->toStdString().c_str();
+      else
+        return m_n;
+    }
+
+    inline bool isEmpty() const
+    {
+      return m_t != nullptr ? m_t->isEmpty() : m_n.isEmpty();
+    }
+  };
+
+  typedef const any_type &arg_type;
+
   explicit inline trstring() : std::string() {}
   explicit inline trstring(const char *s) __attribute__((nonnull(2))) : std::string(gettext(s)) {}
 #if __cplusplus >= 201103L
@@ -92,6 +125,14 @@ public:
   }
 
   const std::string &toStdString() const { return *this; }
+
+  inline trstring arg(any_type a) const
+  {
+    if (a.m_t)
+      return arg(*a.m_t);
+    else
+      return arg(static_cast<const gchar *>(a.m_n));
+  }
 
   inline void swap(std::string &other)
   {

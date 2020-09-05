@@ -31,7 +31,7 @@ public:
   MainUiDummy() : MainUi(), hasMessage(false) {}
   void setActionEnable(menu_items, bool) override
   { abort(); }
-  void showNotification(trstring::native_type_arg message, unsigned int flags) override;
+  void showNotification(trstring::arg_type, unsigned int flags) override;
   bool hasMessage;
 };
 
@@ -44,10 +44,11 @@ appdata_t::appdata_t()
 {
 }
 
-void MainUiDummy::showNotification(trstring::native_type_arg message, unsigned int)
+void MainUiDummy::showNotification(trstring::arg_type message, unsigned int)
 {
   assert(!hasMessage);
-  printf("%s: %s", __PRETTY_FUNCTION__, static_cast<const char *>(message));
+  assert(!message.isEmpty());
+  printf("%s: %s", __PRETTY_FUNCTION__, static_cast<trstring::native_type>(message).toStdString().c_str());
   hasMessage = true;
 }
 

@@ -46,6 +46,11 @@ public:
   osm_upload_context_t(osm_upload_context_t &&) = delete;
   osm_upload_context_t &operator=(osm_upload_context_t &&) = delete;
   ~osm_upload_context_t() = default;
+
+  void append_str(trstring::arg_type, const char * = nullptr) = delete;
+#ifndef TRSTRING_NATIVE_TYPE_IS_TRSTRING
+  void append_str(trstring::native_type, const char * = nullptr) = delete;
+#endif
 #endif
 
   appdata_t &appdata;
@@ -59,20 +64,17 @@ public:
   const std::string src;
   std::unique_ptr<CURL, curl_deleter> curl;
 
-  void append_str(trstring::native_type_arg msg, const char *colorname = nullptr);
-#ifdef TRSTRING_NATIVE_TYPE_IS_TRSTRING
+  /**
+   * @brief append a translated string to the log shown to the user
+   */
+  void append(trstring::arg_type msg, const char *colorname = nullptr);
+
+  /**
+   * @brief append a raw string from the server to the log shown to the user
+   */
   void append_str(const char *msg, const char *colorname = nullptr) __attribute__((nonnull(2)));
-#endif
-  void append(const trstring &msg, const char *colorname = nullptr);
 
   void upload(const osm_t::dirty_t &dirty, osm2go_platform::Widget *parent);
 };
 
 void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty);
-
-#ifdef TRSTRING_NATIVE_TYPE_IS_TRSTRING
-inline void osm_upload_context_t::append_str(trstring::native_type_arg msg, const char *colorname)
-{
-  append(msg, colorname);
-}
-#endif

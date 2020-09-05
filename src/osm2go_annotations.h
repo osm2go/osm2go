@@ -112,8 +112,38 @@ public:
       fail(a, astr, b, bstr, file, func, line);
   }
   // not inline, should happen only in test code
-  assert_cmpstr_struct(trstring::native_type_arg a, const char *astr, trstring::native_type_arg b, const char *file, const char *func, int line);
-  assert_cmpstr_struct(trstring::native_type_arg a, const char *astr, trstring::native_type_arg b, const char *bstr, const char *file, const char *func, int line);
+  assert_cmpstr_struct(trstring::arg_type a, const char *astr, trstring::arg_type b, const char *file, const char *func, int line);
+  assert_cmpstr_struct(trstring::arg_type a, const char *astr, trstring::arg_type b, const char *bstr, const char *file, const char *func, int line);
+
+  assert_cmpstr_struct(trstring::arg_type a, const char *astr, const char *b, const char *file, const char *func, int line);
+  assert_cmpstr_struct(trstring::arg_type a, const char *astr, const char *b, const char *bstr, const char *file, const char *func, int line);
+#ifndef TRSTRING_NATIVE_TYPE_IS_TRSTRING
+  // assist in overload resolution
+  inline assert_cmpstr_struct(const trstring &a, const char *astr, trstring::native_type_arg b, const char *file, const char *func, int line)
+  {
+    assert_cmpstr_struct relay(trstring::arg_type(a), astr, trstring::arg_type(b), file, func, line);
+  }
+  inline assert_cmpstr_struct(const trstring &a, const char *astr, trstring::native_type_arg b, const char *bstr, const char *file, const char *func, int line)
+  {
+    assert_cmpstr_struct relay(trstring::arg_type(a), astr, trstring::arg_type(b), bstr, file, func, line);
+  }
+  inline assert_cmpstr_struct(trstring::native_type_arg a, const char *astr, trstring::native_type_arg b, const char *file, const char *func, int line)
+  {
+    assert_cmpstr_struct relay(trstring::arg_type(a), astr, trstring::arg_type(b), file, func, line);
+  }
+  inline assert_cmpstr_struct(trstring::native_type_arg a, const char *astr, trstring::native_type_arg b, const char *bstr, const char *file, const char *func, int line)
+  {
+    assert_cmpstr_struct relay(trstring::arg_type(a), astr, trstring::arg_type(b), bstr, file, func, line);
+  }
+  inline assert_cmpstr_struct(const trstring &a, const char *astr, const char *b, const char *file, const char *func, int line)
+  {
+    assert_cmpstr_struct relay(trstring::arg_type(a), astr, b, file, func, line);
+  }
+  inline assert_cmpstr_struct(const trstring &a, const char *astr, const char *b, const char *bstr, const char *file, const char *func, int line)
+  {
+    assert_cmpstr_struct relay(trstring::arg_type(a), astr, b, bstr, file, func, line);
+  }
+#endif
   assert_cmpstr_struct(const std::string &a, const char *astr, const std::string &b, const char *file, const char *func, int line);
   assert_cmpstr_struct(const std::string &a, const char *astr, const std::string &b, const char *bstr, const char *file, const char *func, int line);
   assert_cmpstr_struct(const std::string &a, const char *astr, const trstring &b, const char *file, const char *func, int line);

@@ -433,14 +433,40 @@ bool osm2go_platform::create_directories(const std::string &path)
   return g_mkdir_with_parents(path.c_str(), S_IRWXU) == 0;
 }
 
-assert_cmpstr_struct::assert_cmpstr_struct(trstring::native_type_arg a, const char *astr, trstring::native_type_arg b, const char *file, const char *func, int line)
+#ifdef __clang__
+// b cannot be __builtin_constant_p(), but gcc still wants to have the declaration available.
+// Here is the code, but since it cannot happen just wait for the linker error in case this is
+// ever needed. Looks like it happen with clang.
+assert_cmpstr_struct::assert_cmpstr_struct(trstring::arg_type a, const char *astr, trstring::arg_type b, const char *file, const char *func, int line)
 {
-  if(unlikely(a.toStdString() != b.toStdString()))
-    fail(static_cast<const gchar *>(a), astr, static_cast<const gchar *>(b), file, func, line);
+  trstring::native_type nativeA = static_cast<trstring::native_type>(a);
+  trstring::native_type nativeB = static_cast<trstring::native_type>(b);
+  if(unlikely(nativeA.toStdString() != nativeB.toStdString()))
+    fail(static_cast<const gchar *>(nativeA), astr, static_cast<const gchar *>(nativeB), file, func, line);
+}
+#endif
+
+assert_cmpstr_struct::assert_cmpstr_struct(trstring::arg_type a, const char *astr, trstring::arg_type b, const char *bstr, const char *file, const char *func, int line)
+{
+  trstring::native_type nativeA = static_cast<trstring::native_type>(a);
+  trstring::native_type nativeB = static_cast<trstring::native_type>(b);
+  if(unlikely(nativeA.toStdString() != nativeB.toStdString()))
+    fail(static_cast<const gchar *>(nativeA), astr, static_cast<const gchar *>(nativeB), bstr, file, func, line);
 }
 
-assert_cmpstr_struct::assert_cmpstr_struct(trstring::native_type_arg a, const char *astr, trstring::native_type_arg b, const char *bstr, const char *file, const char *func, int line)
+assert_cmpstr_struct::assert_cmpstr_struct(trstring::arg_type a, const char *astr, const char *b, const char *file, const char *func, int line)
 {
-  if(unlikely(a.toStdString() != b.toStdString()))
-    fail(static_cast<const gchar *>(a), astr, static_cast<const gchar *>(b), bstr, file, func, line);
+  trstring::native_type nativeA = static_cast<trstring::native_type>(a);
+  if(unlikely(nativeA.toStdString() != b))
+    fail(static_cast<const gchar *>(nativeA), astr, b, file, func, line);
 }
+
+#ifdef __clang__
+// different way here: b should always be a constant in the compares here
+assert_cmpstr_struct::assert_cmpstr_struct(trstring::arg_type a, const char *astr, const char *b, const char *bstr, const char *file, const char *func, int line)
+{
+  trstring::native_type nativeA = static_cast<trstring::native_type>(a);
+  if(unlikely(nativeA.toStdString() != b))
+    fail(static_cast<const gchar *>(nativeA), astr, b, bstr, file, func, line);
+}
+#endif

@@ -79,9 +79,9 @@ osm_upload_context_t::osm_upload_context_t(appdata_t &a, project_t::ref p, const
 {
 }
 
-void osm_upload_context_t::append_str(trstring::native_type msg, const char *colorname)
+void osm_upload_context_t::append_str(const char *msg, const char *colorname)
 {
-  g_debug("%s", msg.toStdString().c_str());
+  g_debug("%s", msg);
 
   osm_upload_context_gtk * const gtk_this = static_cast<osm_upload_context_gtk *>(this);
   GtkTextBuffer * const logbuffer = gtk_this->logbuffer;
@@ -102,9 +102,9 @@ void osm_upload_context_t::append_str(trstring::native_type msg, const char *col
   osm2go_platform::process_events();
 }
 
-void osm_upload_context_t::append(const trstring &msg, const char *colorname)
+void osm_upload_context_t::append(trstring::arg_type msg, const char *colorname)
 {
-  append_str(static_cast<const gchar *>(msg), colorname);
+  append_str(static_cast<const gchar *>(static_cast<trstring::native_type>(msg)), colorname);
 }
 
 namespace {

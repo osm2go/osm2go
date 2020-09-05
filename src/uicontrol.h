@@ -70,12 +70,7 @@ public:
    * @param message the text to show, must not be empty
    * @param flags flags to control notification behavior
    */
-  virtual void showNotification(trstring::native_type_arg message, unsigned int flags = NoFlags);
-
-  /**
-   * @overload
-   */
-  void showNotification(const trstring &message, unsigned int flags = NoFlags);
+  virtual void showNotification(trstring::arg_type message, unsigned int flags = NoFlags);
 
   /**
    * @brief clear the given type of messages

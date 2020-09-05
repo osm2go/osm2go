@@ -22,12 +22,6 @@
 #include <osm2go_i18n.h>
 #include <osm2go_platform.h>
 
-#ifndef TRSTRING_NATIVE_TYPE_IS_TRSTRING
-void error_dlg(trstring::native_type_arg msg, osm2go_platform::Widget *parent = nullptr);
-void warning_dlg(trstring::native_type_arg msg, osm2go_platform::Widget *parent = nullptr);
-void message_dlg(trstring::native_type_arg title, const trstring &msg, osm2go_platform::Widget *parent);
-#endif
-
-void error_dlg(const trstring &msg, osm2go_platform::Widget *parent = nullptr);
-void warning_dlg(const trstring &msg, osm2go_platform::Widget *parent = nullptr);
-void message_dlg(trstring::native_type_arg title, trstring::native_type_arg msg, osm2go_platform::Widget *parent = nullptr);
+void error_dlg(trstring::arg_type msg, osm2go_platform::Widget *parent = nullptr);
+void warning_dlg(trstring::arg_type msg, osm2go_platform::Widget *parent = nullptr);
+void message_dlg(trstring::arg_type title, trstring::arg_type msg, osm2go_platform::Widget *parent = nullptr);

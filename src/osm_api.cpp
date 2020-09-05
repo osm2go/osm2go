@@ -261,12 +261,12 @@ osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
       /* if it's neither "ok" (200), nor "internal server error" (500) */
       /* then write the message to the log */
       if(response != 500 && !write_data.empty()) {
-        context.append_str(_("Server reply: "));
+        context.append(_("Server reply: "));
         context.append_str(write_data.c_str(), COLOR_ERR);
         context.append_str("\n");
       }
     } else if(unlikely(!id)) {
-      context.append_str(_("ok\n"), COLOR_OK);
+      context.append(_("ok\n"), COLOR_OK);
     } else {
       /* this will return the id on a successful create */
       printf("request to parse successful reply '%s' as an id\n", write_data.c_str());
@@ -333,7 +333,7 @@ osm_post_xml(osm_upload_context_t &context, const xmlString &xml_str, int len,
       context.append(trstring("failed, code: %1 %2\n").arg(response).arg(http_message(response)),
                      COLOR_ERR);
     else
-      context.append_str(_("ok\n"), COLOR_OK);
+      context.append(_("ok\n"), COLOR_OK);
 
     /* don't retry unless we had an "internal server error" */
     if(response != 500)
@@ -407,7 +407,7 @@ static void upload_modified(osm_upload_context_t &co, trstring::native_type_arg 
   if(counter.changed.empty() && counter.added.empty())
     return;
 
-  co.append_str(header);
+  co.append(header);
   std::for_each(counter.added.begin(), counter.added.end(),
                 upload_objects<T>(co, m, true));
   std::for_each(counter.changed.begin(), counter.changed.end(),
@@ -478,7 +478,7 @@ osm_create_changeset(osm_upload_context_t &context)
   osm2go_platform::process_events();
 
   const std::string url = context.urlbasestr + "changeset/create";
-  context.append_str(_("Create changeset "));
+  context.append(_("Create changeset "));
 
   /* create changeset request */
   xmlString xml_str(osm_generate_xml_changeset(context.comment, context.src));
@@ -505,7 +505,7 @@ osm_close_changeset(osm_upload_context_t &context)
 
   const std::string url = context.urlbasestr + "changeset/" + context.changeset +
                           "/close";
-  context.append_str(_("Close changeset "));
+  context.append(_("Close changeset "));
 
   return osm_update_item(context, nullptr, url.c_str(), nullptr);
 }
@@ -531,19 +531,19 @@ void osm_upload_context_t::upload(const osm_t::dirty_t &dirty, osm2go_platform::
   curl.reset(curl_custom_setup(settings->username + ':' + settings->password));
 
   if(unlikely(!curl)) {
-    append_str(_("CURL init error\n"));
+    append(_("CURL init error\n"));
   } else if(likely(osm_create_changeset(*this))) {
     /* check for dirty entries */
     upload_modified(*this, _("Uploading nodes:\n"), osm->nodes, dirty.nodes);
     upload_modified(*this, _("Uploading ways:\n"), osm->ways, dirty.ways);
     upload_modified(*this, _("Uploading relations:\n"), osm->relations, dirty.relations);
     if(!dirty.relations.deleted.empty() || !dirty.ways.deleted.empty() || !dirty.nodes.deleted.empty()) {
-      append_str(_("Deleting objects:\n"));
+      append(_("Deleting objects:\n"));
       xmlDocGuard doc(osmchange_init());
       osmchange_delete(dirty, xmlDocGetRootElement(doc.get()), changeset.c_str());
 
       printf("deleting objects on server\n");
-      append_str(_("Uploading object deletions "));
+      append(_("Uploading object deletions "));
 
       // deletion was successful, remove the objects
       std::string server_reply;
@@ -553,7 +553,7 @@ void osm_upload_context_t::upload(const osm_t::dirty_t &dirty, osm2go_platform::
         std::for_each(dirty.ways.deleted.begin(), dirty.ways.deleted.end(), finfc);
         std::for_each(dirty.nodes.deleted.begin(), dirty.nodes.deleted.end(), finfc);
       } else {
-        append_str(_("Server reply: "));
+        append(_("Server reply: "));
         append_str(server_reply.c_str(), COLOR_ERR);
         append_str("\n");
       }
@@ -563,18 +563,18 @@ void osm_upload_context_t::upload(const osm_t::dirty_t &dirty, osm2go_platform::
     osm_close_changeset(*this);
     curl.reset();
 
-    append_str(_("Upload done.\n"));
+    append(_("Upload done.\n"));
   }
 
   if(project->data_dirty) {
-    append_str(_("Server data has been modified.\nDownloading updated osm data ...\n"));
+    append(_("Server data has been modified.\nDownloading updated osm data ...\n"));
 
     bool reload_map = osm_download(parent, project.get());
     if(likely(reload_map)) {
-      append_str(_("Download successful!\nThe map will be reloaded.\n"));
+      append(_("Download successful!\nThe map will be reloaded.\n"));
       project->data_dirty = false;
     } else
-      append_str(_("Download failed!\n"));
+      append(_("Download failed!\n"));
 
     project->save(parent);
 
@@ -584,32 +584,32 @@ void osm_upload_context_t::upload(const osm_t::dirty_t &dirty, osm2go_platform::
       /* we basically restart the entire map with fresh data from the server */
       /* and the diff will hopefully be empty (if the upload was successful) */
 
-      append_str(_("Reloading map ...\n"));
+      append(_("Reloading map ...\n"));
 
       if(unlikely(!project->osm->is_clean(false)))
-        append_str(_("*** DIFF IS NOT CLEAN ***\nSomething went wrong during "
+        append(_("*** DIFF IS NOT CLEAN ***\nSomething went wrong during "
                      "upload,\nproceed with care!\n"), COLOR_ERR);
 
       /* redraw the entire map by destroying all map items and redrawing them */
-      append_str(_("Cleaning up ...\n"));
+      append(_("Cleaning up ...\n"));
       project->diff_save();
       appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
 
-      append_str(_("Loading OSM ...\n"));
+      append(_("Loading OSM ...\n"));
       if(project->parse_osm()) {
-        append_str(_("Applying diff ...\n"));
+        append(_("Applying diff ...\n"));
         diff_restore(project, appdata.uicontrol.get());
-        append_str(_("Painting ...\n"));
+        append(_("Painting ...\n"));
         appdata.map->paint();
       } else {
-        append_str(_("OSM data is empty\n"), COLOR_ERR);
+        append(_("OSM data is empty\n"), COLOR_ERR);
       }
-      append_str(_("Done!\n"));
+      append(_("Done!\n"));
     }
   }
 
   /* tell the user that he can stop waiting ... */
-  append_str(_("Process finished.\n"));
+  append(_("Process finished.\n"));
 }
 
 void osm_upload(appdata_t &appdata)

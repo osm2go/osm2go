@@ -141,21 +141,17 @@ void MainUiGtk::setActionEnable(menu_items item, bool en)
   gtk_widget_set_sensitive(menu_item(item), en ? TRUE : FALSE);
 }
 
-void MainUi::showNotification(trstring::native_type_arg message, unsigned int flags)
+void MainUi::showNotification(trstring::arg_type message, unsigned int flags)
 {
   statusbar_t *statusbar = static_cast<MainUiGtk *>(this)->statusBar();
   assert(!message.isEmpty());
+  trstring::native_type nativeMsg = static_cast<trstring::native_type>(message);
   if (flags & Brief)
-    statusbar->banner_show_info(message);
+    statusbar->banner_show_info(nativeMsg);
   else if (flags & Busy)
-    statusbar->banner_busy_start(message);
+    statusbar->banner_busy_start(nativeMsg);
   else
-    statusbar->set(message, flags & Highlight);
-}
-
-void MainUi::showNotification(const trstring &message, unsigned int flags)
-{
-  showNotification(static_cast<const gchar *>(message), flags);
+    statusbar->set(nativeMsg, flags & Highlight);
 }
 
 void MainUi::clearNotification(NotificationFlags flags)
