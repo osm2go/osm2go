@@ -568,7 +568,7 @@ details_widget(const info_tag_context_t &context, bool big)
     if(big) table_attach(table, gtk_label_new(_("Length:")), 0, 2);
     table_attach(table, label, big?1:0, big?2:1);
 
-    const char *type_str;
+    trstring::native_type type_str;
     if(context.object.way->is_area())
       type_str = _("area");
     else if(context.object.way->is_closed())

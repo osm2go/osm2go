@@ -241,11 +241,11 @@ icon_add(GtkWidget *vbox, appdata_t &appdata, const char *icon_str, void(*func)(
 #endif
 
 GtkWidget *
-tool_button_label(icon_t &icons, GtkToolbar *toolbar, const char *label_str, const char *icon_str)
+tool_button_label(icon_t &icons, GtkToolbar *toolbar, trstring::native_type_arg label_str, const char *icon_str)
 {
   PangoAttrList *attrs = pango_attr_list_new();
   pango_attr_list_change(attrs, pango_attr_scale_new(PANGO_SCALE_XX_SMALL));
-  GtkWidget *label = gtk_label_new(label_str);
+  GtkWidget *label = gtk_label_new(static_cast<const gchar *>(label_str));
   gtk_label_set_attributes(GTK_LABEL(label), attrs);
   pango_attr_list_unref(attrs);
 
@@ -254,7 +254,7 @@ tool_button_label(icon_t &icons, GtkToolbar *toolbar, const char *label_str, con
   gtk_tool_button_set_label_widget(GTK_TOOL_BUTTON(item), label);
 
 #ifndef FREMANTLE
-  gtk_widget_set_tooltip_text(GTK_WIDGET(item), label_str);
+  gtk_widget_set_tooltip_text(GTK_WIDGET(item), static_cast<const gchar *>(label_str));
 #endif
 
   gtk_toolbar_insert(toolbar, item, -1);
@@ -262,8 +262,8 @@ tool_button_label(icon_t &icons, GtkToolbar *toolbar, const char *label_str, con
   return GTK_WIDGET(item);
 }
 
-GtkWidget *  __attribute__((nonnull(1,3,4,5)))
-tool_add(GtkToolbar *toolbar, icon_t &icons, const char *icon_str, char *tooltip_str,
+GtkWidget *  __attribute__((nonnull(1,3,5)))
+tool_add(GtkToolbar *toolbar, icon_t &icons, const char *icon_str, trstring::native_type_arg tooltip_str,
          GCallback func, gpointer context, bool separator = false)
 {
   GtkWidget *item = tool_button_label(icons, toolbar, tooltip_str, icon_str);

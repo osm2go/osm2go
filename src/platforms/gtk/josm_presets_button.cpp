@@ -784,13 +784,13 @@ presets_context_t::presets_picker(const std::vector<presets_item_t *> &items,
   if(top_level &&
      std::find_if(lru.begin(), lru.end(), matching_type_functor(presets_mask)) != lru.end())
     gtk_list_store_insert_with_values(store, nullptr, 0,
-                       PRESETS_PICKER_COL_NAME, _("Last used presets"),
+                       PRESETS_PICKER_COL_NAME, static_cast<const gchar *>(_("Last used presets")),
                        PRESETS_PICKER_COL_SUBMENU_ICON, subpix,
                        -1);
 
   if(show_recent)
     gtk_list_store_insert_with_values(store, nullptr, 0,
-                       PRESETS_PICKER_COL_NAME, _("Used presets"),
+                       PRESETS_PICKER_COL_NAME, static_cast<const gchar *>(_("Used presets")),
                        PRESETS_PICKER_COL_SUBMENU_ICON, subpix,
                        -1);
 
@@ -963,7 +963,7 @@ presets_element_t::attach_key *presets_element_combo::attach(preset_attach_conte
   if(editable) {
     flags = osm2go_platform::AllowEditing;
   } else {
-    gtk_list_store_insert_with_values(store.get(), nullptr, 0, 0, _("unset"), 1, "", -1);
+    gtk_list_store_insert_with_values(store.get(), nullptr, 0, 0, static_cast<const gchar *>(_("unset")), 1, "", -1);
     flags = osm2go_platform::NoSelectionFlags;
   }
   GtkWidget * const ret = osm2go_platform::select_widget_wrapped(text.c_str(), GTK_TREE_MODEL(store.get()), flags);

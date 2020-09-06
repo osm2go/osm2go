@@ -260,7 +260,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
   gtk_box_pack_start(dialog.vbox(), table, FALSE, FALSE, 0);
 
   GtkTextBuffer *buffer = gtk_text_buffer_new(nullptr);
-  const char *placeholder_comment = _("Please add a comment");
+  trstring::native_type placeholder_comment = _("Please add a comment");
 
   /* disable ok button until user edited the comment */
   gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_ACCEPT, FALSE);

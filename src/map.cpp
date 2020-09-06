@@ -71,10 +71,10 @@ void map_bg_modifier::remove(map_t *map, visible_item_t *way)
 
 static void map_statusbar(const std::unique_ptr<MainUi> &uicontrol, const object_t &object,
                           osm_t::ref osm) {
-  const std::string &str = object.get_name(*osm);
   MainUi::NotificationFlags flags = object.obj->tags.hasTagCollisions() ?
                                     MainUi::Highlight : MainUi::NoFlags;
-  uicontrol->showNotification(str.c_str(), flags);
+  // FIXME: get_name() should return a trstring
+  uicontrol->showNotification(trstring::native_type(object.get_name(*osm).c_str()), flags);
 }
 
 void map_t::outside_error() {

@@ -17,7 +17,7 @@ int main()
   assert_cmpstr(foo, "abc nkw def 1 ghi");
 
   foo = trstring("abc %1 def %1 ghi").arg("nkw").arg(1);
-  assert_cmpstr(foo, trstring::native_type(_("abc nkw def nkw ghi")));
+  assert_cmpstr(foo, _("abc nkw def nkw ghi"));
 
   foo = trstring("abc %1 def %2 ghi %3").arg("3.14").arg("nkw");
   assert_cmpstr(foo, "abc 3.14 def nkw ghi %3");

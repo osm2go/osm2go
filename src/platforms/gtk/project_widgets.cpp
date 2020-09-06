@@ -664,7 +664,7 @@ project_list_widget(select_context_t &context, bool &has_sel)
 void
 project_filesize(project_context_t *context)
 {
-  const char *str = nullptr;
+  trstring::any_type str;
   trstring gstr;
   const project_t * const project = context->project;
 
@@ -694,7 +694,7 @@ project_filesize(project_context_t *context)
           gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:\n(compressed)"));
         else
           gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:"));
-        str = static_cast<const gchar *>(gstr);
+        str = gstr;
       } else {
         str = _("Error testing data file");
       }
@@ -706,8 +706,8 @@ project_filesize(project_context_t *context)
   gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, color);
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, en ? TRUE : FALSE);
 
-  if(str != nullptr)
-    gtk_label_set_text(GTK_LABEL(context->fsize), str);
+  if(!str.isEmpty())
+    gtk_label_set_text(GTK_LABEL(context->fsize), static_cast<const gchar *>(static_cast<trstring::native_type>(str)));
 }
 
 /* a project may currently be open. "unsaved changes" then also */
@@ -727,7 +727,7 @@ active_n_dirty(appdata_t &appdata, const project_t *project)
 void
 project_diffstat(project_context_t &context)
 {
-  const char *str;
+  trstring::native_type str;
 
   if(context.project->diff_file_present() || active_n_dirty(context.appdata, context.project)) {
     /* this should prevent the user from changing the area */

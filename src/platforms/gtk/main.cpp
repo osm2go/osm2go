@@ -155,9 +155,8 @@ void appdata_t::main_ui_enable() {
 
 void appdata_t::set_title()
 {
-  const char *cstr = _("OSM2go");
-
 #ifdef FREMANTLE
+  const char *cstr = _("OSM2Go");
   g_string str;
   if(project) {
     str.reset(g_markup_printf_escaped(_("<b>%s</b> - OSM2Go"),
@@ -167,13 +166,14 @@ void appdata_t::set_title()
 
   hildon_window_set_markup(HILDON_WINDOW(window), cstr);
 #else
-  trstring str;
+  trstring::any_type str = _("OSM2Go");
+  trstring t;
   if(project) {
-    str = trstring("%1 - OSM2Go").arg(project->name);
-    cstr = static_cast<const gchar *>(str);
+    t = trstring("%1 - OSM2Go").arg(project->name);
+    str = t;
   }
 
-  gtk_window_set_title(GTK_WINDOW(window), cstr);
+  gtk_window_set_title(GTK_WINDOW(window), static_cast<const gchar *>(static_cast<trstring::native_type>(str)));
 #endif
 }
 

@@ -28,7 +28,7 @@
 
 typedef char gchar;
 
-#define _(String) gettext(String)
+#define _(String) trstring::tr(String)
 
 class trstring : private std::string {
 #if __cplusplus >= 201103L
@@ -66,7 +66,6 @@ public:
   public:
     inline any_type() : m_t(nullptr) {}
     inline any_type(native_type a) : m_t(nullptr), m_n(a) {}
-    inline any_type(const char *a) : m_t(nullptr), m_n(a) {}
     inline any_type(const trstring &a) : m_t(&a) {}
     inline any_type(const any_type &other) : m_t(other.m_t), m_n(other.m_n) {}
     inline any_type &operator=(const any_type &other)
@@ -141,6 +140,12 @@ public:
 
   inline bool isEmpty() const
   { return empty(); }
+
+  // this is a helper method to implement _(), do not call it directly
+  static inline native_type tr(const char *s) __attribute__((nonnull(1)))
+  {
+    return native_type(gettext(s));
+  }
 
   // There is intentionally no c_str() here as it would too easily be used in generic code,
   // instead there is a cast to a type that tells everyone "hey, this is glib specific".
