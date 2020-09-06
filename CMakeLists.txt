@@ -149,6 +149,7 @@ add_library(osm2go_lib STATIC
 	src/net_io.cpp
 	src/net_io.h
 	src/osm.cpp
+	src/osm_names.cpp
 	src/osm.h
 	src/osm_p.h
 	src/osm_api.cpp
