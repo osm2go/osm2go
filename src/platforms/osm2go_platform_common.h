@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 Rolf Eike Beer <eike@sf-mail.de>.
+ * Copyright (C) 2017-2020 Rolf Eike Beer <eike@sf-mail.de>.
  *
  * This file is part of OSM2Go.
  *
@@ -74,23 +74,26 @@ namespace osm2go_platform {
    * @param str the string to parse
    * @returns the parsed value or NAN if str == nullptr
    */
-  double string_to_double(const char *str);
+  double string_to_double(const char *str) __attribute__((warn_unused_result));
 
   /**
    * @brief a dialog asking for yes or no
    * @retval true the user clicked yes
    */
   bool yes_no(const trstring &title, const trstring &msg,
-              unsigned int again_flags = 0, Widget *parent = nullptr);
+              unsigned int again_flags = 0, Widget *parent = nullptr) __attribute__((warn_unused_result));
 
-  const std::vector<dirguard> &base_paths();
+  const std::vector<dirguard> &base_paths() __attribute__((warn_unused_result));
 
-  std::string find_file(const std::string &n);
+  std::string find_file(const std::string &n) __attribute__((warn_unused_result));
 
   /**
    * @brief return the path where the user may store custom presets
    */
-  dirguard userdatapath();
+  dirguard userdatapath() __attribute__((warn_unused_result));
 
-  bool create_directories(const std::string &path);
+  /**
+   * @brief create the given directory and all missing intermediate directories
+   */
+  bool create_directories(const std::string &path) __attribute__((warn_unused_result));
 };

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Rolf Eike Beer <eike@sf-mail.de>.
+ * Copyright (C) 2017-2020 Rolf Eike Beer <eike@sf-mail.de>.
  *
  * This file is part of OSM2Go.
  *
@@ -29,31 +29,31 @@ class icon_item;
 class statusbar_t;
 
 namespace osm2go_platform {
-  bool init();
+  bool init() __attribute__((warn_unused_result));
 
   void cleanup();
 
-  GtkWidget *notebook_new(void);
+  GtkWidget *notebook_new(void) __attribute__((warn_unused_result));
   void notebook_append_page(GtkWidget *notebook, GtkWidget *page, const char *label);
-  GtkNotebook *notebook_get_gtk_notebook(GtkWidget *notebook);
+  GtkNotebook *notebook_get_gtk_notebook(GtkWidget *notebook) __attribute__((warn_unused_result));
 
-  GtkTreeView *tree_view_new();
-  GtkWidget *scrollable_container(GtkWidget *view, bool shadowed = true);
+  GtkTreeView *tree_view_new() __attribute__((warn_unused_result));
+  GtkWidget *scrollable_container(GtkWidget *view, bool shadowed = true) __attribute__((warn_unused_result));
 
   /* unified widgets */
   enum EntryFlags {
     EntryFlagsDefault,
     EntryFlagsNoAutoCap
   };
-  GtkWidget *entry_new(EntryFlags flags = EntryFlagsDefault);
-  bool isEntryWidget(GtkWidget *widget);
+  GtkWidget *entry_new(EntryFlags flags = EntryFlagsDefault) __attribute__((warn_unused_result));
+  bool isEntryWidget(GtkWidget *widget) __attribute__((warn_unused_result));
 
-  GtkWidget *button_new_with_label(const char *label);
+  GtkWidget *button_new_with_label(const char *label) __attribute__((warn_unused_result));
 
-  GtkWidget *check_button_new_with_label(const char *label);
+  GtkWidget *check_button_new_with_label(const char *label) __attribute__((warn_unused_result));
   void check_button_set_active(GtkWidget *button, bool active);
-  bool check_button_get_active(GtkWidget *button);
-  bool isCheckButtonWidget(GtkWidget *widget);
+  bool check_button_get_active(GtkWidget *button) __attribute__((warn_unused_result));
+  bool isCheckButtonWidget(GtkWidget *widget) __attribute__((warn_unused_result));
 
   /**
    * @brief create a new combo box
@@ -61,16 +61,16 @@ namespace osm2go_platform {
    * @param items the texts to fill
    * @param active the item to preselect or -1 for none
    */
-  GtkWidget *combo_box_new(const char *title, const std::vector<const char *> &items = std::vector<const char *>(), int active = -1);
-  GtkWidget *combo_box_entry_new(const char *title);
+  GtkWidget *combo_box_new(const char *title, const std::vector<const char *> &items = std::vector<const char *>(), int active = -1) __attribute__((warn_unused_result));
+  GtkWidget *combo_box_entry_new(const char *title) __attribute__((warn_unused_result));
 
   void combo_box_append_text(GtkWidget *cbox, const char *text);
   void combo_box_set_active(GtkWidget *cbox, int index);
-  int combo_box_get_active(GtkWidget *cbox);
-  std::string combo_box_get_active_text(GtkWidget *cbox);
+  int combo_box_get_active(GtkWidget *cbox) __attribute__((warn_unused_result));
+  std::string combo_box_get_active_text(GtkWidget *cbox) __attribute__((warn_unused_result));
   void combo_box_set_active_text(GtkWidget *cbox, const char *text);
-  bool isComboBoxWidget(GtkWidget *widget);
-  bool isComboBoxEntryWidget(GtkWidget *widget);
+  bool isComboBoxWidget(GtkWidget *widget) __attribute__((warn_unused_result));
+  bool isComboBoxEntryWidget(GtkWidget *widget) __attribute__((warn_unused_result));
 
   enum SelectionFlags {
     NoSelectionFlags    = 0,
@@ -91,7 +91,7 @@ namespace osm2go_platform {
    * The widget takes a reference on the model. Only the first character of delimiter
    * is used, so it may be a pointer to a single char.
    */
-  GtkWidget *select_widget(GtkTreeModel *model, unsigned int flags = NoSelectionFlags, char delimiter = ';') __attribute__((nonnull(1)));
+  GtkWidget *select_widget(GtkTreeModel *model, unsigned int flags = NoSelectionFlags, char delimiter = ';') __attribute__((nonnull(1))) __attribute__((warn_unused_result));
 
   /**
    * @brief create a widget that let's the user do a selection
@@ -109,13 +109,13 @@ namespace osm2go_platform {
    * This puts the select_widget() behind a picker button on Fremantle. It just
    * returns the select_widget() on desktop systems.
    */
-  GtkWidget *select_widget_wrapped(const char *title, GtkTreeModel *model, unsigned int flags = NoSelectionFlags, char delimiter = ';') __attribute__((nonnull(1, 2)));
+  GtkWidget *select_widget_wrapped(const char *title, GtkTreeModel *model, unsigned int flags = NoSelectionFlags, char delimiter = ';') __attribute__((nonnull(1, 2))) __attribute__((warn_unused_result));
 
   /**
    * @brief return the value selected with the select widget
    * @param widget the widget returned by select_widget_wrapped()
    */
-  std::string select_widget_value(GtkWidget *widget);
+  std::string select_widget_value(GtkWidget *widget) __attribute__((warn_unused_result));
 
   /**
    * @brief check if the given widget has a selection
@@ -123,7 +123,7 @@ namespace osm2go_platform {
    *
    * This only makes sense for widgets created with AllowMultiSelection.
    */
-  bool select_widget_has_selection(GtkWidget *widget);
+  bool select_widget_has_selection(GtkWidget *widget) __attribute__((warn_unused_result));
 
   /**
    * @brief select one or more items
@@ -147,14 +147,14 @@ namespace osm2go_platform {
   /**
    * @brief returns the color to highlight invalid values (i.e. red)
    */
-  const GdkColor *invalid_text_color() __attribute__((pure));
+  const GdkColor *invalid_text_color() __attribute__((pure)) __attribute__((warn_unused_result));
 
   /**
    * @brief returns the widget that contains the statusbar
    *
    * This widget will be added to the main window.
    */
-  GtkWidget *statusBarWidget(statusbar_t *statusbar);
+  GtkWidget *statusBarWidget(statusbar_t *statusbar) __attribute__((warn_unused_result));
 
   class Timer {
     guint id;
@@ -167,11 +167,11 @@ namespace osm2go_platform {
     void restart(unsigned int seconds, GSourceFunc callback, void *data);
     void stop();
 
-    inline bool isActive() const noexcept
+    inline bool __attribute__((warn_unused_result)) isActive() const noexcept
     { return id != 0; }
   };
 
-  GdkPixbuf *icon_pixmap(const icon_item *icon);
+  GdkPixbuf *icon_pixmap(const icon_item *icon) __attribute__((warn_unused_result));
 };
 
 // simplified form of unique_ptr

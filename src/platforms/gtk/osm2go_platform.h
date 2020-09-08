@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Rolf Eike Beer <eike@sf-mail.de>.
+ * Copyright (C) 2017-2020 Rolf Eike Beer <eike@sf-mail.de>.
  *
  * This file is part of OSM2Go.
  *
@@ -53,7 +53,7 @@ namespace osm2go_platform {
     { return reinterpret_cast<GtkWindow *>(get()); }
     inline operator GtkDialog *() const
     { return reinterpret_cast<GtkDialog *>(get()); }
-    GtkBox *vbox();
+    GtkBox *vbox() __attribute__((warn_unused_result));
   };
 
   class MappedFile {
@@ -66,9 +66,9 @@ namespace osm2go_platform {
     inline operator bool() const noexcept
     { return map != nullptr; }
 
-    const char *data();
+    const char *data() __attribute__((warn_unused_result));
 
-    size_t length();
+    size_t length() __attribute__((warn_unused_result));
 
     void reset();
   };
@@ -91,9 +91,9 @@ namespace osm2go_platform {
   };
 
   bool yes_no(trstring::native_type_arg title, trstring::native_type_arg msg,
-              unsigned int again_flags = 0,Widget *parent = nullptr);
+              unsigned int again_flags = 0,Widget *parent = nullptr) __attribute__((warn_unused_result));
   bool yes_no(trstring::native_type_arg title, const trstring &msg,
-              unsigned int again_flags = 0, Widget *parent = nullptr);
+              unsigned int again_flags = 0, Widget *parent = nullptr) __attribute__((warn_unused_result));
 };
 
 #include "../osm2go_platform_common.h"
