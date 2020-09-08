@@ -57,7 +57,7 @@ public:
   explicit trstring_or_key(const char *k = nullptr) : kval(k) {}
 
 #ifdef TRSTRING_NATIVE_TYPE_IS_TRSTRING
-  inline trstring_or_key &operator=(trstring::native_type n)
+  inline trstring_or_key &operator=(trstring::native_type_arg n)
   {
     tval = std::move(n);
     kval = nullptr;

@@ -350,13 +350,13 @@ bool net_io_download_file(osm2go_platform::Widget *parent,
 
 bool net_io_download_file(osm2go_platform::Widget *parent,
                           const std::string &url, const std::string &filename,
-                          trstring::native_type title, bool compress)
+                          trstring::native_type_arg title, bool compress)
 {
   return net_io_download_file(parent, url, filename, title.toStdString(), compress);
 }
 
 bool net_io_download_mem(osm2go_platform::Widget *parent, const std::string &url,
-                         std::string &data, trstring::native_type title)
+                         std::string &data, trstring::native_type_arg title)
 {
   net_io_request_t *request = new net_io_request_t(url, &data);
 

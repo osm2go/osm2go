@@ -38,6 +38,7 @@ class trstring : private std::string {
 #endif
   trstring argFloatHelper(double a) const;
 public:
+  // use this type directly only when declaring variables, not arguments
   class native_type {
     const char *value;
   public:
@@ -55,6 +56,8 @@ public:
     inline operator const char *() const { return value; }
     inline std::string toStdString() const { return isEmpty() ? std::string() : value; }
   };
+  // exclusively use this type in function interfaces
+  // think of it being "const native_type &", it is not because just copying one pointer is cheaper
   typedef native_type native_type_arg;
 #undef TRSTRING_NATIVE_TYPE_IS_TRSTRING
 

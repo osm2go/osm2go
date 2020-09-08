@@ -336,13 +336,13 @@ static bool yes_no(const char *title, const char *msg, unsigned int again_flags,
   return yes;
 }
 
-bool osm2go_platform::yes_no(trstring::native_type title, trstring::native_type msg, unsigned int again_flags,
+bool osm2go_platform::yes_no(trstring::native_type_arg title, trstring::native_type_arg msg, unsigned int again_flags,
                              osm2go_platform::Widget *parent)
 {
   return yes_no(static_cast<const char *>(title), static_cast<const char *>(msg), again_flags, parent);
 }
 
-bool osm2go_platform::yes_no(trstring::native_type title, const trstring &msg, unsigned int again_flags,
+bool osm2go_platform::yes_no(trstring::native_type_arg title, const trstring &msg, unsigned int again_flags,
                              osm2go_platform::Widget *parent)
 {
   return yes_no(static_cast<const char *>(title), static_cast<const gchar *>(msg), again_flags, parent);

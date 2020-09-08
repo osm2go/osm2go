@@ -90,9 +90,9 @@ namespace osm2go_platform {
 
   };
 
-  bool yes_no(trstring::native_type title, trstring::native_type msg,
+  bool yes_no(trstring::native_type_arg title, trstring::native_type_arg msg,
               unsigned int again_flags = 0,Widget *parent = nullptr);
-  bool yes_no(trstring::native_type title, const trstring &msg,
+  bool yes_no(trstring::native_type_arg title, const trstring &msg,
               unsigned int again_flags = 0, Widget *parent = nullptr);
 };
 
