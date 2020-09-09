@@ -648,14 +648,8 @@ map_t::item_at(canvas_item_t *item)
 
   map_item_t *map_item = item->get_user_data();
 
-  if(map_item == nullptr) {
+  if(map_item == nullptr)
     printf("  item has no user data!\n");
-    return nullptr;
-  }
-
-  printf("  item is %s #" ITEM_ID_FORMAT "\n",
-	 map_item->object.type_string(),
-	 map_item->object.obj->id);
 
   return map_item;
 }
@@ -766,8 +760,8 @@ bool map_t::item_is_selected_node(const map_item_t *map_item) const
   } else if(selected.object.type == object_t::WAY) {
     return selected.object.way->contains_node(map_item->object.node);
   } else {
-    printf("%s: selected item is unknown (%s [%i])\n", __PRETTY_FUNCTION__,
-           selected.object.type_string(), selected.object.type);
+    printf("%s: selected item is unknown (%u [%i])\n", __PRETTY_FUNCTION__,
+           selected.object.type, selected.object.type);
     return false;
   }
 }
@@ -950,8 +944,7 @@ void map_t::button_release(const osm2go_platform::screenpos &p)
       map_handle_click(this);
 
       if(old_sel.type != object_t::ILLEGAL && old_sel == selected.object) {
-        printf("re-selected same item of type %s, pushing it to the bottom\n",
-               old_sel.type_string());
+        printf("re-selected same item of type %u, pushing it to the bottom\n", old_sel.type);
         if(selected.item == nullptr) {
           printf("  item has no visible representation to push\n");
         } else {
@@ -1342,7 +1335,7 @@ void map_t::delete_selected() {
   /* work on local copy since de-selecting destroys the selection */
   object_t sel = selected.object;
 
-  const char *objtype = sel.type_string();
+  trstring::native_type objtype = sel.type_string();
   if(!osm2go_platform::yes_no(trstring("Delete selected %1?").arg(objtype),
              trstring("Do you really want to delete the selected %1?").arg(objtype),
              MISC_AGAIN_ID_DELETE | MISC_AGAIN_FLAG_DONT_SAVE_NO))
@@ -1350,9 +1343,6 @@ void map_t::delete_selected() {
 
   /* deleting the selected item de-selects it ... */
   item_deselect();
-
-  printf("request to delete %s #" ITEM_ID_FORMAT "\n",
-         objtype, sel.obj->id);
 
   osm_t::ref osm = appdata.project->osm;
   switch(sel.type) {

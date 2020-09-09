@@ -524,7 +524,7 @@ void members_list_functor::operator()(const member_t &member)
 
   /* Append a row and fill in some data */
   gtk_list_store_insert_with_values(store, &iter, -1,
-                                    MEMBER_COL_TYPE, member.object.type_string(),
+                                    MEMBER_COL_TYPE,     static_cast<const gchar *>(member.object.type_string()),
                                     MEMBER_COL_ID,       id.c_str(),
                                     MEMBER_COL_NAME,     name.c_str(),
                                     MEMBER_COL_ROLE,     member.role,

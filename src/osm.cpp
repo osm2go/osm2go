@@ -108,31 +108,33 @@ static std::map<object_t::type_t, const char *> type_string_init()
 {
   std::map<object_t::type_t, const char *> types;
 
-  types[object_t::ILLEGAL] =     "illegal";
-  types[object_t::NODE] =        "node";
-  types[object_t::WAY] =         "way/area";
-  types[object_t::RELATION] =    "relation";
-  types[object_t::NODE_ID] =     "node id";
-  types[object_t::WAY_ID] =      "way/area id";
-  types[object_t::RELATION_ID] = "relation id";
+  types[object_t::ILLEGAL] =     tr_noop("illegal");
+  types[object_t::NODE] =        tr_noop("node");
+  types[object_t::WAY] =         tr_noop("way/area");
+  types[object_t::RELATION] =    tr_noop("relation");
+  types[object_t::NODE_ID] =     tr_noop("node id");
+  types[object_t::WAY_ID] =      tr_noop("way/area id");
+  types[object_t::RELATION_ID] = tr_noop("relation id");
 
   return types;
 }
 
-const char *object_t::type_string() const {
+trstring::native_type
+object_t::type_string() const
+{
   static std::map<type_t, const char *> types = type_string_init();
 
   if(type == WAY) {
     if(!way->is_closed())
-      return "way";
+      return _("way");
     else if(way->is_area())
-      return "area";
+      return _("area");
   }
 
   const std::map<type_t, const char *>::const_iterator it = types.find(type);
 
   if(likely(it != types.end()))
-    return it->second;
+    return _(it->second);
 
   assert_unreachable();
 }
@@ -209,9 +211,6 @@ void relation_object_replacer::operator()(relation_t *r)
   for(std::vector<member_t>::iterator it = itBegin; it != itEnd; it++) {
     if(it->object != old)
       continue;
-
-    printf("  found %s #" ITEM_ID_FORMAT " in relation #" ITEM_ID_FORMAT "\n",
-          old.type_string(), old.get_id(), r->id);
 
     it->object = replace;
 
@@ -695,9 +694,6 @@ void relation_t::remove_member(std::vector<member_t>::iterator it)
 {
   assert(it->object.is_real());
   assert(it != members.end());
-
-  printf("remove %s #" ITEM_ID_FORMAT " from relation #" ITEM_ID_FORMAT "\n",
-         it->object.type_string(), it->object.get_id(), id);
 
   members.erase(it);
 

@@ -381,10 +381,9 @@ replace_with_last(const info_tag_context_t *context, const osm_t::TagMap &ntags)
   if(osm_t::tagSubset(context->tags, ntags))
     return true;
 
-  const char *ts = context->object.type_string();
   return osm2go_platform::yes_no(_("Overwrite tags?"),
                 trstring("This will overwrite all tags of this %1 with the ones from "
-                         "the %1 selected last.\n\nDo you really want this?").arg(ts),
+                         "the %1 selected last.\n\nDo you really want this?").arg(context->object.type_string()),
                 MISC_AGAIN_ID_OVERWRITE_TAGS, context->dialog.get());
 }
 

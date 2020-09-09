@@ -29,6 +29,7 @@
 typedef char gchar;
 
 #define _(String) trstring::tr(String)
+#define tr_noop(String) (String)
 
 class trstring : private std::string {
 #if __cplusplus >= 201103L

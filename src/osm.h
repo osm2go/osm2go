@@ -117,7 +117,7 @@ struct object_t {
   { return !operator==(r); }
 
   bool is_real() const noexcept;
-  const char *type_string() const;
+  trstring::native_type type_string() const;
   std::string id_string() const;
   item_id_t get_id() const noexcept;
   std::string get_name(const osm_t &osm) const;
