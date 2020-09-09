@@ -1285,7 +1285,7 @@ osm_gps_map_button_release (GtkWidget *widget, GdkEventButton *event)
 gboolean
 osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event);
 
-static gboolean
+gboolean
 osm_gps_map_map_expose (GtkWidget *widget)
 {
     OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
@@ -1475,6 +1475,7 @@ osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event)
 
 } // namespace
 
+// this one can't be in the namespace as it is declared as this by the glib macros
 static void
 osm_gps_map_class_init (OsmGpsMapClass *klass)
 {
