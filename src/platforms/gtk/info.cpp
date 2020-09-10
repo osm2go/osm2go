@@ -331,47 +331,48 @@ on_tag_edit(info_tag_context_t *context)
 
   std::string k = oldk, v = oldv;
 
-  if(tag_edit(context->dialog, k, v, context->m_tags)) {
-    g_debug("setting %s/%s", k.c_str(), v.c_str());
+  if(!tag_edit(context->dialog, k, v, context->m_tags))
+    return;
 
-    std::pair<osm_t::TagMap::iterator, osm_t::TagMap::iterator> matches = context->m_tags.equal_range(oldk);
-    assert(matches.first != matches.second);
-    osm_t::TagMap::iterator it = std::find_if(matches.first, matches.second, value_match_functor(oldv));
-    assert(it != matches.second);
-    const unsigned int match_cnt = std::distance(matches.first, matches.second);
+  g_debug("setting %s/%s", k.c_str(), v.c_str());
 
-    if(it->first == k) {
-      // only value was changed
-      // collision flags only need to be updated if there is more than one entry with that key
-      if(unlikely(match_cnt > 1)) {
-        // check if the entry is now equal to another entry
-        if(std::find_if(matches.first, matches.second, value_match_functor(v)) != matches.second) {
-          // the item is now a duplicate, so it can be removed
-          gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
-          context->m_tags.erase(it);
+  std::pair<osm_t::TagMap::iterator, osm_t::TagMap::iterator> matches = context->m_tags.equal_range(oldk);
+  assert(matches.first != matches.second);
+  osm_t::TagMap::iterator it = std::find_if(matches.first, matches.second, value_match_functor(oldv));
+  assert(it != matches.second);
+  const unsigned int match_cnt = std::distance(matches.first, matches.second);
 
-          select_item(k, v, context);
-          context->update_collisions(k);
-          return;
-        }
-        // if the collisions persist no update has to be done as there already was a collision before
+  if(it->first == k) {
+    // only value was changed
+    // collision flags only need to be updated if there is more than one entry with that key
+    if(unlikely(match_cnt > 1)) {
+      // check if the entry is now equal to another entry
+      if(std::find_if(matches.first, matches.second, value_match_functor(v)) != matches.second) {
+        // the item is now a duplicate, so it can be removed
+        gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
+        context->m_tags.erase(it);
+
+        select_item(k, v, context);
+        context->update_collisions(k);
+        return;
       }
-      it->second = v;
-    } else {
-      context->m_tags.erase(it);
-      // update collisions for the old entry if there was one and it is now gone
-      if(unlikely(match_cnt == 2))
-        context->update_collisions(oldk);
-
-      // There can't be collisions for the new entry as the Ok button is not enabled then
-      context->m_tags.insert(osm_t::TagMap::value_type(k, v));
+      // if the collisions persist no update has to be done as there already was a collision before
     }
+    it->second = v;
+  } else {
+    context->m_tags.erase(it);
+    // update collisions for the old entry if there was one and it is now gone
+    if(unlikely(match_cnt == 2))
+      context->update_collisions(oldk);
 
-    gtk_list_store_set(context->store.get(), &iter,
-                       TAG_COL_KEY, k.c_str(),
-                       TAG_COL_VALUE, v.c_str(),
-                       -1);
+    // There can't be collisions for the new entry as the Ok button is not enabled then
+    context->m_tags.insert(osm_t::TagMap::value_type(k, v));
   }
+
+  gtk_list_store_set(context->store.get(), &iter,
+                     TAG_COL_KEY, k.c_str(),
+                     TAG_COL_VALUE, v.c_str(),
+                     -1);
 }
 
 bool
