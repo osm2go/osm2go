@@ -112,21 +112,18 @@ license_page_new()
   if(unlikely(label == nullptr))
     label = label_wrap(_("Load error"));
 
+  GtkWidget *ret;
 #ifndef FREMANTLE
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(nullptr, nullptr);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
-  				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrolled_window),
-					label);
-  gtk_scrolled_window_set_shadow_type( GTK_SCROLLED_WINDOW(scrolled_window),
-				       GTK_SHADOW_IN);
-  return scrolled_window;
+  ret = gtk_scrolled_window_new(nullptr, nullptr);
+  GtkScrolledWindow *scrolled_window = GTK_SCROLLED_WINDOW(ret);
+  gtk_scrolled_window_set_policy(scrolled_window, GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_add_with_viewport(scrolled_window, label);
+  gtk_scrolled_window_set_shadow_type(scrolled_window, GTK_SHADOW_IN);
 #else
-  GtkWidget *pannable_area = hildon_pannable_area_new();
-  hildon_pannable_area_add_with_viewport(HILDON_PANNABLE_AREA(pannable_area),
-					label);
-  return pannable_area;
+  ret = hildon_pannable_area_new();
+  hildon_pannable_area_add_with_viewport(HILDON_PANNABLE_AREA(ret), label);
 #endif
+  return ret;
 }
 
 GtkWidget *
