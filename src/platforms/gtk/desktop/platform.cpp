@@ -118,15 +118,15 @@ namespace {
 struct combo_add_string {
   GtkComboBoxText * const cbox;
   explicit combo_add_string(GtkWidget *w) : cbox(GTK_COMBO_BOX_TEXT(w)) {}
-  inline void operator()(const char *entry) {
-    gtk_combo_box_text_append_text(cbox, entry);
+  inline void operator()(trstring::native_type_arg entry) {
+    gtk_combo_box_text_append_text(cbox, static_cast<const gchar *>(entry));
   }
 };
 
 }
 
 /* the title is only used on fremantle with the picker widget */
-GtkWidget *osm2go_platform::combo_box_new(const char *, const std::vector<const char *> &items, int active)
+GtkWidget *osm2go_platform::combo_box_new(trstring::native_type_arg, const std::vector<trstring::native_type> &items, int active)
 {
   GtkWidget *cbox = gtk_combo_box_text_new();
 

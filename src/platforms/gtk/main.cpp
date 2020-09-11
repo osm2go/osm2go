@@ -263,7 +263,7 @@ cb_menu_map_show_all(appdata_t *appdata) {
 /* ---------------------------------------------------------- */
 
 GtkWidget *track_vis_select_widget(TrackVisibility current) {
-  std::vector<const char *> labels;
+  std::vector<trstring::native_type> labels;
   labels.push_back(_("Hide tracks"));
   labels.push_back(_("Show current position"));
   labels.push_back(_("Show current segment"));

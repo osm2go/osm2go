@@ -215,15 +215,15 @@ static GtkWidget *picker_button(const gchar *title, GtkWidget *selector)
 struct combo_add_string {
   HildonTouchSelector * const selector;
   explicit combo_add_string(HildonTouchSelector *sel) : selector(sel) {}
-  inline void operator()(const char *entry) {
-    hildon_touch_selector_append_text(selector, entry);
+  inline void operator()(trstring::native_type_arg entry) {
+    hildon_touch_selector_append_text(selector, static_cast<const gchar *>(entry));
   }
 };
 
-GtkWidget *osm2go_platform::combo_box_new(const char *title, const std::vector<const char *> &items, int active)
+GtkWidget *osm2go_platform::combo_box_new(trstring::native_type_arg title, const std::vector<trstring::native_type> &items, int active)
 {
   GtkWidget *selector = hildon_touch_selector_new_text();
-  GtkWidget *cbox = picker_button(title, selector);
+  GtkWidget *cbox = picker_button(static_cast<const gchar *>(title), selector);
 
   /* fill combo box with entries */
   std::for_each(items.begin(), items.end(), combo_add_string(HILDON_TOUCH_SELECTOR(selector)));

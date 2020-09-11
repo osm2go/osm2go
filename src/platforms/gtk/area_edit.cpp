@@ -817,7 +817,7 @@ bool area_edit_t::run() {
 
   settings_t::ref settings = settings_t::instance();
   context.extent.is_mil = settings->imperial_units;
-  std::vector<const char *> units(2);
+  std::vector<trstring::native_type> units(2);
   units[0] = _("mi");
   units[1] = _("km");
   context.extent.mil_km = osm2go_platform::combo_box_new(_("Unit"), units,
