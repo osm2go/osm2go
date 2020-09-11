@@ -96,23 +96,21 @@ label_wrap(const char *str)
 GtkWidget *
 license_page_new()
 {
-  GtkWidget *label = label_wrap(nullptr);
+  GtkWidget *label = nullptr;
 
   const std::string &name = osm2go_platform::find_file("COPYING");
-  bool found = false;
   if(likely(!name.empty())) {
     osm2go_platform::MappedFile licMap(name);
 
     if(licMap) {
       const std::string buffer(licMap.data(), licMap.length());
 
-      gtk_label_set_text(GTK_LABEL(label), buffer.c_str());
-      found = true;
+      label = label_wrap(buffer.c_str());
     }
   }
 
-  if(unlikely(!found))
-    gtk_label_set_text(GTK_LABEL(label), _("Load error"));
+  if(unlikely(label == nullptr))
+    label = label_wrap(_("Load error"));
 
 #ifndef FREMANTLE
   GtkWidget *scrolled_window = gtk_scrolled_window_new(nullptr, nullptr);
