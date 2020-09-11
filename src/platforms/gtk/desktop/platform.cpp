@@ -51,7 +51,9 @@ GtkNotebook *osm2go_platform::notebook_get_gtk_notebook(GtkWidget *notebook) {
   return GTK_NOTEBOOK(notebook);
 }
 
-void osm2go_platform::notebook_append_page(GtkWidget *notebook, GtkWidget *page, const char *label) {
+void
+osm2go_platform::notebook_append_page(GtkWidget *notebook, GtkWidget *page, trstring::native_type_arg label)
+{
   GtkNotebook *nb = notebook_get_gtk_notebook(notebook);
   gtk_notebook_append_page(nb, page, gtk_label_new(label));
 }

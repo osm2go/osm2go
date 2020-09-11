@@ -104,7 +104,9 @@ static void on_notebook_button_clicked(GtkWidget *button, gpointer data) {
   gtk_notebook_set_current_page(nb, page);
 }
 
-void osm2go_platform::notebook_append_page(GtkWidget *notebook, GtkWidget *page, const char *label) {
+void
+osm2go_platform::notebook_append_page(GtkWidget *notebook, GtkWidget *page, trstring::native_type_arg label)
+{
   GtkNotebook *nb = notebook_get_gtk_notebook(notebook);
   gint page_num = gtk_notebook_append_page(nb, page, gtk_label_new(label));
 
@@ -112,12 +114,12 @@ void osm2go_platform::notebook_append_page(GtkWidget *notebook, GtkWidget *page,
 
   /* select button for page 0 by default */
   if(!page_num) {
-    button = gtk_radio_button_new_with_label(nullptr, label);
+    button = gtk_radio_button_new_with_label(nullptr, static_cast<const gchar *>(label));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), TRUE);
     g_object_set_data(G_OBJECT(notebook), "group_master", button);
   } else {
     gpointer master = g_object_get_data(G_OBJECT(notebook), "group_master");
-    button = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(master), label);
+    button = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(master), static_cast<const gchar *>(label));
   }
 
   gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);

@@ -24,6 +24,8 @@
 #include <string>
 #include <vector>
 
+#include "osm2go_i18n.h"
+
 typedef struct _GdkColor GdkColor;
 class icon_item;
 class statusbar_t;
@@ -34,7 +36,7 @@ namespace osm2go_platform {
   void cleanup();
 
   GtkWidget *notebook_new(void) __attribute__((warn_unused_result));
-  void notebook_append_page(GtkWidget *notebook, GtkWidget *page, const char *label);
+  void notebook_append_page(GtkWidget *notebook, GtkWidget *page, trstring::native_type_arg label);
   GtkNotebook *notebook_get_gtk_notebook(GtkWidget *notebook) __attribute__((warn_unused_result));
 
   GtkTreeView *tree_view_new() __attribute__((warn_unused_result));
@@ -188,3 +190,6 @@ struct g_object_deleter {
     g_object_unref(obj);
   }
 };
+
+static inline GtkWidget * __attribute__((warn_unused_result)) gtk_label_new(trstring::native_type_arg str)
+{ return gtk_label_new(static_cast<const gchar *>(str)); }
