@@ -63,7 +63,7 @@ link_new(const char *url)
 }
 
 GtkWidget *
-label_scale(const char *str, double scale_factor)
+label_scale(trstring::native_type_arg str, double scale_factor)
 {
   PangoAttrList *attrs = pango_attr_list_new();
   pango_attr_list_change(attrs, pango_attr_scale_new(scale_factor));
@@ -137,7 +137,7 @@ copyright_page_new(icon_t &icons)
   GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
   GtkWidget *ihbox = gtk_hbox_new(FALSE, 20);
   gtk_box_pack_start(GTK_BOX(ihbox), icons.widget_load(OSM2GO_ICON), FALSE, FALSE, 0);
-  gtk_box_pack_start(GTK_BOX(ihbox), label_scale("OSM2Go", PANGO_SCALE_XX_LARGE),
+  gtk_box_pack_start(GTK_BOX(ihbox), label_scale(_("OSM2Go"), PANGO_SCALE_XX_LARGE),
 		     FALSE, FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(hbox), ihbox, TRUE, FALSE, 0);
