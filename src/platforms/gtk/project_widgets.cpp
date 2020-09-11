@@ -103,23 +103,23 @@ void boundsUpdated(project_context_t *context)
 }
 
 /* create a left aligned label (normal ones are centered) */
-GtkWidget *gtk_label_left_new(const char *str = nullptr)
+GtkWidget *label_left(trstring::native_type_arg str = trstring::native_type())
 {
   GtkWidget *label = gtk_label_new(str);
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, .5f);
   return label;
 }
 
-}
+} // namespace
 
 project_context_t::project_context_t(appdata_t &a, project_t *p, bool n,
                                      const std::vector<project_t *> &j, GtkWidget *dlg)
   : project(p)
   , appdata(a)
   , dialog(dlg)
-  , fsizehdr(gtk_label_left_new(_("Map data:")))
-  , fsize(gtk_label_left_new())
-  , diff_stat(gtk_label_left_new())
+  , fsizehdr(label_left(_("Map data:")))
+  , fsize(label_left())
+  , diff_stat(label_left())
   , diff_remove(osm2go_platform::button_new_with_label(_("Undo all")))
   , desc(osm2go_platform::entry_new())
   , download(osm2go_platform::button_new_with_label(_("Download")))
@@ -874,7 +874,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new)
   gtk_table_set_col_spacing(GTK_TABLE(table), 0, 8);
   gtk_table_set_col_spacing(GTK_TABLE(table), 3, 8);
 
-  gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_left_new(_("Description:")), 0, 1, 0, 1);
+  gtk_table_attach_defaults(GTK_TABLE(table), label_left(_("Description:")), 0, 1, 0, 1);
   gtk_entry_set_activates_default(GTK_ENTRY(context.desc), TRUE);
   if(!project->desc.empty())
     gtk_entry_set_text(GTK_ENTRY(context.desc), project->desc.c_str());
@@ -885,12 +885,12 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new)
   g_signal_connect_swapped(renameBtn, "clicked", G_CALLBACK(on_rename_clicked), &context);
   gtk_table_set_row_spacing(GTK_TABLE(table), 0, 4);
 
-  gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_left_new(_("Latitude:")), 0, 1, 1, 2);
+  gtk_table_attach_defaults(GTK_TABLE(table), label_left(_("Latitude:")), 0, 1, 1, 2);
   gtk_table_attach_defaults(GTK_TABLE(table), context.minlat, 1, 2, 1, 2);
   gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new(_("to")), 2, 3, 1, 2);
   gtk_table_attach_defaults(GTK_TABLE(table), context.maxlat, 3, 4, 1, 2);
 
-  gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_left_new(_("Longitude:")), 0, 1, 2, 3);
+  gtk_table_attach_defaults(GTK_TABLE(table), label_left(_("Longitude:")), 0, 1, 2, 3);
   gtk_table_attach_defaults(GTK_TABLE(table), context.minlon, 1, 2, 2, 3);
   gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new(_("to")), 2, 3, 2, 3);
   gtk_table_attach_defaults(GTK_TABLE(table), context.maxlon, 3, 4, 2, 3);
@@ -904,7 +904,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new)
   gtk_table_set_row_spacing(GTK_TABLE(table), 2, 4);
 
 #ifdef SERVER_EDITABLE
-  gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_left_new(_("Server:")), 0, 1, 3, 4);
+  gtk_table_attach_defaults(GTK_TABLE(table), label_left(_("Server:")), 0, 1, 3, 4);
   gtk_entry_set_activates_default(GTK_ENTRY(context.server), TRUE);
   gtk_entry_set_text(GTK_ENTRY(context.server),
                      project->server(settings_t::instance()->server).c_str());
@@ -923,7 +923,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new)
 
   gtk_table_set_row_spacing(GTK_TABLE(table), 4, 4);
 
-  gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_left_new(_("Changes:")), 0, 1, 5, 6);
+  gtk_table_attach_defaults(GTK_TABLE(table), label_left(_("Changes:")), 0, 1, 5, 6);
   project_diffstat(context);
   gtk_table_attach_defaults(GTK_TABLE(table), context.diff_stat, 1, 4, 5, 6);
   if(!project->diff_file_present() && !active_n_dirty(context.appdata, project))
