@@ -192,13 +192,14 @@ details_table(osm2go_platform::DialogGuard &dialog, const osm_t::dirty_t &dirty)
   gtk_box_pack_start(dialog.vbox(), table, FALSE, FALSE, 0);
 }
 
-#ifdef FREMANTLE
+} // namespace
+
 /* put additional infos into a seperate dialog for fremantle as */
 /* screen space is sparse there */
 void
-info_more(const osm_t::dirty_t &context, GtkWidget *parent)
+osm_modified_info(const osm_t::dirty_t &context, osm2go_platform::Widget *parent)
 {
-  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Changeset details"),
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(static_cast<const gchar *>(_("Changeset details")),
                                       GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, nullptr));
 
@@ -209,9 +210,6 @@ info_more(const osm_t::dirty_t &context, GtkWidget *parent)
   gtk_widget_show_all(dialog.get());
   gtk_dialog_run(dialog);
 }
-#endif
-
-} // namespace
 
 void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
 {
@@ -293,7 +291,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
     switch(gtk_dialog_run(dialog)) {
 #ifdef FREMANTLE
     case GTK_RESPONSE_HELP:
-      info_more(dirty, dialog.get());
+      osm_modified_info(dirty, dialog.get());
       break;
 #endif
     case GTK_RESPONSE_ACCEPT:

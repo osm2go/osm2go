@@ -130,12 +130,13 @@ void appdata_t::main_ui_enable() {
 
   // those icons that get enabled or disabled depending on OSM data being loaded
 #ifndef FREMANTLE
-  std::array<MainUi::menu_items, 6> osm_active_items = { {
+  std::array<MainUi::menu_items, 7> osm_active_items = { {
     MainUi::MENU_ITEM_MAP_SAVE_CHANGES,
 #else
-  std::array<MainUi::menu_items, 5> osm_active_items = { {
+  std::array<MainUi::menu_items, 6> osm_active_items = { {
 #endif
     MainUi::MENU_ITEM_MAP_UNDO_CHANGES,
+    MainUi::MENU_ITEM_MAP_SHOW_CHANGES,
     MainUi::MENU_ITEM_MAP_RELATIONS,
     MainUi::SUBMENU_TRACK,
     MainUi::SUBMENU_VIEW,
@@ -344,6 +345,20 @@ cb_menu_undo_changes(appdata_t *appdata) {
   appdata->map->paint();
 
   appdata->uicontrol->showNotification(_("Undo all changes"), MainUi::Brief);
+}
+
+static void
+cb_menu_show_changes(appdata_t *appdata)
+{
+  project_t::ref project = appdata->project;
+  if (project->osm->is_clean(false)) {
+    appdata->uicontrol->showNotification(_("No changes present"), MainUi::Brief);
+    return;
+  }
+  const osm_t::dirty_t &dirty = project->osm->modified();
+  assert(!dirty.empty());
+
+  osm_modified_info(dirty, appdata_t::window);
 }
 
 static void
@@ -727,6 +742,10 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
     appdata, submenu, G_CALLBACK(cb_menu_undo_changes), MainUi::MENU_ITEM_MAP_UNDO_CHANGES,
     "<OSM2Go-Main>/Map/UndoAll");
 
+  menu_append_new_item(
+    appdata, submenu, G_CALLBACK(cb_menu_show_changes), MainUi::MENU_ITEM_MAP_SHOW_CHANGES,
+    "<OSM2Go-Main>/Map/ShowChanges");
+
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
   menu_append_new_item(
@@ -987,10 +1006,11 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
   } };
 
   /* -- the map submenu -- */
-  const std::array<menu_entry_t, 3> sm_map_entries = { {
+  const std::array<menu_entry_t, 4> sm_map_entries = { {
     menu_entry_t(MainUi::MENU_ITEM_MAP_UPLOAD,       G_CALLBACK(cb_menu_upload)),
     menu_entry_t(_("Download"),                      G_CALLBACK(cb_menu_download)),
     menu_entry_t(MainUi::MENU_ITEM_MAP_UNDO_CHANGES, G_CALLBACK(cb_menu_undo_changes)),
+    menu_entry_t(MainUi::MENU_ITEM_MAP_SHOW_CHANGES, G_CALLBACK(cb_menu_show_changes)),
   } };
 
   /* -- the wms submenu -- */

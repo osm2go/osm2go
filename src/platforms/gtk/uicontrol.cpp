@@ -131,6 +131,7 @@ MainUiGtk::MainUiGtk()
   menuitems[MENU_ITEM_TRACK_IMPORT] = createMenuItem(_("_Import"));
   menuitems[MENU_ITEM_MAP_UPLOAD] = createMenuItem(_("_Upload"), "upload.16");
   menuitems[MENU_ITEM_MAP_UNDO_CHANGES] = createMenuItem(_("Undo _all"), "edit-delete");
+  menuitems[MENU_ITEM_MAP_SHOW_CHANGES] = createMenuItem(_("Show &changes"));
 #ifndef FREMANTLE
   menuitems[MENU_ITEM_MAP_SAVE_CHANGES] = createMenuItem(_("_Save local changes"), "document-save");
 #endif
