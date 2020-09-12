@@ -50,11 +50,11 @@ public:
 #if __cplusplus >= 201103L
     // catch if one passes a constant nullptr as argument
     native_type(std::nullptr_t) = delete;
-    native_type(native_type &&) = default;
-    native_type &operator=(native_type &&) = default;
+    inline native_type(native_type &&) = default;
+    inline native_type &operator=(native_type &&) = default;
 #endif
-    native_type(const native_type &other) : value(other.value) {}
-    native_type &operator=(const native_type &other) { value = other.value; return *this; }
+    inline native_type(const native_type &other) : value(other.value) {}
+    inline native_type &operator=(const native_type &other) { value = other.value; return *this; }
     inline native_type(const char *v = nullptr) : value(v) {}
     inline bool isEmpty() const { return value == nullptr; }
     inline void clear() { value = nullptr; }
