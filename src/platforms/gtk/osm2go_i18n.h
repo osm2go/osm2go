@@ -29,7 +29,11 @@
 typedef char gchar;
 
 #define _(String) trstring::tr(String)
-#define tr_noop(String) (String)
+
+extern const char *bad_tr_call; // never defined, so bad calls to tr_noop() can be detected
+// #define _(String) trstring::tr(String)
+#define tr_noop(String) __builtin_constant_p(String) ? \
+                  (String) : bad_tr_call
 
 class trstring : private std::string {
 #if __cplusplus >= 201103L
