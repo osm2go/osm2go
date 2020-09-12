@@ -180,7 +180,9 @@ void appdata_t::set_title()
 
 /******************** begin of menu *********************/
 
-static void
+namespace {
+
+void
 cb_menu_project_open(appdata_t *appdata) {
   std::unique_ptr<project_t> project(project_select(*appdata));
   if(project)
@@ -188,7 +190,7 @@ cb_menu_project_open(appdata_t *appdata) {
   appdata->main_ui_enable();
 }
 
-static void
+void
 cb_menu_upload(appdata_t *appdata) {
   assert(appdata->project);
   assert(appdata->project->osm);
@@ -197,7 +199,7 @@ cb_menu_upload(appdata_t *appdata) {
   osm_upload(*appdata);
 }
 
-static void
+void
 cb_menu_download(appdata_t *appdata) {
   assert(appdata->project);
 
@@ -228,7 +230,7 @@ cb_menu_download(appdata_t *appdata) {
   appdata->main_ui_enable();
 }
 
-static void
+void
 cb_menu_wms_import(appdata_t *appdata)
 {
   std::string fn = wms_import(appdata_t::window, appdata->project);
@@ -236,7 +238,7 @@ cb_menu_wms_import(appdata_t *appdata)
     appdata->map->set_bg_image(fn, osm2go_platform::screenpos(0, 0));
 }
 
-static void
+void
 cb_menu_wms_remove(appdata_t *appdata)
 {
   appdata->map->remove_bg_image();
@@ -244,19 +246,19 @@ cb_menu_wms_remove(appdata_t *appdata)
   wms_remove_file(*appdata->project);
 }
 
-static void
+void
 cb_menu_wms_adjust(appdata_t *appdata) {
   appdata->map->set_action(MAP_ACTION_BG_ADJUST);
 }
 
 /* ----------- hide objects for performance reasons ----------- */
 
-static void
+void
 cb_menu_map_hide_sel(appdata_t *appdata) {
   appdata->map->hide_selected();
 }
 
-static void
+void
 cb_menu_map_show_all(appdata_t *appdata) {
   appdata->map->show_all();
 }
@@ -276,7 +278,9 @@ GtkWidget *track_vis_select_widget(TrackVisibility current) {
 #ifndef FREMANTLE
 /* in fremantle this happens inside the submenu handling since this button */
 /* is actually placed inside the submenu there */
-static bool track_visibility_select(GtkWidget *parent) {
+bool
+track_visibility_select(GtkWidget *parent)
+{
   osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Select track visibility"),
                                               GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
@@ -311,13 +315,13 @@ static bool track_visibility_select(GtkWidget *parent) {
   return ret;
 }
 
-static void
+void
 cb_menu_track_vis(appdata_t *appdata) {
   if(track_visibility_select(appdata_t::window) && appdata->track.track)
     appdata->map->track_draw(settings_t::instance()->trackVisibility, *appdata->track.track);
 }
 
-static void
+void
 cb_menu_save_changes(appdata_t *appdata) {
   if(likely(appdata->project)) {
     appdata->project->diff_save();
@@ -326,7 +330,7 @@ cb_menu_save_changes(appdata_t *appdata) {
 }
 #endif
 
-static void
+void
 cb_menu_undo_changes(appdata_t *appdata) {
   project_t::ref project = appdata->project;
   // if there is nothing to clean then don't ask
@@ -347,7 +351,7 @@ cb_menu_undo_changes(appdata_t *appdata) {
   appdata->uicontrol->showNotification(_("Undo all changes"), MainUi::Brief);
 }
 
-static void
+void
 cb_menu_show_changes(appdata_t *appdata)
 {
   project_t::ref project = appdata->project;
@@ -361,14 +365,14 @@ cb_menu_show_changes(appdata_t *appdata)
   osm_modified_info(dirty, appdata_t::window);
 }
 
-static void
+void
 cb_menu_osm_relations(appdata_t *appdata) {
   /* list relations of all objects */
   relation_list(appdata_t::window, appdata->map, appdata->project->osm, appdata->presets.get());
 }
 
 #ifndef FREMANTLE
-static void
+void
 cb_menu_fullscreen(appdata_t *, GtkCheckMenuItem *item) {
   if(MENU_CHECK_ITEM_ACTIVE(item))
     gtk_window_fullscreen(GTK_WINDOW(appdata_t::window));
@@ -377,33 +381,33 @@ cb_menu_fullscreen(appdata_t *, GtkCheckMenuItem *item) {
 }
 #endif
 
-static void
+void
 cb_menu_zoomin(map_t *map) {
   map->set_zoom(map->appdata.project->map_state.zoom * ZOOM_FACTOR_MENU, true);
   g_debug("zoom is now %f", map->appdata.project->map_state.zoom);
 }
 
-static void
+void
 cb_menu_zoomout(map_t *map) {
   map->set_zoom(map->appdata.project->map_state.zoom / ZOOM_FACTOR_MENU, true);
   g_debug("zoom is now %f", map->appdata.project->map_state.zoom);
 }
 
-static void
+void
 cb_menu_view_detail_inc(map_t *map) {
   g_debug("detail level increase");
   map->detail_increase();
 }
 
 #ifndef FREMANTLE
-static void
+void
 cb_menu_view_detail_normal(map_t *map) {
   g_debug("detail level normal");
   map->detail_normal();
 }
 #endif
 
-static void
+void
 cb_menu_view_detail_dec(map_t *map) {
   g_debug("detail level decrease");
   map->detail_decrease();
@@ -420,7 +424,7 @@ public:
   { return reinterpret_cast<GtkFileChooser *>(get()); }
 };
 
-static void
+void
 cb_menu_track_import(appdata_t *appdata) {
   /* open a file selector */
   FileDialogGuard dialog(
@@ -473,19 +477,19 @@ cb_menu_track_import(appdata_t *appdata) {
   }
 }
 
-static void
+void
 cb_menu_track_enable_gps(appdata_t *appdata, MENU_CHECK_ITEM *item) {
   track_enable_gps(*appdata, MENU_CHECK_ITEM_ACTIVE(item));
 }
 
 
-static void
+void
 cb_menu_track_follow_gps(appdata_t *, MENU_CHECK_ITEM *item) {
   settings_t::instance()->follow_gps = MENU_CHECK_ITEM_ACTIVE(item);
 }
 
 
-static void
+void
 cb_menu_track_export(appdata_t *appdata) {
   /* open a file selector */
   FileDialogGuard dialog(
@@ -543,16 +547,16 @@ cb_menu_track_export(appdata_t *appdata) {
  *  Platform-specific UI tweaks.
  */
 
-static void track_clear_cb(appdata_t *appdata) {
+void track_clear_cb(appdata_t *appdata) {
   appdata->track_clear();
 }
 
-static void track_clear_current_cb(appdata_t *appdata)
+void track_clear_current_cb(appdata_t *appdata)
 {
   appdata->track_clear_current();
 }
 
-static void about_box(MainUi *uicontrol)
+void about_box(MainUi *uicontrol)
 {
   uicontrol->about_box();
 }
@@ -583,7 +587,7 @@ struct KeySequence {
  * @param keys the key sequence to trigger this action
  * @param item pre-created menu item (icon_name is ignored in this case)
  */
-static GtkWidget * __attribute__((nonnull(2,6)))
+GtkWidget * __attribute__((nonnull(2,6)))
 menu_append_new_item(void *context, GtkWidget *menu_shell,
                      GCallback activate_cb, const char *label,
                      const gchar *icon_name,
@@ -622,7 +626,7 @@ menu_append_new_item(void *context, GtkWidget *menu_shell,
   return item;
 }
 
-static GtkWidget *  __attribute__((nonnull(2,5)))
+GtkWidget *  __attribute__((nonnull(2,5)))
 menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
                      GCallback activate_cb, MainUi::menu_items item,
                      const gchar *accel_path,
@@ -633,7 +637,9 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
                               static_cast<MainUiGtk *>(appdata.uicontrol.get())->menu_item(item));
 }
 
-static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
+void
+menu_create(appdata_internal &appdata, GtkBox *mainvbox)
+{
   GtkWidget *item, *submenu;
 
   MainUiGtk * const mainui = static_cast<MainUiGtk *>(appdata.uicontrol.get());
@@ -832,17 +838,22 @@ struct menu_entry_t {
   GCallback activate_cb;
 };
 
-static gboolean enable_gps_get_toggle() {
+gboolean
+enable_gps_get_toggle()
+{
   return settings_t::instance()->enable_gps;
 }
 
-static gboolean follow_gps_get_toggle() {
+gboolean
+follow_gps_get_toggle()
+{
   return settings_t::instance()->follow_gps;
 }
 
 #define COLUMNS  2
 
-static void on_submenu_entry_clicked(GtkWidget *menu)
+void
+on_submenu_entry_clicked(GtkWidget *menu)
 {
   /* force closing of submenu dialog */
   gtk_dialog_response(GTK_DIALOG(menu), GTK_RESPONSE_NONE);
@@ -853,8 +864,9 @@ static void on_submenu_entry_clicked(GtkWidget *menu)
 }
 
 /* use standard dialog boxes for fremantle submenues */
-static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items submenu,
-                                     const menu_entry_t *menu, const unsigned int rows) {
+GtkWidget *
+app_submenu_create(appdata_t &appdata, MainUi::menu_items submenu, const menu_entry_t *menu, const unsigned int rows)
+{
   MainUiGtk * const mainui = static_cast<MainUiGtk *>(appdata.uicontrol.get());
   const char *title = hildon_button_get_title(HILDON_BUTTON(mainui->menu_item(submenu)));
   /* create a oridinary dialog box */
@@ -919,14 +931,17 @@ static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items subm
 }
 
 /* popup the dialog shaped submenu */
-static void submenu_popup(GtkWidget *menu) {
+void
+submenu_popup(GtkWidget *menu)
+{
   gtk_widget_show_all(menu);
   gtk_dialog_run(GTK_DIALOG(menu));
   gtk_widget_hide(menu);
 }
 
 /* the view submenu */
-static void on_submenu_view_clicked(appdata_internal *appdata)
+void
+on_submenu_view_clicked(appdata_internal *appdata)
 {
   GtkWidget *menu = appdata->app_menu_view.get();
   submenu_popup(menu);
@@ -935,7 +950,8 @@ static void on_submenu_view_clicked(appdata_internal *appdata)
     style_change(*appdata, combo_widget);
 }
 
-static void on_submenu_track_clicked(appdata_internal *appdata)
+void
+on_submenu_track_clicked(appdata_internal *appdata)
 {
   GtkWidget *menu = appdata->app_menu_track.get();
   submenu_popup(menu);
@@ -963,7 +979,9 @@ struct main_menu_entry_t {
 };
 
 /* create a HildonAppMenu */
-static HildonAppMenu *app_menu_create(appdata_internal &appdata) {
+HildonAppMenu *
+app_menu_create(appdata_internal &appdata)
+{
   /* -- the applications main menu -- */
   std::array<main_menu_entry_t, 7> main_menu = { {
     main_menu_entry_t(_("About"),                      G_CALLBACK(about_box), appdata.uicontrol.get()),
@@ -995,7 +1013,9 @@ static HildonAppMenu *app_menu_create(appdata_internal &appdata) {
   return menu;
 }
 
-static void menu_create(appdata_internal &appdata, GtkBox *) {
+void
+menu_create(appdata_internal &appdata, GtkBox *)
+{
   /* -- the view submenu -- */
   const std::array<menu_entry_t, 3> sm_view_entries = { {
     /* --- */
@@ -1046,6 +1066,8 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
   hildon_window_set_app_menu(HILDON_WINDOW(appdata_t::window), app_menu_create(appdata));
 }
 #endif
+
+} // namespace
 
 /********************* end of menu **********************/
 
@@ -1127,14 +1149,20 @@ appdata_internal::~appdata_internal()
 #endif
 }
 
-static void on_window_destroy() {
+namespace {
+
+void
+on_window_destroy()
+{
   g_debug("main window destroy");
 
   gtk_main_quit();
   appdata_t::window = nullptr;
 }
 
-static gboolean on_window_key_press(appdata_internal *appdata, GdkEventKey *event) {
+gboolean
+on_window_key_press(appdata_internal *appdata, GdkEventKey *event)
+{
   /* forward unprocessed key presses to map */
   if(appdata->project && appdata->project->osm && event->type == GDK_KEY_PRESS)
     return static_cast<map_gtk *>(appdata->map)->key_press_event(event->keyval);
@@ -1144,8 +1172,9 @@ static gboolean on_window_key_press(appdata_internal *appdata, GdkEventKey *even
 
 #if defined(FREMANTLE) && !defined(__i386__)
 /* get access to zoom buttons */
-static void
-on_window_realize(GtkWidget *widget, gpointer) {
+void
+on_window_realize(GtkWidget *widget, gpointer)
+{
   if (widget->window) {
     unsigned char value = 1;
     Atom hildon_zoom_key_atom =
@@ -1161,8 +1190,9 @@ on_window_realize(GtkWidget *widget, gpointer) {
 }
 #endif
 
-static GtkWidget *  __attribute__((nonnull(2,4)))
-icon_button(void *context, const char *icon, GCallback cb, GtkWidget *box) {
+GtkWidget *  __attribute__((nonnull(2,4)))
+icon_button(void *context, const char *icon, GCallback cb, GtkWidget *box)
+{
   GtkWidget *but = gtk_button_new();
   const int icon_scale =
 #ifdef FREMANTLE
@@ -1191,7 +1221,8 @@ icon_button(void *context, const char *icon, GCallback cb, GtkWidget *box) {
   return but;
 }
 
-static int application_run(const char *proj)
+int
+application_run(const char *proj)
 {
   /* user specific init */
   settings_t::ref settings = settings_t::instance();
@@ -1368,6 +1399,8 @@ static int application_run(const char *proj)
 
   return 0;
 }
+
+} // namespace
 
 int main(int argc, char *argv[]) {
   // library init
