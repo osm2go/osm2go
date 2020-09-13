@@ -24,6 +24,7 @@
 #include <utility>
 
 #include <osm2go_cpp.h>
+#include "osm2go_i18n.h"
 
 enum list_button_t {
   LIST_BUTTON_NEW = 0,
@@ -58,14 +59,14 @@ enum list_button_t {
 #endif
 
 struct list_view_column {
-  explicit list_view_column(const char *n, unsigned int fl, int hk = -1)
+  explicit list_view_column(trstring::native_type_arg n, unsigned int fl, int hk = -1)
     : name(n), flags(fl), hlkey(hk) {}
-  const char *name;
+  trstring::native_type name;
   unsigned int flags;
   int hlkey; ///< highlight key in case LIST_FLAG_CAN_HIGHLIGHT is set
 };
 
-typedef std::pair<const char *, GCallback> list_button;
+typedef std::pair<trstring::native_type, GCallback> list_button;
 
 typedef void(*list_changed_callback)(GtkTreeSelection*, void*);
 

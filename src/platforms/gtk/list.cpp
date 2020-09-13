@@ -81,12 +81,12 @@ void
 list_set_user_buttons(list_priv_t *priv, const std::vector<list_button> &buttons)
 {
   for(unsigned int id = LIST_BUTTON_USER0; id < buttons.size(); id++) {
-    const char *label = buttons[id].first;
-    if(label == nullptr)
+    trstring::native_type label = buttons[id].first;
+    if(label.isEmpty())
       continue;
     GCallback cb = buttons[id].second;
 
-    priv->button.widget[id] = osm2go_platform::button_new_with_label(label);
+    priv->button.widget[id] = osm2go_platform::button_new_with_label(static_cast<const gchar *>(label));
     if(priv->button.flags & LIST_BTN_2ROW)
       gtk_table_attach_defaults(GTK_TABLE(priv->table), priv->button.widget[id],
 		id-LIST_BUTTON_USER0, id-LIST_BUTTON_USER0+1, 1, 2);
@@ -102,7 +102,7 @@ void
 list_set_columns(GtkTreeView *view, const std::vector<list_view_column> &columns)
 {
   for(unsigned int key = 0; key < columns.size(); key++) {
-    const char *name = columns[key].name;
+    trstring::native_type name = columns[key].name;
     int hlkey = columns[key].hlkey;
     int flags = columns[key].flags;
 
@@ -110,7 +110,7 @@ list_set_columns(GtkTreeView *view, const std::vector<list_view_column> &columns
 
     if(flags & LIST_FLAG_STOCK_ICON) {
       GtkCellRenderer *pixbuf_renderer = gtk_cell_renderer_pixbuf_new();
-      column = gtk_tree_view_column_new_with_attributes(name, pixbuf_renderer,
+      column = gtk_tree_view_column_new_with_attributes(static_cast<const gchar *>(name), pixbuf_renderer,
                                                         "stock_id", key, nullptr);
     } else {
       GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
@@ -124,7 +124,7 @@ list_set_columns(GtkTreeView *view, const std::vector<list_view_column> &columns
       // if LIST_FLAG_CAN_HIGHLIGHT is not set this will be nullptr, so the function
       // will ignore the following int attribute anyway
       const char *hlattr = (flags & LIST_FLAG_CAN_HIGHLIGHT) ? "background-set" : nullptr;
-      column = gtk_tree_view_column_new_with_attributes(name, renderer, "text", key,
+      column = gtk_tree_view_column_new_with_attributes(static_cast<const gchar *>(name), renderer, "text", key,
                                                         hlattr, hlkey, nullptr);
 
       gtk_tree_view_column_set_expand(column,
