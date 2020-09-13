@@ -93,6 +93,12 @@ label_wrap(const char *str)
   return label;
 }
 
+inline GtkWidget *
+label_wrap(trstring::native_type_arg str)
+{
+  return label_wrap(static_cast<const gchar *>(str));
+}
+
 GtkWidget *
 license_page_new()
 {
@@ -187,6 +193,12 @@ void
 author_add(GtkWidget *box, const char *str)
 {
   gtk_box_pack_start(GTK_BOX(box), left_label(str), FALSE, FALSE, 0);
+}
+
+inline void
+author_add(GtkWidget *box, trstring::native_type_arg str)
+{
+  author_add(box, static_cast<const gchar *>(str));
 }
 
 GtkWidget *
