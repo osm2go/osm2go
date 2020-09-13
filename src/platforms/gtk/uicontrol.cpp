@@ -42,10 +42,10 @@ namespace {
 
 #ifdef FREMANTLE
 std::string
-strip_mnemonic(const char *label)
+strip_mnemonic(trstring::native_type_arg label)
 {
   // remove mnemonic marker
-  std::string hlabel = label;
+  std::string hlabel = static_cast<const gchar *>(label);
   std::string::size_type _pos = hlabel.find('_');
   if(likely(_pos != std::string::npos))
     hlabel.erase(_pos, 1);
@@ -54,33 +54,33 @@ strip_mnemonic(const char *label)
 #endif
 
 GtkWidget *
-create_submenu_item(const char *label)
+create_submenu_item(trstring::native_type_arg label)
 {
 #ifdef FREMANTLE
   return hildon_button_new_with_text(
                 static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH),
                 HILDON_BUTTON_ARRANGEMENT_VERTICAL, strip_mnemonic(label).c_str(), nullptr);
 #else
-  return gtk_menu_item_new_with_mnemonic(label);
+  return gtk_menu_item_new_with_mnemonic(static_cast<const gchar *>(label));
 #endif
 }
 
 GtkWidget *
-create_checkbox_item(const char *label)
+create_checkbox_item(trstring::native_type_arg label)
 {
 #ifdef FREMANTLE
   GtkWidget *button = hildon_check_button_new(HILDON_SIZE_AUTO);
   gtk_button_set_label(GTK_BUTTON(button), strip_mnemonic(label).c_str());
   return button;
 #else
-  return gtk_check_menu_item_new_with_mnemonic(label);
+  return gtk_check_menu_item_new_with_mnemonic(static_cast<const gchar *>(label));
 #endif
 }
 
 } // namespace
 
 GtkWidget *
-MainUiGtk::createMenuItem(const char *label, const char *icon_name
+MainUiGtk::createMenuItem(trstring::native_type_arg label, const char *icon_name
 #ifdef FREMANTLE
                           __attribute__((unused))
 #endif
@@ -93,7 +93,7 @@ MainUiGtk::createMenuItem(const char *label, const char *icon_name
     if (image == nullptr)
       image = gtk_image_new_from_icon_name(icon_name, GTK_ICON_SIZE_MENU);
     assert(image != nullptr);
-    GtkWidget *item = gtk_image_menu_item_new_with_mnemonic(label);
+    GtkWidget *item = gtk_image_menu_item_new_with_mnemonic(static_cast<const gchar *>(label));
     gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
     return item;
   }
@@ -182,7 +182,7 @@ GtkWidget *MainUiGtk::addMenu(GtkWidget *item)
 #endif
 }
 
-GtkWidget *MainUiGtk::addMenu(const char *label)
+GtkWidget *MainUiGtk::addMenu(trstring::native_type_arg label)
 {
   return addMenu(create_submenu_item(label));
 }

@@ -884,10 +884,10 @@ app_submenu_create(appdata_t &appdata, MainUi::menu_items submenu, const menu_en
 
     /* the "Style" menu entry is very special */
     /* and is being handled seperately */
-    if(menu_entries->label != nullptr && strcmp(_("Style"), menu_entries->label) == 0) {
+    if(!menu_entries->label.isEmpty() && strcmp(_("Style"), static_cast<const gchar *>(menu_entries->label)) == 0) {
       button = style_select_widget(settings_t::instance()->style);
       g_object_set_data(G_OBJECT(dialog), "style_widget", button);
-    } else if(menu_entries->label != nullptr && strcmp(_("Track visibility"), menu_entries->label) == 0) {
+    } else if(!menu_entries->label.isEmpty() && strcmp(_("Track visibility"), static_cast<const gchar *>(menu_entries->label)) == 0) {
       button = track_vis_select_widget(settings_t::instance()->trackVisibility);
       g_object_set_data(G_OBJECT(dialog), "track_widget", button);
     } else if(!menu_entries->toggle) {
@@ -968,11 +968,11 @@ on_submenu_track_clicked(appdata_internal *appdata)
 }
 
 struct main_menu_entry_t {
-  explicit main_menu_entry_t(const char *l, GCallback cb, void *cb_context)
+  explicit main_menu_entry_t(trstring:native_type_arg l, GCallback cb, void *cb_context)
     : label(l), menuindex(-1), activate_cb(cb), activate_context(cb_context) {}
   explicit main_menu_entry_t(MainUi::menu_items idx, GCallback cb, void *cb_context)
-    : label(nullptr), menuindex(idx), activate_cb(cb), activate_context(cb_context) {}
-  const char *label;
+    : menuindex(idx), activate_cb(cb), activate_context(cb_context) {}
+  trstring::native_type label;
   int menuindex;
   GCallback activate_cb;
   void * const activate_context;
@@ -999,7 +999,7 @@ app_menu_create(appdata_internal &appdata)
     const main_menu_entry_t &entry = main_menu[i];
     GtkWidget *button;
 
-    if (entry.label == nullptr)
+    if (entry.label.isEmpty())
       button = mainui->addMenu(static_cast<MainUi::menu_items>(entry.menuindex));
     else
       button = mainui->addMenu(entry.label);

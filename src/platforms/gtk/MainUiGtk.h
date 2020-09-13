@@ -32,6 +32,7 @@ typedef GtkMenuShell MenuBar;
 #endif
 
 #include <osm2go_cpp.h>
+#include "osm2go_i18n.h"
 #include <osm2go_stl.h>
 
 typedef struct _GtkWidget GtkWidget;
@@ -58,14 +59,14 @@ public:
   /**
    * @brief create a new submenu entry in the global menu bar
    */
-  GtkWidget *addMenu(const char *label);
+  GtkWidget *addMenu(trstring::native_type_arg label);
 
   /**
    * @brief add one of the predefined entries to the global menu bar
    */
   GtkWidget *addMenu(menu_items item);
 
-  static GtkWidget *createMenuItem(const char *label, const char *icon_name = nullptr) __attribute__((nonnull(1)));
+  static GtkWidget *createMenuItem(trstring::native_type_arg label, const char *icon_name = nullptr);
 
   inline statusbar_t *statusBar() const
   { return statusbar.get(); }
