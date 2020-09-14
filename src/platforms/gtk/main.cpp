@@ -825,13 +825,13 @@ menu_create(appdata_internal &appdata, GtkBox *mainvbox)
 
 struct menu_entry_t {
   typedef gboolean (*toggle_cb)();
-  explicit menu_entry_t(const char *l, GCallback cb = nullptr,
+  explicit menu_entry_t(trstring::native_type_arg l, GCallback cb = nullptr,
                         gboolean en = TRUE)
     : label(l), enabled(en), toggle(nullptr), menuindex(-1), activate_cb(cb) {}
   explicit menu_entry_t(MainUi::menu_items idx, GCallback cb = nullptr,
                         toggle_cb tg = nullptr)
     : label(nullptr), enabled(TRUE), toggle(tg), menuindex(idx), activate_cb(cb) {}
-  const char *label;
+  trstring::native_type label;
   gboolean enabled;
   toggle_cb toggle;
   int menuindex;
@@ -968,7 +968,7 @@ on_submenu_track_clicked(appdata_internal *appdata)
 }
 
 struct main_menu_entry_t {
-  explicit main_menu_entry_t(trstring:native_type_arg l, GCallback cb, void *cb_context)
+  explicit main_menu_entry_t(trstring::native_type_arg l, GCallback cb, void *cb_context)
     : label(l), menuindex(-1), activate_cb(cb), activate_context(cb_context) {}
   explicit main_menu_entry_t(MainUi::menu_items idx, GCallback cb, void *cb_context)
     : menuindex(idx), activate_cb(cb), activate_context(cb_context) {}
