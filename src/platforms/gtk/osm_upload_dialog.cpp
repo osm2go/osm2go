@@ -132,6 +132,8 @@ table_attach_int(GtkWidget *table, int x, int y, unsigned int num)
   table_attach_label_c(table, str, x, y);
 }
 
+const char *placeholder_msg = tr_noop("Please add a comment");
+
 /* comment buffer has been edited, allow upload if the buffer is not empty */
 void
 callback_buffer_modified(GtkTextBuffer *buffer, GtkDialog *dialog)
@@ -140,10 +142,18 @@ callback_buffer_modified(GtkTextBuffer *buffer, GtkDialog *dialog)
   gtk_text_buffer_get_start_iter(buffer, &start);
   gtk_text_buffer_get_end_iter(buffer, &end);
   char *text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
+  bool emptyText = text == nullptr || *text == '\0';
+
+#ifndef FREMANTLE
+  if (strcmp(text, static_cast<const gchar *>(_(placeholder_msg))) == 0)
+    emptyText = true;
+#endif
+
   gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_ACCEPT,
-                                    (text != nullptr && *text != '\0') ? TRUE : FALSE);
+                                    !emptyText ? TRUE : FALSE);
 }
 
+#ifndef FREMANTLE
 gboolean
 cb_focus_in(GtkTextView *view, GdkEventFocus *, GtkTextBuffer *buffer)
 {
@@ -159,6 +169,7 @@ cb_focus_in(GtkTextView *view, GdkEventFocus *, GtkTextBuffer *buffer)
 
   return FALSE;
 }
+#endif
 
 template<typename T>
 static void table_insert_count(GtkWidget *table, const osm_t::dirty_t::counter<T> &counter, int row)
@@ -258,7 +269,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
   gtk_box_pack_start(dialog.vbox(), table, FALSE, FALSE, 0);
 
   GtkTextBuffer *buffer = gtk_text_buffer_new(nullptr);
-  trstring::native_type placeholder_comment = _("Please add a comment");
+  trstring::native_type placeholder_comment = _(placeholder_msg);
 
   /* disable ok button until user edited the comment */
   gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_ACCEPT, FALSE);
@@ -268,7 +279,11 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
   GtkTextView *view = GTK_TEXT_VIEW(
 #ifndef FREMANTLE
                     gtk_text_view_new_with_buffer(buffer));
-  gtk_text_buffer_set_text(buffer, placeholder_comment, -1);
+  gtk_text_buffer_set_text(buffer, static_cast<const gchar *>(placeholder_comment), -1);
+
+  // the desktop Gtk+ does not have the placeholder text, so do some extra tricks
+  g_object_set_data(G_OBJECT(view), "first_click", GINT_TO_POINTER(1));
+  g_signal_connect(view, "focus-in-event", G_CALLBACK(cb_focus_in), buffer);
 #else
                     hildon_text_view_new());
   gtk_text_view_set_buffer(view, buffer);
@@ -279,9 +294,6 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
   gtk_text_view_set_editable(view, TRUE);
   gtk_text_view_set_left_margin(view, 2 );
   gtk_text_view_set_right_margin(view, 2 );
-
-  g_object_set_data(G_OBJECT(view), "first_click", GINT_TO_POINTER(1));
-  g_signal_connect(view, "focus-in-event", G_CALLBACK(cb_focus_in), buffer);
 
   gtk_box_pack_start(dialog.vbox(), osm2go_platform::scrollable_container(GTK_WIDGET(view)), TRUE, TRUE, 0);
   gtk_widget_show_all(dialog.get());
@@ -313,7 +325,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
   GtkTextIter start, end;
   gtk_text_buffer_get_start_iter(buffer, &start);
   gtk_text_buffer_get_end_iter(buffer, &end);
-  char *text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
+  const char *text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
 
   project_t::ref project = appdata.project;
   /* server url should not end with a slash */
