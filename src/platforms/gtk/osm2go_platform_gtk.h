@@ -31,7 +31,7 @@ class icon_item;
 class statusbar_t;
 
 namespace osm2go_platform {
-  bool init() __attribute__((warn_unused_result));
+  bool init(bool &startGps) __attribute__((warn_unused_result));
 
   void cleanup();
 

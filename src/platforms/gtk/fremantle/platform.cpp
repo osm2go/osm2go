@@ -37,7 +37,7 @@
 
 static osso_context_t *osso_context;
 
-bool osm2go_platform::init()
+bool osm2go_platform::init(bool &startGps)
 {
   g_signal_new("changed", HILDON_TYPE_PICKER_BUTTON,
                G_SIGNAL_RUN_FIRST, 0, nullptr, nullptr,
@@ -47,6 +47,8 @@ bool osm2go_platform::init()
 
   if(G_UNLIKELY(osso_context == nullptr))
     return false;
+
+  startGps = true;
 
   if(G_UNLIKELY(dbus_register(osso_context) != TRUE)) {
     osso_deinitialize(osso_context);

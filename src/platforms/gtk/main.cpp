@@ -1222,7 +1222,7 @@ icon_button(void *context, const char *icon, GCallback cb, GtkWidget *box)
 }
 
 int
-application_run(const char *proj)
+application_run(const char *proj, bool startGps)
 {
   /* user specific init */
   settings_t::ref settings = settings_t::instance();
@@ -1265,8 +1265,9 @@ application_run(const char *proj)
 
   GtkBox *mainvbox = GTK_BOX(gtk_vbox_new(FALSE, 0));
 
-  /* unconditionally enable the GPS */
-  settings->enable_gps = true;
+  /* unconditionally enable the GPS if the platform wants that */
+  if (startGps)
+    settings->enable_gps = true;
 
   /* generate main map view */
   appdata.map = new map_gtk(appdata);
@@ -1426,9 +1427,10 @@ int main(int argc, char *argv[]) {
 #endif
 
   gtk_init(&argc, &argv);
-  int ret = osm2go_platform::init() ? 0 : 1;
+  bool startGps;
+  int ret = osm2go_platform::init(startGps) ? 0 : 1;
   if (ret == 0) {
-    ret = application_run(argc > 1 ? argv[1] : nullptr);
+    ret = application_run(argc > 1 ? argv[1] : nullptr, startGps);
 
     osm2go_platform::cleanup();
   }

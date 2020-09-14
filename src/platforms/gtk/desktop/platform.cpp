@@ -28,8 +28,10 @@
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
 
-bool osm2go_platform::init()
+bool osm2go_platform::init(bool &startGps)
 {
+  startGps = false;
+
   return true;
 }
 
