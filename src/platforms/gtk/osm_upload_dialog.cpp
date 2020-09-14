@@ -75,7 +75,7 @@ osm_upload_context_t::osm_upload_context_t(appdata_t &a, project_t::ref p, const
   , project(p)
   , urlbasestr(p->server(settings_t::instance()->server) + '/')
   , comment(c)
-  , src(s == nullptr ? s : std::string())
+  , src(s != nullptr ? s : std::string())
 {
 }
 
