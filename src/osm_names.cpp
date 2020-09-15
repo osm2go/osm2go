@@ -197,14 +197,37 @@ std::string object_t::get_name(const osm_t &osm) const {
   const char *name = obj->tags.get_value("name");
 
   /* search for some kind of "type" */
-  const std::array<const char *, 10> type_tags =
-                          { { "amenity", "place", "historic", "leisure",
+  const std::array<const char *, 9> type_tags =
+                          { { "amenity", "place", "historic",
                               "tourism", "landuse", "waterway", "railway",
                               "natural", "man_made" } };
   trstring_or_key typestr;
 
   for(unsigned int i = 0; !typestr && i < type_tags.size(); i++)
     typestr = obj->tags.get_value(type_tags[i]);
+
+  if (!typestr) {
+    const char *ts = obj->tags.get_value("leisure");
+    if (ts != nullptr) {
+      const std::array<const char *, 4> sport_leisure = { {
+        "pitch", "sports_centre", "stadium", "track"
+      } };
+
+      // in case nothing better is found
+      typestr = ts;
+
+      for (unsigned int i = 0; i < sport_leisure.size(); i++) {
+        if (strcmp(ts, sport_leisure[i]) == 0) {
+          const char *sp = obj->tags.get_value("sport");
+          if (sp != nullptr) {
+            trstring("%1 %2").arg(clean_underscores(sp)).arg(clean_underscores(ts)).swap(ret);
+            typestr = nullptr;
+          }
+          break;
+        }
+      }
+    }
+  }
 
   if(!typestr && obj->tags.get_value("building") != nullptr) {
     const char *street = obj->tags.get_value("addr:street");
@@ -303,7 +326,7 @@ std::string object_t::get_name(const osm_t &osm) const {
   }
 
   // no good name was found so far, just look into some other tags to get a useful description
-  const std::array<const char *, 4> name_tags = { { "ref", "note", "fix" "me", "sport" } };
+  const std::array<const char *, 3> name_tags = { { "ref", "note", "fix" "me" } };
   for(unsigned int i = 0; name == nullptr && i < name_tags.size(); i++)
     name = obj->tags.get_value(name_tags[i]);
 

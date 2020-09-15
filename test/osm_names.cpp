@@ -401,6 +401,34 @@ void test_relation_precedence()
   assert_cmpstr(o.get_name(*osm), "way/area: 'foo bar' in public transport 'Kröp cke'");
 }
 
+void test_sport()
+{
+  osm_t::TagMap tags;
+
+  tags.insert(osm_t::TagMap::value_type("leisure", "pitch"));
+  helper_way(tags, "pitch", -3);
+
+  tags.insert(osm_t::TagMap::value_type("sport", "soccer"));
+  helper_way(tags, "soccer pitch", -3);
+
+  tags.insert(osm_t::TagMap::value_type("name", "Waldsportplatz"));
+  helper_way(tags, "soccer pitch: \"Waldsportplatz\"", -3);
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("leisure", "sports_centre"));
+  tags.insert(osm_t::TagMap::value_type("sport", "american_football"));
+  helper_node(tags, "american football sports centre");
+
+  // fallback to the single value mode
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("sport", "american_football"));
+  helper_node(tags, "sport");
+
+  // this tag is not in the explicit whitelist, so "sport" is ignored
+  tags.insert(osm_t::TagMap::value_type("leisure", "bowling_alley"));
+  helper_node(tags, "bowling alley");
+}
+
 } // namespace
 
 int main()
@@ -417,6 +445,7 @@ int main()
   test_way_building_relation();
   test_multipolygon();
   test_relation_precedence();
+  test_sport();
 
   xmlCleanupParser();
 
