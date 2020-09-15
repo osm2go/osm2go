@@ -29,7 +29,8 @@ void set_bounds(osm_t::ref o)
   assert(b);
 }
 
-void test_description()
+template<typename T> void
+helper_node(const osm_t::TagMap tags, T name)
 {
   std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
   set_bounds(osm);
@@ -37,140 +38,198 @@ void test_description()
   node_t *n = osm->node_new(pos);
   osm->node_attach(n);
 
-  object_t o(n);
-  assert_cmpstr(o.get_name(*osm), "unspecified node");
+  n->tags.replace(tags);
+
+  assert_cmpstr(object_t(n).get_name(*osm), name);
+}
+
+way_t *construct_way(std::unique_ptr<osm_t> &osm, int nodes)
+{
+  set_bounds(osm);
+
+  way_t *w = new way_t();
+
+  for (int i = 0; i < std::abs(nodes); i++) {
+    node_t *n = osm->node_new(lpos_t(i, i * 2));
+    osm->node_attach(n);
+    w->append_node(n);
+  }
+
+  if (nodes < 0) {
+    w->append_node(w->node_chain.front());
+    assert(w->is_closed());
+  } else {
+    assert(!w->is_closed());
+  }
+
+  return osm->way_attach(w);
+}
+
+// if nodes is negative close the way
+template<typename T> void
+helper_way(const osm_t::TagMap tags, T name, int nodes)
+{
+  std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
+  way_t * const w = construct_way(osm, nodes);
+
+  w->tags.replace(tags);
+
+  assert_cmpstr(object_t(w).get_name(*osm), name);
+}
+
+void test_unspecified()
+{
+  helper_node(osm_t::TagMap(), "unspecified node");
 
   // test the other "unspecified" code path: tags, but no known ones
   osm_t::TagMap tags;
   tags.insert(osm_t::TagMap::value_type("source", "bong"));
-  n->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), "unspecified node");
+  helper_node(tags, "unspecified node");
+
+  helper_way(osm_t::TagMap(), "unspecified way", 0);
+
+  helper_way(osm_t::TagMap(), "unspecified way/area", -3);
+
+  // this is a bit too underspecified, so this case isn't explicitely catched
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("area", "yes"));
+  helper_way(tags, "area", -3);
+
+  // add some worthless tags that should not change the description in any way
+  tags.insert(osm_t::TagMap::value_type("created_by", "testcase"));
+  helper_way(tags, "area", -3);
+
+  tags.insert(osm_t::TagMap::value_type("source", "imagination"));
+  helper_way(tags, "area", -3);
+
+  // give it some more information
+  tags.insert(osm_t::TagMap::value_type("foo", "bar"));
+  helper_way(tags, "unspecified area", -3);
+}
+
+void test_unspecified_name()
+{
+  osm_t::TagMap tags;
 
   tags.insert(osm_t::TagMap::value_type("name", "foo"));
+  helper_node(tags, "node: \"foo\"");
 
-  n->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), "node: \"foo\"");
+  tags.insert(osm_t::TagMap::value_type("source", "bong"));
+  helper_node(tags, "node: \"foo\"");
+}
 
-  tags.clear();
+void test_node_highway_ref()
+{
+  osm_t::TagMap tags;
+
   tags.insert(osm_t::TagMap::value_type("highway", "emergency_access_point"));
   tags.insert(osm_t::TagMap::value_type("ref", "H-112"));
+
+  helper_node(tags, "emergency access point: \"H-112\"");
+
   // the barrier must not override the highway information
   tags.insert(osm_t::TagMap::value_type("barrier", "bollard"));
-  n->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), "emergency access point: \"H-112\"");
+  helper_node(tags, "emergency access point: \"H-112\"");
+}
 
-  // test the special bollard code
+void test_barrier()
+{
+  osm_t::TagMap tags;
+
+  // test the special barrier code
   // have 2 tags, as the result could otherwise come from the "single tag" fallback code
-  tags.clear();
   tags.insert(osm_t::TagMap::value_type("barrier", "bollard"));
   tags.insert(osm_t::TagMap::value_type("start_date", "2019-04-01"));
-  n->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), "bollard");
+
+  helper_node(tags, "bollard");
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("barrier", "yes"));
   tags.insert(osm_t::TagMap::value_type("start_date", "2019-04-01"));
-  n->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), "barrier");
 
-  way_t *w = new way_t();
-  osm->way_attach(w);
-  o = w;
+  helper_node(tags, "barrier");
+}
 
-  assert_cmpstr(o.get_name(*osm), "unspecified way");
-  w->append_node(n);
-  node_t *n2 = osm->node_new(pos);
-  tags.clear();
-  // prevent deletion of this node when the way count reaches 0
-  tags.insert(osm_t::TagMap::value_type("keep", "me"));
-  n2->tags.replace(tags);
-  osm->node_attach(n2);
-  w->append_node(n2);
-  w->append_node(n);
-  assert_cmpstr(o.get_name(*osm), "unspecified way/area");
-  tags.clear();
-  tags.insert(osm_t::TagMap::value_type("area", "yes"));
-  w->tags.replace(tags);
-  // this is a bit too underspecified, so this case isn't explicitely catched
-  assert_cmpstr(o.get_name(*osm), "area");
-  // add some worthless tags that should not change the description in any way
-  tags.insert(osm_t::TagMap::value_type("created_by", "testcase"));
-  w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), "area");
-  tags.insert(osm_t::TagMap::value_type("source", "imagination"));
-  w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), "area");
-  // give it some more information
-  tags.insert(osm_t::TagMap::value_type("foo", "bar"));
-  w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), "unspecified area");
-   osm_node_chain_free(w->node_chain);
-  w->node_chain.clear();
+void test_way_highway()
+{
+  osm_t::TagMap tags;
 
-  tags.clear();
   tags.insert(osm_t::TagMap::value_type("highway", "pedestrian"));
-  w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), _("pedestrian way"));
+  helper_way(tags, _("pedestrian way"), 0);
+
   tags.insert(osm_t::TagMap::value_type("area", "yes"));
-  w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), _("pedestrian way"));
+  helper_way(tags, _("pedestrian way"), 0);
+
   // needs to be a closed way to be considered an area
-  w->append_node(n);
-  w->append_node(n2);
-  w->append_node(n);
-  assert_cmpstr(o.get_name(*osm), _("pedestrian area"));
-  osm_node_chain_free(w->node_chain);
-  w->node_chain.clear();
+  helper_way(tags, _("pedestrian area"), -3);
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("highway", "construction"));
-  w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), _("road/street under construction"));
+  helper_way(tags, _("road/street under construction"), 0);
+
   tags.insert(osm_t::TagMap::value_type("construction", "foo"));
-  w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), trstring("%1 road under construction").arg("foo").toStdString());
+  helper_way(tags, trstring("%1 road under construction").arg("foo"), 0);
+
   // construction:highway is the proper namespaced tag, so prefer that one
   tags.insert(osm_t::TagMap::value_type("construction:highway", "bar"));
-  w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), trstring("%1 road under construction").arg("bar").toStdString());
+  helper_way(tags, trstring("%1 road under construction").arg("bar"), 0);
+
   tags.insert(osm_t::TagMap::value_type("name", "baz"));
-  w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), trstring("%1 road under construction").arg("bar").toStdString() + ": \"baz\"");
+  helper_way(tags, trstring("%1 road under construction").arg("bar").toStdString() + ": \"baz\"", 0);
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("name", "foo"));
   tags.insert(osm_t::TagMap::value_type("highway", "residential"));
-  w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), "residential road: \"foo\"");
+  helper_way(tags, "residential road: \"foo\"", 0);
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("ref", "B217"));
   tags.insert(osm_t::TagMap::value_type("highway", "primary"));
-  w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), "primary road: \"B217\"");
+  helper_way(tags, "primary road: \"B217\"", 0);
+}
 
-  // building without address given
-  tags.clear();
+void test_way_building_simple()
+{
+  osm_t::TagMap tags;
+
   tags.insert(osm_t::TagMap::value_type("building", "residential"));
-  w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), "building");
+  helper_way(tags, "building", 0);
 
   tags.insert(osm_t::TagMap::value_type("addr:housename", "Baskerville Hall"));
-  w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), "building: \"Baskerville Hall\"");
+  helper_way(tags, "building: \"Baskerville Hall\"", 0);
+
   // name is favored over addr:housename
   tags.insert(osm_t::TagMap::value_type("name", "Brook Hall"));
-  w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), "building: \"Brook Hall\"");
+  helper_way(tags, "building: \"Brook Hall\"", 0);
 
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("building:part", "yes"));
+  helper_way(tags, "building:part", -3);
+
+  // there is still only a single tag because these 2 are ignored
+  tags.insert(osm_t::TagMap::value_type("source", "foo"));
+  tags.insert(osm_t::TagMap::value_type("created_by", "testcase"));
+  helper_way(tags, "building:part", -3);
+
+  tags.insert(osm_t::TagMap::value_type("building:levels", "3"));
+  helper_way(tags, "building part", -3);
+}
+
+void test_way_building_area()
+{
+  std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
+  way_t *w = construct_way(osm, 0);
+
+  osm_t::TagMap tags;
+  tags.insert(osm_t::TagMap::value_type("building", "residential"));
+
+  w->tags.replace(tags);
   assert(!w->is_closed());
   // unclosed ways are not considered an area
   assert(!w->is_area());
 
-  w->append_node(n);
-  w->append_node(n2);
-  w->append_node(n);
-
+  w = construct_way(osm, -3);
+  w->tags.replace(tags);
   assert(w->is_closed());
   // there is no explicit area tag, but all buildings are considered areas
   assert(w->is_area());
@@ -185,12 +244,19 @@ void test_description()
   tags.insert(osm_t::TagMap::value_type("building", "no"));
   w->tags.replace(tags);
   assert(!w->is_area());
+}
 
-  tags.clear();
+void test_way_building_relation()
+{
+  std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
+  way_t *w = construct_way(osm, -3);
+
+  osm_t::TagMap tags;
   tags.insert(osm_t::TagMap::value_type("building", "residential"));
   tags.insert(osm_t::TagMap::value_type("addr:housenumber", "42"));
+
   w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), "building housenumber 42");
+  assert_cmpstr(object_t(w).get_name(*osm), "building housenumber 42");
 
   relation_t *r = new relation_t();
   osm->relation_attach(r);
@@ -199,18 +265,76 @@ void test_description()
   rtags.insert(osm_t::TagMap::value_type("name", "21 Jump Street"));
   r->tags.replace(rtags);
   r->members.push_back(member_t(object_t(w), nullptr));
+
   // description should not have changed by now
-  assert_cmpstr(o.get_name(*osm), "building housenumber 42");
+  assert_cmpstr(object_t(w).get_name(*osm), "building housenumber 42");
   r->members.push_back(member_t(object_t(w), "house"));
-  assert_cmpstr(o.get_name(*osm), "building 21 Jump Street 42");
+  assert_cmpstr(object_t(w).get_name(*osm), "building 21 Jump Street 42");
 
   // addr:street takes precedence
   tags.insert(osm_t::TagMap::value_type("addr:street", "Highway to hell"));
   w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), "building Highway to hell 42");
+  assert_cmpstr(object_t(w).get_name(*osm), "building Highway to hell 42");
 
   // if there are not tags there is a description by relation
   w->tags.clear();
+  assert_cmpstr(object_t(w).get_name(*osm), "way/area: member of associatedStreet '21 Jump Street'");
+}
+
+void test_multipolygon()
+{
+  std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
+  way_t * const w = construct_way(osm, -3);
+
+  relation_t *simple_r = new relation_t();
+  osm->relation_attach(simple_r);
+  simple_r->members.push_back(member_t(object_t(w), "outer"));
+
+  // multipolygons take precedence over other relations
+  osm_t::TagMap rtags;
+  rtags.clear();
+  rtags.insert(osm_t::TagMap::value_type("type", "multipolygon"));
+  simple_r->tags.replace(rtags);
+  assert(simple_r->is_multipolygon());
+  assert_cmpstr(object_t(w).get_name(*osm), "way/area: 'outer' of multipolygon '<ID #-1>'");
+  simple_r->members.clear();
+  simple_r->members.push_back(member_t(object_t(w)));
+  assert_cmpstr(object_t(w).get_name(*osm), "way/area: member of multipolygon '<ID #-1>'");
+
+  // another relation, found first in the map because of lower id
+  relation_t *other_r  = new relation_t();
+  osm->relation_attach(other_r);
+  other_r->members.push_back(member_t(object_t(w)));
+  other_r->tags.replace(rtags);
+  assert_cmpstr(object_t(w).get_name(*osm), "way/area: member of multipolygon '<ID #-2>'");
+
+  // but if the first one has a name (or any non-default description) it is picked
+  rtags.insert(osm_t::TagMap::value_type("name", "Deister"));
+  simple_r->tags.replace(rtags);
+  assert_cmpstr(object_t(w).get_name(*osm), "way/area: member of multipolygon 'Deister'");
+}
+
+void test_relation_precedence()
+{
+  std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
+  set_bounds(osm);
+  way_t * const w = construct_way(osm, -2);
+  node_t * const n = w->node_chain.front();
+
+  osm_t::TagMap tags;
+
+  object_t o(w);
+  relation_t *r = new relation_t();
+  osm->relation_attach(r);
+  osm_t::TagMap rtags;
+  rtags.insert(osm_t::TagMap::value_type("type", "associatedStreet"));
+  rtags.insert(osm_t::TagMap::value_type("name", "21 Jump Street"));
+  r->tags.replace(rtags);
+  r->members.push_back(member_t(object_t(w), nullptr));
+  // description should not have changed by now
+  r->members.push_back(member_t(object_t(w), "house"));
+
+  // if there are not tags there is a description by relation
   assert_cmpstr(o.get_name(*osm), "way/area: member of associatedStreet '21 Jump Street'");
 
   // check PTv2 relation naming
@@ -275,45 +399,6 @@ void test_description()
   pt_r->members.clear();
   pt_r->members.push_back(member_t(object_t(w), "foo_bar"));
   assert_cmpstr(o.get_name(*osm), "way/area: 'foo bar' in public transport 'Kröp cke'");
-
-  // multipolygons take precedence over other relations
-  rtags.clear();
-  rtags.insert(osm_t::TagMap::value_type("type", "multipolygon"));
-  simple_r->tags.replace(rtags);
-  assert(simple_r->is_multipolygon());
-  assert_cmpstr(o.get_name(*osm), "way/area: 'outer' of multipolygon '<ID #-3>'");
-  simple_r->members.clear();
-  simple_r->members.push_back(member_t(object_t(w)));
-  assert_cmpstr(o.get_name(*osm), "way/area: member of multipolygon '<ID #-3>'");
-
-  // another relation, found first in the map because of lower id
-  relation_t *other_r  = new relation_t();
-  osm->relation_attach(other_r);
-  other_r->members.push_back(member_t(object_t(w)));
-  other_r->tags.replace(rtags);
-  assert_cmpstr(o.get_name(*osm), "way/area: member of multipolygon '<ID #-4>'");
-
-  // but if the first one has a name (or any non-default description) it is picked
-  rtags.insert(osm_t::TagMap::value_type("name", "Deister"));
-  simple_r->tags.replace(rtags);
-  assert_cmpstr(o.get_name(*osm), "way/area: member of multipolygon 'Deister'");
-
-  tags.clear();
-  tags.insert(osm_t::TagMap::value_type("building:part", "yes"));
-  w->tags.replace(tags);
-  // only a single tag, this is simply copied
-  assert_cmpstr(o.get_name(*osm), "building:part");
-
-  // there is still only a single tag because these 2 are ignored
-  tags.insert(osm_t::TagMap::value_type("source", "foo"));
-  tags.insert(osm_t::TagMap::value_type("created_by", "testcase"));
-  w->tags.replace(tags);
-  assert_cmpstr(o.get_name(*osm), "building:part");
-
-  tags.insert(osm_t::TagMap::value_type("building:levels", "3"));
-  w->tags.replace(tags);
-  // but building:part is catched even if there are more tags
-  assert_cmpstr(o.get_name(*osm), "building part");
 }
 
 } // namespace
@@ -322,7 +407,16 @@ int main()
 {
   xmlInitParser();
 
-  test_description();
+  test_unspecified();
+  test_unspecified_name();
+  test_node_highway_ref();
+  test_barrier();
+  test_way_highway();
+  test_way_building_simple();
+  test_way_building_area();
+  test_way_building_relation();
+  test_multipolygon();
+  test_relation_precedence();
 
   xmlCleanupParser();
 
