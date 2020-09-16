@@ -192,15 +192,19 @@ void test_way_building_simple()
 {
   osm_t::TagMap tags;
 
-  tags.insert(osm_t::TagMap::value_type("building", "residential"));
+  tags.insert(osm_t::TagMap::value_type("building", "yes"));
   helper_way(tags, "building", 0);
 
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("building", "residential"));
+  helper_way(tags, "residential building", 0);
+
   tags.insert(osm_t::TagMap::value_type("addr:housename", "Baskerville Hall"));
-  helper_way(tags, "building: \"Baskerville Hall\"", 0);
+  helper_way(tags, "residential building: \"Baskerville Hall\"", 0);
 
   // name is favored over addr:housename
   tags.insert(osm_t::TagMap::value_type("name", "Brook Hall"));
-  helper_way(tags, "building: \"Brook Hall\"", 0);
+  helper_way(tags, "residential building: \"Brook Hall\"", 0);
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("building:part", "yes"));
@@ -252,11 +256,18 @@ void test_way_building_relation()
   way_t *w = construct_way(osm, -3);
 
   osm_t::TagMap tags;
-  tags.insert(osm_t::TagMap::value_type("building", "residential"));
+  tags.insert(osm_t::TagMap::value_type("building", "yes"));
   tags.insert(osm_t::TagMap::value_type("addr:housenumber", "42"));
 
   w->tags.replace(tags);
   assert_cmpstr(object_t(w).get_name(*osm), "building housenumber 42");
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("building", "residential"));
+  tags.insert(osm_t::TagMap::value_type("addr:housenumber", "42"));
+
+  w->tags.replace(tags);
+  assert_cmpstr(object_t(w).get_name(*osm), "residential building housenumber 42");
 
   relation_t *r = new relation_t();
   osm->relation_attach(r);
@@ -267,18 +278,32 @@ void test_way_building_relation()
   r->members.push_back(member_t(object_t(w), nullptr));
 
   // description should not have changed by now
-  assert_cmpstr(object_t(w).get_name(*osm), "building housenumber 42");
+  assert_cmpstr(object_t(w).get_name(*osm), "residential building housenumber 42");
   r->members.push_back(member_t(object_t(w), "house"));
-  assert_cmpstr(object_t(w).get_name(*osm), "building 21 Jump Street 42");
+  assert_cmpstr(object_t(w).get_name(*osm), "residential building 21 Jump Street 42");
 
   // addr:street takes precedence
   tags.insert(osm_t::TagMap::value_type("addr:street", "Highway to hell"));
   w->tags.replace(tags);
-  assert_cmpstr(object_t(w).get_name(*osm), "building Highway to hell 42");
+  assert_cmpstr(object_t(w).get_name(*osm), "residential building Highway to hell 42");
 
   // if there are not tags there is a description by relation
   w->tags.clear();
   assert_cmpstr(object_t(w).get_name(*osm), "way/area: member of associatedStreet '21 Jump Street'");
+
+  // when this is no building, it is no building
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("building", "no"));
+  w->tags.replace(tags);
+  assert_cmpstr(object_t(w).get_name(*osm), "way/area: member of associatedStreet '21 Jump Street'");
+
+  // but when it is, it is
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("building", "yes"));
+  w->tags.replace(tags);
+  r->members.clear();
+  r->members.push_back(member_t(object_t(w), "house"));
+  assert_cmpstr(object_t(w).get_name(*osm), "building in 21 Jump Street");
 }
 
 void test_multipolygon()

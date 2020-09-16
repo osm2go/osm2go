@@ -229,25 +229,46 @@ std::string object_t::get_name(const osm_t &osm) const {
     }
   }
 
-  if(!typestr && obj->tags.get_value("building") != nullptr) {
-    const char *street = obj->tags.get_value("addr:street");
-    const char *hn = obj->tags.get_value("addr:housenumber");
+  if(!typestr) {
+    const char *rawValue = obj->tags.get_value("building");
 
-    if(hn != nullptr) {
+    if (rawValue != nullptr && strcmp(rawValue, "no") != 0) {
+      const char *street = obj->tags.get_value("addr:street");
+      const char *hn = obj->tags.get_value("addr:housenumber");
+
+      // simplify further checks
+      if (strcmp(rawValue, "yes") == 0)
+        rawValue = nullptr;
+
       if(street == nullptr) {
         // check if there is an "associatedStreet" relation where this is a "house" member
         const relation_t *astreet = osm.find_relation(typed_relation_member_functor("associatedStreet", "house", *this));
         if(astreet != nullptr)
           street = astreet->tags.get_value("name");
       }
-      trstring dsc = street != nullptr ?
-                     trstring("building %1 %2").arg(street) :
-                     trstring("building housenumber %1");
-      dsc.arg(hn).swap(ret);
-    } else {
-      typestr = _("building");
-      if(name == nullptr)
-        name = obj->tags.get_value("addr:housename");
+
+      if(hn != nullptr) {
+        trstring dsc = street != nullptr ?
+                          rawValue != nullptr ?
+                              trstring("%1 building %2 %3").arg(clean_underscores(rawValue)).arg(street) :
+                              trstring("building %1 %2").arg(street) :
+                          rawValue != nullptr ?
+                              trstring("%1 building housenumber %2").arg(clean_underscores(rawValue)) :
+                              trstring("building housenumber %1");
+        dsc.arg(hn).swap(ret);
+      } else if (street != nullptr) {
+        trstring dsc = rawValue != nullptr ?
+                            trstring("%1 building in %2").arg(clean_underscores(rawValue)).arg(street) :
+                            trstring("building in %1").arg(street);
+        dsc.swap(ret);
+      } else {
+        if (rawValue == nullptr)
+          typestr = _("building");
+        else
+          trstring("%1 building").arg(clean_underscores(rawValue)).swap(ret);
+        if(name == nullptr)
+          name = obj->tags.get_value("addr:housename");
+      }
     }
   }
 
@@ -337,7 +358,7 @@ std::string object_t::get_name(const osm_t &osm) const {
   } else if(ret.empty()) {
     // look if this has only one real tag and use that one
     const tag_t *stag = obj->tags.singleTag();
-    if(stag != nullptr) {
+    if(stag != nullptr && strcmp(stag->value, "no") != 0) {
       ret = stag->key;
     } else {
       // last chance
