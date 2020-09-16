@@ -86,7 +86,7 @@ list_set_user_buttons(list_priv_t *priv, const std::vector<list_button> &buttons
       continue;
     GCallback cb = buttons[id].second;
 
-    priv->button.widget[id] = osm2go_platform::button_new_with_label(static_cast<const gchar *>(label));
+    priv->button.widget[id] = osm2go_platform::button_new_with_label(label);
     if(priv->button.flags & LIST_BTN_2ROW)
       gtk_table_attach_defaults(GTK_TABLE(priv->table), priv->button.widget[id],
 		id-LIST_BUTTON_USER0, id-LIST_BUTTON_USER0+1, 1, 2);

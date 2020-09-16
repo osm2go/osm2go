@@ -50,7 +50,7 @@ namespace osm2go_platform {
   GtkWidget *entry_new(EntryFlags flags = EntryFlagsDefault) __attribute__((warn_unused_result));
   bool isEntryWidget(GtkWidget *widget) __attribute__((warn_unused_result));
 
-  GtkWidget *button_new_with_label(const char *label) __attribute__((warn_unused_result));
+  GtkWidget *button_new_with_label(trstring::arg_type label) __attribute__((warn_unused_result));
 
   GtkWidget *check_button_new_with_label(const char *label) __attribute__((warn_unused_result));
   void check_button_set_active(GtkWidget *button, bool active);

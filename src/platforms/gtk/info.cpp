@@ -588,7 +588,7 @@ details_widget(const info_tag_context_t &context, bool big)
 
     const trstring str = trstring("Members: %1 nodes, %2 ways, %3 relations").arg(nodes).arg(ways).arg(relations);
 
-    GtkWidget *member_btn = osm2go_platform::button_new_with_label(static_cast<const gchar *>(str));
+    GtkWidget *member_btn = osm2go_platform::button_new_with_label(str);
     g_signal_connect(member_btn, "clicked", G_CALLBACK(on_relation_members),
                      const_cast<info_tag_context_t *>(&context));
 

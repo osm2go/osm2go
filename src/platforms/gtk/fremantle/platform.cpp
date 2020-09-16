@@ -160,8 +160,9 @@ bool osm2go_platform::isEntryWidget(GtkWidget *widget)
   return HILDON_IS_ENTRY(widget) == TRUE;
 }
 
-GtkWidget *osm2go_platform::button_new_with_label(const char *label) {
-  GtkWidget *button = gtk_button_new_with_label(label);
+GtkWidget *osm2go_platform::button_new_with_label(trstring::arg_type label)
+{
+  GtkWidget *button = gtk_button_new_with_label(static_cast<const gchar *>(static_cast<trstring::native_type>(label)));
   hildon_gtk_widget_set_theme_size(button,
            static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
   return button;

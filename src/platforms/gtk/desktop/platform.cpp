@@ -89,9 +89,9 @@ bool osm2go_platform::isEntryWidget(GtkWidget *widget)
   return GTK_IS_ENTRY(widget) == TRUE;
 }
 
-GtkWidget *osm2go_platform::button_new_with_label(const char *label)
+GtkWidget *osm2go_platform::button_new_with_label(trstring::arg_type label)
 {
-  return gtk_button_new_with_label(label);
+  return gtk_button_new_with_label(static_cast<const gchar *>(static_cast<trstring::native_type>(label)));
 }
 
 GtkWidget *osm2go_platform::check_button_new_with_label(const char *label)
