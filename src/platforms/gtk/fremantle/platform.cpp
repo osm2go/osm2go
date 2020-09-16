@@ -564,8 +564,8 @@ void osm2go_platform::select_widget_select(GtkWidget *widget, const std::vector<
   }
 }
 
-void osm2go_platform::setEntryText(GtkEntry *entry, const char *text, const char *placeholder)
+void osm2go_platform::setEntryText(GtkEntry *entry, const char *text, trstring::native_type_arg placeholder)
 {
-  hildon_gtk_entry_set_placeholder_text(entry, placeholder);
+  hildon_gtk_entry_set_placeholder_text(entry, static_cast<const gchar *>(placeholder));
   gtk_entry_set_text(entry, text);
 }

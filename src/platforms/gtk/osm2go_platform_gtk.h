@@ -132,7 +132,7 @@ namespace osm2go_platform {
    */
   void select_widget_select(GtkWidget *widget, const std::vector<unsigned int> &indexes);
 
-  void setEntryText(GtkEntry *entry, const char *text, const char *placeholder);
+  void setEntryText(GtkEntry *entry, const char *text, trstring::native_type_arg placeholder);
 
   /* dialog size are specified rather fuzzy */
   enum DialogSizeHint {
