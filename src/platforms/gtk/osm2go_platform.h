@@ -89,11 +89,6 @@ namespace osm2go_platform {
     value_type m_x, m_y;
 
   };
-
-  bool yes_no(trstring::native_type_arg title, trstring::native_type_arg msg,
-              unsigned int again_flags = 0,Widget *parent = nullptr) __attribute__((warn_unused_result));
-  bool yes_no(trstring::native_type_arg title, const trstring &msg,
-              unsigned int again_flags = 0, Widget *parent = nullptr) __attribute__((warn_unused_result));
 };
 
 #include "../osm2go_platform_common.h"

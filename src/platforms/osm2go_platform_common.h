@@ -80,7 +80,7 @@ namespace osm2go_platform {
    * @brief a dialog asking for yes or no
    * @retval true the user clicked yes
    */
-  bool yes_no(const trstring &title, const trstring &msg,
+  bool yes_no(trstring::arg_type title, trstring::arg_type msg,
               unsigned int again_flags = 0, Widget *parent = nullptr) __attribute__((warn_unused_result));
 
   const std::vector<dirguard> &base_paths() __attribute__((warn_unused_result));

@@ -275,8 +275,7 @@ static void on_toggled(GtkWidget *button, const int *flags)
     gtk_dialog_set_response_sensitive(dialog, RESPONSE_YES, not_active);
 }
 
-static bool yes_no(trstring::arg_type title, const char *msg, unsigned int again_flags,
-                             osm2go_platform::Widget *parent)
+bool osm2go_platform::yes_no(trstring::arg_type title, trstring::arg_type msg, unsigned int again_flags, osm2go_platform::Widget *parent)
 {
   /* flags used to prevent re-appearence of dialogs */
   static struct {
@@ -288,7 +287,8 @@ static bool yes_no(trstring::arg_type title, const char *msg, unsigned int again
   if(dialog_again.not_again & again_bit)
     return ((dialog_again.reply & again_bit) != 0);
 
-  printf("%s: \"%s\"\n", static_cast<const gchar *>(static_cast<trstring::native_type>(title)), msg);
+  printf("%s: \"%s\"\n", static_cast<const gchar *>(static_cast<trstring::native_type>(title)),
+                         static_cast<const gchar *>(static_cast<trstring::native_type>(msg)));
 
   GtkWindow *p = GTK_WINDOW(parent ? parent : appdata_t::window);
 
@@ -296,11 +296,11 @@ static bool yes_no(trstring::arg_type title, const char *msg, unsigned int again
 #ifndef FREMANTLE
                   gtk_message_dialog_new(p, GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
-                                         "%s", msg));
+                                         "%s", static_cast<const gchar *>(static_cast<trstring::native_type>(msg))));
 
   gtk_window_set_title(dialog, title);
 #else
-                  hildon_note_new_confirmation(p, msg));
+                  hildon_note_new_confirmation(p, static_cast<const gchar *>(static_cast<trstring::native_type>(msg))));
 #endif
 
   GtkWidget *cbut = nullptr;
@@ -334,24 +334,6 @@ static bool yes_no(trstring::arg_type title, const char *msg, unsigned int again
   }
 
   return yes;
-}
-
-bool osm2go_platform::yes_no(trstring::native_type_arg title, trstring::native_type_arg msg, unsigned int again_flags,
-                             osm2go_platform::Widget *parent)
-{
-  return yes_no(trstring::any_type(title), static_cast<const char *>(msg), again_flags, parent);
-}
-
-bool osm2go_platform::yes_no(trstring::native_type_arg title, const trstring &msg, unsigned int again_flags,
-                             osm2go_platform::Widget *parent)
-{
-  return yes_no(trstring::any_type(title), static_cast<const gchar *>(msg), again_flags, parent);
-}
-
-bool osm2go_platform::yes_no(const trstring &title, const trstring &msg, unsigned int again_flags,
-                             osm2go_platform::Widget *parent)
-{
-  return yes_no(title, static_cast<const gchar *>(msg), again_flags, parent);
 }
 
 const std::vector<dirguard> &osm2go_platform::base_paths()

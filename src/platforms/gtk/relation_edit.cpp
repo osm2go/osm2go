@@ -736,10 +736,10 @@ on_relation_remove(relation_context_t *context)
   g_debug("remove relation #" ITEM_ID_FORMAT, sel->id);
 
   if(!sel->members.empty()) {
-    g_string msg(g_strdup_printf(ngettext("This relation still has %zu member. Delete it anyway?",
-                                          "This relation still has %zu members. Delete it anyway?",
-                                          sel->members.size()), sel->members.size()));
-    if(!osm2go_platform::yes_no(_("Delete non-empty relation?"), msg.get(), 0, context->dialog.get()))
+    trstring msg(ngettext("This relation still has %zu member. Delete it anyway?",
+                          "This relation still has %zu members. Delete it anyway?",
+                          sel->members.size()), nullptr, sel->members.size());
+    if(!osm2go_platform::yes_no(_("Delete non-empty relation?"), msg, 0, context->dialog.get()))
       return;
   }
 
