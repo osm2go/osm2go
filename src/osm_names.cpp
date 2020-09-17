@@ -287,14 +287,11 @@ std::string object_t::get_name(const osm_t &osm) const {
         typestr = nullptr;
       }
 
-      else if(strcmp(highway, "pedestrian") == 0) {
-        if(likely(type == WAY)) {
-          if(way->is_area())
-            typestr = _("pedestrian area");
-          else
-            typestr = _("pedestrian way");
-        } else
-          typestr = highway;
+      else if(type == WAY && strcmp(highway, "pedestrian") == 0) {
+        if(way->is_area())
+          typestr = _("pedestrian area");
+        else
+          typestr = _("pedestrian way");
       }
 
       else if(!strcmp(highway, "construction")) {
