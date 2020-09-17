@@ -193,3 +193,12 @@ struct g_object_deleter {
 
 static inline GtkWidget * __attribute__((warn_unused_result)) gtk_label_new(trstring::native_type_arg str)
 { return gtk_label_new(static_cast<const gchar *>(str)); }
+
+// all versions need to be provided here, otherwise the missing "explict" keyword on
+// operators will make the calls ambiguous with gcc 4.2
+static inline void gtk_window_set_title(GtkWindow *window, trstring::native_type title)
+{ return gtk_window_set_title(window, static_cast<const gchar *>(title)); }
+static inline void gtk_window_set_title(GtkWindow *window, const trstring &title)
+{ return gtk_window_set_title(window, static_cast<const gchar *>(title)); }
+static inline void gtk_window_set_title(GtkWindow *window, trstring::arg_type title)
+{ return gtk_window_set_title(window, static_cast<trstring::native_type>(title)); }

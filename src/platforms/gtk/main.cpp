@@ -174,7 +174,7 @@ void appdata_t::set_title()
     str = t;
   }
 
-  gtk_window_set_title(GTK_WINDOW(window), static_cast<const gchar *>(static_cast<trstring::native_type>(str)));
+  gtk_window_set_title(GTK_WINDOW(window), str);
 #endif
 }
 

@@ -295,7 +295,7 @@ presets_item_dialog(const presets_item *item)
 
     /* special handling for the first label/separators */
     if(item->addEditName) {
-      gtk_window_set_title(dialog, static_cast<const gchar *>(trstring("Edit %1").arg(item->name)));
+      gtk_window_set_title(dialog, trstring("Edit %1").arg(item->name));
     } else {
       // use the first label as title
       const presets_element_t * const w = item->widgets.front();

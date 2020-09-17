@@ -799,8 +799,7 @@ on_rename_clicked(project_context_t *context)
   if(!project->rename(name, openProject, context->dialog))
     return;
 
-  gtk_window_set_title(GTK_WINDOW(context->dialog),
-                       static_cast<const gchar *>(trstring("Edit project - %1").arg(project->name)));
+  gtk_window_set_title(GTK_WINDOW(context->dialog), trstring("Edit project - %1").arg(project->name));
 
   if(!isOpen)
     return;

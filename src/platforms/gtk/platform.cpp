@@ -275,7 +275,7 @@ static void on_toggled(GtkWidget *button, const int *flags)
     gtk_dialog_set_response_sensitive(dialog, RESPONSE_YES, not_active);
 }
 
-static bool yes_no(const char *title, const char *msg, unsigned int again_flags,
+static bool yes_no(trstring::arg_type title, const char *msg, unsigned int again_flags,
                              osm2go_platform::Widget *parent)
 {
   /* flags used to prevent re-appearence of dialogs */
@@ -288,7 +288,7 @@ static bool yes_no(const char *title, const char *msg, unsigned int again_flags,
   if(dialog_again.not_again & again_bit)
     return ((dialog_again.reply & again_bit) != 0);
 
-  printf("%s: \"%s\"\n", title, msg);
+  printf("%s: \"%s\"\n", static_cast<const gchar *>(static_cast<trstring::native_type>(title)), msg);
 
   GtkWindow *p = GTK_WINDOW(parent ? parent : appdata_t::window);
 
@@ -339,19 +339,19 @@ static bool yes_no(const char *title, const char *msg, unsigned int again_flags,
 bool osm2go_platform::yes_no(trstring::native_type_arg title, trstring::native_type_arg msg, unsigned int again_flags,
                              osm2go_platform::Widget *parent)
 {
-  return yes_no(static_cast<const char *>(title), static_cast<const char *>(msg), again_flags, parent);
+  return yes_no(trstring::any_type(title), static_cast<const char *>(msg), again_flags, parent);
 }
 
 bool osm2go_platform::yes_no(trstring::native_type_arg title, const trstring &msg, unsigned int again_flags,
                              osm2go_platform::Widget *parent)
 {
-  return yes_no(static_cast<const char *>(title), static_cast<const gchar *>(msg), again_flags, parent);
+  return yes_no(trstring::any_type(title), static_cast<const gchar *>(msg), again_flags, parent);
 }
 
 bool osm2go_platform::yes_no(const trstring &title, const trstring &msg, unsigned int again_flags,
                              osm2go_platform::Widget *parent)
 {
-  return yes_no(static_cast<const gchar *>(title), static_cast<const gchar *>(msg), again_flags, parent);
+  return yes_no(title, static_cast<const gchar *>(msg), again_flags, parent);
 }
 
 const std::vector<dirguard> &osm2go_platform::base_paths()

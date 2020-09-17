@@ -35,7 +35,8 @@
 
 static void
 vmessage(osm2go_platform::Widget *parent, GtkMessageType type, GtkButtonsType buttons,
-                      const char *title, const char *msg) {
+                      trstring::arg_type title, const char *msg)
+{
   GtkWindow *wnd = GTK_WINDOW(parent ? parent : appdata_t::window);
 
   if(unlikely(wnd == nullptr)) {
@@ -61,8 +62,7 @@ vmessage(osm2go_platform::Widget *parent, GtkMessageType type, GtkButtonsType bu
 
 void message_dlg(trstring::arg_type title, trstring::arg_type msg, GtkWidget *parent)
 {
-  vmessage(parent, GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
-           static_cast<const gchar *>(static_cast<trstring::native_type>(title)),
+  vmessage(parent, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, title,
            static_cast<const gchar *>(static_cast<trstring::native_type>(msg)));
 }
 
