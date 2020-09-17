@@ -707,7 +707,7 @@ project_filesize(project_context_t *context)
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, en ? TRUE : FALSE);
 
   if(!str.isEmpty())
-    gtk_label_set_text(GTK_LABEL(context->fsize), static_cast<const gchar *>(static_cast<trstring::native_type>(str)));
+    gtk_label_set_text(GTK_LABEL(context->fsize), static_cast<trstring::native_type>(str));
 }
 
 /* a project may currently be open. "unsaved changes" then also */
