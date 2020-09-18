@@ -577,6 +577,37 @@ struct KeySequence {
 };
 
 /**
+ * @brief create a new submenu entry for a given visual item
+ * @param context the callback reference
+ * @param menu_shell the menu to attach to
+ * @param activate_cb the function to be called on selection
+ * @param accel_path accel database key (must be a static string)
+ * @param item pre-created menu item (icon_name is ignored in this case)
+ * @param stock_item a stock item to set
+ * @param keys the key sequence to trigger this action
+ */
+GtkWidget * __attribute__((nonnull(2,3,4,5)))
+menu_append_new_item(void *context, GtkWidget *menu_shell,
+                     GCallback activate_cb, const gchar *accel_path,
+                     GtkWidget *item, KeySequence keys,
+                     GtkStockItem *stock_item = nullptr)
+{
+  // Accelerators
+  accel_path = g_intern_static_string(accel_path);
+  gtk_menu_item_set_accel_path(GTK_MENU_ITEM(item), accel_path);
+  if (!keys.isEmpty())
+    gtk_accel_map_add_entry(accel_path, keys.key, keys.mods);
+  else if (stock_item != nullptr)
+    gtk_accel_map_add_entry(accel_path, stock_item->keyval,
+                              stock_item->modifier);
+
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu_shell), GTK_WIDGET(item));
+
+  g_signal_connect_swapped(item, "activate", activate_cb, context);
+  return item;
+}
+
+/**
  * @brief create a new submenu entry
  * @param context the callback reference
  * @param menu_shell the menu to attach to
@@ -585,56 +616,41 @@ struct KeySequence {
  * @param icon_name stock id or name for icon_load (may be nullptr)
  * @param accel_path accel database key (must be a static string)
  * @param keys the key sequence to trigger this action
- * @param item pre-created menu item (icon_name is ignored in this case)
  */
-GtkWidget * __attribute__((nonnull(2,6)))
+GtkWidget * __attribute__((nonnull(2,3,6)))
 menu_append_new_item(void *context, GtkWidget *menu_shell,
-                     GCallback activate_cb, const char *label,
+                     GCallback activate_cb, trstring::native_type_arg label,
                      const gchar *icon_name,
                      const gchar *accel_path,
-                     KeySequence keys = KeySequence(),
-                     GtkWidget *item = nullptr)
+                     KeySequence keys = KeySequence())
 {
   GtkStockItem stock_item;
   const bool stock_item_known = icon_name != nullptr &&
                                 gtk_stock_lookup(icon_name, &stock_item) == TRUE;
 
   // Icons
-  if (item == nullptr) {
-    if(stock_item_known) {
-      item = gtk_image_menu_item_new_with_mnemonic(label);
-      gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
-                                    gtk_image_new_from_stock(icon_name, GTK_ICON_SIZE_MENU));
-    } else {
-      item = MainUiGtk::createMenuItem(label, icon_name);
-    }
+  GtkWidget *item;
+  if(stock_item_known) {
+    item = gtk_image_menu_item_new_with_mnemonic(static_cast<const gchar *>(label));
+    gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
+                                  gtk_image_new_from_stock(icon_name, GTK_ICON_SIZE_MENU));
+  } else {
+    item = MainUiGtk::createMenuItem(label, icon_name);
   }
 
-  // Accelerators
-  // Default
-  accel_path = g_intern_static_string(accel_path);
-  gtk_menu_item_set_accel_path(GTK_MENU_ITEM(item), accel_path);
-  if (!keys.isEmpty())
-    gtk_accel_map_add_entry(accel_path, keys.key, keys.mods);
-  else if (stock_item_known)
-    gtk_accel_map_add_entry(accel_path, stock_item.keyval,
-                              stock_item.modifier);
-
-  gtk_menu_shell_append(GTK_MENU_SHELL(menu_shell), GTK_WIDGET(item));
-
-  g_signal_connect_swapped(item, "activate", activate_cb, context);
-  return item;
+  return menu_append_new_item(context, menu_shell, activate_cb, accel_path, item,
+                              keys, stock_item_known ? &stock_item : nullptr);
 }
 
-GtkWidget *  __attribute__((nonnull(2,5)))
+GtkWidget *  __attribute__((nonnull(2,3,5)))
 menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
                      GCallback activate_cb, MainUi::menu_items item,
                      const gchar *accel_path,
                      KeySequence keys = KeySequence())
 {
-  return menu_append_new_item(&appdata, menu_shell, activate_cb, nullptr, nullptr,
-                              accel_path, keys,
-                              static_cast<MainUiGtk *>(appdata.uicontrol.get())->menu_item(item));
+  return menu_append_new_item(&appdata, menu_shell, activate_cb, accel_path,
+                              static_cast<MainUiGtk *>(appdata.uicontrol.get())->menu_item(item),
+                              keys);
 }
 
 void
@@ -674,9 +690,8 @@ menu_create(appdata_internal &appdata, GtkBox *mainvbox)
   item = gtk_check_menu_item_new_with_mnemonic(_("_Fullscreen"));
   gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), FALSE);
   menu_append_new_item(
-    &appdata, submenu, G_CALLBACK(cb_menu_fullscreen), nullptr,
-    nullptr, "<OSM2Go-Main>/View/Fullscreen",
-    KeySequence(GDK_F11), item);
+    &appdata, submenu, G_CALLBACK(cb_menu_fullscreen),
+    "<OSM2Go-Main>/View/Fullscreen", item, KeySequence(GDK_F11));
 
   menu_append_new_item(
     appdata.map, submenu, G_CALLBACK(cb_menu_zoomin), _("Zoom _in"),
