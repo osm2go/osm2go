@@ -519,16 +519,14 @@ void members_list_functor::operator()(const member_t &member)
 
   const std::string &id = member.object.id_string();
 
-  /* try to find something descriptive */
-  const std::string &name = member.object.is_real() ? member.object.get_name(*osm) : std::string();
-
   /* Append a row and fill in some data */
+  bool realObj = member.object.is_real();
   gtk_list_store_insert_with_values(store, &iter, -1,
                                     MEMBER_COL_TYPE,     static_cast<const gchar *>(member.object.type_string()),
                                     MEMBER_COL_ID,       id.c_str(),
-                                    MEMBER_COL_NAME,     name.c_str(),
+                                    MEMBER_COL_NAME,     realObj ? static_cast<const gchar *>(member.object.get_name(*osm)) : nullptr,
                                     MEMBER_COL_ROLE,     member.role,
-                                    MEMBER_COL_REF_ONLY, member.object.is_real() ? FALSE : TRUE,
+                                    MEMBER_COL_REF_ONLY, realObj ? FALSE : TRUE,
                                     MEMBER_COL_DATA,     &member,
                                     -1);
 }

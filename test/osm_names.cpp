@@ -454,6 +454,19 @@ void test_sport()
   helper_node(tags, "bowling alley");
 }
 
+void test_simple()
+{
+  osm_t::TagMap tags;
+
+  tags.insert(osm_t::TagMap::value_type("amenity", "waste_basket"));
+  helper_node(tags, "waste basket");
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("emergency", "fire_hydrant"));
+  tags.insert(osm_t::TagMap::value_type("ref", "42"));
+  helper_node(tags, "fire hydrant: \"42\"");
+}
+
 } // namespace
 
 int main()
@@ -471,6 +484,7 @@ int main()
   test_multipolygon();
   test_relation_precedence();
   test_sport();
+  test_simple();
 
   xmlCleanupParser();
 

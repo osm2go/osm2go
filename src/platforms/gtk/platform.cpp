@@ -443,12 +443,9 @@ assert_cmpstr_struct::assert_cmpstr_struct(trstring::arg_type a, const char *ast
     fail(static_cast<const gchar *>(nativeA), astr, b, file, func, line);
 }
 
-#ifdef __clang__
-// different way here: b should always be a constant in the compares here
 assert_cmpstr_struct::assert_cmpstr_struct(trstring::arg_type a, const char *astr, const char *b, const char *bstr, const char *file, const char *func, int line)
 {
   trstring::native_type nativeA = static_cast<trstring::native_type>(a);
   if(unlikely(nativeA.toStdString() != b))
     fail(static_cast<const gchar *>(nativeA), astr, b, bstr, file, func, line);
 }
-#endif

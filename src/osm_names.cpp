@@ -42,47 +42,6 @@
 
 namespace {
 
-class trstring_or_key {
-#ifdef TRSTRING_NATIVE_TYPE_IS_TRSTRING
-  trstring::native_type tval;
-#else
-  struct {
-    inline void clear() const {}
-    inline bool isEmpty() const { return true; }
-    inline std::string toStdString() const { return std::string(); }
-  } tval;
-#endif
-  const char *kval;
-public:
-  explicit trstring_or_key(const char *k = nullptr) : kval(k) {}
-
-#ifdef TRSTRING_NATIVE_TYPE_IS_TRSTRING
-  inline trstring_or_key &operator=(trstring::native_type_arg n)
-  {
-    tval = std::move(n);
-    kval = nullptr;
-    return *this;
-  }
-#endif
-
-  inline trstring_or_key &operator=(const char *k)
-  {
-    tval.clear();
-    kval = k;
-    return *this;
-  }
-
-  inline operator bool() const
-  {
-    return !tval.isEmpty() || kval != nullptr;
-  }
-
-  inline operator std::string() const
-  {
-    return kval != nullptr ? kval : tval.toStdString();
-  }
-};
-
 class typed_relation_member_functor {
   const member_t member;
   const char * const type;
@@ -123,6 +82,255 @@ inline std::string __attribute__((nonnull(1))) __attribute__ ((__warn_unused_res
 {
   std::string ret = s;
   clean_underscores_inplace(ret);
+  return ret;
+}
+
+/**
+ * @brief the parts we already have found to construct the final description from
+ */
+struct nameParts {
+  nameParts() : name(nullptr) {}
+
+  const char *name; ///< the value of a "name" key
+  class typeWrapper {
+#ifndef TRSTRING_NATIVE_TYPE_IS_TRSTRING
+    trstring::native_type nt;
+#else
+    struct {
+      inline bool isEmpty() const { return true; };
+      inline operator trstring() const __attribute__((noreturn))
+      {
+        // should always be optimized away
+        assert_unreachable();
+      }
+    } nt;
+#endif
+
+  public:
+    trstring tr;      ///< an already translated type description
+    const char *key;  ///< the raw value of a specific key used as description
+
+    explicit typeWrapper() : key(nullptr) {}
+#if __cplusplus >= 201103L
+    typeWrapper &operator=(trstring &&n) { tr = std::move(n); assert(nt.isEmpty()); return *this; }
+#else
+    typeWrapper &operator=(trstring n) { tr.swap(n); assert(nt.isEmpty()); return *this; }
+#endif
+
+#ifndef TRSTRING_NATIVE_TYPE_IS_TRSTRING
+    typeWrapper &operator=(trstring::native_type_arg n) { assert(tr.isEmpty()); nt = n; return *this; }
+
+#if __cplusplus >= 201103L
+    explicit
+#endif
+    inline operator trstring::native_type() const
+    {
+      assert(key == nullptr);
+      assert(tr.isEmpty());
+      assert(isNative());
+      return nt;
+    }
+
+    inline bool isNative() const
+    {
+      return !nt.isEmpty();
+    }
+#endif
+
+    trstring::any_type toTrstring() const
+    {
+      assert(key == nullptr);
+      if (!nt.isEmpty())
+        return trstring::any_type(nt);
+      assert(!tr.isEmpty());
+      return tr;
+    }
+
+    inline bool isTranslated() const
+    {
+      return !tr.isEmpty() || !nt.isEmpty();
+    }
+
+    inline bool isEmpty() const
+    {
+      return key == nullptr && tr.isEmpty() && nt.isEmpty();
+    }
+  } type;
+};
+
+nameParts nameElements(const osm_t &osm, const object_t &obj)
+{
+  nameParts ret;
+
+  /* try to figure out _what_ this is */
+  ret.name = obj.obj->tags.get_value("name");
+
+  /* search for some kind of "type" */
+  const std::array<const char *, 9> type_tags =
+                          { { "amenity", "place", "historic",
+                              "tourism", "landuse", "waterway", "railway",
+                              "natural", "man_made" } };
+
+  for(unsigned int i = 0; i < type_tags.size(); i++) {
+    ret.type.key = obj.obj->tags.get_value(type_tags[i]);
+    if (ret.type.key)
+      return ret;
+  }
+
+  // ### LEISURE
+  const char *rawValue = obj.obj->tags.get_value("leisure");
+  if (rawValue != nullptr) {
+    // these leisure values will get an extra description from sport=*
+    const std::array<const char *, 4> sport_leisure = { {
+      "pitch", "sports_centre", "stadium", "track"
+    } };
+    for (unsigned int i = 0; i < sport_leisure.size(); i++) {
+      if (strcmp(rawValue, sport_leisure[i]) == 0) {
+        const char *sp = obj.obj->tags.get_value("sport");
+        if (sp != nullptr) {
+          ret.type = trstring("%1 %2").arg(clean_underscores(sp)).arg(clean_underscores(rawValue));
+          return ret;
+        }
+        break;
+      }
+    }
+
+    ret.type.key = rawValue;
+    return ret;
+  }
+
+  // ### BUILDINGS
+  rawValue = obj.obj->tags.get_value("building");
+  if (rawValue != nullptr && strcmp(rawValue, "no") != 0) {
+    const char *street = obj.obj->tags.get_value("addr:street");
+    const char *hn = obj.obj->tags.get_value("addr:housenumber");
+
+    // simplify further checks
+    if (strcmp(rawValue, "yes") == 0)
+      rawValue = nullptr;
+
+    if(street == nullptr) {
+      // check if there is an "associatedStreet" relation where this is a "house" member
+      const relation_t *astreet = osm.find_relation(typed_relation_member_functor("associatedStreet", "house", obj));
+      if(astreet != nullptr)
+        street = astreet->tags.get_value("name");
+    }
+
+    if(hn != nullptr) {
+      trstring dsc = street != nullptr ?
+                        rawValue != nullptr ?
+                            trstring("%1 building %2 %3").arg(clean_underscores(rawValue)).arg(street) :
+                            trstring("building %1 %2").arg(street) :
+                        rawValue != nullptr ?
+                            trstring("%1 building housenumber %2").arg(clean_underscores(rawValue)) :
+                            trstring("building housenumber %1");
+      ret.type = dsc.arg(hn);
+    } else if (street != nullptr) {
+      ret.type = rawValue != nullptr ?
+                          trstring("%1 building in %2").arg(clean_underscores(rawValue)).arg(street) :
+                          trstring("building in %1").arg(street);
+    } else {
+      if (rawValue == nullptr)
+        ret.type = _("building");
+      else
+        ret.type = trstring("%1 building").arg(clean_underscores(rawValue));
+      if(ret.name == nullptr)
+        ret.name = obj.obj->tags.get_value("addr:housename");
+    }
+
+    return ret;
+  }
+
+  // ### HIGHWAYS
+  rawValue = obj.obj->tags.get_value("highway");
+  if(rawValue != nullptr) {
+    /* highways are a little bit difficult */
+    if(!strcmp(rawValue, "primary")     || !strcmp(rawValue, "secondary") ||
+        !strcmp(rawValue, "tertiary")    || !strcmp(rawValue, "unclassified") ||
+        !strcmp(rawValue, "residential") || !strcmp(rawValue, "service")) {
+      // no underscores replacement here because the whitelisted flags above don't have them
+      assert(strchr(rawValue, '_') == nullptr);
+      ret.type = trstring("%1 road").arg(rawValue);
+    }
+
+    else if(obj.type == object_t::WAY && strcmp(rawValue, "pedestrian") == 0) {
+      if(obj.way->is_area())
+        ret.type = _("pedestrian area");
+      else
+        ret.type = _("pedestrian way");
+    }
+
+    else if(!strcmp(rawValue, "construction")) {
+      const char *cstr = obj.obj->tags.get_value("construction:highway");
+      if(cstr == nullptr)
+        cstr = obj.obj->tags.get_value("construction");
+      if(cstr == nullptr) {
+        ret.type = _("road/street under construction");
+      } else {
+        ret.type = trstring("%1 road under construction").arg(cstr);
+      }
+    }
+
+    else
+      ret.type.key = rawValue;
+
+    return ret;
+  }
+
+  // ### EMERGENCY
+  rawValue = obj.obj->tags.get_value("emergency");
+  if (rawValue != nullptr) {
+    ret.type.key = rawValue;
+    return ret;
+  }
+
+  // ### PUBLIC TRANSORT
+  rawValue = obj.obj->tags.get_value("public_transport");
+  if (rawValue != nullptr) {
+    ret.type.key = rawValue;
+
+    // for PT objects without name that are part of another PT relation use the name of that one
+    if(ret.name == nullptr) {
+      const char *ptkey = strcmp(rawValue, "stop_position") == 0 ? "stop" :
+                          strcmp(rawValue, "platform") == 0 ? rawValue :
+                          nullptr;
+      if(ptkey != nullptr) {
+        const relation_t *stoparea = osm.find_relation(pt_relation_member_functor(ptkey, obj));
+        if(stoparea != nullptr)
+          ret.name = stoparea->tags.get_value("name");
+      }
+    }
+
+    return ret;
+  }
+
+  // ### BARRIER
+  rawValue = obj.obj->tags.get_value("barrier");
+  if(rawValue != nullptr) {
+    if(strcmp("yes", rawValue) == 0)
+      ret.type = _("barrier");
+    else
+      ret.type.key = rawValue;
+    return ret;
+  }
+
+  // look if this has only one real tag and use that one
+  const tag_t *stag = obj.obj->tags.singleTag();
+  if (stag != nullptr && strcmp(stag->value, "no") != 0) {
+    // rule out a single name tag first
+    if (ret.name == nullptr)
+      ret.type.key = stag->key;
+    return ret;
+  }
+
+  // ### last chance
+  rawValue = obj.obj->tags.get_value("building:part");
+  trstring tret;
+  if(rawValue != nullptr && strcmp(rawValue, "yes") == 0)
+    ret.type = trstring("building part");
+  else
+    ret.type = osm.unspecified_name(obj);
+
   return ret;
 }
 
@@ -182,195 +390,45 @@ trstring osm_t::unspecified_name(const object_t &obj) const
 }
 
 /* try to get an as "speaking" description of the object as possible */
-std::string object_t::get_name(const osm_t &osm) const {
-  std::string ret;
-
+trstring
+object_t::get_name(const osm_t &osm) const
+{
   assert(is_real());
 
   /* worst case: we have no tags at all. return techincal info then */
-  if(!obj->tags.hasRealTags()) {
-    osm.unspecified_name(*this).swap(ret);
-    return ret;
-  }
+  if(!obj->tags.hasRealTags())
+    return osm.unspecified_name(*this);
 
   /* try to figure out _what_ this is */
-  const char *name = obj->tags.get_value("name");
-
-  /* search for some kind of "type" */
-  const std::array<const char *, 9> type_tags =
-                          { { "amenity", "place", "historic",
-                              "tourism", "landuse", "waterway", "railway",
-                              "natural", "man_made" } };
-  trstring_or_key typestr;
-
-  for(unsigned int i = 0; !typestr && i < type_tags.size(); i++)
-    typestr = obj->tags.get_value(type_tags[i]);
-
-  if (!typestr) {
-    const char *ts = obj->tags.get_value("leisure");
-    if (ts != nullptr) {
-      const std::array<const char *, 4> sport_leisure = { {
-        "pitch", "sports_centre", "stadium", "track"
-      } };
-
-      // in case nothing better is found
-      typestr = ts;
-
-      for (unsigned int i = 0; i < sport_leisure.size(); i++) {
-        if (strcmp(ts, sport_leisure[i]) == 0) {
-          const char *sp = obj->tags.get_value("sport");
-          if (sp != nullptr) {
-            trstring("%1 %2").arg(clean_underscores(sp)).arg(clean_underscores(ts)).swap(ret);
-            typestr = nullptr;
-          }
-          break;
-        }
-      }
-    }
-  }
-
-  if(!typestr) {
-    const char *rawValue = obj->tags.get_value("building");
-
-    if (rawValue != nullptr && strcmp(rawValue, "no") != 0) {
-      const char *street = obj->tags.get_value("addr:street");
-      const char *hn = obj->tags.get_value("addr:housenumber");
-
-      // simplify further checks
-      if (strcmp(rawValue, "yes") == 0)
-        rawValue = nullptr;
-
-      if(street == nullptr) {
-        // check if there is an "associatedStreet" relation where this is a "house" member
-        const relation_t *astreet = osm.find_relation(typed_relation_member_functor("associatedStreet", "house", *this));
-        if(astreet != nullptr)
-          street = astreet->tags.get_value("name");
-      }
-
-      if(hn != nullptr) {
-        trstring dsc = street != nullptr ?
-                          rawValue != nullptr ?
-                              trstring("%1 building %2 %3").arg(clean_underscores(rawValue)).arg(street) :
-                              trstring("building %1 %2").arg(street) :
-                          rawValue != nullptr ?
-                              trstring("%1 building housenumber %2").arg(clean_underscores(rawValue)) :
-                              trstring("building housenumber %1");
-        dsc.arg(hn).swap(ret);
-      } else if (street != nullptr) {
-        trstring dsc = rawValue != nullptr ?
-                            trstring("%1 building in %2").arg(clean_underscores(rawValue)).arg(street) :
-                            trstring("building in %1").arg(street);
-        dsc.swap(ret);
-      } else {
-        if (rawValue == nullptr)
-          typestr = _("building");
-        else
-          trstring("%1 building").arg(clean_underscores(rawValue)).swap(ret);
-        if(name == nullptr)
-          name = obj->tags.get_value("addr:housename");
-      }
-    }
-  }
-
-  if(!typestr && ret.empty()) {
-    const char *highway = obj->tags.get_value("highway");
-    if(highway == nullptr) {
-      typestr = obj->tags.get_value("emergency");
-    } else {
-      /* highways are a little bit difficult */
-      if(!strcmp(highway, "primary")     || !strcmp(highway, "secondary") ||
-         !strcmp(highway, "tertiary")    || !strcmp(highway, "unclassified") ||
-         !strcmp(highway, "residential") || !strcmp(highway, "service")) {
-        // no underscores replacement here because the whitelisted flags above don't have them
-        assert(strchr(highway, '_') == nullptr);
-        trstring("%1 road").arg(highway).swap(ret);
-        typestr = nullptr;
-      }
-
-      else if(type == WAY && strcmp(highway, "pedestrian") == 0) {
-        if(way->is_area())
-          typestr = _("pedestrian area");
-        else
-          typestr = _("pedestrian way");
-      }
-
-      else if(!strcmp(highway, "construction")) {
-        const char *cstr = obj->tags.get_value("construction:highway");
-        if(cstr == nullptr)
-          cstr = obj->tags.get_value("construction");
-        if(cstr == nullptr) {
-          typestr = _("road/street under construction");
-        } else {
-          typestr = nullptr;
-          trstring("%1 road under construction").arg(cstr).swap(ret);
-        }
-      }
-
-      else
-        typestr = highway;
-    }
-  }
-
-  if(!typestr && ret.empty()) {
-    const char *pttype = obj->tags.get_value("public_transport");
-    typestr = pttype;
-
-    // for PT objects without name that are part of another PT relation use the name of that one
-    if(name == nullptr && pttype != nullptr) {
-      const char *ptkey = strcmp(pttype, "stop_position") == 0 ? "stop" :
-                          strcmp(pttype, "platform") == 0 ? pttype :
-                          nullptr;
-      if(ptkey != nullptr) {
-        const relation_t *stoparea = osm.find_relation(pt_relation_member_functor(ptkey, *this));
-        if(stoparea != nullptr)
-          name = stoparea->tags.get_value("name");
-      }
-    }
-  }
-
-  if(!typestr && ret.empty()) {
-    const char *btype = obj->tags.get_value("barrier");
-    if(btype != nullptr) {
-      if(strcmp("yes", btype) == 0)
-        trstring("barrier").swap(ret);
-      else
-        typestr = btype;
-    }
-  }
-
-  if(typestr) {
-    assert(ret.empty());
-    ret = static_cast<std::string>(typestr);
-  }
+  nameParts np = nameElements(osm, *this);
 
   // no good name was found so far, just look into some other tags to get a useful description
   const std::array<const char *, 3> name_tags = { { "ref", "note", "fix" "me" } };
-  for(unsigned int i = 0; name == nullptr && i < name_tags.size(); i++)
-    name = obj->tags.get_value(name_tags[i]);
+  for(unsigned int i = 0; np.name == nullptr && i < name_tags.size(); i++)
+    np.name = obj->tags.get_value(name_tags[i]);
 
-  if(name != nullptr) {
-    if(ret.empty())
-      ret = type_string();
-    trstring("%1: \"%2\"").arg(ret).arg(name).swap(ret);
-  } else if(ret.empty()) {
-    // look if this has only one real tag and use that one
-    const tag_t *stag = obj->tags.singleTag();
-    if(stag != nullptr && strcmp(stag->value, "no") != 0) {
-      ret = stag->key;
-    } else {
-      // last chance
-      const char *bp = obj->tags.get_value("building:part");
-      trstring tret;
-      if(bp != nullptr && strcmp(bp, "yes") == 0)
-        tret = trstring("building part");
-      else
-        tret = osm.unspecified_name(*this);
-      tret.swap(ret);
-      return ret;
-    }
+  if(np.name != nullptr) {
+    if (np.type.isEmpty())
+      np.type = type_string();
+
+    trstring r;
+    if (np.type.isTranslated())
+      r = trstring("%1: \"%2\"").arg(np.type.toTrstring());
+    else
+      r = trstring("%1: \"%2\"").arg(clean_underscores(np.type.key));
+    return r.arg(np.name);
   }
 
-  clean_underscores_inplace(ret);
-
-  return ret;
+  if (!np.type.tr.isEmpty()) {
+    return np.type.tr;
+#ifndef TRSTRING_NATIVE_TYPE_IS_TRSTRING
+  } else if (np.type.isNative()) {
+    return trstring(static_cast<trstring::native_type>(np.type));
+#endif
+  } else {
+    trstring ret;
+    assert(!np.type.isTranslated());
+    ret.assign(clean_underscores(np.type.key));
+    return ret;
+  }
 }

@@ -100,6 +100,7 @@ public:
 
   explicit inline trstring() : std::string() {}
   explicit inline trstring(const char *s) __attribute__((nonnull(2))) : std::string(gettext(s)) {}
+  explicit inline trstring(native_type s) : std::string(static_cast<const gchar *>(s)) {}
 #if __cplusplus >= 201103L
   // catch if one passes a constant nullptr as argument
   trstring(std::nullptr_t) = delete;
@@ -141,7 +142,12 @@ public:
       return arg(static_cast<const gchar *>(a.m_n));
   }
 
-  inline void swap(std::string &other)
+  inline void assign(std::string other)
+  {
+    std::string::swap(other);
+  }
+
+  inline void swap(trstring &other)
   {
     std::string::swap(other);
   }

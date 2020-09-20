@@ -73,8 +73,7 @@ static void map_statusbar(const std::unique_ptr<MainUi> &uicontrol, const object
                           osm_t::ref osm) {
   MainUi::NotificationFlags flags = object.obj->tags.hasTagCollisions() ?
                                     MainUi::Highlight : MainUi::NoFlags;
-  // FIXME: get_name() should return a trstring
-  uicontrol->showNotification(trstring::native_type(object.get_name(*osm).c_str()), flags);
+  uicontrol->showNotification(object.get_name(*osm), flags);
 }
 
 void map_t::outside_error() {

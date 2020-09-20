@@ -120,7 +120,7 @@ struct object_t {
   trstring::native_type type_string() const;
   std::string id_string() const;
   item_id_t get_id() const noexcept;
-  std::string get_name(const osm_t &osm) const;
+  trstring get_name(const osm_t &osm) const;
 };
 
 struct member_t {
