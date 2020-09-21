@@ -260,6 +260,7 @@ public:
 };
 
 class presets_element_checkbox : public presets_element_t {
+  bool widgetValue(attach_key *akey) const;
 protected:
   bool matchValue(const std::string &val) const override;
 public:

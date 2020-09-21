@@ -265,3 +265,9 @@ bool presets_element_checkbox::matchValue(const std::string &val) const
 
   return (strcasecmp(val.c_str(), "true") == 0 || strcasecmp(val.c_str(), "yes") == 0);
 }
+
+std::string presets_element_checkbox::getValue(presets_element_t::attach_key *akey) const
+{
+  return widgetValue(akey) ?
+         (value_on.empty() ? "yes" : value_on) : std::string();
+}

@@ -884,7 +884,7 @@ on_button_destroy(presets_context_t *context)
   return FALSE;
 }
 
-}
+} // namespace
 
 GtkWidget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_context) {
   presets_context_t *context = new presets_context_t(presets, tag_context);
@@ -1048,13 +1048,12 @@ presets_element_t::attach_key *presets_element_checkbox::attach(preset_attach_co
   return reinterpret_cast<presets_element_t::attach_key *>(ret);
 }
 
-std::string presets_element_checkbox::getValue(presets_element_t::attach_key *akey) const
+bool presets_element_checkbox::widgetValue(presets_element_t::attach_key* akey) const
 {
   GtkWidget * const widget = reinterpret_cast<GtkWidget *>(akey);
   assert(osm2go_platform::isCheckButtonWidget(widget));
 
-  return osm2go_platform::check_button_get_active(widget) ?
-         (value_on.empty() ? "yes" : value_on) : std::string();
+  return osm2go_platform::check_button_get_active(widget);
 }
 
 static void item_link_clicked(presets_item *item) {
