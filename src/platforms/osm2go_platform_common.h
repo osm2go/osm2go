@@ -48,6 +48,8 @@ enum {
 #include <string>
 #include <vector>
 
+#include <osm2go_i18n.h>
+
 namespace osm2go_platform {
   /**
    * @brief process all pending GUI events
