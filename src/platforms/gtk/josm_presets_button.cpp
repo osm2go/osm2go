@@ -1066,11 +1066,13 @@ presets_element_t::attach_key *presets_element_link::attach(preset_attach_contex
 {
   const trstring label = trstring("[Preset] %1").arg(item->name);
   GtkWidget *button = osm2go_platform::button_new_with_label(label);
-  GtkWidget *img = icon_t::instance().widget_load(item->icon, 16);
-  if(img != nullptr) {
-    gtk_button_set_image(GTK_BUTTON(button), img);
-    // make sure the image is always shown, Hildon seems to hide it by default
-    gtk_widget_show(img);
+  if (!item->icon.empty()) {
+    GtkWidget *img = icon_t::instance().widget_load(item->icon, 16);
+    if(img != nullptr) {
+      gtk_button_set_image(GTK_BUTTON(button), img);
+      // make sure the image is always shown, Hildon seems to hide it by default
+      gtk_widget_show(img);
+    }
   }
   g_signal_connect_swapped(button, "clicked", G_CALLBACK(item_link_clicked), item);
   attach_both(attctx, button);

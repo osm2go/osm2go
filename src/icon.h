@@ -39,7 +39,7 @@ public:
 
   /**
    * @brief load an icon from disk, limited to given dimensions
-   * @param sname the name of the icon
+   * @param sname the name of the icon, must not be empty
    * @param limit the maximum dimensions of the image
    * @return the scaled pixbuf
    *

@@ -114,8 +114,7 @@ icon_file_exists(const std::string &file)
 
 icon_item *icon_t::load(const std::string &sname, int limit)
 {
-  if(sname.empty())
-    return nullptr;
+  assert(!sname.empty());
 
   icon_buffer::BufferMap &entries = static_cast<icon_buffer *>(this)->entries;
 

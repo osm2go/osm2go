@@ -227,7 +227,7 @@ bool iconbar_t::isTrashEnabled() const
 namespace {
 
 #ifndef FINGER_UI
-GtkWidget *
+GtkWidget * __attribute__((nonnull(1,3,4)))
 icon_add(GtkWidget *vbox, appdata_t &appdata, const char *icon_str, void(*func)(map_t *))
 {
   GtkWidget *but = gtk_button_new();
@@ -240,7 +240,7 @@ icon_add(GtkWidget *vbox, appdata_t &appdata, const char *icon_str, void(*func)(
 }
 #endif
 
-GtkWidget *
+GtkWidget * __attribute__((nonnull(2,4)))
 tool_button_label(icon_t &icons, GtkToolbar *toolbar, trstring::native_type_arg label_str, const char *icon_str)
 {
   PangoAttrList *attrs = pango_attr_list_new();
@@ -262,7 +262,7 @@ tool_button_label(icon_t &icons, GtkToolbar *toolbar, trstring::native_type_arg 
   return GTK_WIDGET(item);
 }
 
-GtkWidget *  __attribute__((nonnull(1,3,5)))
+GtkWidget * __attribute__((nonnull(1,3,5)))
 tool_add(GtkToolbar *toolbar, icon_t &icons, const char *icon_str, trstring::native_type_arg tooltip_str,
          GCallback func, gpointer context, bool separator = false)
 {
