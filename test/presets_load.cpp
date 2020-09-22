@@ -128,6 +128,7 @@ void counter::operator()(const presets_element_t *w)
   case WIDGET_TYPE_REFERENCE:
   case WIDGET_TYPE_LINK:
   case WIDGET_TYPE_CHUNK_LIST_ENTRIES:
+  case WIDGET_TYPE_CHUNK_ROLE_ENTRIES:
     element_counts[w->type]++;
     break;
   case WIDGET_TYPE_CHUNK_CONTAINER:
@@ -273,7 +274,8 @@ int main(int argc, char **argv)
     << "references: " << element_counts[WIDGET_TYPE_REFERENCE] << std::endl
     << "preset_links: " << element_counts[WIDGET_TYPE_LINK] << std::endl
     << "roles: " << roles << std::endl
-    << "list entry chunks: " << element_counts[WIDGET_TYPE_CHUNK_LIST_ENTRIES] << std::endl;
+    << "list entry chunks: " << element_counts[WIDGET_TYPE_CHUNK_LIST_ENTRIES] << std::endl
+    << "role entry chunks: " << element_counts[WIDGET_TYPE_CHUNK_ROLE_ENTRIES] << std::endl;
 
   std::for_each(presets->items.begin(), presets->items.end(), checkItem);
 

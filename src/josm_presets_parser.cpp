@@ -284,9 +284,10 @@ preset_state_map_init()
 #endif
 
   STATE_VECTOR_START(item_chunks, 2) { PresetSax::TagChunk, PresetSax::TagItem } STATE_VECTOR_END(item_chunks);
-  STATE_VECTOR_START(item_refs, 4) { PresetSax::TagChunk, PresetSax::TagItem, PresetSax::TagCombo, PresetSax::TagMultiselect } STATE_VECTOR_END(item_refs);
+  STATE_VECTOR_START(item_refs, 5) { PresetSax::TagChunk, PresetSax::TagItem, PresetSax::TagCombo, PresetSax::TagMultiselect, PresetSax::TagRoles } STATE_VECTOR_END(item_refs);
   STATE_VECTOR_START(pr_gr, 2) { PresetSax::TagPresets, PresetSax::TagGroup } STATE_VECTOR_END(pr_gr);
   STATE_VECTOR_START(selectables, 3) { PresetSax::TagCombo, PresetSax::TagMultiselect, PresetSax::TagChunk } STATE_VECTOR_END(selectables);
+  STATE_VECTOR_START(roles_chunks, 2) { PresetSax::TagRoles, PresetSax::TagChunk } STATE_VECTOR_END(roles_chunks);
 
 #define MAPFILL 20
   map.reserve(MAPFILL);
@@ -311,7 +312,7 @@ preset_state_map_init()
   map.push_back(PresetSax::StateMap::value_type("space", PresetSax::TagSpace, item_chunks));
   map.push_back(PresetSax::StateMap::value_type("link", PresetSax::TagLink, item_chunks));
   map.push_back(PresetSax::StateMap::value_type("roles", PresetSax::TagRoles, item_chunks));
-  map.push_back(PresetSax::StateMap::value_type("role", PresetSax::TagRole, VECTOR_ONE(PresetSax::TagRoles)));
+  map.push_back(PresetSax::StateMap::value_type("role", PresetSax::TagRole, roles_chunks));
 
   map.push_back(PresetSax::StateMap::value_type("checkgroup", PresetSax::IntermediateTag, item_chunks));
   map.push_back(PresetSax::StateMap::value_type("optional", PresetSax::IntermediateTag, item_chunks));
@@ -718,6 +719,12 @@ void PresetSax::startElement(const char *name, const char **attrs)
 
           selitem->display_values.reserve(selitem->display_values.size() + lechunk->display_values.size());
           std::copy(lechunk->display_values.begin(), lechunk->display_values.end(), std::back_inserter(selitem->display_values));
+        // same for role entries
+        } else if (ref->widgets.size() == 1 && ref->widgets.front()->type == WIDGET_TYPE_CHUNK_ROLE_ENTRIES) {
+          presets_element_role_entry_chunks * const selitem = static_cast<presets_element_role_entry_chunks *>(ref->widgets.front());
+          assert(items.top()->isItem());
+          presets_item * const target = static_cast<presets_item *>(items.top());
+          std::copy(selitem->roles.begin(), selitem->roles.end(), std::back_inserter(target->roles));
         }
       }
     }
@@ -921,7 +928,20 @@ void PresetSax::startElement(const char *name, const char **attrs)
   case TagRole: {
     assert(!items.empty());
     assert(items.top()->isItem());
-    presets_item * const item = static_cast<presets_item *>(items.top());
+    std::vector<presets_item::role> *roles;
+
+    if(oldState == TagChunk) {
+      // to store role entries we need a special container as they are not standalone items
+      presets_item * const pit = static_cast<presets_item *>(items.top());
+      if(pit->widgets.empty())
+        pit->widgets.push_back(new presets_element_role_entry_chunks());
+      assert_cmpnum(pit->widgets.size(), 1);
+      assert_cmpnum(pit->widgets.back()->type, WIDGET_TYPE_CHUNK_ROLE_ENTRIES);
+      roles = &static_cast<presets_element_role_entry_chunks *>(pit->widgets.back())->roles;
+    } else {
+      presets_item * const item = static_cast<presets_item *>(items.top());
+      roles = &item->roles;
+    }
 
     std::array<const char *, 4> names = { { "key", "type", "count", "regexp" } };
     const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 0);
@@ -942,7 +962,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
         }
       }
 
-      item->roles.push_back(presets_item::role(key, josm_type_parse(tp), count));
+      roles->push_back(presets_item::role(key, josm_type_parse(tp), count));
     }
     break;
   }
@@ -1381,6 +1401,12 @@ presets_element_multiselect::presets_element_multiselect(const std::string &k, c
 
 presets_element_list_entry_chunks::presets_element_list_entry_chunks()
   : presets_element_selectable(WIDGET_TYPE_CHUNK_LIST_ENTRIES, std::string(), std::string(),
+                               std::string(), nullptr, std::vector<std::string>(), std::vector<std::string>(), false)
+{
+}
+
+presets_element_role_entry_chunks::presets_element_role_entry_chunks()
+  : presets_element_selectable(WIDGET_TYPE_CHUNK_ROLE_ENTRIES, std::string(), std::string(),
                                std::string(), nullptr, std::vector<std::string>(), std::vector<std::string>(), false)
 {
 }

@@ -41,7 +41,8 @@ enum presets_element_type_t {
   WIDGET_TYPE_LINK,
   WIDGET_TYPE_REFERENCE,
   WIDGET_TYPE_CHUNK_CONTAINER = 0x8000,
-  WIDGET_TYPE_CHUNK_LIST_ENTRIES  ///< no real widget, only for storing bare list_entry elements in chunks
+  WIDGET_TYPE_CHUNK_LIST_ENTRIES, ///< no real widget, only for storing bare list_entry elements in chunks
+  WIDGET_TYPE_CHUNK_ROLE_ENTRIES  ///< no real widget, only for storing bare role elements in chunks
 };
 
 struct preset_attach_context;
@@ -369,6 +370,22 @@ public:
 
   std::string link;
   bool addEditName;
+};
+
+/**
+ * @brief a storage for bare list_entry elements stored in a chunk
+ */
+class presets_element_role_entry_chunks : public presets_element_selectable {
+protected:
+  bool matchValue(const std::string &) const override { abort(); }
+public:
+  explicit presets_element_role_entry_chunks();
+
+  std::vector<presets_item::role> roles;
+
+  unsigned int rows() const override {
+    abort();
+  }
 };
 
 class presets_item_separator : public presets_item_t {

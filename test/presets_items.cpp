@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 
   const presets_item *item = dynamic_cast<const presets_item *>(p);
   assert(item != nullptr);
-  assert_cmpnum(item->roles.size(), 0);
+  assert_cmpnum(item->roles.size(), 2);
   assert_cmpnum(item->widgets.size(), 6);
   assert_cmpstr(item->link, std::string());
   assert(!item->addEditName);

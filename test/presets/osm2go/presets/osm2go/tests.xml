@@ -5,6 +5,10 @@
 		<list_entry value="cval" />
 		<list_entry value="cval2" display_value="second cval" />
 	</chunk>
+	<chunk id="ro">
+		<role key="forward" text="forward segment" requisite="optional" type="way,closedway" />
+		<role key="backward" text="backward segment" requisite="optional" type="way,closedway" />
+	</chunk>
 	<group name="OSM2go test" x.name="x" xy.name="OSM2go XY" xyz.name="xyz">
 		<item name="first" xy.name="erster" type="multipolygon">
 			<key key="OSM2go test" value="passed" />
@@ -16,6 +20,7 @@
 			</combo>
 			<preset_link preset_name="second" />
 			<preset_link preset_name="third" />
+			<reference ref="ro"/>
 		</item>
 		<separator/>
 		<item name="second" type="make,warnings">
