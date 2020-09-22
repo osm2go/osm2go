@@ -336,11 +336,12 @@ public:
 };
 
 class presets_item_named : public presets_item_t {
-public:
+protected:
   explicit presets_item_named(unsigned int t, const std::string &n = std::string(),
                        const std::string &ic = std::string())
     : presets_item_t(t), name(n), icon(ic) {}
 
+public:
   const std::string name, icon;
 };
 
