@@ -1056,10 +1056,9 @@ void PresetSax::endElement(const xmlChar *name)
     assert_cmpnum(ref->type, WIDGET_TYPE_REFERENCE);
     if(unlikely(ref->item == nullptr))
       delete ref;
-    // if this is just a collection of list_entry elements that has been inserted
-    // then drop the pseudo widget, all information is in the actual selectable now
-    else if(ref->item->widgets.size() == 1 && ref->item->widgets.front()->type == WIDGET_TYPE_CHUNK_LIST_ENTRIES &&
-           (widgets.top()->type == WIDGET_TYPE_COMBO || widgets.top()->type == WIDGET_TYPE_MULTISELECT))
+    // if this is just a collection of elements that has been inserted
+    // then drop the pseudo widget, all information is in the actual item now
+    else if(ref->item->widgets.size() == 1 && ref->item->widgets.front()->type >= WIDGET_TYPE_CHUNK_CONTAINER)
       delete ref;
     else
       static_cast<presets_item *>(items.top())->widgets.push_back(ref);

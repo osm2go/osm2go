@@ -130,6 +130,8 @@ void counter::operator()(const presets_element_t *w)
   case WIDGET_TYPE_CHUNK_LIST_ENTRIES:
     element_counts[w->type]++;
     break;
+  case WIDGET_TYPE_CHUNK_CONTAINER:
+    assert_unreachable();
   }
 }
 

@@ -40,6 +40,7 @@ enum presets_element_type_t {
   WIDGET_TYPE_KEY,
   WIDGET_TYPE_LINK,
   WIDGET_TYPE_REFERENCE,
+  WIDGET_TYPE_CHUNK_CONTAINER = 0x8000,
   WIDGET_TYPE_CHUNK_LIST_ENTRIES  ///< no real widget, only for storing bare list_entry elements in chunks
 };
 
