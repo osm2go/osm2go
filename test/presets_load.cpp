@@ -66,26 +66,13 @@ err(const std::string &filename)
 }
 
 struct counter {
-  unsigned int &groups;
-  unsigned int &items;
-  unsigned int &separators;
-  unsigned int &combos;
-  unsigned int &multis;
+  std::map<presets_element_type_t, unsigned int> &element_counts;
+  std::map<presets_item_t::item_type, unsigned int> &item_counter;
   unsigned int &list_entries;
-  unsigned int &labels;
-  unsigned int &keys;
-  unsigned int &checks;
-  unsigned int &refs;
-  unsigned int &plinks;
   unsigned int &roles;
-  unsigned int &list_entry_chunks;
-  counter(unsigned int &gr,  unsigned int &it, unsigned int &sep, unsigned int &c,
-          unsigned int &mu,  unsigned int &ce, unsigned int &lb,  unsigned int &ky,
-          unsigned int &chk, unsigned int &rf, unsigned int &pl,  unsigned int &rl,
-          unsigned int &lec)
-    : groups(gr), items(it), separators(sep), combos(c), multis(mu), list_entries(ce),
-      labels(lb), keys(ky), checks(chk), refs(rf), plinks(pl), roles(rl),
-      list_entry_chunks(lec) {}
+  counter(std::map<presets_element_type_t, unsigned int> &ec, std::map<presets_item_t::item_type, unsigned int> &ic,
+          unsigned int &ce, unsigned int &rl)
+    : element_counts(ec), item_counter(ic), list_entries(ce), roles(rl) {}
   void operator()(const presets_item_t *p);
   void operator()(const presets_element_t *w);
 };
@@ -95,13 +82,13 @@ void counter::operator()(const presets_item_t *p)
   if(p->type & presets_item_t::TY_GROUP) {
     const presets_item_group * const gr = static_cast<const presets_item_group *>(p);
     std::for_each(gr->items.begin(), gr->items.end(), *this);
-    groups++;
+    item_counter[presets_item_t::TY_GROUP]++;
     return;
   } else if (p->type == presets_item_t::TY_SEPARATOR) {
-    separators++;
+    item_counter[presets_item_t::TY_SEPARATOR]++;
   } else {
     assert(p->isItem());
-    items++;
+    item_counter[presets_item_t::TY_ALL]++;
     const presets_item * const item = static_cast<const presets_item *>(p);
     std::for_each(item->widgets.begin(), item->widgets.end(), *this);
     roles += item->roles.size();
@@ -116,40 +103,32 @@ void counter::operator()(const presets_element_t *w)
 {
   switch(w->type) {
   case WIDGET_TYPE_LABEL:
-    labels++;
+    element_counts[WIDGET_TYPE_LABEL]++;
     break;
   case WIDGET_TYPE_SEPARATOR:
   case WIDGET_TYPE_SPACE:
   case WIDGET_TYPE_TEXT:
     break;
   case WIDGET_TYPE_COMBO: {
-    combos++;
+    element_counts[WIDGET_TYPE_COMBO]++;
     const presets_element_selectable *sel = static_cast<const presets_element_selectable *>(w);
     list_entries += sel->values.size();
     std::for_each(sel->display_values.begin(), sel->display_values.end(), display_value_verifactor);
     break;
   }
   case WIDGET_TYPE_MULTISELECT: {
-    multis++;
+    element_counts[WIDGET_TYPE_MULTISELECT]++;
     const presets_element_selectable *sel = static_cast<const presets_element_selectable *>(w);
     list_entries += sel->values.size();
     std::for_each(sel->display_values.begin(), sel->display_values.end(), display_value_verifactor);
     break;
   }
   case WIDGET_TYPE_CHECK:
-    checks++;
-    break;
   case WIDGET_TYPE_KEY:
-    keys++;
-    break;
   case WIDGET_TYPE_REFERENCE:
-    refs++;
-    break;
   case WIDGET_TYPE_LINK:
-    plinks++;
-    break;
   case WIDGET_TYPE_CHUNK_LIST_ENTRIES:
-    list_entry_chunks++;
+    element_counts[w->type]++;
     break;
   }
 }
@@ -268,20 +247,11 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  unsigned int groups = 0;
-  unsigned int items = 0;
-  unsigned int separators = 0;
-  unsigned int combos = 0;
-  unsigned int multis = 0;
+  std::map<presets_element_type_t, unsigned int> element_counts;
+  std::map<presets_item_t::item_type, unsigned int> item_counter;
   unsigned int list_entries = 0;
-  unsigned int labels = 0;
-  unsigned int keys = 0;
-  unsigned int checks = 0;
-  unsigned int refs = 0;
-  unsigned int plinks = 0;
   unsigned int roles = 0;
-  unsigned int list_entry_chunks = 0;
-  counter cnt(groups, items, separators, combos, multis, list_entries, labels, keys, checks, refs, plinks, roles, list_entry_chunks);
+  counter cnt(element_counts, item_counter, list_entries, roles);
 
   std::for_each(presets->items.begin(), presets->items.end(), cnt);
   std::for_each(presets->chunks.begin(), presets->chunks.end(), cnt);
@@ -289,19 +259,19 @@ int main(int argc, char **argv)
   std::cout
     << "chunks found: " << presets->chunks.size() << std::endl
     << "top level items found: " << presets->items.size() << std::endl
-    << "groups: " << groups << std::endl
-    << "items: " << items << std::endl
-    << "separators: " << separators << std::endl
-    << "combos: " << combos << std::endl
-    << "multis: " << multis << std::endl
+    << "groups: " << item_counter[presets_item_t::TY_GROUP] << std::endl
+    << "items: " << item_counter[presets_item_t::TY_ALL] << std::endl
+    << "separators: " << item_counter[presets_item_t::TY_SEPARATOR] << std::endl
+    << "combos: " << element_counts[WIDGET_TYPE_COMBO] << std::endl
+    << "multis: " << element_counts[WIDGET_TYPE_MULTISELECT] << std::endl
     << "list_entries: " << list_entries << std::endl
-    << "labels: " << labels << std::endl
-    << "keys: " << keys << std::endl
-    << "checks: " << checks << std::endl
-    << "references: " << refs << std::endl
-    << "preset_links: " << plinks << std::endl
+    << "labels: " << element_counts[WIDGET_TYPE_LABEL] << std::endl
+    << "keys: " << element_counts[WIDGET_TYPE_KEY] << std::endl
+    << "checks: " << element_counts[WIDGET_TYPE_CHECK] << std::endl
+    << "references: " << element_counts[WIDGET_TYPE_REFERENCE] << std::endl
+    << "preset_links: " << element_counts[WIDGET_TYPE_LINK] << std::endl
     << "roles: " << roles << std::endl
-    << "list entry chunks: " << list_entry_chunks << std::endl;
+    << "list entry chunks: " << element_counts[WIDGET_TYPE_CHUNK_LIST_ENTRIES] << std::endl;
 
   std::for_each(presets->items.begin(), presets->items.end(), checkItem);
 
