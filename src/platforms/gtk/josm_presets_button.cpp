@@ -801,44 +801,44 @@ presets_context_t::presets_picker(const std::vector<presets_item_t *> &items,
 #endif
 
 gint
-button_press(GtkWidget *widget, GdkEventButton *event)
+button_press(GtkWidget *widget, GdkEventButton *event, presets_context_t *context)
 {
   if(event->type != GDK_BUTTON_PRESS)
     return FALSE;
 
   g_debug("button press %d", event->button);
 
-  presets_items_internal *pinternal = static_cast<presets_items_internal *>(presets_context_t::instance->presets);
+  presets_items_internal *pinternal = static_cast<presets_items_internal *>(context->presets);
 
 #ifndef PICKER_MENU
   (void)widget;
 
-  if (!presets_context_t::instance->menu) {
+  if (!context->menu) {
     GtkWidget *matches = nullptr;
-    presets_context_t::instance->menu.reset(build_menu(pinternal->items, &matches));
+    context->menu.reset(build_menu(pinternal->items, &matches));
     if(!pinternal->lru.empty()) {
       // This will not update the menu while the dialog is open. Not worth the effort.
       GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Last used presets"));
       GtkWidget *lrumenu = build_menu(pinternal->lru, nullptr);
 
       gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), lrumenu);
-      gtk_menu_shell_prepend(GTK_MENU_SHELL(presets_context_t::instance->menu.get()), gtk_separator_menu_item_new());
-      gtk_menu_shell_prepend(GTK_MENU_SHELL(presets_context_t::instance->menu.get()), menu_item);
+      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu.get()), gtk_separator_menu_item_new());
+      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu.get()), menu_item);
     }
     if(matches) {
       GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Used presets"));
 
       gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), matches);
-      gtk_menu_shell_prepend(GTK_MENU_SHELL(presets_context_t::instance->menu.get()), gtk_separator_menu_item_new());
-      gtk_menu_shell_prepend(GTK_MENU_SHELL(presets_context_t::instance->menu.get()), menu_item);
+      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu.get()), gtk_separator_menu_item_new());
+      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu.get()), menu_item);
     }
   }
-  gtk_widget_show_all(presets_context_t::instance->menu.get());
+  gtk_widget_show_all(context->menu.get());
 
-  gtk_menu_popup(GTK_MENU(presets_context_t::instance->menu.get()), nullptr, nullptr, nullptr, nullptr,
+  gtk_menu_popup(GTK_MENU(context->menu.get()), nullptr, nullptr, nullptr, nullptr,
                  event->button, event->time);
 #else
-  assert(presets_context_t::instance->submenus.empty());
+  assert(context->submenus.empty());
   /* popup our special picker like menu */
   osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Presets"),
                                               GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(widget))),
@@ -850,24 +850,24 @@ button_press(GtkWidget *widget, GdkEventButton *event)
   /* create root picker */
   GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
 
-  GtkWidget *root = presets_context_t::instance->presets_picker(pinternal->items, true);
+  GtkWidget *root = context->presets_picker(pinternal->items, true);
   gtk_box_pack_start(GTK_BOX(hbox), root, TRUE, TRUE, 0);
   gtk_box_pack_start(dialog.vbox(), hbox, TRUE, TRUE, 0);
 
-  assert_null(presets_context_t::instance->selected_item);
+  assert_null(context->selected_item);
   gtk_widget_show_all(dialog.get());
   gtk_dialog_run(dialog);
 
   // remove all references to the widgets, they will be destroyed together with the dialog
-  presets_context_t::instance->submenus.clear();
-  presets_context_t::instance->subwidget = nullptr;
+  context->submenus.clear();
+  context->subwidget = nullptr;
 
   // then delete the dialog, it would delete the submenus first otherwise
   dialog.reset();
 
-  if(presets_context_t::instance->selected_item != nullptr) {
-    presets_item_dialog(presets_context_t::instance->selected_item);
-    presets_context_t::instance->selected_item = nullptr;
+  if(context->selected_item != nullptr) {
+    presets_item_dialog(context->selected_item);
+    context->selected_item = nullptr;
   }
 #endif
 
@@ -892,7 +892,7 @@ GtkWidget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_
   GtkWidget *but = osm2go_platform::button_new_with_label(_("Presets"));
   gtk_widget_set_events(but, GDK_EXPOSURE_MASK);
   gtk_widget_add_events(but, GDK_BUTTON_PRESS_MASK);
-  g_signal_connect(but, "button-press-event", G_CALLBACK(button_press), nullptr);
+  g_signal_connect(but, "button-press-event", G_CALLBACK(button_press), context);
   g_signal_connect_swapped(but, "destroy", G_CALLBACK(on_button_destroy), context);
 
   return but;
