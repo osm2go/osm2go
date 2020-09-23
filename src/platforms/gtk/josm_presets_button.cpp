@@ -367,7 +367,7 @@ presets_item_dialog(const presets_item *item)
 
 #ifndef PICKER_MENU
 GtkWidget *
-create_menuitem(icon_t &icons, const presets_item_named *item)
+create_menuitem(const presets_item_named *item)
 {
   GtkWidget *menu_item;
 
@@ -377,73 +377,58 @@ create_menuitem(icon_t &icons, const presets_item_named *item)
     menu_item = gtk_image_menu_item_new_with_label(item->name.c_str());
 
     gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(menu_item),
-                                  icons.widget_load(item->icon, 16));
+                                  presets_context_t::instance->icons.widget_load(item->icon, 16));
   }
 
   return menu_item;
 }
 
-struct build_menu_functor {
-  GtkWidget * const menu;
-  GtkWidget ** const matches;
-  bool was_separator;
-  bool was_item;
-  inline build_menu_functor(GtkWidget *m, GtkWidget **a)
-    : menu(m), matches(a), was_separator(false), was_item(false) {}
-  void operator()(const presets_item_t *item);
-};
-
 template<typename T>
 GtkWidget *
 build_menu(const T &items, GtkWidget **matches)
 {
-  build_menu_functor fc(gtk_menu_new(), matches);
+  GtkWidget * const menu = gtk_menu_new();
+  bool was_separator = false;
+  bool was_item = false;
 
-  std::for_each(items.begin(), items.end(), fc);
+  for (auto &&item : items) {
+    /* check if this presets entry is appropriate for the current item */
+    if(item->type & presets_context_t::instance->presets_mask) {
+      /* Show a separator if one was requested, but not if there was no item
+      * before to prevent to show one as the first entry. */
+      if(was_item && was_separator)
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
+      was_item = true;
+      was_separator = false;
 
-  return fc.menu;
-}
+      GtkWidget *menu_item = create_menuitem(static_cast<const presets_item_named *>(item));
 
-void build_menu_functor::operator()(const presets_item_t *item)
-{
-  /* check if this presets entry is appropriate for the current item */
-  if(item->type & presets_context_t::instance->presets_mask) {
-    GtkWidget *menu_item;
+      if(item->type & presets_item_t::TY_GROUP) {
+        gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
+                                  build_menu(static_cast<const presets_item_group *>(item)->items,
+                                            matches));
+      } else {
+        g_signal_connect_swapped(menu_item, "activate",
+                                G_CALLBACK(presets_item_dialog), const_cast<presets_item_t *>(item));
 
-    /* Show a separator if one was requested, but not if there was no item
-     * before to prevent to show one as the first entry. */
-    if(was_item && was_separator)
-      gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
-    was_item = true;
-    was_separator = false;
+        if(matches && item->matches(presets_context_t::instance->tag_context->tags)) {
+          if(!*matches)
+            *matches = gtk_menu_new();
 
-    menu_item = create_menuitem(presets_context_t::instance->icons,
-                                static_cast<const presets_item_named *>(item));
-
-    if(item->type & presets_item_t::TY_GROUP) {
-      gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
-                                build_menu(static_cast<const presets_item_group *>(item)->items,
-                                           matches));
-    } else {
-      g_signal_connect_swapped(menu_item, "activate",
-                               G_CALLBACK(presets_item_dialog), const_cast<presets_item_t *>(item));
-
-      if(matches && item->matches(presets_context_t::instance->tag_context->tags)) {
-        if(!*matches)
-          *matches = gtk_menu_new();
-
-        GtkWidget *used_item = create_menuitem(presets_context_t::instance->icons,
-                                               static_cast<const presets_item_named *>(item));
-        g_signal_connect_swapped(used_item, "activate",
-                                 G_CALLBACK(presets_item_dialog), const_cast<presets_item_t *>(item));
-        gtk_menu_shell_append(GTK_MENU_SHELL(*matches), used_item);
+          GtkWidget *used_item = create_menuitem(static_cast<const presets_item_named *>(item));
+          g_signal_connect_swapped(used_item, "activate",
+                                  G_CALLBACK(presets_item_dialog), const_cast<presets_item_t *>(item));
+          gtk_menu_shell_append(GTK_MENU_SHELL(*matches), used_item);
+        }
       }
-    }
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
-  } else if(item->type == presets_item_t::TY_SEPARATOR)
-    /* Record that there was a separator. Do not immediately add it here to
-     * prevent to show one as last entry. */
-    was_separator = true;
+      gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
+    } else if(item->type == presets_item_t::TY_SEPARATOR)
+      /* Record that there was a separator. Do not immediately add it here to
+      * prevent to show one as last entry. */
+      was_separator = true;
+  }
+
+  return menu;
 }
 
 void

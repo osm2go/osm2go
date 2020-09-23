@@ -207,6 +207,8 @@ endif ()
 
 if (PICKER_MENU)
 	set_property(SOURCE src/platforms/gtk/josm_presets_button.cpp APPEND PROPERTY COMPILE_DEFINITIONS "PICKER_MENU")
+else ()
+	set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 endif ()
 
 option(USE_SVG_ICONS "Use SVG icons without converting them to PNG at build time" ${USE_SVG_ICONS_DEFAULT})
