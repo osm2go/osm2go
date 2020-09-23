@@ -446,6 +446,16 @@ void build_menu_functor::operator()(const presets_item_t *item)
     was_separator = true;
 }
 
+void
+add_context_sensitive_menu(trstring::native_type_arg label, GtkWidget *submenu, GtkMenuShell *topmenu)
+{
+  GtkWidget *menu_item = gtk_menu_item_new_with_label(static_cast<const gchar *>(label));
+
+  gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), submenu);
+  gtk_menu_shell_prepend(topmenu, gtk_separator_menu_item_new());
+  gtk_menu_shell_prepend(topmenu, menu_item);
+}
+
 #else // PICKER_MENU
 
 struct group_member_used {
@@ -818,20 +828,12 @@ button_press(GtkWidget *widget, GdkEventButton *event, presets_context_t *contex
     context->menu.reset(build_menu(pinternal->items, &matches));
     if(!pinternal->lru.empty()) {
       // This will not update the menu while the dialog is open. Not worth the effort.
-      GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Last used presets"));
-      GtkWidget *lrumenu = build_menu(pinternal->lru, nullptr);
-
-      gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), lrumenu);
-      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu.get()), gtk_separator_menu_item_new());
-      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu.get()), menu_item);
+      add_context_sensitive_menu(_("Last used presets"),
+                                 build_menu(pinternal->lru, nullptr),
+                                 GTK_MENU_SHELL(context->menu.get()));
     }
-    if(matches) {
-      GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Used presets"));
-
-      gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), matches);
-      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu.get()), gtk_separator_menu_item_new());
-      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu.get()), menu_item);
-    }
+    if(matches)
+      add_context_sensitive_menu(_("Used presets"), matches, GTK_MENU_SHELL(context->menu.get()));
   }
   gtk_widget_show_all(context->menu.get());
 
