@@ -45,7 +45,8 @@ std::string
 strip_mnemonic(trstring::native_type_arg label)
 {
   // remove mnemonic marker
-  std::string hlabel = static_cast<const gchar *>(label);
+  assert(!label.isEmpty());
+  std::string hlabel = label.toStdString();
   std::string::size_type _pos = hlabel.find('_');
   if(likely(_pos != std::string::npos))
     hlabel.erase(_pos, 1);
