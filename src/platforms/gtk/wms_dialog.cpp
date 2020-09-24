@@ -229,7 +229,7 @@ callback_modified_name(GtkWidget *widget)
 
 /* edit url and path of a given wms server entry */
 bool wms_server_edit(wms_server_context_t *context, bool edit_name, wms_server_t *wms_server) {
-  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Edit WMS Server"),
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(static_cast<const gchar *>(_("Edit WMS Server")),
                                       GTK_WINDOW(context->dialog), GTK_DIALOG_MODAL,
                                       GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                       GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, nullptr));
@@ -363,7 +363,7 @@ std::string
 wms_server_dialog(osm2go_platform::Widget *parent, const std::string &wms_server)
 {
   wms_server_context_t context(wms_server,
-                               gtk_dialog_new_with_buttons(_("WMS Server Selection"),
+                               gtk_dialog_new_with_buttons(static_cast<const gchar *>(_("WMS Server Selection")),
                                                            GTK_WINDOW(parent),
                                                            GTK_DIALOG_MODAL,
                                                            GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
@@ -494,7 +494,7 @@ wms_layer_dialog(osm2go_platform::Widget *parent, const pos_area &bounds, const 
   hildon_picker_dialog_set_selector(HILDON_PICKER_DIALOG(dialog.get()),
                                     HILDON_TOUCH_SELECTOR(sel_widget));
 #else
-                                      gtk_dialog_new_with_buttons(_("WMS layer selection"),
+                                      gtk_dialog_new_with_buttons(static_cast<const gchar *>(_("WMS layer selection")),
                                               GTK_WINDOW(parent),
                                               GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,

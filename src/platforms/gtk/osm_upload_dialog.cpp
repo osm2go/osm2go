@@ -110,15 +110,21 @@ void osm_upload_context_t::append(trstring::arg_type msg, const char *colorname)
 namespace {
 
 GtkWidget *
-table_attach_label_c(GtkWidget *table, const char *str, int x, int y)
+table_attach_label_c(GtkWidget *table, const gchar *str, int x, int y)
 {
   GtkWidget *label =  gtk_label_new(str);
   gtk_table_attach_defaults(GTK_TABLE(table), label, x, x + 1, y, y + 1);
   return label;
 }
 
+inline GtkWidget *
+table_attach_label_c(GtkWidget *table, trstring::native_type_arg str, int x, int y)
+{
+  return table_attach_label_c(table, static_cast<const gchar *>(str), x, y);
+}
+
 void
-table_attach_label_l(GtkWidget *table, int y, const char *str)
+table_attach_label_l(GtkWidget *table, int y, trstring::native_type_arg str)
 {
   GtkWidget *label = table_attach_label_c(table, str, 0, y);
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
@@ -224,7 +230,7 @@ osm_modified_info(const osm_t::dirty_t &context, osm2go_platform::Widget *parent
 
 void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
 {
-  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Upload to OSM"),
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(static_cast<const gchar *>(_("Upload to OSM")),
                                               GTK_WINDOW(appdata_t::window),
                                               GTK_DIALOG_MODAL,
 #ifdef FREMANTLE
@@ -287,7 +293,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
 #else
                     hildon_text_view_new());
   gtk_text_view_set_buffer(view, buffer);
-  hildon_gtk_text_view_set_placeholder_text(view, placeholder_comment);
+  hildon_gtk_text_view_set_placeholder_text(view, static_cast<const gchar *>(placeholder_comment));
 #endif
 
   gtk_text_view_set_wrap_mode(view, GTK_WRAP_WORD);
@@ -340,7 +346,7 @@ void osm_upload_dialog(appdata_t &appdata, const osm_t::dirty_t &dirty)
   dialog.reset();
   project->save();
 
-  dialog.reset(gtk_dialog_new_with_buttons(_("Uploading"), GTK_WINDOW(appdata_t::window),
+  dialog.reset(gtk_dialog_new_with_buttons(static_cast<const gchar *>(_("Uploading")), GTK_WINDOW(appdata_t::window),
                                            GTK_DIALOG_MODAL,
                                            GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                            nullptr));

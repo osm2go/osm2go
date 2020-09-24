@@ -215,7 +215,7 @@ cb_value_focus_in(GtkEntry *value, GdkEventFocus *, GtkEntry *key)
 bool
 tag_edit(GtkWindow *window, std::string &k, std::string &v, const osm_t::TagMap &otherkeys)
 {
-  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Edit Tag"), window, GTK_DIALOG_MODAL,
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(static_cast<const gchar *>(_("Edit Tag")), window, GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                               nullptr));

@@ -321,8 +321,8 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
 
   /* add the three default buttons, but keep all but the first disabled for now */
   for(unsigned int i = 0; i < 3; i++) {
-    if(strchr(buttons[i].first, '_') != nullptr)
-      priv->button.widget[i] = gtk_button_new_with_mnemonic(buttons[i].first);
+    if(strchr(static_cast<const char *>(buttons[i].first), '_') != nullptr)
+      priv->button.widget[i] = gtk_button_new_with_mnemonic(static_cast<const gchar *>(buttons[i].first));
     else
       priv->button.widget[i] = osm2go_platform::button_new_with_label(buttons[i].first);
     gtk_table_attach_defaults(GTK_TABLE(priv->table),

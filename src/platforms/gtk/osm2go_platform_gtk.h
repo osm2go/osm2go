@@ -205,3 +205,6 @@ static inline void gtk_window_set_title(GtkWindow *window, const trstring &title
 { return gtk_window_set_title(window, static_cast<const gchar *>(title)); }
 static inline void gtk_window_set_title(GtkWindow *window, trstring::arg_type title)
 { return gtk_window_set_title(window, static_cast<trstring::native_type>(title)); }
+
+static inline GtkWidget * __attribute__((warn_unused_result)) gtk_dialog_add_button(GtkDialog *dialog, trstring::native_type_arg button_text, gint response_id)
+{ return gtk_dialog_add_button(dialog, static_cast<const gchar *>(button_text), response_id); }

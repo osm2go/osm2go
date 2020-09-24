@@ -319,7 +319,7 @@ bugs_page_new()
 
 void MainUi::about_box()
 {
-  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("About OSM2Go"),
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(static_cast<const gchar *>(_("About OSM2Go")),
                                               GTK_WINDOW(appdata_t::window), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, nullptr));
 

@@ -64,7 +64,7 @@ style_select_widget(const std::string &currentstyle, const std::map<std::string,
 
   std::for_each(styles.begin(), styles.end(), selector_model_functor(store.get(), match, currentstyle));
 
-  GtkWidget *ret = osm2go_platform::select_widget_wrapped(_("Style"), GTK_TREE_MODEL(store.get()));
+  GtkWidget *ret = osm2go_platform::select_widget_wrapped(static_cast<const char *>(_("Style")), GTK_TREE_MODEL(store.get()));
   osm2go_platform::combo_box_set_active(ret, match);
   return ret;
 }
@@ -80,7 +80,7 @@ void style_select(appdata_t *appdata) {
   g_debug("select style");
 
   /* ------------------ style dialog ---------------- */
-  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Select style"),
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(static_cast<const gchar *>(_("Select style")),
                                               GTK_WINDOW(appdata_t::window), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,

@@ -114,7 +114,7 @@ relation_add_item(GtkWidget *parent, relation_t *relation, const object_t &objec
 
   /* ask the user for the role of the new object in this relation */
   /* ------------------ role dialog ---------------- */
-  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Select role"), GTK_WINDOW(parent),
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(static_cast<const gchar *>(_("Select role")), GTK_WINDOW(parent),
                                               GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
@@ -145,7 +145,7 @@ relation_add_item(GtkWidget *parent, relation_t *relation, const object_t &objec
 
   GtkWidget *entry = nullptr;
   if(!roles.empty()) {
-    entry = osm2go_platform::combo_box_entry_new(_("Role"));
+    entry = osm2go_platform::combo_box_entry_new(static_cast<const char *>(_("Role")));
 
     /* fill combo box with presets */
     std::for_each(roles.begin(), roles.end(), entry_insert_text(entry));
@@ -335,19 +335,19 @@ relation_item_list_widget(relitem_context_t &context)
   GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
   g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, nullptr );
   GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
-       _("Name"), renderer, "text", RELITEM_COL_NAME, nullptr);
+       static_cast<const gchar *>(_("Name")), renderer, "text", RELITEM_COL_NAME, nullptr);
   gtk_tree_view_column_set_expand(column, TRUE);
   gtk_tree_view_insert_column(view, column, -1);
 
   /* --- "Type" column --- */
   renderer = gtk_cell_renderer_text_new();
   gtk_tree_view_insert_column_with_attributes(view,
-      -1, _("Type"), renderer, "text", RELITEM_COL_TYPE, nullptr);
+      -1, static_cast<const gchar *>(_("Type")), renderer, "text", RELITEM_COL_TYPE, nullptr);
 
   /* --- "Role" column --- */
   renderer = gtk_cell_renderer_text_new();
   gtk_tree_view_insert_column_with_attributes(view,
-      -1, _("Role"), renderer, "text", RELITEM_COL_ROLE, nullptr);
+      -1, static_cast<const gchar *>(_("Role")), renderer, "text", RELITEM_COL_ROLE, nullptr);
 
   /* build and fill the store */
   context.store.reset(gtk_list_store_new(RELITEM_NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
@@ -544,7 +544,7 @@ member_list_widget(member_context_t &context)
   GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
   g_object_set(renderer, "foreground", "grey", nullptr);
   GtkTreeViewColumn *column =
-    gtk_tree_view_column_new_with_attributes(_("Type"), renderer,
+    gtk_tree_view_column_new_with_attributes(static_cast<const gchar *>(_("Type")), renderer,
 		     "text", MEMBER_COL_TYPE,
 		     "foreground-set", MEMBER_COL_REF_ONLY,  nullptr);
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_TYPE);
@@ -553,7 +553,7 @@ member_list_widget(member_context_t &context)
   /* --- "id" column --- */
   renderer = gtk_cell_renderer_text_new();
   g_object_set(renderer, "foreground", "grey", nullptr);
-  column = gtk_tree_view_column_new_with_attributes(_("Id"), renderer,
+  column = gtk_tree_view_column_new_with_attributes(static_cast<const gchar *>(_("Id")), renderer,
 		     "text", MEMBER_COL_ID,
 		     "foreground-set", MEMBER_COL_REF_ONLY,  nullptr);
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_ID);
@@ -563,7 +563,7 @@ member_list_widget(member_context_t &context)
   renderer = gtk_cell_renderer_text_new();
   g_object_set(renderer, "foreground", "grey", nullptr);
   g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, nullptr);
-  column = gtk_tree_view_column_new_with_attributes(_("Name"), renderer,
+  column = gtk_tree_view_column_new_with_attributes(static_cast<const gchar *>(_("Name")), renderer,
 		     "text", MEMBER_COL_NAME,
 		     "foreground-set", MEMBER_COL_REF_ONLY,  nullptr);
   gtk_tree_view_column_set_expand(column, TRUE);
@@ -573,7 +573,7 @@ member_list_widget(member_context_t &context)
   /* --- "role" column --- */
   renderer = gtk_cell_renderer_text_new();
   g_object_set(renderer, "foreground", "grey", nullptr);
-  column = gtk_tree_view_column_new_with_attributes(_("Role"), renderer,
+  column = gtk_tree_view_column_new_with_attributes(static_cast<const gchar *>(_("Role")), renderer,
 		     "text", MEMBER_COL_ROLE,
 		     "foreground-set", MEMBER_COL_REF_ONLY,  nullptr);
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_ROLE);
@@ -822,7 +822,7 @@ relation_list_widget(relation_context_t &context)
 /* a global view on all relations */
 void relation_list(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *presets) {
   relation_context_t context(map, osm, presets,
-                             gtk_dialog_new_with_buttons(_("All relations"),
+                             gtk_dialog_new_with_buttons(static_cast<const gchar *>(_("All relations")),
                                                          GTK_WINDOW(parent),
                                                          GTK_DIALOG_MODAL,
                                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,

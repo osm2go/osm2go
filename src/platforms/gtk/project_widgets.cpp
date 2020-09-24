@@ -273,7 +273,7 @@ std::string
 project_name_dialog(GtkWidget *parent, const std::string &oldname)
 {
   /* --------------  first choose a name for the project --------------- */
-  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Project name"),
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(static_cast<const gchar *>(_("Project name")),
                                               GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
@@ -973,7 +973,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new)
 project_t *project_select(appdata_t &appdata)
 {
   select_context_t context(appdata,
-                    gtk_dialog_new_with_buttons(_("Project selection"),
+                    gtk_dialog_new_with_buttons(static_cast<const gchar *>(_("Project selection")),
                                     GTK_WINDOW(appdata_t::window), GTK_DIALOG_MODAL,
                                     GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                     GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,

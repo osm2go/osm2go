@@ -250,7 +250,7 @@ current_tab_is(GtkNotebook *nb, GtkWidget *w, const char *str)
 {
   const char *name = gtk_notebook_get_tab_label_text(nb, w);
 
-  return (strcmp(name, _(str)) == 0);
+  return (strcmp(name, static_cast<const char *>(_(str))) == 0);
 }
 
 bool
@@ -704,7 +704,7 @@ bool area_edit_t::run() {
   GtkWidget *vbox;
 
   area_context_t context(*this,
-                         gtk_dialog_new_with_buttons(_("Area editor"),
+                         gtk_dialog_new_with_buttons(static_cast<const gchar *>(_("Area editor")),
                                                GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                                GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                                GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,

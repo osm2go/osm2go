@@ -87,6 +87,7 @@ MainUiGtk::createMenuItem(trstring::native_type_arg label, const char *icon_name
 #endif
                           )
 {
+  assert(!label.isEmpty());
 #ifndef FREMANTLE
   // Icons
   if(icon_name != nullptr) {
@@ -149,11 +150,11 @@ void MainUi::showNotification(trstring::arg_type message, unsigned int flags)
   assert(!message.isEmpty());
   trstring::native_type nativeMsg = static_cast<trstring::native_type>(message);
   if (flags & Brief)
-    statusbar->banner_show_info(nativeMsg);
+    statusbar->banner_show_info(static_cast<const char *>(nativeMsg));
   else if (flags & Busy)
-    statusbar->banner_busy_start(nativeMsg);
+    statusbar->banner_busy_start(static_cast<const char *>(nativeMsg));
   else
-    statusbar->set(nativeMsg, flags & Highlight);
+    statusbar->set(static_cast<const char *>(nativeMsg), flags & Highlight);
 }
 
 void MainUi::clearNotification(NotificationFlags flags)

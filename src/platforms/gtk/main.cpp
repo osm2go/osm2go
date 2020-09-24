@@ -281,7 +281,7 @@ GtkWidget *track_vis_select_widget(TrackVisibility current) {
 bool
 track_visibility_select(GtkWidget *parent)
 {
-  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Select track visibility"),
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(static_cast<const gchar *>(_("Select track visibility")),
                                               GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
@@ -432,7 +432,7 @@ cb_menu_track_import(appdata_t *appdata) {
                   hildon_file_chooser_dialog_new(GTK_WINDOW(appdata_t::window),
                                                  GTK_FILE_CHOOSER_ACTION_OPEN)
 #else
-                  gtk_file_chooser_dialog_new (_("Import track file"),
+                  gtk_file_chooser_dialog_new(static_cast<const gchar *>(_("Import track file")),
                                                GTK_WINDOW(appdata_t::window),
                                                GTK_FILE_CHOOSER_ACTION_OPEN,
                                                GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -497,7 +497,7 @@ cb_menu_track_export(appdata_t *appdata) {
                   hildon_file_chooser_dialog_new(GTK_WINDOW(appdata_t::window),
                                                  GTK_FILE_CHOOSER_ACTION_SAVE)
 #else
-                  gtk_file_chooser_dialog_new(_("Export track file"),
+                  gtk_file_chooser_dialog_new(static_cast<const gchar *>(_("Export track file")),
                                               GTK_WINDOW(appdata_t::window),
                                               GTK_FILE_CHOOSER_ACTION_SAVE,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -687,7 +687,7 @@ menu_create(appdata_internal &appdata, GtkBox *mainvbox)
   submenu = mainui->addMenu(MainUi::SUBMENU_VIEW);
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
 
-  item = gtk_check_menu_item_new_with_mnemonic(_("_Fullscreen"));
+  item = gtk_check_menu_item_new_with_mnemonic(static_cast<const gchar *>(_("_Fullscreen")));
   gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), FALSE);
   menu_append_new_item(
     &appdata, submenu, G_CALLBACK(cb_menu_fullscreen),

@@ -312,7 +312,7 @@ bool osm2go_platform::yes_no(trstring::arg_type title, trstring::arg_type msg, u
 
     GtkWidget *alignment = gtk_alignment_new(0.5, 0, 0, 0);
 
-    cbut = osm2go_platform::check_button_new_with_label(_("Don't ask this question again"));
+    cbut = osm2go_platform::check_button_new_with_label(static_cast<const char *>(_("Don't ask this question again")));
     g_signal_connect(cbut, "toggled", G_CALLBACK(on_toggled), GUINT_TO_POINTER(again_flags));
 
     gtk_container_add(GTK_CONTAINER(alignment), cbut);

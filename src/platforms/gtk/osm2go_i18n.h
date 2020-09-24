@@ -58,7 +58,7 @@ public:
     inline native_type(const char *v = nullptr) : value(v) {}
     inline bool isEmpty() const { return value == nullptr; }
     inline void clear() { value = nullptr; }
-    inline operator const char *() const { return value; }
+    O2G_OPERATOR_EXPLICIT inline operator const char *() const { return value; }
     inline std::string toStdString() const { return isEmpty() ? std::string() : value; }
   };
   // exclusively use this type in function interfaces

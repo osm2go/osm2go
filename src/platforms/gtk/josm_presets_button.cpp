@@ -562,7 +562,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
       gtk_tree_model_get(model, &iter, PRESETS_PICKER_COL_NAME, &text, -1);
       g_string textGuard(text);
       assert(textGuard);
-      if (strcmp(text, _("Used presets")) == 0)
+      if (strcmp(text, static_cast<const char *>(_("Used presets"))) == 0)
         sub = context->preset_picker_recent();
       else
         sub = context->preset_picker_lru();
@@ -827,7 +827,7 @@ button_press(GtkWidget *widget, GdkEventButton *event, presets_context_t *contex
 #else
   assert(context->submenus.empty());
   /* popup our special picker like menu */
-  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(_("Presets"),
+  osm2go_platform::DialogGuard dialog(gtk_dialog_new_with_buttons(static_cast<const gchar *>(_("Presets")),
                                               GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(widget))),
                                               GTK_DIALOG_MODAL, GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               nullptr));
