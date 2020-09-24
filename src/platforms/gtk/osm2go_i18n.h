@@ -79,10 +79,7 @@ public:
     inline any_type &operator=(const any_type &other)
     { m_t = other.m_t; m_n = other.m_n; return *this; }
 
-#if __cplusplus >= 201103L
-    explicit
-#endif
-    inline operator native_type() const
+    O2G_OPERATOR_EXPLICIT inline operator native_type() const
     {
       if (m_t != nullptr)
         return m_t->toStdString().c_str();

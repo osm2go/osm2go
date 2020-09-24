@@ -120,10 +120,7 @@ struct nameParts {
 #ifndef TRSTRING_NATIVE_TYPE_IS_TRSTRING
     typeWrapper &operator=(trstring::native_type_arg n) { assert(tr.isEmpty()); nt = n; return *this; }
 
-#if __cplusplus >= 201103L
-    explicit
-#endif
-    inline operator trstring::native_type() const
+    O2G_OPERATOR_EXPLICIT inline operator trstring::native_type() const
     {
       assert(key == nullptr);
       assert(tr.isEmpty());

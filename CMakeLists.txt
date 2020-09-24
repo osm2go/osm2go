@@ -114,6 +114,11 @@ write_compiler_detection_header(
 "#if !(defined(O2G_COMPILER_CXX_STATIC_ASSERT) && O2G_COMPILER_CXX_STATIC_ASSERT)
 #  define static_assert(X, MSG) O2G_STATIC_ASSERT_MSG(X, MSG)
 #endif
+#if __cplusplus >= 201103L
+#  define O2G_OPERATOR_EXPLICIT explicit
+#else
+#  define O2G_OPERATOR_EXPLICIT
+#endif
 ")
 
 add_library(osm2go_lib STATIC
