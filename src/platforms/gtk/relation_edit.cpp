@@ -798,7 +798,7 @@ relation_list_widget(relation_context_t &context)
                                          G_TYPE_STRING, G_TYPE_STRING, G_TYPE_UINT,
                                          G_TYPE_POINTER));
 
-  context.list = list_new(LIST_HILDON_WITH_HEADERS, 0, &context,
+  context.list = list_new(LIST_HILDON_WITH_HEADERS, &context,
                           relation_list_changed, buttons, columns,
                           GTK_TREE_MODEL(context.store.get()));
 

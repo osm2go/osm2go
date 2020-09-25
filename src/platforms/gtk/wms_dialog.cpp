@@ -345,7 +345,7 @@ wms_server_widget(wms_server_context_t *context)
   context->store.reset(gtk_list_store_new(WMS_SERVER_NUM_COLS,
                                           G_TYPE_STRING, G_TYPE_POINTER));
 
-  context->list = list_new(LIST_HILDON_WITHOUT_HEADERS, 0, context,
+  context->list = list_new(LIST_HILDON_WITHOUT_HEADERS, context,
                            wms_server_changed, buttons,
                            std::vector<list_view_column>(1, list_view_column(_("Name"), LIST_FLAG_ELLIPSIZE)),
                            GTK_TREE_MODEL(context->store.get()));

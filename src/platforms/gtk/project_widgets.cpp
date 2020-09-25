@@ -629,7 +629,7 @@ project_list_widget(select_context_t &context, bool &has_sel)
   context.filter = reinterpret_cast<GtkTreeModelFilter *>(
             gtk_tree_model_filter_new(GTK_TREE_MODEL(context.store.get()), nullptr));
 
-  context.list = list_new(LIST_HILDON_WITHOUT_HEADERS, 0, &context, changed,
+  context.list = list_new(LIST_HILDON_WITHOUT_HEADERS, &context, changed,
                           buttons, columns, GTK_TREE_MODEL(context.filter));
 
   GtkTreeIter seliter;

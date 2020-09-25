@@ -35,28 +35,23 @@ enum list_button_t {
   LIST_BUTTON_USER2
 };
 
-#define LIST_BTN_2ROW  (1<<4)   // use 2 rows for the buttons
+enum flag_values {
+  LIST_HILDON_WITH_HEADERS = 0, // this is the default: force headers
+  LIST_HILDON_WITHOUT_HEADERS =
+#ifdef FREMANTLE
+/* on hildon a list may be system default (LIST_HILDON_WITHOUT_HEADERS), */
+                                (1<<0),
+#else
+                                0, // headers are always shown on desktop platform
+#endif
+  LIST_BTN_2ROW = (1<<4)   // use 2 rows for the buttons
+};
 
 /* list item flags */
 #define LIST_FLAG_EXPAND         (1<<0)   /* column expands with dialog size */
 #define LIST_FLAG_ELLIPSIZE      (1<<1)   /* column expands and text is ellipsized */
 #define LIST_FLAG_CAN_HIGHLIGHT  (1<<2)   /* column can be highlighted */
 #define LIST_FLAG_STOCK_ICON     (1<<3)   /* column contains stock icons */
-
-#ifdef FREMANTLE
-
-/* on hildon a list may be system default (LIST_HILDON_WITHOUT_HEADERS), */
-/* or forced to have headers (LIST_HILDON_WITH_HEADERS) */
-
-#define LIST_HILDON_WITH_HEADERS     true
-#define LIST_HILDON_WITHOUT_HEADERS  false
-
-#else
-
-/* there is more space on the PC, so always show headers there */
-#define LIST_HILDON_WITH_HEADERS true
-#define LIST_HILDON_WITHOUT_HEADERS true
-#endif
 
 struct list_view_column {
   explicit list_view_column(trstring::native_type_arg n, unsigned int fl, int hk = -1)
@@ -81,7 +76,7 @@ typedef void(*list_changed_callback)(GtkTreeSelection*, void*);
  *
  * WARNING: all callbacks have swapped arguments
  */
-GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
+GtkWidget *list_new(unsigned int flags, void *context,
                     list_changed_callback cb_changed,
                     const std::vector<list_button> &buttons,
                     const std::vector<list_view_column> &columns,

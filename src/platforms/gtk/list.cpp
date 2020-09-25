@@ -45,7 +45,7 @@
 namespace {
 
 struct list_priv_t {
-  list_priv_t(list_changed_callback cb, void *cb_ctx, GtkWidget *tw, unsigned int btnflags);
+  list_priv_t(list_changed_callback cb, void *cb_ctx, GtkWidget *tw, unsigned int fl);
 
   GtkTreeView * const view;
 
@@ -56,17 +56,18 @@ struct list_priv_t {
 
   struct {
     std::array<GtkWidget *, 6> widget;
-    int flags;
   } button;
+
+  const int flags;
 };
 
-list_priv_t::list_priv_t(list_changed_callback cb, void *cb_ctx, GtkWidget *tw, unsigned int btnflags)
+list_priv_t::list_priv_t(list_changed_callback cb, void *cb_ctx, GtkWidget *tw, unsigned int fl)
   : view(osm2go_platform::tree_view_new())
   , change(cb)
   , callback_context(cb_ctx)
   , table(tw)
+  , flags(fl)
 {
-  button.flags = btnflags;
 }
 
 struct tree_path_deleter {
@@ -87,7 +88,7 @@ list_set_user_buttons(list_priv_t *priv, const std::vector<list_button> &buttons
     GCallback cb = buttons[id].second;
 
     priv->button.widget[id] = osm2go_platform::button_new_with_label(label);
-    if(priv->button.flags & LIST_BTN_2ROW)
+    if(priv->flags & LIST_BTN_2ROW)
       gtk_table_attach_defaults(GTK_TABLE(priv->table), priv->button.widget[id],
 		id-LIST_BUTTON_USER0, id-LIST_BUTTON_USER0+1, 1, 2);
     else
@@ -149,7 +150,7 @@ void list_set_custom_user_button(GtkWidget *list, list_button_t id,
   /* make space for user buttons */
   gtk_table_resize(GTK_TABLE(priv->table), 2, 3);
 
-  if(priv->button.flags & LIST_BTN_2ROW)
+  if(priv->flags & LIST_BTN_2ROW)
     gtk_table_attach_defaults(GTK_TABLE(priv->table), widget,
 	      id-LIST_BUTTON_USER0, id-LIST_BUTTON_USER0+1, 1, 2);
   else
@@ -280,7 +281,7 @@ static void del_priv(gpointer p)
 
 /* a generic list widget with "add", "edit" and "remove" buttons as used */
 /* for all kinds of lists in osm2go */
-GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
+GtkWidget *list_new(unsigned int flags, void *context,
                     list_changed_callback cb_changed,
                     const std::vector<list_button> &buttons,
                     const std::vector<list_view_column> &columns,
@@ -291,19 +292,21 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
   guint rows = 1;
   guint cols = 3;
   /* make space for user buttons */
-  if(btn_flags & LIST_BTN_2ROW)
+  if(flags & LIST_BTN_2ROW)
     rows = 2;
   else
     cols = buttons.size();
 
+  bool hide_headers = flags & LIST_HILDON_WITHOUT_HEADERS;
+
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
-  list_priv_t *priv = new list_priv_t(cb_changed, context, gtk_table_new(rows, cols, TRUE), btn_flags);
+  list_priv_t *priv = new list_priv_t(cb_changed, context, gtk_table_new(rows, cols, TRUE), flags);
 
   g_object_set_data(G_OBJECT(vbox), "priv", priv);
   g_signal_connect_swapped(vbox, "destroy", G_CALLBACK(del_priv), priv);
 
   /* hildon hides these by default */
-  gtk_tree_view_set_headers_visible(priv->view, show_headers ? TRUE : FALSE);
+  gtk_tree_view_set_headers_visible(priv->view, hide_headers ? FALSE : TRUE);
 
   GtkTreeSelection *sel = gtk_tree_view_get_selection(priv->view);
 
