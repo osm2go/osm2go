@@ -636,7 +636,7 @@ GtkTreeIter
 preset_insert_item(const presets_item_named *item, icon_t &icons, GtkListStore *store)
 {
   /* icon load can cope with empty string as name (returns nullptr then) */
-  icon_item *icon = icons.load(item->icon, 16);
+  icon_item *icon = item->icon.empty() ? nullptr : icons.load(item->icon, 16);
 
   /* Append a row and fill in some data */
   GtkTreeIter iter;
