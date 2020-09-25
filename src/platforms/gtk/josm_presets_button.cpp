@@ -873,7 +873,9 @@ on_button_destroy(presets_context_t *context)
 
 } // namespace
 
-GtkWidget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_context) {
+GtkWidget *
+osm2go_platform::josm_build_presets_button(presets_items *presets, tag_context_t *tag_context)
+{
   presets_context_t *context = new presets_context_t(presets, tag_context);
 
   GtkWidget *but = osm2go_platform::button_new_with_label(_("Presets"));

@@ -22,11 +22,8 @@
 #include <set>
 #include <string>
 
-#include <osm2go_platform.h>
-
 struct object_t;
 class relation_t;
-class tag_context_t;
 
 class presets_items {
 protected:
@@ -39,5 +36,3 @@ public:
 };
 
 std::string josm_icon_name_adjust(const char *name) __attribute__((nonnull(1)));
-
-osm2go_platform::Widget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_context);

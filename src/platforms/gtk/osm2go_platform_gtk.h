@@ -28,7 +28,9 @@
 
 typedef struct _GdkColor GdkColor;
 class icon_item;
+class presets_items;
 class statusbar_t;
+class tag_context_t;
 
 namespace osm2go_platform {
   bool init(bool &startGps) __attribute__((warn_unused_result));
@@ -174,6 +176,8 @@ namespace osm2go_platform {
   };
 
   GdkPixbuf *icon_pixmap(const icon_item *icon) __attribute__((warn_unused_result));
+
+  GtkWidget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_context);
 };
 
 // simplified form of unique_ptr

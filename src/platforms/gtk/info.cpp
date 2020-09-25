@@ -481,7 +481,7 @@ tag_widget(info_tag_context_t &context)
                           buttons, columns, GTK_TREE_MODEL(context.store.get()));
 
   list_set_custom_user_button(context.list, LIST_BUTTON_USER1,
-                              josm_build_presets_button(context.presets, &context));
+                              osm2go_platform::josm_build_presets_button(context.presets, &context));
   if(unlikely(context.presets == nullptr))
     list_button_enable(context.list, LIST_BUTTON_USER1, FALSE);
 
