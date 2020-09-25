@@ -177,7 +177,7 @@ namespace osm2go_platform {
 
   GdkPixbuf *icon_pixmap(const icon_item *icon) __attribute__((warn_unused_result));
 
-  GtkWidget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_context);
+  void josm_build_presets_button(GtkWidget *button, presets_items *presets, tag_context_t *tag_context);
 };
 
 // simplified form of unique_ptr

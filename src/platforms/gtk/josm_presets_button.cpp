@@ -873,18 +873,15 @@ on_button_destroy(presets_context_t *context)
 
 } // namespace
 
-GtkWidget *
-osm2go_platform::josm_build_presets_button(presets_items *presets, tag_context_t *tag_context)
+void
+osm2go_platform::josm_build_presets_button(GtkWidget *button, presets_items *presets, tag_context_t *tag_context)
 {
   presets_context_t *context = new presets_context_t(presets, tag_context);
 
-  GtkWidget *but = osm2go_platform::button_new_with_label(_("Presets"));
-  gtk_widget_set_events(but, GDK_EXPOSURE_MASK);
-  gtk_widget_add_events(but, GDK_BUTTON_PRESS_MASK);
-  g_signal_connect(but, "button-press-event", G_CALLBACK(button_press), context);
-  g_signal_connect_swapped(but, "destroy", G_CALLBACK(on_button_destroy), context);
-
-  return but;
+  gtk_widget_set_events(button, GDK_EXPOSURE_MASK);
+  gtk_widget_add_events(button, GDK_BUTTON_PRESS_MASK);
+  g_signal_connect(button, "button-press-event", G_CALLBACK(button_press), context);
+  g_signal_connect_swapped(button, "destroy", G_CALLBACK(on_button_destroy), context);
 }
 
 presets_element_t::attach_key *presets_element_text::attach(preset_attach_context &attctx,

@@ -82,8 +82,12 @@ GtkWidget *list_new(unsigned int flags, void *context,
                     const std::vector<list_view_column> &columns,
                     GtkTreeModel *store);
 
-void list_set_custom_user_button(GtkWidget *list, list_button_t id,
-				 GtkWidget *widget);
+/**
+ * @brief get the first custom button, i.e. the one without callback
+ *
+ * Assumes it is LIST_BUTTON_USER1.
+ */
+GtkWidget *list_get_custom_button(GtkWidget *list);
 GtkTreeSelection *list_get_selection(GtkWidget *list);
 void list_button_enable(GtkWidget *list, list_button_t id, bool enable);
 

@@ -86,14 +86,20 @@ list_set_user_buttons(list_priv_t *priv, const std::vector<list_button> &buttons
     GCallback cb = buttons[id].second;
 
     priv->buttons[id] = osm2go_platform::button_new_with_label(label);
-    if(priv->flags & LIST_BTN_2ROW)
-      gtk_table_attach_defaults(GTK_TABLE(priv->table), priv->buttons[id],
-		id-LIST_BUTTON_USER0, id-LIST_BUTTON_USER0+1, 1, 2);
-    else
-      gtk_table_attach_defaults(GTK_TABLE(priv->table), priv->buttons[id],
-                                id, id + 1, 0, 1);
+    guint left_attach;
+    guint top_attach;
+    if(priv->flags & LIST_BTN_2ROW) {
+      left_attach = id - LIST_BUTTON_USER0;
+      top_attach = 1;
+    } else {
+      left_attach = id;
+      top_attach = 0;
+    }
+    gtk_table_attach_defaults(GTK_TABLE(priv->table), priv->buttons[id],
+                              left_attach, left_attach + 1, top_attach, top_attach + 1);
 
-    g_signal_connect_swapped(priv->buttons[id], "clicked", cb, priv->callback_context);
+    if (cb != nullptr)
+      g_signal_connect_swapped(priv->buttons[id], "clicked", cb, priv->callback_context);
   }
 }
 
@@ -137,25 +143,10 @@ list_set_columns(GtkTreeView *view, const std::vector<list_view_column> &columns
 
 }
 
-/* put a custom widget into one of the button slots */
-void list_set_custom_user_button(GtkWidget *list, list_button_t id,
-				 GtkWidget *widget) {
-  list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
-  assert(priv != nullptr);
-  assert_cmpnum_op(static_cast<int>(id), >=, 3);
-  assert_cmpnum_op(static_cast<int>(id), <,  6);
-
-  /* make space for user buttons */
-  gtk_table_resize(GTK_TABLE(priv->table), 2, 3);
-
-  if(priv->flags & LIST_BTN_2ROW)
-    gtk_table_attach_defaults(GTK_TABLE(priv->table), widget,
-	      id-LIST_BUTTON_USER0, id-LIST_BUTTON_USER0+1, 1, 2);
-  else
-    gtk_table_attach_defaults(GTK_TABLE(priv->table), widget,
-                              id, id + 1, 0, 1);
-
-  priv->buttons[id] = widget;
+GtkWidget *
+list_get_custom_button(GtkWidget *list)
+{
+  return static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"))->buttons[LIST_BUTTON_USER1];
 }
 
 GtkTreeSelection *list_get_selection(GtkWidget *list) {

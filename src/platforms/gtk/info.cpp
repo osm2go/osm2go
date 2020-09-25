@@ -470,7 +470,7 @@ tag_widget(info_tag_context_t &context)
   buttons.push_back(list_button(_("_Edit"), G_CALLBACK(on_tag_edit)));
   buttons.push_back(list_button(_("Remove"), G_CALLBACK(on_tag_remove)));
   buttons.push_back(list_button(_("Last"), G_CALLBACK(on_tag_last)));
-  buttons.push_back(list_button(trstring::native_type(), nullptr));
+  buttons.push_back(list_button(_("Presets"), nullptr));
   buttons.push_back(list_button(_("Relations"), G_CALLBACK(on_relations)));
 
   context.store.reset(gtk_list_store_new(TAG_NUM_COLS,
@@ -480,8 +480,8 @@ tag_widget(info_tag_context_t &context)
   context.list = list_new(LIST_HILDON_WITHOUT_HEADERS | LIST_BTN_2ROW, &context, changed,
                           buttons, columns, GTK_TREE_MODEL(context.store.get()));
 
-  list_set_custom_user_button(context.list, LIST_BUTTON_USER1,
-                              osm2go_platform::josm_build_presets_button(context.presets, &context));
+  osm2go_platform::josm_build_presets_button(list_get_custom_button(context.list), context.presets, &context);
+
   if(unlikely(context.presets == nullptr))
     list_button_enable(context.list, LIST_BUTTON_USER1, FALSE);
 
