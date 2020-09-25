@@ -54,9 +54,7 @@ struct list_priv_t {
 
   GtkWidget * const table;
 
-  struct {
-    std::array<GtkWidget *, 6> widget;
-  } button;
+  std::array<GtkWidget *, 6> buttons;
 
   const int flags;
 };
@@ -87,15 +85,15 @@ list_set_user_buttons(list_priv_t *priv, const std::vector<list_button> &buttons
       continue;
     GCallback cb = buttons[id].second;
 
-    priv->button.widget[id] = osm2go_platform::button_new_with_label(label);
+    priv->buttons[id] = osm2go_platform::button_new_with_label(label);
     if(priv->flags & LIST_BTN_2ROW)
-      gtk_table_attach_defaults(GTK_TABLE(priv->table), priv->button.widget[id],
+      gtk_table_attach_defaults(GTK_TABLE(priv->table), priv->buttons[id],
 		id-LIST_BUTTON_USER0, id-LIST_BUTTON_USER0+1, 1, 2);
     else
-      gtk_table_attach_defaults(GTK_TABLE(priv->table), priv->button.widget[id],
+      gtk_table_attach_defaults(GTK_TABLE(priv->table), priv->buttons[id],
                                 id, id + 1, 0, 1);
 
-    g_signal_connect_swapped(priv->button.widget[id], "clicked", cb, priv->callback_context);
+    g_signal_connect_swapped(priv->buttons[id], "clicked", cb, priv->callback_context);
   }
 }
 
@@ -157,7 +155,7 @@ void list_set_custom_user_button(GtkWidget *list, list_button_t id,
     gtk_table_attach_defaults(GTK_TABLE(priv->table), widget,
                               id, id + 1, 0, 1);
 
-  priv->button.widget[id] = widget;
+  priv->buttons[id] = widget;
 }
 
 GtkTreeSelection *list_get_selection(GtkWidget *list) {
@@ -199,7 +197,7 @@ void list_button_enable(GtkWidget *list, list_button_t id, bool enable) {
   list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
   assert(priv != nullptr);
 
-  GtkWidget *but = priv->button.widget[id];
+  GtkWidget *but = priv->buttons[id];
 
   if(likely(but))
     gtk_widget_set_sensitive(but, enable ? TRUE : FALSE);
@@ -325,14 +323,14 @@ GtkWidget *list_new(unsigned int flags, void *context,
   /* add the three default buttons, but keep all but the first disabled for now */
   for(unsigned int i = 0; i < 3; i++) {
     if(strchr(static_cast<const char *>(buttons[i].first), '_') != nullptr)
-      priv->button.widget[i] = gtk_button_new_with_mnemonic(static_cast<const gchar *>(buttons[i].first));
+      priv->buttons[i] = gtk_button_new_with_mnemonic(static_cast<const gchar *>(buttons[i].first));
     else
-      priv->button.widget[i] = osm2go_platform::button_new_with_label(buttons[i].first);
+      priv->buttons[i] = osm2go_platform::button_new_with_label(buttons[i].first);
     gtk_table_attach_defaults(GTK_TABLE(priv->table),
-                              priv->button.widget[i], i, i + 1, 0, 1);
-    g_signal_connect_swapped(priv->button.widget[i], "clicked",
+                              priv->buttons[i], i, i + 1, 0, 1);
+    g_signal_connect_swapped(priv->buttons[i], "clicked",
                              buttons[i].second, priv->callback_context);
-    gtk_widget_set_sensitive(priv->button.widget[i], i == 0 ? TRUE : FALSE);
+    gtk_widget_set_sensitive(priv->buttons[i], i == 0 ? TRUE : FALSE);
   }
 
   list_set_columns(priv->view, columns);
