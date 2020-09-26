@@ -1,20 +1,7 @@
 /*
- * Copyright (C) 2009 Till Harbaum <till@harbaum.org>.
+ * SPDX-FileCopyrightText: 2009 Till Harbaum <till@harbaum.org>
  *
- * This file is part of OSM2Go.
- *
- * OSM2Go is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * OSM2Go is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 #include <uicontrol.h>
@@ -169,7 +156,7 @@ copyright_page_new(icon_t &icons)
   ivbox = gtk_vbox_new(FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(ivbox),
-	      gtk_label_new(_("Copyright 2008-2017")), FALSE, FALSE, 0);
+	      gtk_label_new(_("Copyright 2008-2020")), FALSE, FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(ivbox),
                      link_new("http://www.harbaum.org/till/maemo#osm2go"),

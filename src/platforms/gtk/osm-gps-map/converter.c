@@ -2,8 +2,8 @@
 /* vim:set et sw=4 ts=4 cino=t0,(0: */
 /*
  * converter.c
- * Copyright (C) Marcus Bauer 2008 <marcus.bauer@gmail.com>
- * Copyright (C) John Stowers 2008 <john.stowers@gmail.com>
+ * SPDX-FileCopyrightText: Marcus Bauer 2008 <marcus.bauer@gmail.com>
+ * SPDX-FileCopyrightText: John Stowers 2008 <john.stowers@gmail.com>
  *
  * osm-gps-map.c is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the

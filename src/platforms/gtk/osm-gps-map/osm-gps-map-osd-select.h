@@ -1,7 +1,7 @@
 /* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4; tab-width: 4 -*- */
 /* vim:set et sw=4 ts=4 cino=t0,(0: */
 /*
- * Copyright (C) Till Harbaum 2009 <till@harbaum.org>
+ * SPDX-FileCopyrightText: Till Harbaum 2009 <till@harbaum.org>
  *
  * osm-gps-map is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the

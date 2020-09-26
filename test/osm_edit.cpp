@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: 2017-2020 Rolf Eike Beer <eike@sf-mail.de>
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 #include <icon.h>
 #include <map.h>
 #include <misc.h>

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Copyright (C) 2018 Rolf Eike Beer <eike@sf-mail.de>.
+# SPDX-FileCopyrightText: 2018 Rolf Eike Beer <eike@sf-mail.de>.
 
 # find out if std::filesystem can be used
 

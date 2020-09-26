@@ -2,8 +2,8 @@
 /* vim:set et sw=4 ts=4 cino=t0,(0: */
 /*
  * osm-gps-map-widget.h
- * Copyright (C) Marcus Bauer 2008 <marcus.bauer@gmail.com>
- * Copyright (C) John Stowers 2009 <john.stowers@gmail.com>
+ * SPDX-FileCopyrightText: Marcus Bauer 2008 <marcus.bauer@gmail.com>
+ * SPDX-FileCopyrightText: John Stowers 2009 <john.stowers@gmail.com>
  *
  * Contributions by
  * Everaldo Canuto 2009 <everaldo.canuto@gmail.com>
