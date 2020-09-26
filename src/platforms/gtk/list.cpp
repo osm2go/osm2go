@@ -322,6 +322,13 @@ GtkWidget *list_new(unsigned int flags, void *context,
     g_signal_connect_swapped(priv->buttons[i], "clicked",
                              buttons[i].cb, priv->callback_context);
     gtk_widget_set_sensitive(priv->buttons[i], i == 0 ? TRUE : FALSE);
+
+#ifndef FREMANTLE
+    if (buttons[i].icon != nullptr) {
+      GtkWidget *iconw = gtk_image_new_from_icon_name(buttons[i].icon, GTK_ICON_SIZE_BUTTON);
+      gtk_button_set_image(GTK_BUTTON(priv->buttons[i]), iconw);
+    }
+#endif
   }
 
   list_set_columns(priv->view, columns);
@@ -356,7 +363,7 @@ void list_view_scroll(GtkTreeView *view, GtkTreeSelection *sel, GtkTreeIter* ite
 
 list_button list_button::addButton(GCallback cb)
 {
-  return list_button(_("_Add"), cb);
+  return list_button(_("_Add"), cb, "list-add");
 }
 
 list_button list_button::editButton(GCallback cb)
@@ -366,5 +373,5 @@ list_button list_button::editButton(GCallback cb)
 
 list_button list_button::removeButton(GCallback cb)
 {
-  return list_button(_("Remove"), cb);
+  return list_button(_("Remove"), cb, "list-remove");
 }

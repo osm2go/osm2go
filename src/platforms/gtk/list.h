@@ -62,9 +62,24 @@ struct list_view_column {
 };
 
 class list_button {
+  inline list_button(trstring::native_type_arg lb, GCallback c, const char *ic)
+    : label(lb), cb(c)
+#ifndef FREMANTLE
+    , icon(ic)
+    {
+    }
+#else
+    {
+      (void)ic;
+    }
+#endif
 public:
   inline list_button(trstring::native_type_arg lb, GCallback c)
-    : label(lb), cb(c) {}
+    : label(lb), cb(c)
+#ifndef FREMANTLE
+    , icon(nullptr)
+#endif
+    {}
 
   // with C++11 the relevant places use move operations which have no
   // problem with the const members
@@ -78,6 +93,9 @@ public:
 
   const trstring::native_type label;
   const GCallback cb;
+#ifndef FREMANTLE
+  const char * const icon;
+#endif
 
   static list_button addButton(GCallback cb);
   static list_button editButton(GCallback cb);
