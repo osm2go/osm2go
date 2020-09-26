@@ -80,10 +80,10 @@ void
 list_set_user_buttons(list_priv_t *priv, const std::vector<list_button> &buttons)
 {
   for(unsigned int id = LIST_BUTTON_USER0; id < buttons.size(); id++) {
-    trstring::native_type label = buttons[id].first;
+    trstring::native_type label = buttons[id].label;
     if(label.isEmpty())
       continue;
-    GCallback cb = buttons[id].second;
+    GCallback cb = buttons[id].cb;
 
     priv->buttons[id] = osm2go_platform::button_new_with_label(label);
     guint left_attach;
@@ -313,14 +313,14 @@ GtkWidget *list_new(unsigned int flags, void *context,
 
   /* add the three default buttons, but keep all but the first disabled for now */
   for(unsigned int i = 0; i < 3; i++) {
-    if(strchr(static_cast<const char *>(buttons[i].first), '_') != nullptr)
-      priv->buttons[i] = gtk_button_new_with_mnemonic(static_cast<const gchar *>(buttons[i].first));
+    if(strchr(static_cast<const char *>(buttons[i].label), '_') != nullptr)
+      priv->buttons[i] = gtk_button_new_with_mnemonic(static_cast<const gchar *>(buttons[i].label));
     else
-      priv->buttons[i] = osm2go_platform::button_new_with_label(buttons[i].first);
+      priv->buttons[i] = osm2go_platform::button_new_with_label(buttons[i].label);
     gtk_table_attach_defaults(GTK_TABLE(priv->table),
                               priv->buttons[i], i, i + 1, 0, 1);
     g_signal_connect_swapped(priv->buttons[i], "clicked",
-                             buttons[i].second, priv->callback_context);
+                             buttons[i].cb, priv->callback_context);
     gtk_widget_set_sensitive(priv->buttons[i], i == 0 ? TRUE : FALSE);
   }
 

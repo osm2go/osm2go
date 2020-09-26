@@ -61,7 +61,24 @@ struct list_view_column {
   int hlkey; ///< highlight key in case LIST_FLAG_CAN_HIGHLIGHT is set
 };
 
-typedef std::pair<trstring::native_type, GCallback> list_button;
+class list_button {
+public:
+  inline list_button(trstring::native_type_arg lb, GCallback c)
+    : label(lb), cb(c) {}
+
+  // with C++11 the relevant places use move operations which have no
+  // problem with the const members
+#if __cplusplus < 201103L
+  inline list_button &operator=(const list_button &other)
+  {
+    memcpy(this, &other, sizeof(this));
+    return *this;
+  }
+#endif
+
+  const trstring::native_type label;
+  const GCallback cb;
+};
 
 typedef void(*list_changed_callback)(GtkTreeSelection*, void*);
 
