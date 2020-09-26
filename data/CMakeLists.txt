@@ -50,7 +50,7 @@ if (NOT USE_SVG_ICONS)
 	# must be modified, will be installed below
 	list(REMOVE_ITEM INSTALL_DATA_FILES defaultpresets.xml)
 endif ()
-install(FILES COPYING ${INSTALL_DATA_FILES}
+install(FILES ${INSTALL_DATA_FILES}
 	DESTINATION ${DATA_DIR})
 
 install(DIRECTORY icons
@@ -101,3 +101,5 @@ endif ()
 
 install(DIRECTORY demo
 	DESTINATION ${DATA_DIR})
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../LICENSES/GPL-3.0-or-later ${CMAKE_CURRENT_BINARY_DIR}/GPL-3.0-or-later COPYONLY)

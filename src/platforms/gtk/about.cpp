@@ -104,7 +104,7 @@ license_page_new()
 {
   GtkWidget *label = nullptr;
 
-  const std::string &name = osm2go_platform::find_file("COPYING");
+  const std::string &name = osm2go_platform::find_file("GPL-3.0-or-later");
   if(likely(!name.empty())) {
     osm2go_platform::MappedFile licMap(name);
 

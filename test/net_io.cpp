@@ -1,6 +1,5 @@
 #include <net_io.h>
 
-
 #include <cassert>
 #include <cerrno>
 #include <cstdlib>
@@ -15,7 +14,7 @@
 static void do_mem(osm2go_platform::MappedFile &lic)
 {
   std::string mem;
-  assert(net_io_download_mem(nullptr, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/COPYING", mem, _("dummy")));
+  assert(net_io_download_mem(nullptr, "https://raw.githubusercontent.com/osm2go/osm2go/master/LICENSES/GPL-3.0-or-later", mem, _("dummy")));
 
   assert_cmpmem(lic.data(), lic.length(), mem.c_str(), mem.size());
 }
@@ -34,7 +33,7 @@ static void do_file(osm2go_platform::MappedFile &lic)
 
   std::string fname = tmpdir;
   fname += "/lic";
-  assert(net_io_download_file(nullptr, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/COPYING", fname, trstring::native_type(), false));
+  assert(net_io_download_file(nullptr, "https://raw.githubusercontent.com/osm2go/osm2go/master/LICENSES/GPL-3.0-or-later", fname, trstring::native_type(), false));
 
   osm2go_platform::MappedFile download(fname);
   assert(download);
@@ -44,7 +43,7 @@ static void do_file(osm2go_platform::MappedFile &lic)
   download.reset();
 
   fname += ".gz";
-  assert(net_io_download_file(nullptr, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/COPYING", fname, trstring::native_type(), true));
+  assert(net_io_download_file(nullptr, "https://raw.githubusercontent.com/osm2go/osm2go/master/LICENSES/GPL-3.0-or-later", fname, trstring::native_type(), true));
   osm2go_platform::MappedFile downloadgz(fname);
 
   assert(check_gzip(downloadgz.data(), downloadgz.length()));

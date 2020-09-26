@@ -70,6 +70,6 @@ osm_test(project "${CMAKE_CURRENT_SOURCE_DIR}/empty_proj.proj"
 		"${CMAKE_CURRENT_SOURCE_DIR}/diff_restore_data/diff_restore_data.diff")
 
 if (NETWORK_TESTS)
-	osm_test(net_io "${CMAKE_SOURCE_DIR}/data/COPYING")
+	osm_test(net_io "${CMAKE_SOURCE_DIR}/LICENSES/GPL-3.0-or-later")
 	osm_test(osm_api_download)
 endif ()

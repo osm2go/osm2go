@@ -250,3 +250,6 @@ add_subdirectory(data)
 if (BUILD_TESTING)
 	add_subdirectory(test)
 endif ()
+
+install(FILES LICENSES/GPL-3.0-or-later
+	DESTINATION ${DATA_DIR})
