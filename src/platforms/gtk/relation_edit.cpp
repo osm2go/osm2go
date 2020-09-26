@@ -787,9 +787,9 @@ relation_list_widget(relation_context_t &context)
   columns.push_back(list_view_column(_("Members"), 0));
 
   std::vector<list_button> buttons;
-  buttons.push_back(list_button(_("_New"), G_CALLBACK(on_relation_add)));
-  buttons.push_back(list_button(_("_Edit"), G_CALLBACK(on_relation_edit)));
-  buttons.push_back(list_button(_("Remove"), G_CALLBACK(on_relation_remove)));
+  buttons.push_back(list_button::addButton(G_CALLBACK(on_relation_add)));
+  buttons.push_back(list_button::editButton(G_CALLBACK(on_relation_edit)));
+  buttons.push_back(list_button::removeButton(G_CALLBACK(on_relation_remove)));
   buttons.push_back(list_button(_("Members"), G_CALLBACK(on_relation_members)));
   buttons.push_back(list_button(_("Select"),  G_CALLBACK(on_relation_select)));
 

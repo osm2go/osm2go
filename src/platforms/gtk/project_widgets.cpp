@@ -613,9 +613,9 @@ project_list_widget(select_context_t &context, bool &has_sel)
   columns.push_back(list_view_column(_("Description"), LIST_FLAG_ELLIPSIZE));
 
   std::vector<list_button> buttons;
-  buttons.push_back(list_button(_("_New"), G_CALLBACK(on_project_new)));
-  buttons.push_back(list_button(_("_Edit"), G_CALLBACK(on_project_edit)));
-  buttons.push_back(list_button(_("Remove"), G_CALLBACK(on_project_delete)));
+  buttons.push_back(list_button::addButton(G_CALLBACK(on_project_new)));
+  buttons.push_back(list_button::editButton(G_CALLBACK(on_project_edit)));
+  buttons.push_back(list_button::removeButton(G_CALLBACK(on_project_delete)));
   buttons.push_back(list_button(_("Update all"), G_CALLBACK(on_project_update_all)));
 
   /* build the store */

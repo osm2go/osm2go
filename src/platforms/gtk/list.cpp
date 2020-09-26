@@ -353,3 +353,18 @@ void list_view_scroll(GtkTreeView *view, GtkTreeSelection *sel, GtkTreeIter* ite
   tree_path_guard mpath(gtk_tree_model_get_path(model, iter));
   gtk_tree_view_scroll_to_cell(view, mpath.get(), nullptr, FALSE, 0.0f, 0.0f);
 }
+
+list_button list_button::addButton(GCallback cb)
+{
+  return list_button(_("_Add"), cb);
+}
+
+list_button list_button::editButton(GCallback cb)
+{
+  return list_button(_("_Edit"), cb);
+}
+
+list_button list_button::removeButton(GCallback cb)
+{
+  return list_button(_("Remove"), cb);
+}

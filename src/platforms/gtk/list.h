@@ -78,6 +78,10 @@ public:
 
   const trstring::native_type label;
   const GCallback cb;
+
+  static list_button addButton(GCallback cb);
+  static list_button editButton(GCallback cb);
+  static list_button removeButton(GCallback cb);
 };
 
 typedef void(*list_changed_callback)(GtkTreeSelection*, void*);

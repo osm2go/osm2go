@@ -338,9 +338,9 @@ GtkWidget *
 wms_server_widget(wms_server_context_t *context)
 {
   std::vector<list_button> buttons;
-  buttons.push_back(list_button(_("_Add"), G_CALLBACK(on_server_add)));
-  buttons.push_back(list_button(_("_Edit"), G_CALLBACK(on_server_edit)));
-  buttons.push_back(list_button(_("Remove"), G_CALLBACK(on_server_remove)));
+  buttons.push_back(list_button::addButton(G_CALLBACK(on_server_add)));
+  buttons.push_back(list_button::editButton(G_CALLBACK(on_server_edit)));
+  buttons.push_back(list_button::removeButton(G_CALLBACK(on_server_remove)));
 
   context->store.reset(gtk_list_store_new(WMS_SERVER_NUM_COLS,
                                           G_TYPE_STRING, G_TYPE_POINTER));

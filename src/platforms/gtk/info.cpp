@@ -466,9 +466,9 @@ tag_widget(info_tag_context_t &context)
   columns.push_back(list_view_column(_("Value"), LIST_FLAG_ELLIPSIZE));
 
   std::vector<list_button> buttons;
-  buttons.push_back(list_button(_("_Add"), G_CALLBACK(on_tag_add)));
-  buttons.push_back(list_button(_("_Edit"), G_CALLBACK(on_tag_edit)));
-  buttons.push_back(list_button(_("Remove"), G_CALLBACK(on_tag_remove)));
+  buttons.push_back(list_button::addButton(G_CALLBACK(on_tag_add)));
+  buttons.push_back(list_button::editButton(G_CALLBACK(on_tag_edit)));
+  buttons.push_back(list_button::removeButton(G_CALLBACK(on_tag_remove)));
   buttons.push_back(list_button(_("Last"), G_CALLBACK(on_tag_last)));
   buttons.push_back(list_button(_("Presets"), nullptr));
   buttons.push_back(list_button(_("Relations"), G_CALLBACK(on_relations)));
