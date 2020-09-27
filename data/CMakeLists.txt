@@ -1,7 +1,7 @@
 find_package(Perl REQUIRED)
 
 add_custom_command(OUTPUT elemstyles-mapnik.xml
-		COMMAND sh -c "\"${PERL_EXECUTABLE}\" \"${CMAKE_CURRENT_SOURCE_DIR}/compose-elemstyles.pl\" 0.4 '#f2eee8' \"${CMAKE_CURRENT_SOURCE_DIR}/elemstyles-mapnik.xml.in\" > \"${CMAKE_CURRENT_BINARY_DIR}/elemstyles-mapnik.xml\""
+		COMMAND "${PERL_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/compose-elemstyles.pl" "0.4" "#f2eee8" "${CMAKE_CURRENT_BINARY_DIR}/elemstyles-mapnik.xml" "${CMAKE_CURRENT_SOURCE_DIR}/elemstyles-mapnik.xml.in"
 		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/compose-elemstyles.pl
 			${CMAKE_CURRENT_SOURCE_DIR}/elemstyles-mapnik.xml.in
 		VERBATIM
