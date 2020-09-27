@@ -627,10 +627,6 @@ void osm_t::node_free(node_t *node) {
   delete node;
 }
 
-static inline void nodefree(std::pair<item_id_t, node_t *> pair) {
-  delete pair.second;
-}
-
 /* ------------------- way handling ------------------- */
 static void osm_unref_node(node_t* node)
 {
@@ -646,11 +642,6 @@ void osm_t::way_free(way_t *way) {
   ways.erase(way->id);
   way->cleanup();
   delete way;
-}
-
-static void way_free(std::pair<item_id_t, way_t *> pair) {
-  pair.second->cleanup();
-  delete pair.second;
 }
 
 /* ------------------- relation handling ------------------- */
@@ -720,11 +711,6 @@ void osm_t::relation_free(relation_t *relation) {
   relations.erase(relation->id);
   relation->cleanup();
   delete relation;
-}
-
-static void osm_relation_free_pair(std::pair<item_id_t, relation_t *> pair) {
-  pair.second->cleanup();
-  delete pair.second;
 }
 
 /* try to find something descriptive */
@@ -1473,12 +1459,21 @@ osm_t::osm_t()
   bounds.ll = pos_area(pos_t(NAN, NAN), pos_t(NAN, NAN));
 }
 
+namespace {
+
+template<typename T> inline void
+pairfree(std::pair<item_id_t, T *> pair)
+{
+  delete pair.second;
+}
+
+} // namespace
+
 osm_t::~osm_t()
 {
-  std::for_each(ways.begin(), ways.end(), ::way_free);
-  std::for_each(nodes.begin(), nodes.end(), nodefree);
-  std::for_each(relations.begin(), relations.end(),
-                osm_relation_free_pair);
+  std::for_each(relations.begin(), relations.end(), pairfree<relation_t>);
+  std::for_each(ways.begin(), ways.end(), pairfree<way_t>);
+  std::for_each(nodes.begin(), nodes.end(), pairfree<node_t>);
 }
 
 node_t *osm_t::node_by_id(item_id_t id) const {
