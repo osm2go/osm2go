@@ -40,31 +40,19 @@ cache_set value_cache;
 
 bool object_t::operator==(const object_t &other) const noexcept
 {
-  if (type != other.type) {
-    if ((type ^ _REF_FLAG) != other.type)
-      return false;
-    // we only handle the other case
-    if(type & _REF_FLAG)
-      return other == *this;
-    switch(type) {
-    case NODE:
-    case WAY:
-    case RELATION:
-      return obj->id == other.id;
-    default:
-      assert_unreachable();
-    }
-  }
+  // the base types must be identical
+  if ((type & ~_REF_FLAG) != (other.type & ~_REF_FLAG))
+    return false;
 
   switch(type) {
   case NODE:
   case WAY:
   case RELATION:
-    return obj == other.obj;
+    return obj->id == other.get_id();
   case NODE_ID:
   case WAY_ID:
   case RELATION_ID:
-    return id == other.id;
+    return id == other.get_id();
   case ILLEGAL:
     return true;
   default:
