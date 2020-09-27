@@ -157,6 +157,10 @@ void test_way_highway()
   tags.insert(osm_t::TagMap::value_type("highway", "pedestrian"));
   helper_way(tags, _("pedestrian way"), 0);
 
+  // no area without specifying it as area
+  tags.insert(osm_t::TagMap::value_type("highway", "pedestrian"));
+  helper_way(tags, _("pedestrian way"), -3);
+
   tags.insert(osm_t::TagMap::value_type("area", "yes"));
   helper_way(tags, _("pedestrian way"), 0);
 

@@ -1229,7 +1229,7 @@ bool way_t::is_closed() const noexcept {
 static bool implicit_area(const tag_t &tg)
 {
   std::array<const char *, 5> keys = { {
-    "aeroway", "building", "landuse", "leisure", "natural"
+    "building", "landuse", "leisure", "natural", "aeroway"
   } };
 
   // this can be checked faster than the keys, so do it first
