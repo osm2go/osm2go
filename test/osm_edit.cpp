@@ -833,6 +833,15 @@ void test_reverse()
   // the original value was uppercase
   tags.find("oneway")->second = "yes";
   assert(w->tags == tags);
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("highway", "residential"));
+  tags.insert(osm_t::TagMap::value_type("oneway", "strange"));
+  w->tags.replace(tags);
+
+  // the oneway key is unknown, so it is not touched.
+  w->reverse(o, r, rroles);
+  assert(w->tags == tags);
 }
 
 unsigned int nn_cnt;
