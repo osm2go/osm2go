@@ -1527,20 +1527,28 @@ osm_t::dirty_t::counter<T>::counter(const std::map<item_id_t, T *> &map)
   std::for_each(map.begin(), map.end(), object_counter(*this));
 }
 
+namespace {
+
+template<typename T>
+inline void object_insert(std::map<item_id_t, T *> &map, T *o)
+{
+  bool b = map.insert(std::make_pair(o->id, o)).second;
+  assert(b); (void)b;
+}
+
+} // namespace
+
 void osm_t::node_insert(node_t *node)
 {
-  bool b = nodes.insert(std::make_pair(node->id, node)).second;
-  assert(b); (void)b;
+  object_insert(nodes, node);
 }
 
 void osm_t::way_insert(way_t *way)
 {
-  bool b = ways.insert(std::make_pair(way->id, way)).second;
-  assert(b); (void)b;
+  object_insert(ways, way);
 }
 
 void osm_t::relation_insert(relation_t *relation)
 {
-  bool b = relations.insert(std::make_pair(relation->id, relation)).second;
-  assert(b); (void)b;
+  object_insert(relations, relation);
 }
