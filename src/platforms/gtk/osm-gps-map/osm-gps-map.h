@@ -62,7 +62,7 @@ void osm_gps_map_add_track (OsmGpsMap *map, const std::pair<OsmGpsMapPoint, OsmG
 void osm_gps_map_add_bounds(OsmGpsMap *map, const std::pair<OsmGpsMapPoint, OsmGpsMapPoint> &bounds);
 #endif
 osd_button_t osm_gps_map_osd_check(OsmGpsMap *map, gint x, gint y);
-void osm_gps_map_repaint (OsmGpsMap *map);
+gboolean osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event);
 
 G_END_DECLS
 

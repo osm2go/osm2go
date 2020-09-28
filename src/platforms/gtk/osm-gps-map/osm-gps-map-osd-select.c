@@ -202,7 +202,7 @@ osm_gps_map_osd_check(OsmGpsMap *map, gint x, gint y)
                 if(priv->select_toggle.state) {
                     priv->select_toggle.state = FALSE;
                     osd_render_toggle(priv);
-                    osm_gps_map_repaint(map);
+                    osm_gps_map_expose(widget, NULL);
                 }
 
                 return OSD_SELECT;
@@ -210,7 +210,7 @@ osm_gps_map_osd_check(OsmGpsMap *map, gint x, gint y)
                 if(!priv->select_toggle.state) {
                     priv->select_toggle.state = TRUE;
                     osd_render_toggle(priv);
-                    osm_gps_map_repaint(map);
+                    osm_gps_map_expose(widget, NULL);
                 }
 
                 return OSD_DRAG;

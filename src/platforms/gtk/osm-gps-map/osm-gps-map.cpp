@@ -1283,9 +1283,6 @@ osm_gps_map_button_release (GtkWidget *widget, GdkEventButton *event)
 }
 
 gboolean
-osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event);
-
-gboolean
 osm_gps_map_map_expose (GtkWidget *widget)
 {
     OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
@@ -1383,6 +1380,8 @@ osm_gps_map_configure(GtkWidget *widget, G_GNUC_UNUSED GdkEventConfigure *event)
     return FALSE;
 }
 
+} // namespace
+
 gboolean
 osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event)
 {
@@ -1472,8 +1471,6 @@ osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event)
 
     return FALSE;
 }
-
-} // namespace
 
 // this one can't be in the namespace as it is declared as this by the glib macros
 static void
@@ -1592,12 +1589,6 @@ osm_gps_map_osd_get(OsmGpsMap *map)
 {
     g_return_val_if_fail (OSM_IS_GPS_MAP (map), nullptr);
     return map->priv->osd;
-}
-
-void
-osm_gps_map_repaint (OsmGpsMap *map)
-{
-    osm_gps_map_expose (GTK_WIDGET(map), nullptr);
 }
 
 OsmGpsMapPoint *
