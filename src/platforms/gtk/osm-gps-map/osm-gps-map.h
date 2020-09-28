@@ -61,7 +61,6 @@ typedef void (*OsmGpsMapOsdCallback)(osd_button_t but, gpointer data);
 void osm_gps_map_add_track (OsmGpsMap *map, const std::pair<OsmGpsMapPoint, OsmGpsMapPoint> &track);
 void osm_gps_map_add_bounds(OsmGpsMap *map, const std::pair<OsmGpsMapPoint, OsmGpsMapPoint> &bounds);
 #endif
-void osm_gps_map_redraw (OsmGpsMap *map);
 osd_button_t osm_gps_map_osd_check(OsmGpsMap *map, gint x, gint y);
 void osm_gps_map_repaint (OsmGpsMap *map);
 

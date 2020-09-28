@@ -1587,12 +1587,6 @@ osm_gps_map_convert_screen_to_geographic(OsmGpsMap *map, gint pixel_x, gint pixe
     return pt;
 }
 
-void
-osm_gps_map_redraw (OsmGpsMap *map)
-{
-    osm_gps_map_map_redraw_idle(map);
-}
-
 struct osd_priv_s *
 osm_gps_map_osd_get(OsmGpsMap *map)
 {
