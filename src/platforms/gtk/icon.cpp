@@ -166,24 +166,21 @@ struct find_icon_buf {
 
 } // namespace
 
-void icon_t::icon_free(icon_item *buf) {
+void icon_t::icon_free(icon_item *buf)
+{
   //  g_debug("request to free icon %p", buf);
 
-  /* check if icon list already contains an icon of that name */
   icon_buffer::BufferMap &entries = static_cast<icon_buffer *>(this)->entries;
   const icon_buffer::BufferMap::iterator itEnd = entries.end();
   icon_buffer::BufferMap::iterator it = std::find_if(entries.begin(), itEnd,
                                                     find_icon_buf(buf));
-  if(unlikely(it == itEnd)) {
-    g_warning("ERROR: icon to be freed not found");
-  } else {
-    it->second->use--;
-    if(it->second->use == 0) {
-      //  g_debug("freeing unused icon %s", it->first.c_str());
+  assert(it != itEnd);
+  it->second->use--;
+  if(it->second->use == 0) {
+    //  g_debug("freeing unused icon %s", it->first.c_str());
 
-      delete it->second;
-      entries.erase(it);
-    }
+    delete it->second;
+    entries.erase(it);
   }
 }
 
