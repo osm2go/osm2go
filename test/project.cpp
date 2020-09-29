@@ -28,6 +28,7 @@
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
 #include <osm2go_platform.h>
+#include <osm2go_test.h>
 
 namespace {
 
@@ -48,18 +49,10 @@ void MainUiDummy::showNotification(trstring::arg_type message, unsigned int)
   messages.push_back(nativeMsg.toStdString());
 }
 
-} // namespace
+const char *proj_name = "test_proj";
 
-appdata_t::appdata_t()
-  : uicontrol(new MainUiDummy())
-  , map(nullptr)
-  , icons(icon_t::instance())
-{
-}
-
-static const char *proj_name = "test_proj";
-
-static void testNoFiles(const std::string &tmpdir)
+void
+testNoFiles(const std::string &tmpdir)
 {
   appdata_t appdata;
   appdata.project.reset(new project_t(proj_name, tmpdir));
@@ -88,7 +81,8 @@ static void testNoFiles(const std::string &tmpdir)
   unlink(pfile.c_str());
 }
 
-static void testSave(const std::string &tmpdir, const char *empty_proj)
+void
+testSave(const std::string &tmpdir, const std::string &readonly, const char *empty_proj)
 {
   std::unique_ptr<project_t> project(std::make_unique<project_t>(proj_name, tmpdir));
 
@@ -120,9 +114,14 @@ static void testSave(const std::string &tmpdir, const char *empty_proj)
   }
 
   project_delete(project);
+
+  project.reset(new project_t(proj_name, readonly));
+  assert(project);
+  assert(!project->save());
 }
 
-static void testNoData(const std::string &tmpdir)
+void
+testNoData(const std::string &tmpdir)
 {
   std::unique_ptr<project_t> project(std::make_unique<project_t>(proj_name, tmpdir));
 
@@ -156,7 +155,8 @@ static void testNoData(const std::string &tmpdir)
   project_delete(project);
 }
 
-static void testServer(const std::string &tmpdir)
+void
+testServer(const std::string &tmpdir)
 {
   const std::string defaultserver = "https://api.openstreetmap.org/api/0.6";
   const std::string oldserver = "http://api.openstreetmap.org/api/0.5";
@@ -186,12 +186,26 @@ static void testServer(const std::string &tmpdir)
   assert_cmpstr(project.server(defaultserver), defaultserver);
 }
 
-static void testLoad(const std::string &tmpdir, const char *osmfile)
+void
+helper_createOsm(project_t::ref project, const std::string &tmpdir, const char *data, size_t datalen)
+{
+  // save for the base directory
+  assert(project->save());
+  // copy the OSM data
+  fdguard osmfd(open((tmpdir + proj_name + '/' + proj_name + ".osm").c_str(), O_CREAT | O_WRONLY, 0644));
+  assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
+  assert_cmpnum(write(osmfd, data, datalen), datalen);
+}
+
+void
+testLoad(const std::string &tmpdir, osm2go_platform::MappedFile &osmfile)
 {
   appdata_t appdata;
 
   // 3 attempts of loading, the first will fail because of missing OSM data
   const size_t loopcnt = 3;
+  // loopcnt is doubled here, the excess loop iterations use the other overload
+  // of project_load() but behave otherwise the same
   for (size_t i = loopcnt * 2; i > 0; i--) {
     fflush(stdout); // output readability
     // create dummy project
@@ -203,26 +217,27 @@ static void testLoad(const std::string &tmpdir, const char *osmfile)
 
     assert(project->bounds == pos_area::normalized(project->bounds.min, project->bounds.max));
     assert(project->bounds == pos_area::normalized(project->bounds.max, project->bounds.min));
+    assert(static_cast<bool>(osmfile));
 
-    size_t msgs = (i + 1) / 2;
-    switch (msgs) {
-    case 3:
+    size_t msgs; // number of showNotification() messages this is expected to emit
+    switch (i) {
+    case 6:
+    case 5:
+      // these must come first, they expected that no .osm file is present
       msgs = 2;
       break;
-    case 2:
+    case 4:
+    case 3:
+      msgs = 2;
       // let it fail because of invalid bounds
       project->bounds.min.lat = 2;
-      // fallthrough
-    case 1: {
-      // save for the base directory
-      assert(project->save());
-      // copy the OSM data
-      osm2go_platform::MappedFile osm(osmfile);
-      assert(static_cast<bool>(osm));
-      fdguard osmfd(open((tmpdir + proj_name + '/' + proj_name + ".osm").c_str(), O_CREAT | O_WRONLY, 0644));
-      assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
-      assert_cmpnum(write(osmfd, osm.data(), osm.length()), osm.length());
-      }
+      helper_createOsm(project, tmpdir, osmfile.data(), osmfile.length());
+      break;
+    case 2:
+    case 1:
+      msgs = 1;
+      helper_createOsm(project, tmpdir, osmfile.data(), osmfile.length());
+      break;
     }
 
     assert(project->save());
@@ -263,7 +278,8 @@ static void testLoad(const std::string &tmpdir, const char *osmfile)
   project_delete(tmpproj);
 }
 
-static void testRename(const std::string &tmpdir, const char *diff_file)
+void
+testRename(const std::string &tmpdir, const char *diff_file)
 {
   std::unique_ptr<project_t> project(std::make_unique<project_t>("diff_restore_data", tmpdir));
   assert(project->save());
@@ -356,8 +372,19 @@ static void testRename(const std::string &tmpdir, const char *diff_file)
   project_delete(project);
 }
 
+} // namespace
+
+appdata_t::appdata_t()
+  : uicontrol(new MainUiDummy())
+  , map(nullptr)
+  , icons(icon_t::instance())
+{
+}
+
 int main(int argc, char **argv)
 {
+  OSM2GO_TEST_INIT(argc, argv);
+
   xmlInitParser();
 
   if(argc != 4)
@@ -373,13 +400,24 @@ int main(int argc, char **argv)
   std::string osm_path = tmpdir;
   osm_path += '/';
 
+  std::string readonly = osm_path + "readonly/";
+  int r = mkdir(readonly.c_str(), 0555);
+  if (r != 0) {
+    std::cerr << "cannot create non-writable directory";
+    return 1;
+  }
+
+  osm2go_platform::MappedFile osmfile(argv[2]);
+  assert(osmfile);
+
   testNoFiles(osm_path);
-  testSave(osm_path, argv[1]);
+  testSave(osm_path, readonly, argv[1]);
   testNoData(osm_path);
   testServer(osm_path);
-  testLoad(osm_path, argv[2]);
+  testLoad(osm_path, osmfile);
   testRename(osm_path, argv[3]);
 
+  assert_cmpnum(rmdir(readonly.c_str()), 0);
   assert_cmpnum(rmdir(tmpdir), 0);
 
   xmlCleanupParser();
