@@ -405,7 +405,7 @@ bool osm2go_platform::create_directories(const std::string &path)
 #ifdef __clang__
 // b cannot be __builtin_constant_p(), but gcc still wants to have the declaration available.
 // Here is the code, but since it cannot happen just wait for the linker error in case this is
-// ever needed. Looks like it happen with clang.
+// ever needed. Looks like it happens with clang.
 assert_cmpstr_struct::assert_cmpstr_struct(trstring::arg_type a, const char *astr, trstring::arg_type b, const char *file, const char *func, int line)
 {
   trstring::native_type nativeA = static_cast<trstring::native_type>(a);
