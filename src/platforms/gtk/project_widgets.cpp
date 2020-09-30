@@ -651,8 +651,8 @@ project_list_widget(select_context_t &context, bool &has_sel)
 void
 project_filesize(project_context_t *context)
 {
-  trstring::any_type str;
   trstring gstr;
+  trstring::any_type str(gstr);
   const project_t * const project = context->project;
 
   g_debug("Checking size of %s", project->osmFile.c_str());
@@ -678,11 +678,10 @@ project_filesize(project_context_t *context)
         strftime(time_str, sizeof(time_str), "%x %X", &loctime);
         gstr = trstring("%1 bytes present\nfrom %2").arg(st.st_size).arg(time_str);
 
-        if(project->osmFile.size() > 3 && ends_with(project->osmFile, ".gz"))
+        if(ends_with(project->osmFile, ".gz"))
           gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:\n(compressed)"));
         else
           gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:"));
-        str = gstr;
         en = true;
       } else {
         str = _("Error testing data file");

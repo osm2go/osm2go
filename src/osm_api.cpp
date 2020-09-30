@@ -78,7 +78,7 @@ bool osm_download(osm2go_platform::Widget *parent, project_t *project)
     return false;
 
   // if the project's gzip setting and the download one don't match change the project
-  const bool wasGzip = project->osmFile.size() > 3 && ends_with(project->osmFile, ".gz");
+  const bool wasGzip = ends_with(project->osmFile, ".gz");
 
   // check the contents of the new file
   osm2go_platform::MappedFile osmData(update);

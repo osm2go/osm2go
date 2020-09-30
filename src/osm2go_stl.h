@@ -265,6 +265,8 @@ static inline bool ends_with(const std::string &s, const char *es)
   return s.ends_with(es);
 #else
   const size_t eslen = strlen(es);
+  if (s.size() < eslen)
+    return false;
   return s.compare(s.size() - eslen, eslen, es) == 0;
 #endif
 }
