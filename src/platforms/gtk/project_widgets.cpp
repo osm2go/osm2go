@@ -659,6 +659,7 @@ project_filesize(project_context_t *context)
 
   bool en = !context->is_new;
   struct stat st;
+  errno = 0; // make sure that the next check works if S_ISREG() returns false
   bool stret = fstatat(project->dirfd, project->osmFile.c_str(), &st, 0) == 0 &&
                S_ISREG(st.st_mode);
   const GdkColor *color;
@@ -682,13 +683,12 @@ project_filesize(project_context_t *context)
         else
           gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:"));
         str = gstr;
+        en = true;
       } else {
         str = _("Error testing data file");
       }
     } else
       str = _("Outdated, please download!");
-
-    en = en || !project->data_dirty;
   }
   gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, color);
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, en ? TRUE : FALSE);
