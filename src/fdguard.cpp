@@ -58,12 +58,31 @@ void fdguard::swap(fdguard &other) noexcept
   const_cast<int &>(other.fd) = f;
 }
 
-dirguard::dirguard(int fd)
-  : d(fdopendir(dup(fd)))
+namespace {
+
+DIR *openByFd(int fd)
 {
+  int nfd = dup(fd);
+  if (unlikely(nfd < 0))
+    return nullptr;
+
+  DIR *ret = fdopendir(nfd);
+  if (unlikely(ret == nullptr)) {
+    close(nfd);
+    return nullptr;
+  }
+
   // ignore the position of fd
-  if(d != nullptr)
-    rewinddir(d);
+  rewinddir(ret);
+
+  return ret;
+}
+
+} // namespace
+
+dirguard::dirguard(int fd)
+  : d(openByFd(fd))
+{
 }
 
 #if __cplusplus < 201103L
