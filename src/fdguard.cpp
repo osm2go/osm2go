@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2017 Rolf Eike Beer <eike@sf-mail.de>
+ * SPDX-FileCopyrightText: 2017,2018,2020 Rolf Eike Beer <eike@sf-mail.de>
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -60,7 +60,7 @@ void fdguard::swap(fdguard &other) noexcept
 
 namespace {
 
-DIR *openByFd(int fd)
+DIR *openByFd(int fd, bool rewind)
 {
   int nfd = dup(fd);
   if (unlikely(nfd < 0))
@@ -73,7 +73,8 @@ DIR *openByFd(int fd)
   }
 
   // ignore the position of fd
-  rewinddir(ret);
+  if (rewind)
+    rewinddir(ret);
 
   return ret;
 }
@@ -81,13 +82,15 @@ DIR *openByFd(int fd)
 } // namespace
 
 dirguard::dirguard(int fd)
-  : d(openByFd(fd))
+  : d(openByFd(fd, true))
 {
 }
 
 #if __cplusplus < 201103L
 dirguard::dirguard(const dirguard &other)
-  : p(other.p), d(fdopendir(dup(other.dirfd())))
+  : p(other.p)
+  // do not rewind to behave the same like a move constructor
+  , d(openByFd(other.dirfd(), false))
 {
 }
 
@@ -95,7 +98,7 @@ dirguard& dirguard::operator=(const dirguard &other)
 {
   assert(d == nullptr);
   assert(p.empty());
-  const_cast<DIR*&>(d) = fdopendir(dup(other.dirfd()));
+  const_cast<DIR*&>(d) = openByFd(other.dirfd(), false);
   const_cast<std::string&>(p) = other.p;
 
   return *this;
