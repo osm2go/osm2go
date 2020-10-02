@@ -53,30 +53,8 @@ public:
   gps_data_t gpsdata;
 };
 
-}
-
-pos_t gpsd_state_t::get_pos(float* alt)
-{
-  pos_t pos(NAN, NAN);
-
-  if(enable) {
-    std::lock_guard<std::mutex> lock(mutex);
-    if(gpsdata.set & STATUS_SET) {
-      if(gpsdata.status != STATUS_NO_FIX) {
-        if(gpsdata.set & LATLON_SET) {
-          pos.lat = gpsdata.fix.latitude;
-          pos.lon = gpsdata.fix.longitude;
-        }
-        if(alt != nullptr && gpsdata.set & ALTITUDE_SET)
-          *alt = gpsdata.fix.altitude;
-      }
-    }
-  }
-
-  return pos;
-}
-
-static bool gps_connect(gps_data_t &gps)
+bool
+gps_connect(gps_data_t &gps)
 {
   memset(&gps, 0, sizeof(gps));
   if(gps_open("localhost", DEFAULT_GPSD_PORT, &gps) != 0)
@@ -88,11 +66,51 @@ static bool gps_connect(gps_data_t &gps)
   return true;
 }
 
+gboolean
+gps_callback(gpointer data)
+{
+  return static_cast<gpsd_state_t *>(data)->runCallback() ? TRUE : FALSE;
+}
 
-static gboolean gps_callback(gpointer data) {
-  gpsd_state_t * const state = static_cast<gpsd_state_t *>(data);
+inline bool
+hasGpsFix(gps_data_t &gpsdata)
+{
+#if GPSD_API_MAJOR_VERSION < 10
+  return (gpsdata.status != STATUS_NO_FIX);
+#else
+  return (gpsdata.fix.status != STATUS_NO_FIX);
+#endif
+}
 
-  return state->runCallback() ? TRUE : FALSE;
+#if GPSD_API_MAJOR_VERSION >= 7
+inline int
+gps_read(gps_data_t *gps)
+{
+  return gps_read(gps, nullptr, 0);
+}
+#endif
+
+} // namespace
+
+pos_t gpsd_state_t::get_pos(float* alt)
+{
+  pos_t pos(NAN, NAN);
+
+  if(enable) {
+    std::lock_guard<std::mutex> lock(mutex);
+    if(gpsdata.set & STATUS_SET) {
+      if(hasGpsFix(gpsdata)) {
+        if(gpsdata.set & LATLON_SET) {
+          pos.lat = gpsdata.fix.latitude;
+          pos.lon = gpsdata.fix.longitude;
+        }
+        if(alt != nullptr && gpsdata.set & ALTITUDE_SET)
+          *alt = gpsdata.fix.altitude;
+      }
+    }
+  }
+
+  return pos;
 }
 
 void gpsd_state_t::setEnable(bool en)
@@ -123,11 +141,7 @@ gpointer gps_thread(gpointer data) {
         /* update every second, wait here to make sure a complete */
         /* reply is received */
         if(gps_waiting(&gps, 1000000)) {
-#if GPSD_API_MAJOR_VERSION < 7
           int r = gps_read(&gps);
-#else
-          int r = gps_read(&gps, nullptr, 0);
-#endif
 
           std::lock_guard<std::mutex> lock(gps_state->mutex);
 
