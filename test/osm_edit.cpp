@@ -1043,7 +1043,7 @@ void test_member_delete()
   n2->map_item = mi.get();
 
   // now delete the node that is member of both other objects
-  o->node_delete(n2, true);
+  o->node_delete(n2);
   fflush(stdout);
   // since the object had a valid id it should still be there, but unreferenced
   assert_cmpnum(o->nodes.size(), 3);
@@ -1223,7 +1223,40 @@ void test_merge_nodes()
   assert_cmpnum(o->nodes.size(), 1);
   assert_cmpnum(o->ways.size(), 0);
   assert_cmpnum(o->relations.size(), 0);
+  assert(o->nodes.begin()->second == n2);
   o->node_delete(n2);
+  assert_cmpnum(o->nodes.size(), 0);
+
+  /// ==================
+  // have short ways of 2 nodes, deletion of one of the nodes should trigger deletion of the ways
+  n1 = o->node_new(oldpos);
+  n2 = o->node_new(newpos);
+  o->node_attach(n1);
+  o->node_attach(n2);
+
+  // one way
+  w = new way_t(0);
+  o->way_attach(w);
+  w->append_node(n1);
+  w->append_node(n2);
+
+  node_t *n3 = o->node_new(pos_t(25, 45));
+  o->node_attach(n3);
+  // important: set non-trivial tags so this will not be deleted when the referencing way is deleted
+  std::vector<tag_t> tags = ab_with_creator();
+  n3->tags.replace(std::move(tags));
+
+  way_t *w2 = new way_t(0);
+  o->way_attach(w2);
+  w2->append_node(n1);
+  w2->append_node(n3);
+
+  o->node_delete(n1, nullptr);
+  assert_cmpnum(o->nodes.size(), 1);
+  assert_cmpnum(o->ways.size(), 0);
+  assert_cmpnum(o->relations.size(), 0);
+  assert(o->nodes.begin()->second == n3);
+  o->node_delete(n3);
   assert_cmpnum(o->nodes.size(), 0);
 
   /// ==================

@@ -1287,25 +1287,6 @@ void map_t::action_ok() {
   }
 }
 
-class node_deleted_from_ways {
-  map_t * const map;
-public:
-  explicit inline node_deleted_from_ways(map_t *m) : map(m) { }
-  void operator()(way_t *way);
-};
-
-/* redraw all affected ways */
-void node_deleted_from_ways::operator()(way_t *way) {
-  if(way->node_chain.size() == 1) {
-    /* this way now only contains one node and thus isn't a valid */
-    /* way anymore. So it'll also get deleted (which in turn may */
-    /* cause other nodes to be deleted as well) */
-    map->appdata.project->osm->way_delete(way, map);
-  } else {
-    map->redraw_item(way);
-  }
-}
-
 class short_way {
   const node_t * const node;
 public:
@@ -1343,8 +1324,7 @@ void map_t::delete_selected() {
       return;
 
     /* and mark it "deleted" in the database */
-    const way_chain_t &chain = osm->node_delete(sel.node);
-    std::for_each(chain.begin(), chain.end(), node_deleted_from_ways(this));
+    osm->node_delete(sel.node, this);
 
     break;
   }

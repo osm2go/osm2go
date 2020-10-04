@@ -312,14 +312,29 @@ public:
     return find_object(relations, pred);
   }
 
+  enum NodeDeleteFlags {
+    NodeDeleteDefault,   ///< remove it from all ways and relations it is part of
+    NodeDeleteKeepRefs,  ///< do not remove this node from ways and relations
+    NodeDeleteShortWays  ///< if this is part of 2-node ways delete the ways also
+  };
+
+private:
+  void node_delete(node_t *node, NodeDeleteFlags flags, map_t *map);
+
+public:
   /**
    * @brief remove the given node
    * @param node the node to remove
    * @param remove_refs if it should be cleaned also from ways and relations referencing it
-   * @return list of ways affected by this deletion
    */
-  way_chain_t node_delete(node_t *node, bool remove_refs = true);
+  inline void node_delete(node_t *node, NodeDeleteFlags flags = NodeDeleteDefault)
+  { node_delete(node, flags, nullptr); }
+
+  void node_delete(node_t *node, map_t *map)
+  { node_delete(node, NodeDeleteShortWays, map); }
+
   void relation_free(relation_t *relation);
+
   /**
    * @brief insert a relation and create a new temporary id
    * @param relation the new relation

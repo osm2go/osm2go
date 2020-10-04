@@ -13,6 +13,7 @@
 #include "osm_p.h"
 
 #include "cache_set.h"
+#include "map.h"
 #include "misc.h"
 #include "osm_objects.h"
 #include "pos.h"
@@ -374,7 +375,7 @@ osm_t::mergeResult<node_t> osm_t::mergeNodes(node_t *first, node_t *second, std:
   /* remove must not have any references to ways anymore */
   assert_cmpnum(remove->ways, 0);
 
-  node_delete(remove, false);
+  node_delete(remove, osm_t::NodeDeleteKeepRefs);
 
   return mergeResult<node_t>(keep, conflict);
 }
@@ -910,7 +911,8 @@ class node_chain_delete_functor {
   way_chain_t &way_chain;
   const bool check_only;
 public:
-  inline node_chain_delete_functor(osm_t *o, const node_t *n, way_chain_t &w, bool a) : osm(o), node(n), way_chain(w), check_only(!a) {}
+  inline node_chain_delete_functor(osm_t *o, const node_t *n, way_chain_t &w, bool c)
+    : osm(o), node(n), way_chain(w), check_only(c) {}
   void operator()(std::pair<item_id_t, way_t *> p);
 };
 
@@ -938,9 +940,31 @@ void node_chain_delete_functor::operator()(std::pair<item_id_t, way_t *> p)
   }
 }
 
+class node_deleted_from_ways {
+  map_t * const map;
+  osm_t * const osm;
+public:
+  explicit inline node_deleted_from_ways(map_t *m, osm_t *o) : map(m), osm(o) { }
+  void operator()(way_t *way);
+};
+
+/* redraw all affected ways */
+void node_deleted_from_ways::operator()(way_t *way)
+{
+  if(way->node_chain.size() == 1) {
+    /* this way now only contains one node and thus isn't a valid */
+    /* way anymore. So it'll also get deleted (which in turn may */
+    /* cause other nodes to be deleted as well) */
+    osm->way_delete(way, map);
+  } else {
+    map->redraw_item(way);
+  }
+}
+
 } // namespace
 
-way_chain_t osm_t::node_delete(node_t *node, bool remove_refs)
+void
+osm_t::node_delete(node_t *node, NodeDeleteFlags flags, map_t *map)
 {
   way_chain_t way_chain;
 
@@ -948,9 +972,9 @@ way_chain_t osm_t::node_delete(node_t *node, bool remove_refs)
   if (node->ways > 0)
     /* first remove node from all ways using it */
     std::for_each(ways.begin(), ways.end(),
-                  node_chain_delete_functor(this, node, way_chain, remove_refs));
+                  node_chain_delete_functor(this, node, way_chain, (flags == NodeDeleteKeepRefs)));
 
-  if(remove_refs)
+  if(flags != NodeDeleteKeepRefs)
     remove_from_relations(object_t(node));
 
   /* remove that nodes map representations */
@@ -965,7 +989,8 @@ way_chain_t osm_t::node_delete(node_t *node, bool remove_refs)
     node_free(node);
   }
 
-  return way_chain;
+  if (flags == NodeDeleteShortWays)
+    std::for_each(way_chain.begin(), way_chain.end(), node_deleted_from_ways(map, this));
 }
 
 class remove_member_functor {
@@ -1038,7 +1063,7 @@ void osm_unref_way_free::operator()(node_t *node)
     /* associated ways as the only such way is the one we are currently */
     /* deleting */
     if(osm->find_relation(find_relation_members(object_t(node))) == nullptr)
-      osm->node_delete(node, false);
+      osm->node_delete(node, osm_t::NodeDeleteKeepRefs);
   }
 }
 
