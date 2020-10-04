@@ -312,7 +312,8 @@ style_t::~style_t()
   std::for_each(node_icons.begin(), node_icons.end(), unref_icon);
 }
 
-void style_t::colorize(node_t *n)
+void
+style_t::colorize(node_t *n) const
 {
   josm_elemstyles_colorize_node(this, n);
 }

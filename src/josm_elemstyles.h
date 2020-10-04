@@ -33,6 +33,6 @@ std::vector<elemstyle_t *> josm_elemstyles_load(const char *name);
 void josm_elemstyles_free(std::vector<elemstyle_t *> &elemstyles);
 bool parse_color(xmlNode *a_node, const char *name, color_t &color);
 
-void josm_elemstyles_colorize_node(style_t *style, node_t *node);
+void josm_elemstyles_colorize_node(const style_t *style, node_t *node);
 void josm_elemstyles_colorize_way(const style_t *style, way_t *way);
-void josm_elemstyles_colorize_world(style_t *styles, osm_t::ref osm);
+void josm_elemstyles_colorize_world(const style_t *styles, osm_t::ref osm);

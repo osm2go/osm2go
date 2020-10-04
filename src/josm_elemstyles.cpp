@@ -537,7 +537,7 @@ struct condition_not_matches_obj {
 };
 
 void
-node_icon_unref(style_t *style, const node_t *node, icon_t &icons)
+node_icon_unref(const style_t *style, const node_t *node, icon_t &icons)
 {
   style_t::IconCache::iterator it = style->node_icons.find(node->id);
   if(it != style->node_icons.end()) {
@@ -547,12 +547,12 @@ node_icon_unref(style_t *style, const node_t *node, icon_t &icons)
 }
 
 struct colorize_node {
-  style_t * const style;
+  const style_t * const style;
   node_t * const node;
   icon_t &icons;
   bool &somematch;
   int priority;
-  colorize_node(style_t *s, node_t *n, bool &m, icon_t &i)
+  colorize_node(const style_t *s, node_t *n, bool &m, icon_t &i)
     : style(s), node(n), icons(i), somematch(m)
     , priority(std::numeric_limits<typeof(priority)>::min()) {}
   void operator()(const elemstyle_t *elemstyle);
@@ -600,7 +600,9 @@ void colorize_node::operator()(const elemstyle_t *elemstyle)
 
 } // namespace
 
-void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
+void
+josm_elemstyles_colorize_node(const style_t *style, node_t *node)
+{
   node->zoom_max = style->node.zoom_max;
 
   bool somematch = false;
@@ -618,8 +620,8 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
 namespace {
 
 struct josm_elemstyles_colorize_node_functor {
-  style_t * const style;
-  explicit inline josm_elemstyles_colorize_node_functor(style_t *s) : style(s) {}
+  const style_t * const style;
+  explicit inline josm_elemstyles_colorize_node_functor(const style_t *s) : style(s) {}
   inline void operator()(std::pair<item_id_t, node_t *> pair) {
     josm_elemstyles_colorize_node(style, pair.second);
   }
@@ -772,7 +774,9 @@ void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
   f(way);
 }
 
-void josm_elemstyles_colorize_world(style_t *styles, osm_t::ref osm) {
+void
+josm_elemstyles_colorize_world(const style_t *styles, osm_t::ref osm)
+{
   printf("preparing colors\n");
 
   /* colorize ways */
