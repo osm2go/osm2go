@@ -940,12 +940,15 @@ void node_chain_delete_functor::operator()(std::pair<item_id_t, way_t *> p)
 
 } // namespace
 
-way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
+way_chain_t osm_t::node_delete(node_t *node, bool remove_refs)
+{
   way_chain_t way_chain;
 
-  /* first remove node from all ways using it */
-  std::for_each(ways.begin(), ways.end(),
-                node_chain_delete_functor(this, node, way_chain, remove_refs));
+  // no need to iterate all ways if we already know in advance that none references this node
+  if (node->ways > 0)
+    /* first remove node from all ways using it */
+    std::for_each(ways.begin(), ways.end(),
+                  node_chain_delete_functor(this, node, way_chain, remove_refs));
 
   if(remove_refs)
     remove_from_relations(object_t(node));
@@ -1022,7 +1025,7 @@ public:
   void operator()(node_t *node);
 };
 
-void osm_unref_way_free::operator()(node_t* node)
+void osm_unref_way_free::operator()(node_t *node)
 {
   printf("checking node #" ITEM_ID_FORMAT " (still used by %u)\n",
          node->id, node->ways);
@@ -1034,11 +1037,8 @@ void osm_unref_way_free::operator()(node_t* node)
     /* delete this node, but don't let this actually affect the */
     /* associated ways as the only such way is the one we are currently */
     /* deleting */
-    if(osm->find_relation(find_relation_members(object_t(node))) == nullptr) {
-      const way_chain_t &way_chain = osm->node_delete(node, false);
-      assert_cmpnum(way_chain.size(), 1);
-      assert(way_chain.front() == way);
-    }
+    if(osm->find_relation(find_relation_members(object_t(node))) == nullptr)
+      osm->node_delete(node, false);
   }
 }
 
