@@ -396,18 +396,14 @@ void map_t::node_move(map_item_t *map_item, const osm2go_platform::screenpos &p)
   assert(map_item->object.type == object_t::NODE);
   node_t *node = map_item->object.node;
 
-  printf("released dragged node #" ITEM_ID_FORMAT "\n", node->id);
-  printf("  was at %d %d (%f %f)\n",
-	 node->lpos.x, node->lpos.y,
-	 node->pos.lat, node->pos.lon);
+  printf("released dragged node #" ITEM_ID_FORMAT ", was at %d %d (%f %f)\n",
+         node->id, node->lpos.x, node->lpos.y, node->pos.lat, node->pos.lon);
 
   /* check if it was dropped onto another node */
   bool joined_with_touchnode = false;
 
   if(touchnode != nullptr) {
     node_t *tn = touchnode_get_node();
-
-    printf("  dropped onto node #" ITEM_ID_FORMAT "\n", tn->id);
 
     if(osm2go_platform::yes_no(_("Join nodes?"),
                                _("Do you want to join the dragged node with the one you dropped it on?"),
