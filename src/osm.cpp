@@ -187,6 +187,8 @@ void relation_object_replacer::operator()(relation_t *r)
     if(it->object != old)
       continue;
 
+    osm->mark_dirty(r);
+
     it->object = replace;
 
     // check if this member now is the same as the next or previous one
@@ -200,8 +202,6 @@ void relation_object_replacer::operator()(relation_t *r)
       // end iterator changed because container was modified, update it
       itEnd = r->members.end();
     }
-
-    r->flags |= OSM_FLAG_DIRTY;
   }
 }
 
@@ -300,6 +300,9 @@ osm_t::mergeResult<node_t> osm_t::mergeNodes(node_t *first, node_t *second, std:
   if(!checkObjectPersistence(object_t(keep), object_t(remove), rels))
     std::swap(keep, remove);
 
+  mark_dirty(keep);
+  mark_dirty(remove);
+
   /* use "second" position as that was the target */
   keep->lpos = second->lpos;
   keep->pos = second->pos;
@@ -332,6 +335,7 @@ osm_t::mergeResult<node_t> osm_t::mergeNodes(node_t *first, node_t *second, std:
     while(remove->ways > 0 && (it = std::find(it, itEnd, remove)) != itEnd) {
       printf("  found node in way #" ITEM_ID_FORMAT "\n", way->id);
 
+      mark_dirty(way);
       // check if this node is the same as the neighbor
       if((it != itBegin && *std::prev(it) == keep) || (std::next(it) != itEnd && *std::next(it) == keep)) {
         // this node would now be twice in the way at adjacent positions
@@ -356,15 +360,13 @@ osm_t::mergeResult<node_t> osm_t::mergeNodes(node_t *first, node_t *second, std:
       /* and adjust way references of remove */
       assert_cmpnum_op(remove->ways, >, 0);
       remove->ways--;
-
-      way->flags |= OSM_FLAG_DIRTY;
     }
   }
   assert_cmpnum(remove->ways, 0);
 
   /* replace "remove" in relations */
   std::for_each(rels.begin(), rels.end(),
-                relation_object_replacer(object_t(remove), object_t(keep)));
+                relation_object_replacer(this, object_t(remove), object_t(keep)));
 
   /* transfer tags from "remove" to "keep" */
   bool conflict = keep->tags.merge(remove->tags);
@@ -373,8 +375,6 @@ osm_t::mergeResult<node_t> osm_t::mergeNodes(node_t *first, node_t *second, std:
   assert_cmpnum(remove->ways, 0);
 
   node_delete(remove, false);
-
-  keep->flags |= OSM_FLAG_DIRTY;
 
   return mergeResult<node_t>(keep, conflict);
 }
@@ -660,10 +660,9 @@ void relation_t::remove_member(std::vector<member_t>::iterator it)
 {
   assert(it->object.is_real());
   assert(it != members.end());
+  assert(isDirty()); // the caller should have saved this to original.relations
 
   members.erase(it);
-
-  flags |= OSM_FLAG_DIRTY;
 }
 
 class gen_xml_relation_functor {
@@ -880,12 +879,38 @@ way_t *osm_t::way_attach(way_t *way)
   return way;
 }
 
+void
+osm_t::updateTags(object_t o, const TagMap &ntags)
+{
+  // only mark dirty if this will actually change something
+  if (o.obj->tags == ntags)
+    return;
+
+  switch (o.type) {
+  case object_t::NODE:
+    mark_dirty(o.node);
+    break;
+  case object_t::WAY:
+    mark_dirty(o.way);
+    break;
+  case object_t::RELATION:
+    mark_dirty(o.relation);
+    break;
+  default:
+    assert_unreachable();
+  }
+  o.obj->updateTags(ntags);
+}
+
+namespace {
+
 class node_chain_delete_functor {
+  osm_t * const osm;
   const node_t * const node;
   way_chain_t &way_chain;
   const bool check_only;
 public:
-  inline node_chain_delete_functor(const node_t *n, way_chain_t &w, bool a) : node(n), way_chain(w), check_only(!a) {}
+  inline node_chain_delete_functor(osm_t *o, const node_t *n, way_chain_t &w, bool a) : osm(o), node(n), way_chain(w), check_only(!a) {}
   void operator()(std::pair<item_id_t, way_t *> p);
 };
 
@@ -899,7 +924,7 @@ void node_chain_delete_functor::operator()(std::pair<item_id_t, way_t *> p)
   while((it = std::find(it, chain.end(), node)) != chain.end()) {
     if (!modified) {
       modified = true;
-      way->flags |= OSM_FLAG_DIRTY;
+      osm->mark_dirty(way);
 
       // and add the way to the list of affected ways
       way_chain.push_back(way);
@@ -913,12 +938,14 @@ void node_chain_delete_functor::operator()(std::pair<item_id_t, way_t *> p)
   }
 }
 
+} // namespace
+
 way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
   way_chain_t way_chain;
 
   /* first remove node from all ways using it */
   std::for_each(ways.begin(), ways.end(),
-                node_chain_delete_functor(node, way_chain, remove_refs));
+                node_chain_delete_functor(this, node, way_chain, remove_refs));
 
   if(remove_refs)
     remove_from_relations(object_t(node));
@@ -939,9 +966,10 @@ way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
 }
 
 class remove_member_functor {
+  osm_t * const osm;
   const object_t obj;
 public:
-  explicit inline remove_member_functor(object_t o) : obj(o) {}
+  explicit inline remove_member_functor(osm_t *o, object_t ob) : osm(o), obj(ob) {}
   void operator()(std::pair<item_id_t, relation_t *> pair);
 };
 
@@ -954,11 +982,10 @@ void remove_member_functor::operator()(std::pair<item_id_t, relation_t *> pair)
   while((it = std::find(it, itEnd, obj)) != itEnd) {
     printf("  from relation #" ITEM_ID_FORMAT "\n", relation->id);
 
+    osm->mark_dirty(relation);
     it = relation->members.erase(it);
     // refresh end iterator as the vector was modified
     itEnd = relation->members.end();
-
-    relation->flags |= OSM_FLAG_DIRTY;
   }
 }
 
@@ -968,7 +995,7 @@ void osm_t::remove_from_relations(object_t obj) {
   printf("removing %s #" ITEM_ID_FORMAT " from all relations:\n", obj.obj->apiString(), obj.get_id());
 
   std::for_each(relations.begin(), relations.end(),
-                remove_member_functor(obj));
+                remove_member_functor(this, obj));
 }
 
 relation_t *osm_t::relation_attach(relation_t *relation)
@@ -1148,10 +1175,11 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
  * dirty. */
 
 class reverse_roles {
+  osm_t::ref osm;
   const object_t way;
   unsigned int &n_roles_flipped;
 public:
-  inline reverse_roles(way_t *w, unsigned int &n) : way(w), n_roles_flipped(n) {}
+  inline reverse_roles(osm_t::ref o, way_t *w, unsigned int &n) : osm(o), way(w), n_roles_flipped(n) {}
   void operator()(const std::pair<item_id_t, relation_t *> &pair);
 };
 
@@ -1178,11 +1206,11 @@ void reverse_roles::operator()(const std::pair<item_id_t, relation_t *> &pair)
     printf("null role in route relation -> ignore\n");
   } else if (member->role == DS_ROUTE_FORWARD || strcasecmp(member->role, DS_ROUTE_FORWARD) == 0) {
     member->role = DS_ROUTE_REVERSE;
-    relation->flags |= OSM_FLAG_DIRTY;
+    osm->mark_dirty(relation);
     ++n_roles_flipped;
   } else if (member->role == DS_ROUTE_REVERSE || strcasecmp(member->role, DS_ROUTE_REVERSE) == 0) {
     member->role = DS_ROUTE_FORWARD;
-    relation->flags |= OSM_FLAG_DIRTY;
+    osm->mark_dirty(relation);
     ++n_roles_flipped;
   }
 
@@ -1194,14 +1222,13 @@ void reverse_roles::operator()(const std::pair<item_id_t, relation_t *> &pair)
 void way_t::reverse(osm_t::ref osm, unsigned int &tags_flipped, unsigned int &roles_flipped) {
   tags_flipped = 0;
 
+  osm->mark_dirty(this);
   tags.for_each(reverse_direction_sensitive_tags_functor(tags_flipped));
-
-  flags |= OSM_FLAG_DIRTY;
 
   std::reverse(node_chain.begin(), node_chain.end());
 
   roles_flipped = 0;
-  reverse_roles context(this, roles_flipped);
+  reverse_roles context(osm, this, roles_flipped);
   std::for_each(osm->relations.begin(), osm->relations.end(), context);
 }
 
@@ -1255,10 +1282,11 @@ bool way_t::is_area() const
 }
 
 class relation_transfer {
+  osm_t::ref osm;
   way_t * const dst;
   const way_t * const src;
 public:
-  inline relation_transfer(way_t *d, const way_t *s) : dst(d), src(s) {}
+  inline relation_transfer(osm_t::ref o, way_t *d, const way_t *s) : osm(o), dst(d), src(s) {}
   void operator()(const std::pair<item_id_t, relation_t *> &pair);
 };
 
@@ -1292,6 +1320,7 @@ void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pai
                      next_way->ends_with_node(src->node_chain.back());
     } // if this is both itEnd and itBegin it is the only member, so the ordering is irrelevant
 
+    osm->mark_dirty(relation);
     // make dst member of the same relation
     if(insertBefore) {
       printf("\tinserting before way #" ITEM_ID_FORMAT " to keep relation ordering\n", src->id);
@@ -1305,8 +1334,6 @@ void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pai
     it++;
     // refresh the end iterator as the container was modified
     itEnd = relation->members.end();
-
-    relation->flags |= OSM_FLAG_DIRTY;
   }
 }
 
@@ -1315,7 +1342,7 @@ way_t *way_t::split(osm_t::ref osm, node_chain_t::iterator cut_at, bool cut_at_n
   assert_cmpnum_op(node_chain.size(), >, 2);
 
   /* remember that the way needs to be uploaded */
-  flags |= OSM_FLAG_DIRTY;
+  osm->mark_dirty(this);
 
   /* If this is a closed way, reorder (rotate) it, so the place to cut is
    * adjacent to the begin/end of the way. This prevents a cut polygon to be
@@ -1369,7 +1396,7 @@ way_t *way_t::split(osm_t::ref osm, node_chain_t::iterator cut_at, bool cut_at_n
   way_t *ret = osm->way_attach(neww.release());
 
   /* ---- transfer relation membership from way to new ----- */
-  std::for_each(osm->relations.begin(), osm->relations.end(), relation_transfer(ret, this));
+  std::for_each(osm->relations.begin(), osm->relations.end(), relation_transfer(osm, ret, this));
 
   return ret;
 }

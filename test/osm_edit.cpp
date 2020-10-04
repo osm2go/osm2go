@@ -344,21 +344,24 @@ void test_taglist()
 
 void test_replace()
 {
-  node_t node(1, pos_t(0, 0), 1);
+  std::unique_ptr<osm_t> o(std::make_unique<osm_t>());
+  node_t *nd = new node_t(1, pos_t(0, 0), 1);
+  o->node_attach(nd);
+  node_t &node = *nd;
   assert_cmpnum(node.flags, 0);
 
   assert(node.tags.empty());
 
   osm_t::TagMap nstags;
-  node.updateTags(nstags);
+  o->updateTags(object_t(nd), nstags);
   assert_cmpnum(node.flags, 0);
   assert(node.tags.empty());
 
   osm_t::TagMap::value_type cr_by("created_by", "test");
   assert(tag_t::is_discardable(cr_by.first.c_str()));
   nstags.insert(cr_by);
-  node.updateTags(nstags);
-  assert(node.flags == 0);
+  o->updateTags(object_t(nd), nstags);
+  assert_cmpnum(node.flags, 0);
   assert(node.tags.empty());
 
   node.tags.replace(nstags);
@@ -368,14 +371,14 @@ void test_replace()
   osm_t::TagMap::value_type aA("a", "A");
   nstags.insert(aA);
 
-  node.updateTags(nstags);
+  o->updateTags(object_t(nd), nstags);
   assert_cmpnum(node.flags, OSM_FLAG_DIRTY);
   assert(!node.tags.empty());
   assert(node.tags == nstags);
 
   node.flags = 0;
 
-  node.updateTags(nstags);
+  o->updateTags(object_t(nd), nstags);
   assert_cmpnum(node.flags, 0);
   assert(!node.tags.empty());
   assert(node.tags == nstags);
@@ -395,7 +398,7 @@ void test_replace()
   assert(node.tags == nstags);
 
   // updating with the same "real" tag shouldn't change anything
-  node.updateTags(nstags);
+  o->updateTags(object_t(nd), nstags);
   assert_cmpnum(node.flags, 0);
   assert(!node.tags.empty());
   assert(node.tags == nstags);

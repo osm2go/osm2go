@@ -93,7 +93,7 @@ struct relation_context_t {
 };
 
 bool
-relation_add_item(GtkWidget *parent, relation_t *relation, const object_t &object, const presets_items *presets)
+relation_add_item(GtkWidget *parent, relation_t *relation, const object_t &object, const presets_items *presets, osm_t::ref osm)
 {
   g_debug("add object of type %d to relation #" ITEM_ID_FORMAT, object.type, relation->id);
 
@@ -164,6 +164,7 @@ relation_add_item(GtkWidget *parent, relation_t *relation, const object_t &objec
       role = ptr;
   }
 
+  osm->mark_dirty(relation);
   // create new member
   // must be done before the widget is destroyed as it may reference the
   // internal string from the text entry
@@ -171,7 +172,6 @@ relation_add_item(GtkWidget *parent, relation_t *relation, const object_t &objec
 
   assert(object.is_real());
 
-  relation->flags |= OSM_FLAG_DIRTY;
   return true;
 }
 
@@ -199,7 +199,7 @@ changed_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer 
     g_debug("selected: " ITEM_ID_FORMAT, relation->id);
 
     /* either accept this or unselect again */
-    if(relation_add_item(context->dialog.get(), relation, context->item, context->presets)) {
+    if(relation_add_item(context->dialog.get(), relation, context->item, context->presets, context->osm)) {
       // the item is now the last one in the chain
       const member_t &member = relation->members.back();
       gtk_list_store_set(GTK_LIST_STORE(model), iter, RELITEM_COL_ROLE, member.role, -1);
@@ -210,6 +210,7 @@ changed_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer 
   } else if(it != itEnd && isSelected == FALSE) {
     g_debug("deselected: " ITEM_ID_FORMAT, relation->id);
 
+    context->osm->mark_dirty(relation);
     relation->remove_member(it);
     gtk_list_store_set(GTK_LIST_STORE(model), iter, RELITEM_COL_ROLE, nullptr, -1);
 

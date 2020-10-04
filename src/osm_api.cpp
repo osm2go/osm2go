@@ -332,8 +332,9 @@ osm_post_xml(osm_upload_context_t &context, const xmlString &xml_str, int len,
 
 /**
  * @brief upload one object to the OSM server
+ * @returns if object has been updated
  */
-void
+bool
 upload_object(osm_upload_context_t &context, base_object_t *obj, bool is_new)
 {
   /* make sure gui gets updated */
@@ -360,10 +361,12 @@ upload_object(osm_upload_context_t &context, base_object_t *obj, bool is_new)
     if(osm_update_item(context, xml_str.get(), url.c_str(), is_new ? &obj->id : &tmp)) {
       if(!is_new)
         obj->version = tmp;
-      obj->flags ^= OSM_FLAG_DIRTY;
       context.project->data_dirty = true;
+      return true;
     }
   }
+
+  return false;
 }
 
 template<typename T>
@@ -380,7 +383,8 @@ template<typename T>
 void upload_objects<T>::operator()(T *obj)
 {
   item_id_t oldid = obj->id;
-  upload_object(context, obj, is_new);
+  if (upload_object(context, obj, is_new))
+    context.osm->unmark_dirty(obj);
   if(oldid != obj->id) {
     map.erase(oldid);
     map[obj->id] = obj;

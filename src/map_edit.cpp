@@ -456,6 +456,7 @@ void map_t::node_move(map_item_t *map_item, const osm2go_platform::screenpos &p)
   /* the node either wasn't dropped into another one (touchnode) or */
   /* the user didn't want to join the nodes */
   if(!joined_with_touchnode) {
+    osm->mark_dirty(node);
 
     /* finally update dragged nodes position */
 
@@ -486,10 +487,6 @@ void map_t::node_move(map_item_t *map_item, const osm2go_platform::screenpos &p)
     std::for_each(osm->ways.begin(), osm->ways.end(), fc);
   }
 
-  /* and mark the node as dirty */
-  node->flags |= OSM_FLAG_DIRTY;
-
-  /* update highlight */
   highlight_refresh();
 }
 

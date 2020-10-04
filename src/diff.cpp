@@ -293,7 +293,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t::ref osm) {
 
       node = osm->node_by_id(id);
       if(likely(node != nullptr)) {
-        node->flags |= OSM_FLAG_DIRTY;
+        osm->mark_dirty(node);
         if (node->pos == pos)
           pos_diff = false;
         else
@@ -314,7 +314,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t::ref osm) {
   /* check if the same changes have been done upstream */
   if(state == OSM_FLAG_DIRTY && !pos_diff && node->tags == ntags) {
     printf("node " ITEM_ID_FORMAT " has the same values and position as upstream, discarding diff\n", id);
-    node->flags &= ~OSM_FLAG_DIRTY;
+    osm->unmark_dirty(node);
     return;
   }
 
@@ -365,7 +365,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t::ref osm) {
 
       way = osm->way_by_id(id);
       if(likely(way != nullptr)) {
-        way->flags |= OSM_FLAG_DIRTY;
+        osm->mark_dirty(way);
         break;
       } else {
         printf("  WARNING: no way with that id found\n");
@@ -412,7 +412,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t::ref osm) {
     } else if (!ntags.empty()) {
       if (sameChain) {
         printf("way " ITEM_ID_FORMAT " has the same nodes and tags as upstream, discarding diff\n", id);
-        way->flags &= ~OSM_FLAG_DIRTY;
+        osm->unmark_dirty(way);
       }
     }
   } else {
@@ -420,7 +420,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t::ref osm) {
     /* were found this wasn't a dirty entry but e.g. only the hidden */
     /* flag had been set */
     printf("  no nodes restored, way isn't dirty!\n");
-    way->flags &= ~OSM_FLAG_DIRTY;
+    osm->unmark_dirty(way);
   }
 }
 
@@ -463,7 +463,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t::ref osm) {
 
       relation = osm->relation_by_id(id);
       if(likely(relation != nullptr)) {
-        relation->flags |= OSM_FLAG_DIRTY;
+        osm->mark_dirty(relation);
         break;
       } else {
         printf("  WARNING: no relation with that id found\n");
@@ -506,7 +506,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t::ref osm) {
 
   if(!was_changed && (relation->flags & OSM_FLAG_DIRTY)) {
     printf("relation " ITEM_ID_FORMAT " has the same members and tags as upstream, discarding diff\n", id);
-    relation->flags &= ~OSM_FLAG_DIRTY;
+    osm->unmark_dirty(relation);
   }
 }
 

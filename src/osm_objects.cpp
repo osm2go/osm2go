@@ -220,9 +220,8 @@ void base_object_t::updateTags(const osm_t::TagMap &ntags)
   if (tags == ntags)
     return;
 
+  assert(isDirty()); // caller should have set this
   tags.replace(ntags);
-
-  flags |= OSM_FLAG_DIRTY;
 }
 
 std::string base_object_t::id_string() const {
@@ -301,14 +300,13 @@ node_t *way_t::insert_node(osm_t::ref osm, int position, lpos_t coords)
   node_t *node = osm->node_new(coords);
   osm->node_attach(node);
 
+  osm->mark_dirty(this);
+
   /* search correct position */
   node_chain.insert(std::next(node_chain.begin(), position), node);
 
   /* remember that this node is contained in one way */
   node->ways = 1;
-
-  /* and that the way needs to be uploaded */
-  flags |= OSM_FLAG_DIRTY;
 
   return node;
 }
@@ -322,6 +320,9 @@ bool way_t::merge(way_t *other, osm_t *osm, map_t *map, const std::vector<relati
 
   assert(ends_with_node(other->node_chain.front()) ||
            ends_with_node(other->node_chain.back()));
+
+  osm->mark_dirty(this);
+  osm->mark_dirty(other);
 
   const bool collision = tags.merge(other->tags);
 
@@ -358,12 +359,10 @@ bool way_t::merge(way_t *other, osm_t *osm, map_t *map, const std::vector<relati
 
   /* replace "other" in relations */
   std::for_each(rels.begin(), rels.end(),
-                relation_object_replacer(object_t(other), object_t(this)));
+                relation_object_replacer(osm, object_t(other), object_t(this)));
 
   /* erase and free other way (now only containing the overlapping node anymore) */
   osm->way_free(other);
-
-  flags |= OSM_FLAG_DIRTY;
 
   return collision;
 }

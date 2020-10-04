@@ -175,6 +175,19 @@ private:
 };
 
 class base_object_t {
+  friend class osm_t;
+
+  /**
+   * @brief replace the tags and set dirty flag if they were actually different
+   * @param ntags the new tags
+   *
+   * "created_by" tags are ignored when considering if the list needs to be
+   * changed or not.
+   *
+   * This expects to be called on a dirty object. In doubt use osm_t::updateTags().
+   */
+  void updateTags(const osm_t::TagMap &ntags);
+
 public:
   explicit base_object_t(unsigned int ver = 0, item_id_t i = ID_ILLEGAL) noexcept;
 
@@ -184,15 +197,6 @@ public:
   unsigned int flags;
   int user;
   unsigned int version;
-
-  /**
-   * @brief replace the tags and set dirty flag if they were actually different
-   * @param ntags the new tags
-   *
-   * "created_by" tags are ignored when considering if the list needs to be
-   * changed or not.
-   */
-  void updateTags(const osm_t::TagMap &ntags);
 
   xmlChar *generate_xml(const std::string &changeset) const;
 

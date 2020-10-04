@@ -706,7 +706,7 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *p
   } while(!quit);
 
   if(ok)
-    context.object.obj->updateTags(context.tags);
+    osm->updateTags(context.object, context.tags);
 
   return ok;
 }

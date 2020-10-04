@@ -263,11 +263,33 @@ private:
   }
 
 public:
+  template<typename T>
+  void mark_dirty(T *obj)
+  {
+    obj->flags |= OSM_FLAG_DIRTY;
+  }
+
+  template<typename T>
+  void unmark_dirty(T *obj)
+  {
+    obj->flags &= ~OSM_FLAG_DIRTY;
+  }
+
+  /**
+   * @brief update the tags of a given object
+   * @param o the object to update, must be a real one
+   * @param ntags the new tags to set
+   *
+   * Marks the object as dirty as necessary.
+   */
+  void updateTags(object_t o, const TagMap &ntags);
+
   /**
    * @brief find a way matching the given predicate
    */
   template<typename _Predicate>
-  way_t *find_way(_Predicate pred) const {
+  way_t *find_way(_Predicate pred) const
+  {
     return find_object(ways, pred);
   }
 
