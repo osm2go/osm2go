@@ -21,6 +21,8 @@ osm_test(osm_names)
 osm_test(presets_classes)
 osm_test(presets_load "${CMAKE_CURRENT_BINARY_DIR}/../data" "${CMAKE_CURRENT_SOURCE_DIR}/../data")
 set_property(TEST presets_load PROPERTY WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+# a path that is known to contain no additional presets
+set_property(TEST presets_load APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAKE_CURRENT_SOURCE_DIR}/../src/platforms")
 osm_test(presets_items)
 set_property(TEST presets_items APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAKE_CURRENT_SOURCE_DIR}/presets")
 set_property(TEST presets_items APPEND PROPERTY ENVIRONMENT "LC_MESSAGES=xy_ZZ")

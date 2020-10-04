@@ -323,17 +323,21 @@ bool osm2go_platform::yes_no(trstring::arg_type title, trstring::arg_type msg, u
   return yes;
 }
 
-const std::vector<dirguard> &osm2go_platform::base_paths()
+bool use_test_paths_only; ///< may be set by the tests to avoid looking up files in installation paths
+
+namespace {
+
+std::vector<dirguard> base_paths_init()
 {
 /* all entries must contain a trailing '/' ! */
-  static std::vector<dirguard> ret;
+  std::vector<dirguard> ret;
 
-  if(unlikely(ret.empty())) {
-    std::vector<std::string> pathnames;
+  std::vector<std::string> pathnames;
 
-    const char *home = g_get_home_dir();
-    assert(home != nullptr);
+  const char *home = g_get_home_dir();
+  assert(home != nullptr);
 
+  if (unlikely(!use_test_paths_only)) {
     // in home directory
     pathnames.push_back(home + std::string("/." PACKAGE "/"));
     // final installation path
@@ -344,24 +348,34 @@ const std::vector<dirguard> &osm2go_platform::base_paths()
     // path to internal memory card
     pathnames.push_back("/media/mmc2/" PACKAGE "/");
 #endif
-    // local paths for testing
-    pathnames.push_back("./data/");
-    pathnames.push_back("../data/");
-
-    for (unsigned int i = 0; i < pathnames.size(); i++) {
-      assert(ends_with(pathnames[i], '/'));
-      dirguard dfd(pathnames[i].c_str());
-      if(dfd.valid()) {
-#if __cplusplus >= 201103L
-        ret.emplace_back(std::move(dfd));
-#else
-        ret.push_back(dfd);
-#endif
-      }
-    }
-
-    assert(!ret.empty());
   }
+  // local paths for testing
+  pathnames.push_back("./data/");
+  pathnames.push_back("../data/");
+
+  for (unsigned int i = 0; i < pathnames.size(); i++) {
+    assert(ends_with(pathnames[i], '/'));
+    dirguard dfd(pathnames[i].c_str());
+    if(dfd.valid()) {
+#if __cplusplus >= 201103L
+      ret.emplace_back(std::move(dfd));
+#else
+      ret.push_back(dfd);
+#endif
+    }
+  }
+
+  assert(!ret.empty());
+
+  return ret;
+}
+
+} // namespace
+
+const std::vector<dirguard> &osm2go_platform::base_paths()
+{
+/* all entries must contain a trailing '/' ! */
+  static std::vector<dirguard> ret = base_paths_init();
 
   return ret;
 }

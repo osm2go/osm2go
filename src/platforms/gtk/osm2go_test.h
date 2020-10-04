@@ -16,10 +16,12 @@
 class canvas_t;
 extern canvas_t *canvas_t_create();
 
+extern bool use_test_paths_only;
+
 #if !GLIB_CHECK_VERSION(2,36,0)
-#define OSM2GO_TEST_INIT(argc, argv) g_type_init();(void)argc;(void)argv
+#define OSM2GO_TEST_INIT(argc, argv) g_type_init();(void)argc;(void)argv;use_test_paths_only = true
 #else
-#define OSM2GO_TEST_INIT(argc, argv) (void)argc;(void)argv
+#define OSM2GO_TEST_INIT(argc, argv) (void)argc;(void)argv;use_test_paths_only = true
 #endif
 
 class canvas_holder {
