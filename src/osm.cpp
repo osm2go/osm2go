@@ -883,9 +883,9 @@ way_t *osm_t::way_attach(way_t *way)
 class node_chain_delete_functor {
   const node_t * const node;
   way_chain_t &way_chain;
-  const bool affect_ways;
+  const bool check_only;
 public:
-  inline node_chain_delete_functor(const node_t *n, way_chain_t &w, bool a) : node(n), way_chain(w), affect_ways(a) {}
+  inline node_chain_delete_functor(const node_t *n, way_chain_t &w, bool a) : node(n), way_chain(w), check_only(!a) {}
   void operator()(std::pair<item_id_t, way_t *> p);
 };
 
@@ -895,22 +895,21 @@ void node_chain_delete_functor::operator()(std::pair<item_id_t, way_t *> p)
   node_chain_t &chain = way->node_chain;
   bool modified = false;
 
-  node_chain_t::iterator cit = chain.begin();
-  while((cit = std::find(cit, chain.end(), node)) != chain.end()) {
-    /* remove node from chain */
-    modified = true;
-    if(affect_ways)
-      cit = chain.erase(cit);
-    else
-      /* only record that there has been a change */
-      break;
-  }
+  node_chain_t::iterator it = chain.begin();
+  while((it = std::find(it, chain.end(), node)) != chain.end()) {
+    if (!modified) {
+      modified = true;
+      way->flags |= OSM_FLAG_DIRTY;
 
-  if(modified) {
-    way->flags |= OSM_FLAG_DIRTY;
+      // and add the way to the list of affected ways
+      way_chain.push_back(way);
+      // only record that there has been a change
+      if (check_only)
+        return;
+    }
 
-    /* and add the way to the list of affected ways */
-    way_chain.push_back(way);
+    // remove node from chain
+    it = chain.erase(it);
   }
 }
 
