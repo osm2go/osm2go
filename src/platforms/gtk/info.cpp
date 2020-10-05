@@ -416,7 +416,7 @@ on_tag_add(info_tag_context_t *context)
   // there can't be a new collision as the ok button in tag_edit() is not enabled then
   context->m_tags.insert(osm_t::TagMap::value_type(k, v));
   /* append a row for the new data */
-  GtkTreeIter iter = store_append(context->store.get(), k, v, FALSE);
+  GtkTreeIter iter = store_append(context->store.get(), k, v, false);
 
   gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
 }
@@ -449,7 +449,7 @@ tag_widget(info_tag_context_t &context)
 {
   /* setup both columns */
   std::vector<list_view_column> columns;
-  columns.push_back(list_view_column(_("Key"),   LIST_FLAG_ELLIPSIZE|LIST_FLAG_CAN_HIGHLIGHT, TAG_COL_COLLISION));
+  columns.push_back(list_view_column(_("Key"),   LIST_FLAG_ELLIPSIZE | LIST_FLAG_CAN_HIGHLIGHT, TAG_COL_COLLISION));
   columns.push_back(list_view_column(_("Value"), LIST_FLAG_ELLIPSIZE));
 
   std::vector<list_button> buttons;
