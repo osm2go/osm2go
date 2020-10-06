@@ -213,6 +213,7 @@ base_object_t::base_object_t(unsigned int ver, item_id_t i) noexcept
   , user(0)
   , version(ver)
 {
+  assert((version == 0) == (id <= ID_ILLEGAL));
 }
 
 void base_object_t::updateTags(const osm_t::TagMap &ntags)

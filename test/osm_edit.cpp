@@ -342,11 +342,13 @@ void test_taglist()
   assert(virgin != tags.asMap());
 }
 
-void test_replace()
+void test_replace_tags()
 {
   std::unique_ptr<osm_t> o(std::make_unique<osm_t>());
-  node_t *nd = new node_t(1, pos_t(0, 0), 1);
-  o->node_attach(nd);
+  set_bounds(o);
+
+  node_t *nd = new node_t(1, pos_t(0, 0), 47);
+  o->node_insert(nd);
   node_t &node = *nd;
   assert_cmpnum(node.flags, 0);
 
@@ -412,6 +414,8 @@ unsigned int intrnd(unsigned int r)
 void test_split()
 {
   std::unique_ptr<osm_t> o(std::make_unique<osm_t>());
+  set_bounds(o);
+
   way_t * const v = new way_t();
   way_t * const w = new way_t();
   relation_t * const r1 = new relation_t();
@@ -445,7 +449,7 @@ void test_split()
   // create the way to split
   std::vector<node_t *> nodes;
   for(int i = 0; i < 6; i++) {
-    node_t *n = new node_t(3, pos_t(52.25 + i * 0.001, 9.58 + i * 0.001), 1234500 + i);
+    node_t *n = o->node_new(pos_t(52.25 + i * 0.001, 9.58 + i * 0.001));
     o->node_attach(n);
     v->node_chain.push_back(n);
     w->node_chain.push_back(n);
@@ -1742,7 +1746,7 @@ int main()
 
   test_trivial();
   test_taglist();
-  test_replace();
+  test_replace_tags();
   test_split();
   test_split_order();
   test_changeset();

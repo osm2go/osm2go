@@ -151,7 +151,7 @@ int main(int argc, char **argv)
   assert_cmpnum(way->draw.color, 0x809bc0ff);
   assert_cmpnum(way->draw.width, 1);
 
-  way_t * const area = new way_t(1);
+  way_t * const area = new way_t(0);
   area->append_node(node);
   node_t *tmpn = osm->node_new(pos_t(0.0, 1.0));
   osm->node_attach(tmpn);

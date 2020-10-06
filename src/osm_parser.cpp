@@ -374,7 +374,9 @@ static node_t *process_nd(xmlTextReaderPtr reader, osm_t::ref osm) {
 
 static void process_way(xmlTextReaderPtr reader, osm_t::ref osm) {
   /* allocate a new way structure */
-  way_t *way = new way_t(1);
+  way_t *way = new way_t(0);
+  // reset the flags, this object comes from upstream OSM
+  way->flags = 0;
 
   process_base_attributes(way, reader, osm);
 
@@ -421,7 +423,9 @@ static bool process_member(xmlTextReaderPtr reader, osm_t::ref osm, std::vector<
 
 static void process_relation(xmlTextReaderPtr reader, osm_t::ref osm) {
   /* allocate a new relation structure */
-  relation_t *relation = new relation_t(1);
+  relation_t *relation = new relation_t(0);
+  // reset the flags, this object comes from upstream OSM
+  relation->flags = 0;
 
   process_base_attributes(relation, reader, osm);
 

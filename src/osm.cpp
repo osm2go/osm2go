@@ -845,6 +845,10 @@ xmlChar *osm_generate_xml_changeset(const std::string &comment,
 template<typename T> void osm_t::attach(T *obj)
 {
   std::map<item_id_t, T *> &map = objects<T>();
+  item_id_t id = obj->id;
+  assert_cmpnum(id, ID_ILLEGAL);
+  unsigned int version = obj->version;
+  assert_cmpnum(version, 0);
   if(map.empty()) {
     obj->id = -1;
   } else {
