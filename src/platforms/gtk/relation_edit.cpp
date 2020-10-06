@@ -211,7 +211,7 @@ changed_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer 
     g_debug("deselected: " ITEM_ID_FORMAT, relation->id);
 
     context->osm->mark_dirty(relation);
-    relation->remove_member(it);
+    relation->members.erase(it);
     gtk_list_store_set(GTK_LIST_STORE(model), iter, RELITEM_COL_ROLE, nullptr, -1);
 
     return TRUE;

@@ -658,15 +658,6 @@ void relation_t::cleanup()
   members.clear();
 }
 
-void relation_t::remove_member(std::vector<member_t>::iterator it)
-{
-  assert(it->object.is_real());
-  assert(it != members.end());
-  assert(isDirty()); // the caller should have saved this to original.relations
-
-  members.erase(it);
-}
-
 class gen_xml_relation_functor {
   xmlNodePtr const xml_node;
 public:

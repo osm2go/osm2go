@@ -1500,18 +1500,18 @@ void verify_merged_way(way_t *w, osm_t::ref o, const node_chain_t &nodes, const 
     std::vector<member_t>::iterator it = rel->find_member_object(object_t(w));
     assert(it != rel->members.end());
     assert_cmpstr(it->role, "foo");
-    rel->remove_member(it);
+    rel->members.erase(it);
 
     rel = o->relation_by_id(-4);
     it = rel->find_member_object(object_t(w));
     assert(it != rel->members.end());
     assert_cmpstr(it->role, "bar");
-    rel->remove_member(it);
+    rel->members.erase(it);
 
     it = rel->find_member_object(object_t(w));
     assert(it != rel->members.end());
     assert_null(it->role);
-    rel->remove_member(it);
+    rel->members.erase(it);
   }
   for(unsigned int i = 1; i < o->relations.size(); i++)
     assert_cmpnum(o->relation_by_id(-1 - static_cast<item_id_t>(i))->members.size(), i - 1);
@@ -1707,7 +1707,7 @@ void test_relation_members()
   r->members.push_back(member_t(object_t(n1), "foo"));
   r->members.push_back(member_t(object_t(n2), "bar"));
 
-  r->remove_member(r->find_member_object(object_t(n2)));
+  r->members.erase(r->find_member_object(object_t(n2)));
 
   assert_cmpnum(r->members.size(), 1);
 }
