@@ -65,6 +65,9 @@ public:
 
 #define assert_cmpnum(a, b) assert_cmpnum_op(a, ==, b)
 
+#ifdef NDEBUG
+#define assert_cmpnum_op(a, op, b) static_cast<void>(0)
+#else
 #define assert_cmpnum_op(a, op, b) \
        do { \
          const typeof(a) &ca = a; \
@@ -75,6 +78,7 @@ public:
              assert_num_tpl<typeof(ca)>(ca, cb, #a, #op, #b, __FILE__, __PRETTY_FUNCTION__, __LINE__); \
          } \
        } while (0)
+#endif
 
 class assert_cmpstr_struct {
 public:
@@ -167,6 +171,10 @@ private:
   __attribute__((noreturn)) ATTRIBUTE_COLD void fail(const char *a, const char *astr, const char *b, const char *bstr, const char *file, const char *func, int line);
 };
 
+#ifdef NDEBUG
+#define assert_cmpstr(a, b) static_cast<void>(0)
+#define assert_cmpmem(p1, l1, p2, l2) static_cast<void>(0)
+#else
 #define assert_cmpstr(a, b) \
          do { \
            __builtin_constant_p(b) ? \
@@ -183,6 +191,14 @@ private:
          else if (__l1 != 0 && memcmp (q1, q2, __l1) != 0) \
            assert(p1 == p2); \
        } while (0)
+#endif
 
 #define assert_unreachable() \
        assert_msg_unreachable(__FILE__, __LINE__, __PRETTY_FUNCTION__);
+
+#ifdef __GNUC_PREREQ
+#if __GNUC_PREREQ(4, 5)
+#undef assert_unreachable
+#define assert_unreachable() __builtin_unreachable()
+#endif
+#endif
