@@ -652,7 +652,8 @@ bool relation_t::is_multipolygon() const {
   return tp != nullptr && (strcmp(tp, "multipolygon") == 0);
 }
 
-void relation_t::cleanup() {
+void relation_t::cleanup()
+{
   tags.clear();
   members.clear();
 }
@@ -707,9 +708,9 @@ void relation_t::generate_member_xml(xmlNodePtr xml_node) const
   std::for_each(members.begin(), members.end(), gen_xml_relation_functor(xml_node));
 }
 
-void osm_t::relation_free(relation_t *relation) {
+void osm_t::relation_free(relation_t *relation)
+{
   relations.erase(relation->id);
-  relation->cleanup();
   delete relation;
 }
 

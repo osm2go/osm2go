@@ -222,8 +222,6 @@ test_roles(const presets_items *presets)
   relation_t r2;
   roles = presets->roles(&r, object_t(&r2));
   assert_cmpnum(roles.size(), 0);
-
-  r.cleanup();
 }
 
 } // namespace

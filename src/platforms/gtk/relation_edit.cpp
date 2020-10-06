@@ -641,21 +641,14 @@ on_relation_add(relation_context_t *context)
   /* create a new relation */
 
   std::unique_ptr<relation_t> relation(std::make_unique<relation_t>(0));
-  if(!relation_info_dialog(context, relation.get())) {
-    g_debug("tag edit cancelled");
-    relation->cleanup();
-  } else {
+  if(relation_info_dialog(context, relation.get())) {
     relation_t *r = context->osm->relation_attach(relation.release());
 
-    /* append a row for the new data */
-
-    const std::string &name = r->descriptive_name();
-
-    /* Append a row and fill in some data */
+    // append a row for the new data
     GtkTreeIter iter;
     gtk_list_store_insert_with_values(context->store.get(), &iter, -1,
                                       RELATION_COL_TYPE,    r->tags.get_value("type"),
-                                      RELATION_COL_NAME,    name.c_str(),
+                                      RELATION_COL_NAME,    r->descriptive_name().c_str(),
                                       RELATION_COL_MEMBERS, r->members.size(),
                                       RELATION_COL_DATA,    r,
                                       -1);
