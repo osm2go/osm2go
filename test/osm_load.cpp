@@ -1,4 +1,5 @@
 #include <icon.h>
+#include <misc.h>
 #include <osm.h>
 #include <osm_objects.h>
 
@@ -8,8 +9,59 @@
 #include <cerrno>
 #include <cstring>
 #include <iostream>
+#include <libxml/parser.h>
+#include <libxml/xmlstring.h>
 
 namespace {
+
+void
+check_memberParser()
+{
+  xmlString tp(xmlStrdup(BAD_CAST "node"));
+  xmlString refstr(xmlStrdup(BAD_CAST "47"));
+  xmlString role;
+  std::vector<member_t> members;
+  std::unique_ptr<osm_t> o(std::make_unique<osm_t>());
+
+  o->parse_relation_member(tp, refstr, role, members);
+  assert_cmpnum(members.size(), 1);
+  assert_null(members.front().role);
+  assert_cmpnum(members.front().object.type, object_t::NODE_ID);
+  assert_cmpnum(members.front().object.get_id(), 47);
+
+  // no type
+  tp.reset();
+  o->parse_relation_member(tp, refstr, role, members);
+  assert_cmpnum(members.size(), 1);
+
+  // invalid type
+  tp.reset(xmlStrdup(BAD_CAST "bogus"));
+  o->parse_relation_member(tp, refstr, role, members);
+  assert_cmpnum(members.size(), 1);
+
+  // no ref
+  tp.reset(xmlStrdup(BAD_CAST "way"));
+  refstr.reset();
+  o->parse_relation_member(tp, refstr, role, members);
+  assert_cmpnum(members.size(), 1);
+
+  // invalid ref
+  refstr.reset(xmlStrdup(BAD_CAST "bogus"));
+  o->parse_relation_member(tp, refstr, role, members);
+  assert_cmpnum(members.size(), 1);
+
+  // something valid again
+  refstr.reset(xmlStrdup(BAD_CAST "42"));
+  o->parse_relation_member(tp, refstr, role, members);
+
+  assert_cmpnum(members.size(), 2);
+  assert_null(members.front().role);
+  assert_cmpnum(members.front().object.type, object_t::NODE_ID);
+  assert_cmpnum(members.front().object.get_id(), 47);
+  assert_null(members.back().role);
+  assert_cmpnum(members.back().object.type, object_t::WAY_ID);
+  assert_cmpnum(members.back().object.get_id(), 42);
+}
 
 template<typename T>
 struct tag_counter {
@@ -36,6 +88,8 @@ int main(int argc, char **argv)
     return EINVAL;
 
   xmlInitParser();
+
+  check_memberParser();
 
   std::unique_ptr<osm_t> osm(osm_t::parse(std::string(), argv[1]));
   if(!osm) {

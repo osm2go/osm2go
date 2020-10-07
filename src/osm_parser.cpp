@@ -163,14 +163,15 @@ node_t *osm_t::parse_way_nd(xmlNode *a_node) const {
 
 /* ------------------- relation handling ------------------- */
 
-bool osm_t::parse_relation_member(const xmlString &tp, const xmlString &refstr, const xmlString &role, std::vector<member_t> &members) {
+void osm_t::parse_relation_member(const xmlString &tp, const xmlString &refstr, const xmlString &role, std::vector<member_t> &members)
+{
   if(unlikely(tp.empty())) {
     printf("missing type for relation member\n");
-    return false;
+    return;
   }
   if(unlikely(refstr.empty())) {
     printf("missing ref for relation member\n");
-    return false;
+    return;
   }
 
   object_t::type_t type;
@@ -182,14 +183,14 @@ bool osm_t::parse_relation_member(const xmlString &tp, const xmlString &refstr, 
     type = object_t::RELATION;
   else {
     printf("Unable to store illegal type '%s'\n", tp.get());
-    return false;
+    return;
   }
 
   char *endp;
   item_id_t id = strtoll(refstr, &endp, 10);
   if(unlikely(*endp != '\0')) {
     printf("Illegal ref '%s' for relation member\n", refstr.get());
-    return false;
+    return;
   }
 
   object_t obj(type);
@@ -220,7 +221,6 @@ bool osm_t::parse_relation_member(const xmlString &tp, const xmlString &refstr, 
 
   const char *rstr = role.empty() ? nullptr : static_cast<const char *>(role);
   members.push_back(member_t(obj, rstr));
-  return true;
 }
 
 void osm_t::parse_relation_member(xmlNode *a_node, std::vector<member_t> &members) {
@@ -413,12 +413,13 @@ static void process_way(xmlTextReaderPtr reader, osm_t::ref osm)
   way->tags.replace(std::move(tags));
 }
 
-static bool process_member(xmlTextReaderPtr reader, osm_t::ref osm, std::vector<member_t> &members) {
+static void process_member(xmlTextReaderPtr reader, osm_t::ref osm, std::vector<member_t> &members)
+{
   xmlString tp(xmlTextReaderGetAttribute(reader, BAD_CAST "type"));
   xmlString ref(xmlTextReaderGetAttribute(reader, BAD_CAST "ref"));
   xmlString role(xmlTextReaderGetAttribute(reader, BAD_CAST "role"));
 
-  return osm->parse_relation_member(tp, ref, role, members);
+  osm->parse_relation_member(tp, ref, role, members);
 }
 
 static void process_relation(xmlTextReaderPtr reader, osm_t::ref osm)
