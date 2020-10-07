@@ -297,16 +297,17 @@ static void process_tag(xmlTextReaderPtr reader, std::vector<tag_t> &tags) {
     printf("incomplete tag key/value %s/%s\n", k.get(), v.get());
 }
 
-static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader, osm_t::ref osm)
+static base_attributes process_base_attributes(xmlTextReaderPtr reader, osm_t::ref osm)
 {
+  base_attributes ret;
   xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST "id"));
   if(likely(prop))
-    obj->id = strtoll(prop, nullptr, 10);
+    ret.id = strtoll(prop, nullptr, 10);
 
   /* new in api 0.6: */
   prop.reset(xmlTextReaderGetAttribute(reader, BAD_CAST "version"));
   if(likely(prop))
-    obj->version = strtoul(prop, nullptr, 10);
+    ret.version = strtoul(prop, nullptr, 10);
 
   prop.reset(xmlTextReaderGetAttribute(reader, BAD_CAST "user"));
   if(likely(prop)) {
@@ -320,23 +321,23 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
         uid = -1;
       }
     }
-    obj->user = osm_user_insert(osm->users, prop, uid);
+    ret.user = osm_user_insert(osm->users, prop, uid);
   }
 
   prop.reset(xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"));
   if(likely(prop))
-    obj->time = convert_iso8601(prop);
+    ret.time = convert_iso8601(prop);
+
+  return ret;
 }
 
 static void process_node(xmlTextReaderPtr reader, osm_t::ref osm) {
   const pos_t pos = pos_t::fromXmlProperties(reader);
 
-  /* allocate a new node structure */
-  node_t *node = osm->node_new(pos);
-  // reset the flags, this object comes from upstream OSM
-  node->flags = 0;
+  base_attributes ba = process_base_attributes(reader, osm);
 
-  process_base_attributes(node, reader, osm);
+  node_t *node = osm->node_new(pos, ba);
+  assert_cmpnum(node->flags, 0);
 
   osm->node_insert(node);
 
@@ -372,13 +373,12 @@ static node_t *process_nd(xmlTextReaderPtr reader, osm_t::ref osm) {
   return parse_node_ref(prop, osm.get());
 }
 
-static void process_way(xmlTextReaderPtr reader, osm_t::ref osm) {
-  /* allocate a new way structure */
-  way_t *way = new way_t(0);
-  // reset the flags, this object comes from upstream OSM
-  way->flags = 0;
+static void process_way(xmlTextReaderPtr reader, osm_t::ref osm)
+{
+  base_attributes ba = process_base_attributes(reader, osm);
 
-  process_base_attributes(way, reader, osm);
+  way_t *way = new way_t(ba);
+  assert_cmpnum(way->flags, 0);
 
   osm->way_insert(way);
 
@@ -421,13 +421,12 @@ static bool process_member(xmlTextReaderPtr reader, osm_t::ref osm, std::vector<
   return osm->parse_relation_member(tp, ref, role, members);
 }
 
-static void process_relation(xmlTextReaderPtr reader, osm_t::ref osm) {
-  /* allocate a new relation structure */
-  relation_t *relation = new relation_t(0);
-  // reset the flags, this object comes from upstream OSM
-  relation->flags = 0;
+static void process_relation(xmlTextReaderPtr reader, osm_t::ref osm)
+{
+  base_attributes ba = process_base_attributes(reader, osm);
 
-  process_base_attributes(relation, reader, osm);
+  relation_t *relation = new relation_t(ba);
+  assert_cmpnum(relation->flags, 0);
 
   osm->relation_insert(relation);
 

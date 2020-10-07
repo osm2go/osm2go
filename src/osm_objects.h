@@ -174,7 +174,7 @@ private:
   std::vector<tag_t> *contents;
 };
 
-class base_object_t {
+class base_object_t : public base_attributes {
   friend class osm_t;
 
   /**
@@ -188,15 +188,12 @@ class base_object_t {
    */
   void updateTags(const osm_t::TagMap &ntags);
 
-public:
-  explicit base_object_t(unsigned int ver = 0, item_id_t i = ID_ILLEGAL) noexcept;
+protected:
+  explicit base_object_t(const base_attributes &attr) noexcept;
 
-  item_id_t id;
-  tag_list_t tags;
-  time_t time;
+public:
   unsigned int flags;
-  int user;
-  unsigned int version;
+  tag_list_t tags;
 
   xmlChar *generate_xml(const std::string &changeset) const;
 
@@ -233,12 +230,8 @@ protected:
 
 class visible_item_t : public base_object_t {
 protected:
-  inline visible_item_t(unsigned int ver = 0, item_id_t i = ID_ILLEGAL) noexcept
-    : base_object_t(ver, i)
-    , map_item(nullptr)
-    , zoom_max(0.0f)
-  {
-  }
+  inline visible_item_t(const base_attributes &attr) noexcept
+    : base_object_t(attr), map_item(nullptr), zoom_max(0.0f) {}
 
 public:
   /* a link to the visual representation on screen */
@@ -258,8 +251,9 @@ public:
 
 class node_t : public visible_item_t {
 public:
-  node_t(unsigned int ver, const lpos_t lp, const pos_t &p) noexcept;
-  node_t(unsigned int ver, const pos_t &p, item_id_t i) noexcept;
+  node_t(const base_attributes &attr, const lpos_t lp, const pos_t &p) noexcept
+    : visible_item_t(attr) , ways(0) , pos(p) , lpos(lp) {}
+
   virtual ~node_t() {}
 
   unsigned int ways;
@@ -284,8 +278,11 @@ typedef std::vector<node_t *> node_chain_t;
 class way_t : public visible_item_t {
   friend class osm_t;
 public:
-  explicit way_t();
-  explicit way_t(unsigned int ver, item_id_t i = ID_ILLEGAL);
+  explicit way_t(const base_attributes &attr = base_attributes())
+    : visible_item_t(attr)
+  {
+    memset(&draw, 0, sizeof(draw));
+  }
   virtual ~way_t() {}
 
   /* visual representation from elemstyle */
@@ -380,8 +377,8 @@ protected:
 
 class relation_t : public base_object_t {
 public:
-  explicit relation_t();
-  explicit relation_t(unsigned int ver, item_id_t i = ID_ILLEGAL);
+  explicit relation_t(const base_attributes &attr = base_attributes())
+    : base_object_t(attr) {}
   virtual ~relation_t() {}
 
   std::vector<member_t> members;

@@ -640,7 +640,7 @@ on_relation_add(relation_context_t *context)
 {
   /* create a new relation */
 
-  std::unique_ptr<relation_t> relation(std::make_unique<relation_t>(0));
+  std::unique_ptr<relation_t> relation(std::make_unique<relation_t>());
   if(relation_info_dialog(context, relation.get())) {
     relation_t *r = context->osm->relation_attach(relation.release());
 

@@ -29,7 +29,7 @@
 
 void map_t::way_add_begin() {
   assert_null(action.way);
-  action.way = new way_t(0);
+  action.way = new way_t();
   action.extending = nullptr;
 }
 

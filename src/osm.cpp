@@ -858,12 +858,13 @@ template<typename T> void osm_t::attach(T *obj)
 
 node_t *osm_t::node_new(const lpos_t lpos) {
   /* convert screen position back to ll */
-  return new node_t(0, lpos, lpos.toPos(bounds));
+  return new node_t(base_attributes(), lpos, lpos.toPos(bounds));
 }
 
-node_t *osm_t::node_new(const pos_t &pos) {
+node_t *osm_t::node_new(const pos_t &pos, const base_attributes &attr)
+{
   /* convert ll position to screen */
-  return new node_t(0, pos.toLpos(bounds), pos);
+  return new node_t(attr, pos.toLpos(bounds), pos);
 }
 
 void osm_t::node_attach(node_t *node) {
@@ -1381,7 +1382,7 @@ way_t *way_t::split(osm_t::ref osm, node_chain_t::iterator cut_at, bool cut_at_n
   }
 
   /* create a duplicate of the currently selected way */
-  std::unique_ptr<way_t> neww(std::make_unique<way_t>(0));
+  std::unique_ptr<way_t> neww(std::make_unique<way_t>());
 
   /* attach remaining nodes to new way */
   neww->node_chain.insert(neww->node_chain.end(), cut_at, node_chain.end());

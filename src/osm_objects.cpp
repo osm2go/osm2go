@@ -206,12 +206,9 @@ void tag_list_t::replace(const osm_t::TagMap &ntags)
   std::for_each(ntags.begin(), ntags.end(), tag_fill_functor(*contents));
 }
 
-base_object_t::base_object_t(unsigned int ver, item_id_t i) noexcept
-  : id(i)
-  , time(0)
-  , flags(ver == 0 ? OSM_FLAG_DIRTY : 0)
-  , user(0)
-  , version(ver)
+base_object_t::base_object_t(const base_attributes &attr) noexcept
+  : base_attributes(attr)
+  , flags(version == 0 ? OSM_FLAG_DIRTY : 0)
 {
   assert((version == 0) == (id <= ID_ILLEGAL));
 }
@@ -249,18 +246,6 @@ void base_object_t::markDeleted()
   printf("mark %s #" ITEM_ID_FORMAT " as deleted\n", apiString(), id);
   flags = OSM_FLAG_DELETED;
   tags.clear();
-}
-
-way_t::way_t()
-  : visible_item_t()
-{
-  memset(&draw, 0, sizeof(draw));
-}
-
-way_t::way_t(unsigned int ver, item_id_t i)
-  : visible_item_t(ver, i)
-{
-  memset(&draw, 0, sizeof(draw));
 }
 
 bool way_t::contains_node(const node_t *node) const
@@ -368,16 +353,6 @@ bool way_t::merge(way_t *other, osm_t *osm, map_t *map, const std::vector<relati
   return collision;
 }
 
-relation_t::relation_t()
-  : base_object_t()
-{
-}
-
-relation_t::relation_t(unsigned int ver, item_id_t i)
-  : base_object_t(ver, i)
-{
-}
-
 std::vector<member_t>::iterator relation_t::find_member_object(const object_t &o) {
   return std::find_if(members.begin(), members.end(), find_member_object_functor(o));
 }
@@ -416,20 +391,4 @@ void member_counter::operator()(const member_t &member) noexcept
 void relation_t::members_by_type(unsigned int &nodes, unsigned int &ways, unsigned int &relations) const {
   std::for_each(members.begin(), members.end(),
                 member_counter(nodes, ways, relations));
-}
-
-node_t::node_t(unsigned int ver, const lpos_t lp, const pos_t &p) noexcept
-  : visible_item_t(ver, ID_ILLEGAL)
-  , ways(0)
-  , pos(p)
-  , lpos(lp)
-{
-}
-
-node_t::node_t(unsigned int ver, const pos_t &p, item_id_t i) noexcept
-  : visible_item_t(ver, i)
-  , ways(0)
-  , pos(p)
-  , lpos(0, 0)
-{
 }

@@ -138,6 +138,21 @@ struct member_t {
   }
 };
 
+/**
+ * @brief the attributes of OSM objects as stored in the upstream database
+ */
+class base_attributes {
+public:
+  base_attributes(const base_attributes &other) noexcept
+    : id(other.id), time(other.time), user(other.user), version(other.version) {}
+  explicit base_attributes(item_id_t i = ID_ILLEGAL) noexcept
+    : id(i), time(0), user(0), version(0) {}
+  item_id_t id;
+  time_t time;
+  int user;
+  unsigned int version;
+};
+
 class osm_t {
   template<typename T> inline std::map<item_id_t, T *> &objects();
   template<typename T> inline const std::map<item_id_t, T *> &objects() const;
@@ -210,7 +225,7 @@ public:
   relation_t *relation_by_id(item_id_t id) const;
 
   node_t *node_new(const lpos_t lpos);
-  node_t *node_new(const pos_t &pos);
+  node_t *node_new(const pos_t &pos, const base_attributes &ba = base_attributes());
   /**
    * @brief insert a node and create a new temporary id
    */

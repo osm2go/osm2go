@@ -33,7 +33,7 @@ static void test_map_delete_items()
   std::unique_ptr<osm_t> o(std::make_unique<osm_t>());
   set_bounds(o);
 
-  way_t *w = o->way_attach(new way_t(0));
+  way_t *w = o->way_attach(new way_t());
 
   // keep it here, it ill only be reset, but not freed as that is done through the map
   std::unique_ptr<map_item_t> mi(new map_item_t(object_t(w), nullptr));
@@ -59,16 +59,22 @@ static void test_draw_deleted(const std::string &tmpdir)
   set_bounds(o);
 
   lpos_t p(10, 10);
-  node_t *n = o->node_new(p);
-  o->node_attach(n);
-  n->flags = OSM_FLAG_DELETED;
+  base_attributes ba(123);
+  ba.version = 1;
+  node_t *n = o->node_new(p.toPos(o->bounds), ba);
+  o->node_insert(n);
+  assert(!n->isDeleted());
+  assert_cmpnum(n->flags, 0);
+  o->node_delete(n);
   assert(n->isDeleted());
 
   m->draw(n);
 
-  way_t *w = new way_t(0);
-  o->way_attach(w);
-  w->flags = OSM_FLAG_DELETED;
+  way_t *w = new way_t(ba);
+  o->way_insert(w);
+  assert(!w->isDeleted());
+  assert_cmpnum(w->flags, 0);
+  o->way_delete(w, m.get());
   assert(w->isDeleted());
 
   m->draw(w);

@@ -168,7 +168,7 @@ test_roles(const presets_items *presets)
   r.tags.replace(tags);
 
   // object type does not match
-  node_t n(0, pos_t(0, 0), ID_ILLEGAL);
+  node_t n(base_attributes(), lpos_t(0, 0), pos_t(0, 0));
   std::set<std::string> roles = presets->roles(&r, object_t(&n));
   assert(roles.empty());
 
@@ -190,7 +190,7 @@ test_roles(const presets_items *presets)
 
   r.members.push_back(member_t(object_t(&n), "admin_centre"));
 
-  node_t n2(0, pos_t(0, 0), ID_ILLEGAL);
+  node_t n2(base_attributes(), lpos_t(0, 0), pos_t(0, 0));
   roles = presets->roles(&r, object_t(&n2));
   assert_cmpnum(roles.size(), 1);
   assert(roles.find("label") != roles.end());
