@@ -35,7 +35,7 @@ assert_msg_fmt(const char *file, const int line, const char *func, const char *f
 static void
 heremsg(const char *file, const int line, const char *func)
 {
-  std::cerr << "code at " << file << ":" << line << ":" << func << " ";
+  std::cerr << "code at: " << file << ":" << line << ": " << func << ": ";
 }
 
 void
@@ -49,7 +49,7 @@ assert_msg_unreachable(const char *file, const int line, const char *func)
 static void
 nummsg(const char *amsg, const char *opmsg, const char *bmsg)
 {
-  std::cerr << amsg << " " << opmsg << " " << bmsg << " failed: " << amsg << ": ";
+  std::cerr << "Assertion " << amsg << " " << opmsg << " " << bmsg << " failed: " << amsg << ": ";
 }
 
 template<typename T>
