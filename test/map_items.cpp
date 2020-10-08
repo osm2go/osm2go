@@ -55,7 +55,8 @@ static void test_draw_deleted(const std::string &tmpdir)
   a.project.reset(new project_t("foo", tmpdir));
   std::unique_ptr<map_t> m(std::make_unique<test_map>(a));
   m->style.reset(new style_t());
-  std::unique_ptr<osm_t> o(std::make_unique<osm_t>());
+  a.project->osm.reset(new osm_t());
+  osm_t::ref o = a.project->osm;
   set_bounds(o);
 
   lpos_t p(10, 10);
@@ -68,6 +69,7 @@ static void test_draw_deleted(const std::string &tmpdir)
   o->node_delete(n);
   assert(n->isDeleted());
 
+  // deleted nodes are not drawn
   m->draw(n);
 
   way_t *w = new way_t(ba);
@@ -77,6 +79,19 @@ static void test_draw_deleted(const std::string &tmpdir)
   o->way_delete(w, m.get());
   assert(w->isDeleted());
 
+  // deleted ways are not drawn
+  m->draw(w);
+
+  ba.id = 1235;
+  w = new way_t(ba);
+  o->way_insert(w);
+  assert(!w->isDeleted());
+  assert_cmpnum(w->flags, 0);
+  assert(!o->wayIsHidden(w));
+  o->waySetHidden(w);
+  assert(o->wayIsHidden(w));
+
+  // hidden ways are not drawn
   m->draw(w);
 }
 
@@ -98,6 +113,28 @@ static void test_way_add_cancel(const std::string &tmpdir)
   m->test_function();
 }
 
+static void test_map_item_deleter(const std::string &tmpdir)
+{
+  appdata_t a;
+  a.project.reset(new project_t("foo", tmpdir));
+  std::unique_ptr<map_t> m(std::make_unique<test_map>(a));
+  m->style.reset(new style_t());
+  a.project->osm.reset(new osm_t());
+  osm_t::ref o = a.project->osm;
+  set_bounds(o);
+
+  way_t * const w = new way_t();
+  o->way_attach(w);
+  w->map_item = new map_item_t(object_t(w));
+
+  map_item_destroyer mid(w->map_item);
+
+  w->item_chain_destroy(m.get());
+
+  assert_null(w->map_item);
+  mid.run(nullptr);
+}
+
 int main()
 {
   char tmpdir[] = "/tmp/osm2go-project-XXXXXX";
@@ -114,6 +151,7 @@ int main()
   test_map_delete_items();
   test_draw_deleted(osm_path);
   test_way_add_cancel(osm_path);
+  test_map_item_deleter(osm_path);
 
   assert_cmpnum(rmdir(tmpdir), 0);
 
