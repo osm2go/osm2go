@@ -129,6 +129,8 @@ struct member_t {
   bool operator==(const member_t &other) const noexcept;
   inline bool operator==(const object_t &other) const noexcept
   { return object == other; }
+  inline bool operator!=(const member_t &other) const noexcept
+  { return !operator==(other); }
 
   /**
    * @brief check function for use in std::find_if
@@ -147,6 +149,9 @@ public:
     : id(other.id), time(other.time), user(other.user), version(other.version) {}
   explicit base_attributes(item_id_t i = ID_ILLEGAL) noexcept
     : id(i), time(0), user(0), version(0) {}
+  bool operator==(const base_attributes &other) const noexcept
+  { return id == other.id && time == other.time && user == other.user && version == other.version; }
+
   item_id_t id;
   time_t time;
   int user;

@@ -57,6 +57,16 @@ tag_list_t::~tag_list_t()
   clear();
 }
 
+bool
+tag_list_t::operator==(const tag_list_t &other) const
+{
+  if (other.empty())
+    return empty();
+
+  // now it is safe to dereference as the vector must exist and can't be empty
+  return operator==(*other.contents);
+}
+
 bool tag_list_t::empty() const noexcept
 {
   return contents == nullptr || contents->empty();
@@ -213,6 +223,13 @@ base_object_t::base_object_t(const base_attributes &attr) noexcept
   assert((version == 0) == (id <= ID_ILLEGAL));
 }
 
+base_object_t::base_object_t(const base_object_t &other)
+  : base_attributes(other)
+  , flags(other.flags)
+{
+  tags.copy(other.tags);
+}
+
 void base_object_t::updateTags(const osm_t::TagMap &ntags)
 {
   if (tags == ntags)
@@ -246,6 +263,26 @@ void base_object_t::markDeleted()
   printf("mark %s #" ITEM_ID_FORMAT " as deleted\n", apiString(), id);
   flags = OSM_FLAG_DELETED;
   tags.clear();
+}
+
+bool way_t::operator==(const way_t &other) const
+{
+  if (!visible_item_t::operator==(other))
+    return false;
+
+  if (node_chain.size() != other.node_chain.size())
+    return false;
+
+  const node_chain_t::const_iterator itEnd = node_chain.end();
+  node_chain_t::const_iterator it = node_chain.begin();
+  node_chain_t::const_iterator oit = other.node_chain.begin();
+
+  // comparing the ids is enough to see if the ways as such are identical
+  for (; it != itEnd; it++, oit++)
+    if ((*it)->id != (*oit)->id)
+      return false;
+
+  return true;
 }
 
 bool way_t::contains_node(const node_t *node) const

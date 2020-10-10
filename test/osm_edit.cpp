@@ -1745,6 +1745,165 @@ void test_way_insert()
   assert(w->node_chain.at(2) == n1);
 }
 
+template<typename T> void
+helper_test_compare_tags(T &b1, T &b2)
+{
+  assert(b1 == b2);
+  b1.tags.clear();
+  if (b2.tags.empty()) {
+    assert(b1 == b2);
+    assert(b2 == b1);
+  } else {
+    assert(b1 != b2);
+    assert(b2 != b1);
+  }
+  std::vector<tag_t> tags = ab_with_creator();
+  b1.tags.replace(std::move(tags));
+  assert(b1 != b2);
+  assert(b1.tags != b2.tags);
+
+  tags = ab_with_creator();
+  b2.tags.replace(std::move(tags));
+  assert(b1 == b2);
+  assert(b1.tags == b2.tags);
+}
+
+// check the compare operators
+void test_compare()
+{
+  std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
+  set_bounds(osm);
+
+  // ==== NODES
+  node_t * const n1 = new node_t(base_attributes(), lpos_t(0, 0), pos_t(0, 0));
+  osm->node_attach(n1);
+
+  std::unique_ptr<node_t> n2(std::make_unique<node_t>(*n1));
+  // same position, but different object
+  base_attributes ba(42);
+  ba.version = 2;
+  node_t * const otherN = new node_t(ba, n1->lpos, n1->pos);
+
+  osm->nodes[otherN->id] = otherN;
+
+  const object_t o1(n1);
+  const object_t o2(n2.get());
+  const object_t oN(otherN);
+
+  // both objects refer the same id and type, so should be identical
+  assert(o1 == o2);
+  assert(o1 != oN);
+  assert(o2 != oN);
+  // the tags are both empty
+  assert(n1->tags == n2->tags);
+  assert(n1->tags == otherN->tags);
+
+  const object_t o2ref(object_t::NODE_ID, o1.get_id());
+  assert(o1 == o2ref);
+  assert(oN != o2ref);
+
+  // even with different tags
+  helper_test_compare_tags(*n1, *n2);
+  assert(o1 == o2);
+  assert(o1 == o2ref);
+  assert(*n1 != *otherN);
+
+  // of course the tags are not the same
+  assert(n1->tags != otherN->tags);
+
+  // with the same tags the are identical again
+  std::vector<tag_t>  tags = ab_with_creator();
+  otherN->tags.replace(std::move(tags));
+
+  assert(otherN->tags == n2->tags);
+  assert(*otherN != *n2);
+
+  // create a complete copy and see that this matches
+  std::unique_ptr<node_t> otherCopy(new node_t(*otherN));
+  assert(*n1 != *otherCopy);
+  assert(*otherN == *otherCopy);
+
+  // ==== WAYS
+  way_t * const w1 = new way_t();
+  osm->way_attach(w1);
+  std::unique_ptr<way_t> w2(std::make_unique<way_t>(*w1));
+
+  assert(*w1 == *w2);
+
+  // different node chains
+  w1->append_node(n1);
+  assert(*w1 != *w2);
+
+  w2->append_node(n1);
+  assert(*w1 == *w2);
+
+  w1->append_node(otherN);
+  w2->append_node(otherN);
+  assert(*w1 == *w2);
+
+  helper_test_compare_tags(*w1, *w2);
+
+  // same nodes, but different order
+  unsigned int a, b;
+  w2->reverse(osm, a, b);
+  assert_cmpnum(a, 0);
+  assert_cmpnum(b, 0);
+
+  assert(*w1 != *w2);
+
+  // check way copies
+  std::unique_ptr<way_t> w3(new way_t(*w2));
+  assert(*w2 == *w3);
+
+  // ==== MEMBERS
+  member_t mo1(o1);
+  member_t mo2ref(o2);
+  // members are the same if their objects are the same
+  assert(mo1 == mo2ref);
+
+  // but of course not if their roles differ
+  mo1.role = "foobar";
+  assert(mo1 != mo2ref);
+
+  // same role -> equality
+  mo2ref.role = mo1.role;
+  assert(mo1 == mo2ref);
+  const std::string rolecopy = mo1.role;
+  mo2ref.role = rolecopy.c_str();
+  assert(mo1 == mo2ref);
+
+  // ==== RELATIONS
+  relation_t * const r1 = new relation_t();
+  osm->relation_attach(r1);
+  std::unique_ptr<relation_t> r2(std::make_unique<relation_t>(*r1));
+
+  assert(*r1 == *r2);
+
+  helper_test_compare_tags(*r1, *r2);
+
+  // check members also
+  r1->members.push_back(mo1);
+  assert(*r1 != *r2);
+  r2->members.push_back(mo2ref);
+  assert(*r1 == *r2);
+  r2->members.back().role = nullptr;
+  assert(*r1 != *r2);
+  r1->members.back().role = nullptr;
+  assert(*r1 == *r2);
+
+  r1->members.push_back(member_t(object_t(w2.get()), "forward"));
+  assert(*r1 != *r2);
+  r2->members.insert(r2->members.begin(), member_t(object_t(object_t::WAY_ID, w1->id), "forward"));
+  assert(*r1 != *r2);
+  std::reverse(r2->members.begin(), r2->members.end());
+  assert(*r1 == *r2);
+
+  // check relation copies
+  std::unique_ptr<relation_t> r3(new relation_t(*r1));
+  assert(*r1 == *r3);
+  assert(*r3 == *r2);
+}
+
 } // namespace
 
 int main()
@@ -1766,6 +1925,7 @@ int main()
   test_api_adjust();
   test_relation_members();
   test_way_insert();
+  test_compare();
 
   xmlCleanupParser();
 

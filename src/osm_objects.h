@@ -80,6 +80,10 @@ public:
   inline tag_list_t() noexcept : contents(nullptr) {}
   ~tag_list_t();
 
+  bool operator==(const tag_list_t &other) const;
+  inline bool operator!=(const tag_list_t &other) const
+  { return !operator==(other); }
+
   /**
    * @brief check if any tags are present
    */
@@ -190,6 +194,14 @@ class base_object_t : public base_attributes {
 
 protected:
   explicit base_object_t(const base_attributes &attr) noexcept;
+  base_object_t(const base_object_t &other);
+
+  // it makes no sense do directly compare base_object_t instances as that will miss half of the picture
+  bool operator==(const base_object_t &other) const
+  {
+    // flags are just a marker for runtime processing so are ignored here
+    return base_attributes::operator==(other) && tags == other.tags;
+  }
 
 public:
   unsigned int flags;
@@ -233,6 +245,12 @@ protected:
   inline visible_item_t(const base_attributes &attr) noexcept
     : base_object_t(attr), map_item(nullptr), zoom_max(0.0f) {}
 
+  inline bool operator==(const visible_item_t &other) const
+  {
+    // explicitely ignore the local members which are just visual representation
+    return base_object_t::operator==(other);
+  }
+
 public:
   /* a link to the visual representation on screen */
   struct map_item_t *map_item;
@@ -255,6 +273,15 @@ public:
     : visible_item_t(attr) , ways(0) , pos(p) , lpos(lp) {}
 
   virtual ~node_t() {}
+
+  inline bool operator==(const node_t &other) const
+  {
+    // the other members are only about visual representation and can be ignored
+    return visible_item_t::operator==(other) &&
+           pos == other.pos;
+  }
+  inline bool operator!=(const node_t &other) const
+  { return !operator==(other); }
 
   unsigned int ways;
   pos_t pos;
@@ -284,6 +311,9 @@ public:
     memset(&draw, 0, sizeof(draw));
   }
   virtual ~way_t() {}
+  bool operator==(const way_t &other) const;
+  inline bool operator!=(const way_t &other) const
+  { return !operator==(other); }
 
   /* visual representation from elemstyle */
   struct {
@@ -380,6 +410,13 @@ public:
   explicit relation_t(const base_attributes &attr = base_attributes())
     : base_object_t(attr) {}
   virtual ~relation_t() {}
+  inline bool operator==(const relation_t &other) const
+  {
+    return base_object_t::operator==(other) &&
+           members == other.members;
+  }
+  inline bool operator!=(const relation_t &other) const
+  { return !operator==(other); }
 
   std::vector<member_t> members;
 
