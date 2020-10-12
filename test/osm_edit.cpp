@@ -419,7 +419,9 @@ void test_split()
   set_bounds(o);
 
   way_t * const v = new way_t();
-  way_t * const w = new way_t();
+  base_attributes ba(47);
+  ba.version = 1;
+  way_t * const w = new way_t(ba);
   relation_t * const r1 = new relation_t();
   relation_t * const r2 = new relation_t();
   relation_t * const r3 = new relation_t();
@@ -436,7 +438,7 @@ void test_split()
   v->tags.replace(w->tags.asMap());
 
   o->way_attach(v);
-  o->way_attach(w);
+  o->way_insert(w);
 
   r1->members.push_back(member_t(object_t(w)));
   o->relation_attach(r1);
@@ -480,8 +482,8 @@ void test_split()
   assert_cmpnum(dirty0.nodes.added.size(), 6);
   assert_cmpnum(dirty0.nodes.changed.size(), 0);
   assert_cmpnum(dirty0.nodes.deleted.size(), 0);
-  assert_cmpnum(dirty0.ways.added.size(), 3);
-  assert_cmpnum(dirty0.ways.changed.size(), 0);
+  assert_cmpnum(dirty0.ways.added.size(), 2);
+  assert_cmpnum(dirty0.ways.changed.size(), 1);
   assert_cmpnum(dirty0.ways.deleted.size(), 0);
 
   // now split the remaining way at a node
@@ -499,8 +501,8 @@ void test_split()
   assert_cmpnum(dirty1.nodes.changed.size(), 0);
   assert_cmpnum(dirty1.nodes.added.size(), 6);
   assert_cmpnum(dirty1.nodes.deleted.size(), 0);
-  assert_cmpnum(dirty1.ways.changed.size(), 0);
-  assert_cmpnum(dirty1.ways.added.size(), 4);
+  assert_cmpnum(dirty1.ways.changed.size(), 1);
+  assert_cmpnum(dirty1.ways.added.size(), 3);
   assert_cmpnum(dirty1.ways.deleted.size(), 0);
 
   assert(w->contains_node(nodes[4]));
@@ -518,19 +520,26 @@ void test_split()
   // just split the last node out of the way
   o->unmark_dirty(w);
   assert_null(w->split(o, std::next(w->node_chain.begin(), 2), false));
+  const way_t *origWay = static_cast<const way_t *>(o->originalObject(object_t(w)));
+  assert(origWay != nullptr);
+  assert(origWay != w);
+  assert_cmpnum(origWay->id, w->id);
+
   assert_cmpnum(o->ways.size(), 4);
-  assert(w->flags & OSM_FLAG_DIRTY);
+  // this is the original way
+  assert_cmpnum(origWay->flags, 0);
+  assert(origWay->contains_node(nodes[4]));
+  assert(origWay->ends_with_node(nodes[4]));
+  assert_cmpnum(origWay->node_chain.size(), 3);
+
+  // this is the modified one
+  assert_cmpnum(w->flags, OSM_FLAG_DIRTY);
   for(unsigned int i = 0; i < nodes.size(); i++)
     assert_cmpnum(nodes[i]->ways, 2);
 
   assert(!w->contains_node(nodes[4]));
   assert(!w->ends_with_node(nodes[4]));
   assert_cmpnum(w->node_chain.size(), 2);
-  assert_cmpnum(neww->node_chain.size(), 2);
-  assert_cmpnum(neww2->node_chain.size(), 2);
-  assert_cmpnum(r1->members.size(), 3);
-  assert_cmpnum(r2->members.size(), 7);
-  assert_cmpnum(r3->members.size(), 1);
 
   // now test a closed way
   way_t * const area = new way_t();
@@ -545,7 +554,7 @@ void test_split()
   o->way_delete(w, nullptr);
   o->way_delete(neww, nullptr);
   o->way_delete(neww2, nullptr);
-  assert_cmpnum(o->ways.size(), 1);
+  assert_cmpnum(o->ways.size(), 2); // area and w, as w is present upstream
   for(unsigned int i = 1; i < nodes.size(); i++)
     assert_cmpnum(nodes[i]->ways, 1);
   assert_cmpnum(nodes.front()->ways, 2);
@@ -1154,6 +1163,17 @@ void test_merge_nodes()
   assert_cmpnum(n2->flags, OSM_FLAG_DIRTY);
   assert_null(ways2join[0]);
   assert_null(ways2join[1]);
+  // verify that this has been inserted into the original map
+  assert_cmpnum(o->original.nodes.size(), 1);
+  assert_cmpnum(o->original.ways.size(), 0);
+  assert_cmpnum(o->original.relations.size(), 0);
+  assert_cmpnum(o->original.nodes.begin()->first, n2->id);
+  assert_cmpnum(o->original.nodes.begin()->second->id, n2->id);
+  assert(o->original.nodes.begin()->second == o->originalObject(object_t(n2)));
+  assert(o->original.nodes.begin()->second != n2); // must be a distinct instance
+  assert(*(o->original.nodes.begin()->second) != *n2);
+  delete o->original.nodes.begin()->second;
+  o->original.nodes.clear();
 
   /// ==================
   // do the same join again, but with swapped arguments
@@ -1174,8 +1194,18 @@ void test_merge_nodes()
   assert_null(ways2join[0]);
   assert_null(ways2join[1]);
 
+  assert(o->original.nodes.begin()->second == o->originalObject(object_t(n2)));
   o->node_free(n2);
   assert_cmpnum(o->nodes.size(), 0);
+
+  assert_cmpnum(o->original.nodes.size(), 1);
+  assert_cmpnum(o->original.ways.size(), 0);
+  assert_cmpnum(o->original.relations.size(), 0);
+  assert_cmpnum(o->original.nodes.begin()->first, ba.id);
+  assert_cmpnum(o->original.nodes.begin()->second->id, ba.id);
+  assert(o->original.nodes.begin()->second == o->originalObject(object_t(object_t::NODE_ID, ba.id)));
+  delete o->original.nodes.begin()->second;
+  o->original.nodes.clear();
 
   /// ==================
   // start new
@@ -1335,6 +1365,7 @@ void test_merge_nodes()
   assert(r->members.front().object == n2);
   assert_cmpnum(o->nodes.size(), 5);
 
+  item_id_t mergedId = n2->id;
   {
     osm_t::mergeResult<node_t> mergeRes = o->mergeNodes(n1, n2, ways2join);
     assert(mergeRes.obj == n1);
@@ -1349,15 +1380,22 @@ void test_merge_nodes()
   assert(w->last_node() == n1);
   assert(w->ends_with_node(n1));
   assert_cmpnum(w->node_chain.size(), 2);
-  assert_cmpnum(w->flags, OSM_FLAG_DIRTY);
+  assert_cmpnum(w->flags, 0); // not marked dirty as it is a new object
+  assert(w->isNew());
+
   assert_cmpnum(n1->ways, 3);
   assert(relations.back()->members.front().object == n1);
   // test member_t::operator==(object_t)
   assert(relations.back()->members.front() == object_t(n1));
   assert(r->members.front().object == n1);
-  assert_cmpnum(r->flags, OSM_FLAG_DIRTY);
+  assert_cmpnum(r->flags, 0); // not marked dirty as it is a new object
+  assert(r->isNew());
   assert_null(ways2join[0]);
   assert_null(ways2join[1]);
+  // no entries for new items
+  assert(o->original.nodes.find(n1->id) == o->original.nodes.end());
+  assert(o->original.nodes.find(mergedId) == o->original.nodes.end());
+  assert(o->original.ways.find(w->id) == o->original.ways.end());
 
   // while at it: test backwards mapping to containing objects
   way_chain_t wchain;
@@ -1438,6 +1476,11 @@ void test_merge_nodes()
   }
   assert(ways2join[0] == nullptr);
   assert(ways2join[1] == nullptr);
+
+  // final verification: none of the tests above should have created something here
+  assert_cmpnum(o->original.nodes.size(), 0);
+  assert_cmpnum(o->original.ways.size(), 0);
+  assert_cmpnum(o->original.relations.size(), 0);
 }
 
 void setup_way_relations_for_merge(osm_t::ref o, way_t *w0, way_t *w1)

@@ -1501,6 +1501,16 @@ template<typename T> T *osm_t::find_by_id(item_id_t id) const
   return nullptr;
 }
 
+template<typename T> const T *osm_t::findOriginalById(item_id_t id) const
+{
+  const std::unordered_map<item_id_t, const T *> &map = originalObjects<T>();
+  const typename std::unordered_map<item_id_t, const T *>::const_iterator it = map.find(id);
+  if(it != map.end())
+    return it->second;
+
+  return nullptr;
+}
+
 osm_t::osm_t()
   : uploadPolicy(Upload_Normal)
 {
@@ -1522,6 +1532,9 @@ osm_t::~osm_t()
   std::for_each(relations.begin(), relations.end(), pairfree<relation_t>);
   std::for_each(ways.begin(), ways.end(), pairfree<way_t>);
   std::for_each(nodes.begin(), nodes.end(), pairfree<node_t>);
+  std::for_each(original.ways.begin(), original.ways.end(), pairfree<const way_t>);
+  std::for_each(original.nodes.begin(), original.nodes.end(), pairfree<const node_t>);
+  std::for_each(original.relations.begin(), original.relations.end(), pairfree<const relation_t>);
 }
 
 node_t *osm_t::node_by_id(item_id_t id) const {
@@ -1594,4 +1607,33 @@ void osm_t::way_insert(way_t *way)
 void osm_t::relation_insert(relation_t *relation)
 {
   object_insert(relations, relation);
+}
+
+const base_object_t *
+osm_t::originalObject(object_t o) const
+{
+  switch (o.type) {
+  case object_t::NODE:
+  case object_t::NODE_ID:
+    return findOriginalById<node_t>(o.get_id());
+  case object_t::WAY:
+  case object_t::WAY_ID:
+    return findOriginalById<way_t>(o.get_id());
+  case object_t::RELATION:
+  case object_t::RELATION_ID:
+    return findOriginalById<relation_t>(o.get_id());
+  default:
+    assert_unreachable();
+  }
+}
+
+void osm_t::cleanupOriginalObject(node_t *o)
+{
+  o->map_item = nullptr;
+  o->ways = 0;
+}
+
+void osm_t::cleanupOriginalObject(way_t *o)
+{
+  o->map_item = nullptr;
 }

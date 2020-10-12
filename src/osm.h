@@ -18,6 +18,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -163,6 +164,9 @@ class osm_t {
   template<typename T> inline const std::map<item_id_t, T *> &objects() const;
   template<typename T> void attach(T *obj);
   template<typename T> inline T *find_by_id(item_id_t id) const;
+  template<typename T> inline const T *findOriginalById(item_id_t id) const;
+  template<typename T> inline std::unordered_map<item_id_t, const T *> &originalObjects();
+  template<typename T> inline const std::unordered_map<item_id_t, const T *> &originalObjects() const;
 public:
   typedef const std::unique_ptr<osm_t> &ref;
 
@@ -222,6 +226,12 @@ public:
   std::map<item_id_t, node_t *> nodes;
   std::map<item_id_t, way_t *> ways;
   std::map<item_id_t, relation_t *> relations;
+  // of those objects that are modified in the above 3, this saves the original values
+  struct {
+    std::unordered_map<item_id_t, const node_t *> nodes;
+    std::unordered_map<item_id_t, const way_t *> ways;
+    std::unordered_map<item_id_t, const relation_t *> relations;
+  } original;
   std::map<int, std::string> users;   ///< mapping of user id to username
   UploadPolicy uploadPolicy;
 
@@ -282,10 +292,26 @@ private:
     return nullptr;
   }
 
+  void cleanupOriginalObject(node_t *o);
+  void cleanupOriginalObject(way_t *o);
+  inline void cleanupOriginalObject(relation_t *) {}
+
 public:
   template<typename T>
   void mark_dirty(T *obj)
   {
+    std::unordered_map<item_id_t, const T *> &orig = originalObjects<T>();
+
+    // if already marked or never uploaded then don't store it in the original map
+    if ((obj->flags & OSM_FLAG_DIRTY) || obj->isNew())
+      return;
+
+    assert(orig.find(obj->id) == orig.end());
+
+    T *n = new T(*obj);
+    cleanupOriginalObject(n);
+    orig[obj->id] = n;
+
     obj->flags |= OSM_FLAG_DIRTY;
   }
 
@@ -293,6 +319,15 @@ public:
   void unmark_dirty(T *obj)
   {
     obj->flags &= ~OSM_FLAG_DIRTY;
+
+    std::unordered_map<item_id_t, const T *> &orig = originalObjects<T>();
+
+    typename std::unordered_map<item_id_t, const T *>::iterator it = orig.find(obj->id);
+    if (it != orig.end()) {
+      const T *oobj = it->second;
+      orig.erase(it);
+      delete oobj;
+    }
   }
 
   /**
@@ -303,6 +338,11 @@ public:
    * Marks the object as dirty as necessary.
    */
   void updateTags(object_t o, const TagMap &ntags);
+
+  /**
+   * @brief return the original object to the given object if there is one
+   */
+  const base_object_t *originalObject(object_t o) const;
 
   /**
    * @brief find a way matching the given predicate
@@ -482,3 +522,17 @@ bool osm_t::hasHiddenWays() const noexcept
 {
   return !hiddenWays.empty();
 }
+
+template<> inline std::unordered_map<item_id_t, const node_t *> &osm_t::originalObjects<node_t>()
+{ return original.nodes; }
+template<> inline std::unordered_map<item_id_t, const way_t *> &osm_t::originalObjects<way_t>()
+{ return original.ways; }
+template<> inline std::unordered_map<item_id_t, const relation_t *> &osm_t::originalObjects<relation_t>()
+{ return original.relations; }
+
+template<> inline const std::unordered_map<item_id_t, const node_t *> &osm_t::originalObjects<node_t>() const
+{ return original.nodes; }
+template<> inline const std::unordered_map<item_id_t, const way_t *> &osm_t::originalObjects<way_t>() const
+{ return original.ways; }
+template<> inline const std::unordered_map<item_id_t, const relation_t *> &osm_t::originalObjects<relation_t>() const
+{ return original.relations; }
