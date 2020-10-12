@@ -877,27 +877,73 @@ way_t *osm_t::way_attach(way_t *way)
   return way;
 }
 
+namespace {
+
+template<typename T> bool
+unmarkedDirty(T *obj, const base_object_t *orig, osm_t *osm)
+{
+  if (*obj == *static_cast<const T *>(orig)) {
+    osm->unmark_dirty(obj);
+    return true;
+  }
+
+  return false;
+}
+
+} // namespace
+
 void
 osm_t::updateTags(object_t o, const TagMap &ntags)
 {
-  // only mark dirty if this will actually change something
+  // when no tags have changed at this point nothing has to be updated
   if (o.obj->tags == ntags)
     return;
 
-  switch (o.type) {
-  case object_t::NODE:
-    mark_dirty(o.node);
-    break;
-  case object_t::WAY:
-    mark_dirty(o.way);
-    break;
-  case object_t::RELATION:
-    mark_dirty(o.relation);
-    break;
-  default:
-    assert_unreachable();
+  const base_object_t * const origobj = originalObject(o);
+  bool tagsUpdated = false;
+
+  if (origobj != nullptr) {
+    o.obj->tags.replace(ntags);
+    tagsUpdated = true;
+
+    // reset the objects to being unmodified if possible
+    switch (o.type) {
+    case object_t::NODE:
+      if (unmarkedDirty(o.node, origobj, this))
+        return;
+      break;
+    case object_t::WAY:
+      if (unmarkedDirty(o.way, origobj, this))
+        return;
+      break;
+    case object_t::RELATION:
+      if (unmarkedDirty(o.relation, origobj, this))
+        return;
+      break;
+    default:
+      assert_unreachable();
+    }
   }
-  o.obj->updateTags(ntags);
+
+  // only mark dirty if this will actually change something
+  if (o.obj->tags != ntags) {
+    switch (o.type) {
+    case object_t::NODE:
+      mark_dirty(o.node);
+      break;
+    case object_t::WAY:
+      mark_dirty(o.way);
+      break;
+    case object_t::RELATION:
+      mark_dirty(o.relation);
+      break;
+    default:
+      assert_unreachable();
+    }
+  }
+
+  if (!tagsUpdated)
+    o.obj->tags.replace(ntags);
 }
 
 namespace {

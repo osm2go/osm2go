@@ -230,15 +230,6 @@ base_object_t::base_object_t(const base_object_t &other)
   tags.copy(other.tags);
 }
 
-void base_object_t::updateTags(const osm_t::TagMap &ntags)
-{
-  if (tags == ntags)
-    return;
-
-  assert(isDirty()); // caller should have set this
-  tags.replace(ntags);
-}
-
 std::string base_object_t::id_string() const {
   return std::to_string(id);
 }

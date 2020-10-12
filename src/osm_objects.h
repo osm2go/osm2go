@@ -181,17 +181,6 @@ private:
 class base_object_t : public base_attributes {
   friend class osm_t;
 
-  /**
-   * @brief replace the tags and set dirty flag if they were actually different
-   * @param ntags the new tags
-   *
-   * "created_by" tags are ignored when considering if the list needs to be
-   * changed or not.
-   *
-   * This expects to be called on a dirty object. In doubt use osm_t::updateTags().
-   */
-  void updateTags(const osm_t::TagMap &ntags);
-
 protected:
   explicit base_object_t(const base_attributes &attr) noexcept;
   base_object_t(const base_object_t &other);

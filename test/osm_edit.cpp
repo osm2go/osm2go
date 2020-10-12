@@ -1172,6 +1172,11 @@ void test_merge_nodes()
   assert(o->original.nodes.begin()->second == o->originalObject(object_t(n2)));
   assert(o->original.nodes.begin()->second != n2); // must be a distinct instance
   assert(*(o->original.nodes.begin()->second) != *n2);
+  // now do an update, which should detect that things are still different
+  o->updateTags(object_t(n2), n2->tags.asMap());
+  assert_cmpnum(o->original.nodes.size(), 1);
+  assert_cmpnum(n2->flags, OSM_FLAG_DIRTY);
+
   delete o->original.nodes.begin()->second;
   o->original.nodes.clear();
 
@@ -1179,6 +1184,7 @@ void test_merge_nodes()
   // do the same join again, but with swapped arguments
   o->unmark_dirty(n2);
   n2->lpos = newpos;
+  assert_cmpnum(n2->flags, 0);
   n1 = o->node_new(oldpos);
   o->node_attach(n1);
 
@@ -1365,7 +1371,6 @@ void test_merge_nodes()
   assert(r->members.front().object == n2);
   assert_cmpnum(o->nodes.size(), 5);
 
-  item_id_t mergedId = n2->id;
   {
     osm_t::mergeResult<node_t> mergeRes = o->mergeNodes(n1, n2, ways2join);
     assert(mergeRes.obj == n1);
@@ -1393,9 +1398,9 @@ void test_merge_nodes()
   assert_null(ways2join[0]);
   assert_null(ways2join[1]);
   // no entries for new items
-  assert(o->original.nodes.find(n1->id) == o->original.nodes.end());
-  assert(o->original.nodes.find(mergedId) == o->original.nodes.end());
-  assert(o->original.ways.find(w->id) == o->original.ways.end());
+  assert_cmpnum(o->original.nodes.size(), 0);
+  assert_cmpnum(o->original.nodes.size(), 0);
+  assert_cmpnum(o->original.ways.size(), 0);
 
   // while at it: test backwards mapping to containing objects
   way_chain_t wchain;
@@ -1947,6 +1952,153 @@ void test_compare()
   assert(*r3 == *r2);
 }
 
+void check_updateTags_all(osm_t::ref osm, object_t obj)
+{
+  assert(obj.is_real());
+
+  osm_t::TagMap tags;
+  tags.insert(osm_t::TagMap::value_type("a", "aa"));
+
+  osm_t::TagMap otags = tags;
+  obj.obj->tags.replace(otags);
+
+  tags.insert(osm_t::TagMap::value_type("b", "bb"));
+
+  assert(tags != otags); // paranoia
+
+  osm->updateTags(obj, otags);
+  // nothing changed
+  assert_cmpnum(osm->original.nodes.size(), 0);
+  assert_cmpnum(osm->original.ways.size(), 0);
+  assert_cmpnum(osm->original.relations.size(), 0);
+  assert_cmpnum(obj.obj->flags, 0);
+
+  // now actually change something
+  osm->updateTags(obj, tags);
+  if (obj.type == object_t::NODE)
+    assert_cmpnum(osm->original.nodes.size(), 1);
+  else
+    assert_cmpnum(osm->original.nodes.size(), 0);
+  if (obj.type == object_t::WAY)
+    assert_cmpnum(osm->original.ways.size(), 1);
+  else
+    assert_cmpnum(osm->original.ways.size(), 0);
+  if (obj.type == object_t::RELATION)
+    assert_cmpnum(osm->original.relations.size(), 1);
+  else
+    assert_cmpnum(osm->original.relations.size(), 0);
+  assert_cmpnum(obj.obj->flags, OSM_FLAG_DIRTY);
+  const base_object_t *orig = osm->originalObject(obj);
+  assert(orig != nullptr);
+  assert(orig != obj.obj);
+  assert_cmpnum(obj.get_id(), orig->id);
+  assert(orig->tags == otags);
+  assert(obj.obj->tags == tags);
+
+  // setting it back to original state should clear it from map
+  osm->updateTags(obj, otags);
+  // nothing changed
+  assert_cmpnum(osm->original.nodes.size(), 0);
+  assert_cmpnum(osm->original.ways.size(), 0);
+  assert_cmpnum(osm->original.relations.size(), 0);
+  assert_cmpnum(obj.obj->flags, 0);
+}
+
+void test_updateTags()
+{
+  std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
+  set_bounds(osm);
+
+  const lpos_t startPos(10, 10);
+  base_attributes ba(1234);
+  ba.version = 1;
+  node_t * const n = osm->node_new(startPos.toPos(osm->bounds), ba);
+  const object_t objN(n);
+  osm->node_insert(n);
+
+  osm_t::TagMap tags;
+  tags.insert(osm_t::TagMap::value_type("a", "aa"));
+
+  osm_t::TagMap otags = tags;
+  n->tags.replace(otags);
+
+  tags.insert(osm_t::TagMap::value_type("b", "bb"));
+
+  assert(tags != otags); // paranoia
+
+  check_updateTags_all(osm, objN);
+
+  way_t *w = new way_t(ba);
+  osm->way_insert(w);
+  check_updateTags_all(osm, object_t(w));
+
+  relation_t *r = new relation_t(ba);
+  osm->relation_insert(r);
+  check_updateTags_all(osm, object_t(r));
+
+  // NODE: updateTags not resetting back
+  // now do the same changes, but...
+  osm->updateTags(objN, tags);
+  assert_cmpnum(osm->original.nodes.size(), 1);
+  assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
+
+  // ...change the position...
+  const lpos_t movedPos(10, 20);
+  n->pos = movedPos.toPos(osm->bounds);
+
+  // ...and this should not mark it as not dirty
+  osm->updateTags(objN, otags);
+  assert_cmpnum(osm->original.nodes.size(), 1);
+  assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
+
+  // moving it back should not have an immediate effect as updateTags() checks tags for equality first
+  n->pos = startPos.toPos(osm->bounds);
+  osm->updateTags(objN, otags);
+  assert_cmpnum(osm->original.nodes.size(), 1);
+  assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
+
+  osm->updateTags(objN, tags);
+  assert_cmpnum(osm->original.nodes.size(), 1);
+  assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
+
+  // but now everything should reset back to the original state
+  osm->updateTags(objN, otags);
+  assert_cmpnum(osm->original.nodes.size(), 0);
+  assert_cmpnum(n->flags, 0);
+
+  // WAY: updateTags not resetting back
+  const object_t objW(w);
+  osm->updateTags(objW, tags);
+  assert_cmpnum(osm->original.ways.size(), 1);
+  assert_cmpnum(w->flags, OSM_FLAG_DIRTY);
+
+  w->append_node(n);
+  // this doesn't change the node, only increases the refcount
+  assert_cmpnum(osm->original.nodes.size(), 0);
+  assert_cmpnum(n->flags, 0);
+
+  // the nodechain is still modified, so this must not clear the dirty flag
+  osm->updateTags(objW, otags);
+  assert_cmpnum(osm->original.ways.size(), 1);
+  assert_cmpnum(w->flags, OSM_FLAG_DIRTY);
+
+  // RELATION: updateTags not resetting back
+  const object_t objR(r);
+  osm->updateTags(objR, tags);
+  assert_cmpnum(osm->original.relations.size(), 1);
+  assert_cmpnum(r->flags, OSM_FLAG_DIRTY);
+
+  r->members.push_back(member_t(objN));
+  // this doesn't change the node either
+  assert_cmpnum(osm->original.nodes.size(), 0);
+  assert_cmpnum(n->flags, 0);
+
+  // the member list is still modified, so this must not clear the dirty flag
+  osm->updateTags(objR, otags);
+  assert_cmpnum(osm->original.relations.size(), 1);
+  assert_cmpnum(w->flags, OSM_FLAG_DIRTY);
+}
+
 } // namespace
 
 int main()
@@ -1969,6 +2121,7 @@ int main()
   test_relation_members();
   test_way_insert();
   test_compare();
+  test_updateTags();
 
   xmlCleanupParser();
 
