@@ -653,12 +653,6 @@ bool relation_t::is_multipolygon() const {
   return tp != nullptr && (strcmp(tp, "multipolygon") == 0);
 }
 
-void relation_t::cleanup()
-{
-  tags.clear();
-  members.clear();
-}
-
 class gen_xml_relation_functor {
   xmlNodePtr const xml_node;
 public:
@@ -1005,6 +999,13 @@ void node_deleted_from_ways::operator()(way_t *way)
   }
 }
 
+void markDeleted(base_object_t &obj)
+{
+  printf("mark %s #" ITEM_ID_FORMAT " as deleted\n", obj.apiString(), obj.id);
+  obj.flags = OSM_FLAG_DELETED;
+  obj.tags.clear();
+}
+
 } // namespace
 
 void
@@ -1025,7 +1026,7 @@ osm_t::node_delete(node_t *node, NodeDeleteFlags flags, map_t *map)
   node->item_chain_destroy(nullptr);
 
   if(!node->isNew()) {
-    node->markDeleted();
+    markDeleted(*node);
   } else {
     printf("permanently delete node #" ITEM_ID_FORMAT "\n", node->id);
 
@@ -1127,7 +1128,7 @@ void osm_t::way_delete(way_t *way, map_t *map, void (*unref)(node_t *))
   chain.clear();
 
   if(!way->isNew()) {
-    way->markDeleted();
+    markDeleted(*way);
     way->cleanup();
   } else {
     printf("permanently delete way #" ITEM_ID_FORMAT "\n", way->id);
@@ -1143,8 +1144,8 @@ void osm_t::relation_delete(relation_t *relation) {
   /* don't have any reference to the relation they are part of */
 
   if(!relation->isNew()) {
-    relation->markDeleted();
-    relation->cleanup();
+    markDeleted(*relation);
+    relation->members.clear();
   } else {
     printf("permanently delete relation #" ITEM_ID_FORMAT "\n",
 	   relation->id);

@@ -249,13 +249,6 @@ void base_object_t::osmchange_delete(xmlNodePtr parent_node, const char *changes
   xmlNewProp(obj_node, BAD_CAST "changeset", BAD_CAST changeset);
 }
 
-void base_object_t::markDeleted()
-{
-  printf("mark %s #" ITEM_ID_FORMAT " as deleted\n", apiString(), id);
-  flags = OSM_FLAG_DELETED;
-  tags.clear();
-}
-
 bool way_t::operator==(const way_t &other) const
 {
   if (!visible_item_t::operator==(other))

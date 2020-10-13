@@ -224,7 +224,6 @@ public:
    */
   void osmchange_delete(xmlNodePtr parent_node, const char *changeset) const;
 
-  void markDeleted();
 protected:
   virtual void generate_xml_custom(xmlNodePtr xml_node) const = 0;
 };
@@ -418,8 +417,6 @@ public:
   void generate_member_xml(xmlNodePtr xml_node) const;
 
   bool is_multipolygon() const;
-
-  void cleanup();
 
   const char *apiString() const noexcept override {
     return api_string();
