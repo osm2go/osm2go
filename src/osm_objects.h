@@ -433,4 +433,9 @@ protected:
   }
 };
 
-void osm_node_chain_free(node_chain_t &node_chain);
+/**
+ * @brief drop the reference to all nodes in the given chain
+ *
+ * This does not modify the node_chain itself!
+ */
+void osm_node_chain_unref(node_chain_t &node_chain);

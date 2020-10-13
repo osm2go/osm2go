@@ -403,7 +403,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t::ref osm) {
     // it doesn't matter which chain is kept if they are the same, so just
     // always swap as that keeps the code simpler
     way->node_chain.swap(new_chain);
-    osm_node_chain_free(new_chain);
+    osm_node_chain_unref(new_chain);
     new_chain.clear();
 
     osm_t::TagMap ntags = xml_scan_tags(node_way->children);

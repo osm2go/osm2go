@@ -302,7 +302,7 @@ bool way_t::ends_with_node(const node_t *node) const noexcept
 }
 
 void way_t::cleanup() {
-  osm_node_chain_free(node_chain);
+  osm_node_chain_unref(node_chain);
   tags.clear();
 
   /* there must not be anything left in this chain */

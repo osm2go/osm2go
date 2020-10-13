@@ -635,7 +635,8 @@ static void osm_unref_node(node_t* node)
   node->ways--;
 }
 
-void osm_node_chain_free(node_chain_t &node_chain) {
+void osm_node_chain_unref(node_chain_t &node_chain)
+{
   std::for_each(node_chain.begin(), node_chain.end(), osm_unref_node);
 }
 
