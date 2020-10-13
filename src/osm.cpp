@@ -1025,7 +1025,6 @@ osm_t::node_delete(node_t *node, NodeDeleteFlags flags, map_t *map)
   node->item_chain_destroy(nullptr);
 
   if(!node->isNew()) {
-    printf("mark node #" ITEM_ID_FORMAT " as deleted\n", node->id);
     node->markDeleted();
   } else {
     printf("permanently delete node #" ITEM_ID_FORMAT "\n", node->id);
@@ -1128,7 +1127,6 @@ void osm_t::way_delete(way_t *way, map_t *map, void (*unref)(node_t *))
   chain.clear();
 
   if(!way->isNew()) {
-    printf("mark way #" ITEM_ID_FORMAT " as deleted\n", way->id);
     way->markDeleted();
     way->cleanup();
   } else {
@@ -1145,7 +1143,6 @@ void osm_t::relation_delete(relation_t *relation) {
   /* don't have any reference to the relation they are part of */
 
   if(!relation->isNew()) {
-    printf("mark relation #" ITEM_ID_FORMAT " as deleted\n", relation->id);
     relation->markDeleted();
     relation->cleanup();
   } else {
