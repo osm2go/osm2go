@@ -59,14 +59,9 @@ public:
  *
  * In case no userid is given a temporary one will be created.
  */
-int
+int __attribute__ ((nonnull (2)))
 osm_user_insert(std::map<int, std::string> &users, const char *name, int uid)
 {
-  if(unlikely(!name)) {
-    users[0] = std::string();
-    return 0;
-  }
-
   const std::map<int, std::string>::const_iterator itEnd = users.end();
   /* search through user list */
   if(likely(uid > 0)) {
