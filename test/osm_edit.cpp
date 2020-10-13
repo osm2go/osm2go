@@ -1516,14 +1516,11 @@ node_chain_t setup_ways_for_merge(const node_chain_t &nodes, osm_t::ref o, way_t
   o->way_attach(w0);
 
   w1 = new way_t();
-  if(i % 2) {
-    for(unsigned int j = nodes.size() / 2 - 1; j < nodes.size(); j++)
-      w1->append_node(nodes[j]);
-    expect = nodes;
-  } else {
-    for(unsigned int j = nodes.size() - 1; j >= nodes.size() / 2 - 1; j--)
-      w1->append_node(nodes[j]);
-    expect = nodes;
+  for(unsigned int j = nodes.size() / 2 - 1; j < nodes.size(); j++)
+    w1->append_node(nodes[j]);
+  expect = nodes;
+  if(i % 2 == 0) {
+    std::reverse(w1->node_chain.begin(), w1->node_chain.end());
     std::reverse(expect.begin(), expect.end());
   }
   o->way_attach(w1);
@@ -1546,7 +1543,8 @@ void verify_merged_way(way_t *w, osm_t::ref o, const node_chain_t &nodes, const 
 {
   assert_cmpnum(w->node_chain.size(), nodes.size());
   assert_cmpnum(o->ways.size(), 1);
-  assert_cmpnum(o->nodes.size(), nodes.size());
+  const size_t nodecount = o->nodes.size();
+  assert_cmpnum_op(nodecount, >=, nodes.size());
   for(node_chain_t::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
     w->contains_node(*it);
     assert_cmpnum((*it)->ways, 1);
@@ -1579,7 +1577,7 @@ void verify_merged_way(way_t *w, osm_t::ref o, const node_chain_t &nodes, const 
   o->way_free(w);
 
   assert_cmpnum(o->ways.size(), 0);
-  assert_cmpnum(o->nodes.size(), nodes.size());
+  assert_cmpnum(o->nodes.size(), nodecount);
   for(node_chain_t::const_iterator it = nodes.begin(); it != nodes.end(); it++)
     assert_cmpnum((*it)->ways, 0);
 }
@@ -1601,6 +1599,8 @@ void test_merge_ways()
       r->members.push_back(member_t(object_t(nodes[j])));
     o->relation_attach(r);
   }
+
+  const node_chain_t shortNodes(nodes.begin(), std::next(nodes.begin(), 3));
 
   // test all 4 combinations how the ways can be oriented
   for(unsigned int i = 0; i < 4; i++) {
@@ -1634,6 +1634,22 @@ void test_merge_ways()
     }
 
     verify_merged_way(w1, o, nodes, expect, true);
+
+    // Merge a "normal" and a "degenerated" way. The latter shouldn't really exist
+    // in the first place, but it shouldn't cause any problems in the software.
+    const node_chain_t &shortExpect = setup_ways_for_merge(shortNodes, o, w0, w1, 0, 1);
+    assert_cmpnum(w0->node_chain.size(), 1);
+    assert_cmpnum(w1->node_chain.size(), 3);
+    assert_cmpnum(shortExpect.size(), 3);
+    assert(w1->node_chain == shortExpect);
+
+    {
+      osm_t::mergeResult<way_t> mergeRes = o->mergeWays(w0, w1, nullptr);
+      assert(mergeRes.obj == w1);
+      assert(!mergeRes.conflict);
+    }
+
+    verify_merged_way(w1, o, shortNodes, shortExpect, true);
   }
 }
 

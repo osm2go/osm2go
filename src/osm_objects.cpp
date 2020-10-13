@@ -340,12 +340,6 @@ bool way_t::merge(way_t *other, osm_t *osm, map_t *map, const std::vector<relati
 
   const bool collision = tags.merge(other->tags);
 
-  // nothing to do
-  if(unlikely(other->node_chain.size() < 2)) {
-    osm->way_free(other);
-    return collision;
-  }
-
   /* make enough room for all nodes */
   node_chain.reserve(node_chain.size() + other->node_chain.size() - 1);
 
