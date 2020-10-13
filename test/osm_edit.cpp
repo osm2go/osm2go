@@ -1061,13 +1061,18 @@ void test_member_delete()
   std::unique_ptr<map_item_t> mi(new map_item_t(object_t(w), nullptr));
   n2->map_item = mi.get();
 
+  // insert an unrelated relation, just because we can
+  relation_t *rn = new relation_t();
+  o->relation_attach(rn);
+  r->members.insert(r->members.begin(), member_t(object_t(rn), "dummy"));
+
   // now delete the node that is member of both other objects
   o->node_delete(n2);
   fflush(stdout);
   // since the object had a valid id it should still be there, but unreferenced
   assert_cmpnum(o->nodes.size(), 3);
   assert_cmpnum(o->ways.size(), 1);
-  assert_cmpnum(o->relations.size(), 1);
+  assert_cmpnum(o->relations.size(), 2);
   assert(n2->tags.empty());
   assert(n2->isDeleted());
   assert_cmpnum(n2->flags, OSM_FLAG_DELETED);
@@ -1081,7 +1086,7 @@ void test_member_delete()
   assert_cmpnum(dirty1.ways.added.size(), 1);
   assert_cmpnum(dirty1.ways.deleted.size(), 0);
   assert_cmpnum(dirty1.relations.changed.size(), 0);
-  assert_cmpnum(dirty1.relations.added.size(), 1);
+  assert_cmpnum(dirty1.relations.added.size(), 2);
   assert_cmpnum(dirty1.relations.deleted.size(), 0);
 
   nodes = 0;
@@ -1090,7 +1095,7 @@ void test_member_delete()
   r->members_by_type(nodes, ways, relations);
   assert_cmpnum(nodes, 0);
   assert_cmpnum(ways, 1);
-  assert_cmpnum(relations, 0);
+  assert_cmpnum(relations, 1);
 }
 
 struct node_collector {
