@@ -1653,6 +1653,77 @@ void test_merge_ways()
   }
 }
 
+// all objects already exist in the OSM database, the victim way should be scheduled for deletion
+void test_merge_existing_ways()
+{
+  std::unique_ptr<osm_t> o(std::make_unique<osm_t>());
+  set_bounds(o);
+
+  node_chain_t nodes;
+  for(int i = 0; i < 6; i++) {
+    base_attributes ba(470420 + i);
+    ba.version = 1;
+    nodes.push_back(o->node_new(pos_t(i * 3, i * 3), ba));
+    o->insert(nodes.back());
+  }
+
+  base_attributes ba(47);
+  ba.version = 1;
+  way_t *w0 = new way_t(ba);
+  for(unsigned int j = 0; j < nodes.size() / 2; j++)
+    w0->append_node(nodes[j]);
+  o->insert(w0);
+
+  base_attributes ba2(42);
+  ba2.version = 1;
+  way_t *w1 = new way_t(ba2);
+  for(unsigned int j = nodes.size() / 2 - 1; j < nodes.size(); j++)
+    w1->append_node(nodes[j]);
+  o->insert(w1);
+
+  relation_t *r = new relation_t(ba2);
+  r->members.push_back(member_t(object_t(w0)));
+  o->insert(r);
+
+  // verify direct merging
+  osm_t::mergeResult<way_t > mr = o->mergeWays(w0, w1, nullptr);
+  assert(!mr.conflict);
+  assert(mr.obj == w1);
+
+  assert_cmpnum(w1->node_chain.size(), nodes.size());
+  assert_cmpnum(o->relations.size(), 1);
+  assert_cmpnum(o->ways.size(), 2);
+  assert_cmpnum(o->nodes.size(), nodes.size());
+  assert_cmpnum(o->original.relations.size(), 1);
+  assert_cmpnum(o->original.ways.size(), 2);
+  // only the reference count has changed, which is no property of the object in the database
+  assert_cmpnum(o->original.nodes.size(), 0);
+  for(node_chain_t::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
+    w1->contains_node(*it);
+    assert_cmpnum((*it)->ways, 1);
+  }
+  assert(nodes == w1->node_chain);
+
+  assert_cmpnum(r->members.size(), 1);
+  assert(r->members.front() == object_t(w1));
+
+  for(node_chain_t::const_iterator it = nodes.begin(); it != nodes.end(); it++)
+    assert_cmpnum((*it)->ways, 1);
+
+  // the relation should have been saved
+  const relation_t * const origR = static_cast<const relation_t *>(o->originalObject(object_t(r)));
+  assert(origR != nullptr);
+  assert_cmpnum(origR->members.size(), 1);
+  assert(origR->members.front() == object_t(w0));
+
+  o->relation_delete(r);
+
+  // deleting the relation must not invalidate the original
+  assert(origR == static_cast<const relation_t *>(o->originalObject(object_t(object_t::RELATION_ID, origR->id))));
+  assert_cmpnum(origR->members.size(), 1);
+  assert(origR->members.front() == object_t(w0));
+}
+
 // test that neighbors in relations are merged if necessary
 void test_way_merge_relation_neighbors()
 {
@@ -2138,6 +2209,7 @@ int main()
   test_member_delete();
   test_merge_nodes();
   test_merge_ways();
+  test_merge_existing_ways();
   test_api_adjust();
   test_relation_members();
   test_way_insert();

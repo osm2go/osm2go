@@ -363,7 +363,7 @@ bool way_t::merge(way_t *other, osm_t *osm, map_t *map, const std::vector<relati
                 relation_object_replacer(osm, object_t(other), object_t(this)));
 
   /* erase and free other way (now only containing the overlapping node anymore) */
-  osm->wipe(other);
+  osm->way_delete(other, map);
 
   return collision;
 }
