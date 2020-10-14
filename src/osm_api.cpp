@@ -420,15 +420,15 @@ struct osm_delete_objects_final {
     : context(c) {}
   void operator()(relation_t *r) {
     log_deletion(context, r);
-    context.osm->relation_free(r);
+    context.osm->wipe(r);
   }
   void operator()(way_t *w) {
     log_deletion(context, w);
-    context.osm->way_free(w);
+    context.osm->wipe(w);
   }
   void operator()(node_t *n) {
     log_deletion(context, n);
-    context.osm->node_free(n);
+    context.osm->wipe(n);
   }
 };
 

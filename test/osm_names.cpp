@@ -36,7 +36,7 @@ helper_node(const osm_t::TagMap tags, T name)
   set_bounds(osm);
   lpos_t pos(1, 1);
   node_t *n = osm->node_new(pos);
-  osm->node_attach(n);
+  osm->attach(n);
 
   n->tags.replace(tags);
 
@@ -51,7 +51,7 @@ way_t *construct_way(std::unique_ptr<osm_t> &osm, int nodes)
 
   for (int i = 0; i < std::abs(nodes); i++) {
     node_t *n = osm->node_new(lpos_t(i, i * 2));
-    osm->node_attach(n);
+    osm->attach(n);
     w->append_node(n);
   }
 
@@ -62,7 +62,7 @@ way_t *construct_way(std::unique_ptr<osm_t> &osm, int nodes)
     assert(!w->is_closed());
   }
 
-  return osm->way_attach(w);
+  return osm->attach(w);
 }
 
 // if nodes is negative close the way
@@ -274,7 +274,7 @@ void test_way_building_relation()
   assert_cmpstr(object_t(w).get_name(*osm), "residential building housenumber 42");
 
   relation_t *r = new relation_t();
-  osm->relation_attach(r);
+  osm->attach(r);
   osm_t::TagMap rtags;
   rtags.insert(osm_t::TagMap::value_type("type", "associatedStreet"));
   rtags.insert(osm_t::TagMap::value_type("name", "21 Jump Street"));
@@ -316,7 +316,7 @@ void test_multipolygon()
   way_t * const w = construct_way(osm, -3);
 
   relation_t *simple_r = new relation_t();
-  osm->relation_attach(simple_r);
+  osm->attach(simple_r);
   simple_r->members.push_back(member_t(object_t(w), "outer"));
 
   // multipolygons take precedence over other relations
@@ -332,7 +332,7 @@ void test_multipolygon()
 
   // another relation, found first in the map because of lower id
   relation_t *other_r  = new relation_t();
-  osm->relation_attach(other_r);
+  osm->attach(other_r);
   other_r->members.push_back(member_t(object_t(w)));
   other_r->tags.replace(rtags);
   assert_cmpstr(object_t(w).get_name(*osm), "way/area: member of multipolygon '<ID #-2>'");
@@ -354,7 +354,7 @@ void test_relation_precedence()
 
   object_t o(w);
   relation_t *r = new relation_t();
-  osm->relation_attach(r);
+  osm->attach(r);
   osm_t::TagMap rtags;
   rtags.insert(osm_t::TagMap::value_type("type", "associatedStreet"));
   rtags.insert(osm_t::TagMap::value_type("name", "21 Jump Street"));
@@ -368,7 +368,7 @@ void test_relation_precedence()
 
   // check PTv2 relation naming
   relation_t *pt_r = new relation_t();
-  osm->relation_attach(pt_r);
+  osm->attach(pt_r);
   rtags.clear();
   rtags.insert(osm_t::TagMap::value_type("type", "public_transport"));
   rtags.insert(osm_t::TagMap::value_type("public_transport", "stop_area"));
@@ -397,7 +397,7 @@ void test_relation_precedence()
   // check description of untagged objects by relation membership
   o = w;
   relation_t *simple_r = new relation_t();
-  osm->relation_attach(simple_r);
+  osm->attach(simple_r);
   simple_r->members.push_back(member_t(object_t(w)));
 
   // a relation with name takes precedence

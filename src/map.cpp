@@ -970,7 +970,7 @@ void map_t::button_release(const osm2go_platform::screenpos &p)
       outside_error();
     else {
       node = osm->node_new(pos);
-      osm->node_attach(node);
+      osm->attach(node);
       draw(node);
     }
     set_action(MAP_ACTION_IDLE);
@@ -1268,7 +1268,7 @@ void map_t::action_ok() {
       map_t::outside_error();
     } else {
       node = osm->node_new(pos);
-      osm->node_attach(node);
+      osm->attach(node);
       draw(node);
     }
 

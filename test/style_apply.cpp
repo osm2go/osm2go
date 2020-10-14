@@ -70,7 +70,7 @@ int main(int argc, char **argv)
   osm->bounds.max = lpos_t(0, 0);
 
   node_t * const node = osm->node_new(pos_t(0.0, 0.0));
-  osm->node_attach(node);
+  osm->attach(node);
 
   style->colorize(node);
 
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
   assert(oldicon != style->node_icons[node->id]);
   assert_cmpnum_op(oldzoom * 1.9f, <, node->zoom_max);
 
-  way_t * const way = osm->way_attach(new way_t());
+  way_t * const way = osm->attach(new way_t());
 
   style->colorize_world(osm);
   // default values for all ways set in test1.style
@@ -154,12 +154,12 @@ int main(int argc, char **argv)
   way_t * const area = new way_t();
   area->append_node(node);
   node_t *tmpn = osm->node_new(pos_t(0.0, 1.0));
-  osm->node_attach(tmpn);
+  osm->attach(tmpn);
   area->append_node(tmpn);
   tmpn = osm->node_new(pos_t(1.0, 1.0));
-  osm->node_attach(tmpn);
+  osm->attach(tmpn);
   area->append_node(tmpn);
-  osm->way_attach(area);
+  osm->attach(area);
 
   assert(!area->is_closed());
   area->append_node(node);

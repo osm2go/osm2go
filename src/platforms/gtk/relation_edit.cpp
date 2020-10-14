@@ -642,7 +642,7 @@ on_relation_add(relation_context_t *context)
 
   std::unique_ptr<relation_t> relation(std::make_unique<relation_t>());
   if(relation_info_dialog(context, relation.get())) {
-    relation_t *r = context->osm->relation_attach(relation.release());
+    relation_t *r = context->osm->attach(relation.release());
 
     // append a row for the new data
     GtkTreeIter iter;

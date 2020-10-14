@@ -305,7 +305,7 @@ void way_t::cleanup() {
 node_t *way_t::insert_node(osm_t::ref osm, int position, lpos_t coords)
 {
   node_t *node = osm->node_new(coords);
-  osm->node_attach(node);
+  osm->attach(node);
 
   osm->mark_dirty(this);
 
@@ -363,7 +363,7 @@ bool way_t::merge(way_t *other, osm_t *osm, map_t *map, const std::vector<relati
                 relation_object_replacer(osm, object_t(other), object_t(this)));
 
   /* erase and free other way (now only containing the overlapping node anymore) */
-  osm->way_free(other);
+  osm->wipe(other);
 
   return collision;
 }

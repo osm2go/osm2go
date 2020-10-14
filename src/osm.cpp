@@ -619,7 +619,7 @@ bool tag_list_t::hasTagCollisions() const
 
 /* ------------------- node handling ------------------- */
 
-void osm_t::node_free(node_t *node) {
+void osm_t::wipe(node_t *node) {
   nodes.erase(node->id);
 
   /* there must not be anything left in this chain */
@@ -640,7 +640,7 @@ void osm_node_chain_unref(node_chain_t &node_chain)
   std::for_each(node_chain.begin(), node_chain.end(), osm_unref_node);
 }
 
-void osm_t::way_free(way_t *way) {
+void osm_t::wipe(way_t *way) {
   ways.erase(way->id);
   way->cleanup();
   delete way;
@@ -694,7 +694,7 @@ void relation_t::generate_member_xml(xmlNodePtr xml_node) const
   std::for_each(members.begin(), members.end(), gen_xml_relation_functor(xml_node));
 }
 
-void osm_t::relation_free(relation_t *relation)
+void osm_t::wipe(relation_t *relation)
 {
   relations.erase(relation->id);
   delete relation;
@@ -829,7 +829,7 @@ xmlChar *osm_generate_xml_changeset(const std::string &comment,
 
 /* ---------- edit functions ------------- */
 
-template<typename T> void osm_t::attach(T *obj)
+template<typename T> void osm_t::attachObject(T *obj)
 {
   std::map<item_id_t, T *> &map = objects<T>();
   item_id_t id = obj->id;
@@ -862,13 +862,13 @@ node_t *osm_t::node_new(const pos_t &pos, const base_attributes &attr)
   return new node_t(attr, pos.toLpos(bounds), pos);
 }
 
-void osm_t::node_attach(node_t *node) {
-  attach(node);
+void osm_t::attach(node_t *node) {
+  attachObject(node);
 }
 
-way_t *osm_t::way_attach(way_t *way)
+way_t *osm_t::attach(way_t *way)
 {
-  attach(way);
+  attachObject(way);
   return way;
 }
 
@@ -1030,7 +1030,7 @@ osm_t::node_delete(node_t *node, NodeDeleteFlags flags, map_t *map)
   } else {
     printf("permanently delete node #" ITEM_ID_FORMAT "\n", node->id);
 
-    node_free(node);
+    wipe(node);
   }
 
   if (flags == NodeDeleteShortWays)
@@ -1070,9 +1070,9 @@ void osm_t::remove_from_relations(object_t obj) {
                 remove_member_functor(this, obj));
 }
 
-relation_t *osm_t::relation_attach(relation_t *relation)
+relation_t *osm_t::attach(relation_t *relation)
 {
-  attach(relation);
+  attachObject(relation);
   return relation;
 }
 
@@ -1133,7 +1133,7 @@ void osm_t::way_delete(way_t *way, map_t *map, void (*unref)(node_t *))
   } else {
     printf("permanently delete way #" ITEM_ID_FORMAT "\n", way->id);
 
-    way_free(way);
+    wipe(way);
   }
 }
 
@@ -1150,7 +1150,7 @@ void osm_t::relation_delete(relation_t *relation) {
     printf("permanently delete relation #" ITEM_ID_FORMAT "\n",
 	   relation->id);
 
-    relation_free(relation);
+    wipe(relation);
   }
 }
 
@@ -1460,7 +1460,7 @@ way_t *way_t::split(osm_t::ref osm, node_chain_t::iterator cut_at, bool cut_at_n
 
   // now move the way itself into the main data structure
   // do it before transferring the relation membership to get meaningful ids in debug output
-  way_t *ret = osm->way_attach(neww.release());
+  way_t *ret = osm->attach(neww.release());
 
   /* ---- transfer relation membership from way to new ----- */
   std::for_each(osm->relations.begin(), osm->relations.end(), relation_transfer(osm, ret, this));
@@ -1639,17 +1639,17 @@ inline void object_insert(std::map<item_id_t, T *> &map, T *o)
 
 } // namespace
 
-void osm_t::node_insert(node_t *node)
+void osm_t::insert(node_t *node)
 {
   object_insert(nodes, node);
 }
 
-void osm_t::way_insert(way_t *way)
+void osm_t::insert(way_t *way)
 {
   object_insert(ways, way);
 }
 
-void osm_t::relation_insert(relation_t *relation)
+void osm_t::insert(relation_t *relation)
 {
   object_insert(relations, relation);
 }

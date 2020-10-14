@@ -123,14 +123,14 @@ void test_trivial()
   assert(!osm->bounds.contains(lpos_t(-1, 0)));
   assert(!osm->bounds.contains(lpos_t(0, -1)));
 
-  way_t *w = osm->way_attach(new way_t());
+  way_t *w = osm->attach(new way_t());
   // must work even on empty way
   assert_null(w->first_node());
   assert_null(w->last_node());
 
   lpos_t l(10, 20);
   node_t *n = osm->node_new(l);
-  osm->node_attach(n);
+  osm->attach(n);
   // the sanity check look on the node map which now isn't empty anymore
   assert(osm->sanity_check().isEmpty());
 
@@ -140,7 +140,7 @@ void test_trivial()
   w->flags |= OSM_FLAG_DELETED;
   assert(!w->ends_with_node(n));
 
-  relation_t *r = osm->relation_attach(new relation_t());
+  relation_t *r = osm->attach(new relation_t());
   object_t robj(r);
   // check compare
   assert(robj == r);
@@ -350,7 +350,7 @@ void test_replace_tags()
   base_attributes ba(47);
   ba.version = 1;
   node_t *nd = o->node_new(pos_t(0, 0), ba);
-  o->node_insert(nd);
+  o->insert(nd);
   node_t &node = *nd;
   assert_cmpnum(node.flags, 0);
 
@@ -437,24 +437,24 @@ void test_split()
   w->tags.replace(std::move(otags));
   v->tags.replace(w->tags.asMap());
 
-  o->way_attach(v);
-  o->way_insert(w);
+  o->attach(v);
+  o->insert(w);
 
   r1->members.push_back(member_t(object_t(w)));
-  o->relation_attach(r1);
+  o->attach(r1);
   r2->members.push_back(member_t(object_t(w)));
   r2->members.push_back(member_t(object_t(v)));
   // insert twice, to check if all entries get duplicated
   r2->members.push_back(member_t(object_t(w)));
-  o->relation_attach(r2);
+  o->attach(r2);
   r3->members.push_back(member_t(object_t(v)));
-  o->relation_attach(r3);
+  o->attach(r3);
 
   // create the way to split
   std::vector<node_t *> nodes;
   for(int i = 0; i < 6; i++) {
     node_t *n = o->node_new(pos_t(52.25 + i * 0.001, 9.58 + i * 0.001));
-    o->node_attach(n);
+    o->attach(n);
     v->node_chain.push_back(n);
     w->node_chain.push_back(n);
     n->ways += 2;
@@ -547,7 +547,7 @@ void test_split()
     area->append_node(nodes[i]);
   area->append_node(nodes[0]);
   assert(area->is_closed());
-  o->way_attach(area);
+  o->attach(area);
 
   // drop the other ways to make reference counting easier
   o->way_delete(v, nullptr);
@@ -640,16 +640,16 @@ void test_split_order()
     ba.version = 3;
     node_t *n = o->node_new(pos_t(52.25 + i * 0.001, 9.58 + i * 0.001), ba);
     n->id = i;
-    o->node_insert(n);
+    o->insert(n);
     nodes.push_back(n);
   }
   // the ways that start and end each relation, opposing directions
   way_t *wstart = new way_t();
-  o->way_attach(wstart);
+  o->attach(wstart);
   wstart->append_node(o->node_by_id(1));
   wstart->append_node(o->node_by_id(2));
   way_t *wend = new way_t();
-  o->way_attach(wend);
+  o->attach(wend);
   wend->append_node(o->node_by_id(10));
   wend->append_node(o->node_by_id(9));
 
@@ -657,7 +657,7 @@ void test_split_order()
   std::vector<way_t *> splitw;
   for(unsigned int i = 0; i < 12; i++) {
     way_t *w = new way_t();
-    o->way_attach(w);
+    o->attach(w);
     splitw.push_back(w);
     const std::vector<node_t *>::const_iterator itEnd = std::prev(nodes.end());
 
@@ -668,7 +668,7 @@ void test_split_order()
   for(unsigned int i = 1; i <= splitw.size(); i++) {
     relation_t * const r = new relation_t();
     r->id = i;
-    o->relation_insert(r);
+    o->insert(r);
     // create relations where either the first way is a different way (in order), or is a node
     if(i % 4 == 1)
       r->members.push_back(member_t(object_t(wstart)));
@@ -754,16 +754,16 @@ void test_reverse()
   node_t *n1 = o->node_new(l);
   assert_cmpnum(n1->version, 0);
   assert_cmpnum(n1->flags, OSM_FLAG_DIRTY);
-  o->node_attach(n1);
+  o->attach(n1);
   l.y = 40;
   node_t *n2 = o->node_new(l);
-  o->node_attach(n2);
+  o->attach(n2);
   base_attributes ba(47);
   ba.version = 2;
   way_t *w = new way_t(ba);
   w->append_node(n1);
   w->append_node(n2);
-  o->way_insert(w);
+  o->insert(w);
 
   osm_t::TagMap tags;
   tags.insert(osm_t::TagMap::value_type("highway", "residential"));
@@ -784,7 +784,7 @@ void test_reverse()
   for(unsigned int i = 0; i < 5; i++) {
     relation_t *r = new relation_t();
     rels.push_back(r);
-    o->relation_attach(r);
+    o->attach(r);
     osm_t::TagMap rtags;
     rtags.insert(osm_t::TagMap::value_type("type", i == 0 ? "multipolygon" : "route"));
     r->tags.replace(rtags);
@@ -879,14 +879,14 @@ void test_way_delete()
   // delete a simple way
   lpos_t l(10, 20);
   node_t *n1 = o->node_new(l);
-  o->node_attach(n1);
+  o->attach(n1);
   l.y = 40;
   node_t *n2 = o->node_new(l);
-  o->node_attach(n2);
+  o->attach(n2);
   way_t *w = new way_t();
   w->append_node(n1);
   w->append_node(n2);
-  o->way_attach(w);
+  o->attach(w);
 
   o->way_delete(w, nullptr);
 
@@ -895,17 +895,17 @@ void test_way_delete()
 
   // delete a closed way
   n1 = o->node_new(l);
-  o->node_attach(n1);
+  o->attach(n1);
   l.y = 20;
   n2 = o->node_new(l);
-  o->node_attach(n2);
+  o->attach(n2);
   w = new way_t();
   w->append_node(n1);
   w->append_node(n2);
-  o->way_attach(w);
+  o->attach(w);
   l.x = 20;
   n2 = o->node_new(l);
-  o->node_attach(n2);
+  o->attach(n2);
   w->append_node(n2);
   assert(!w->is_closed());
   w->append_node(n1);
@@ -920,26 +920,26 @@ void test_way_delete()
   l.x = 10;
   l.y = 20;
   n1 = o->node_new(l);
-  o->node_attach(n1);
+  o->attach(n1);
 
   // this node will be removed when the way is removed
   l.y = 40;
   n2 = o->node_new(l);
-  o->node_attach(n2);
+  o->attach(n2);
 
   w = new way_t();
   w->append_node(n1);
   w->append_node(n2);
-  o->way_attach(w);
+  o->attach(w);
 
   // this instance will persist
   l.x = 20;
   n2 = o->node_new(l);
-  o->node_attach(n2);
+  o->attach(n2);
   w->append_node(n2);
 
   relation_t *r = new relation_t();
-  o->relation_attach(r);
+  o->attach(r);
   r->members.push_back(member_t(object_t(n2)));
 
   osm_t::TagMap nstags;
@@ -948,13 +948,13 @@ void test_way_delete()
 
   l.x = 5;
   node_t *n3 = o->node_new(l);
-  o->node_attach(n3);
+  o->attach(n3);
   l.y = 25;
   node_t *n4 = o->node_new(l);
-  o->node_attach(n4);
+  o->attach(n4);
 
   way_t *w2 = new way_t();
-  o->way_attach(w2);
+  o->attach(w2);
   w2->append_node(n3);
   w2->append_node(n4);
 
@@ -994,7 +994,7 @@ void test_way_delete()
   base_attributes ba(42);
   ba.version = 1;
   w = new way_t(ba);
-  o->way_insert(w);
+  o->insert(w);
   w->append_node(n3);
   w->append_node(n4);
   // keep it here, it ill only be reset, but not freed as that is done through the map
@@ -1017,27 +1017,27 @@ void test_member_delete()
   // a way with 3 points
   lpos_t l(10, 20);
   node_t *n1 = o->node_new(l);
-  o->node_attach(n1);
+  o->attach(n1);
   l.y = 40;
   node_t *n2 = o->node_new(l);
-  o->node_attach(n2);
+  o->attach(n2);
   way_t *w = new way_t();
   w->append_node(n1);
   w->append_node(n2);
-  o->way_attach(w);
+  o->attach(w);
 
   l.x = 20;
   base_attributes ba(42);
   ba.version = 1;
   n2 = o->node_new(l.toPos(o->bounds), ba);
-  o->node_insert(n2);
+  o->insert(n2);
   w->append_node(n2);
 
   // a relation containing both the way as well as the node
   relation_t * const r = new relation_t();
   r->members.push_back(member_t(object_t(w)));
   r->members.push_back(member_t(object_t(n2)));
-  o->relation_attach(r);
+  o->attach(r);
 
   osm_t::dirty_t dirty0 = o->modified();
   assert_cmpnum(dirty0.nodes.total, 3);
@@ -1063,7 +1063,7 @@ void test_member_delete()
 
   // insert an unrelated relation, just because we can
   relation_t *rn = new relation_t();
-  o->relation_attach(rn);
+  o->attach(rn);
   r->members.insert(r->members.begin(), member_t(object_t(rn), "dummy"));
 
   // now delete the node that is member of both other objects
@@ -1134,8 +1134,8 @@ void test_merge_nodes()
   lpos_t newpos(20, 20);
   node_t *n1 = o->node_new(oldpos);
   node_t *n2 = o->node_new(newpos);
-  o->node_attach(n1);
-  o->node_attach(n2);
+  o->attach(n1);
+  o->attach(n2);
 
   std::array<way_t *, 2> ways2join;
 
@@ -1156,7 +1156,7 @@ void test_merge_nodes()
   ba.version = 1;
   n2 = o->node_new(oldpos.toPos(o->bounds), ba);
   n2->lpos = oldpos;
-  o->node_insert(n2);
+  o->insert(n2);
 
   {
     osm_t::mergeResult<node_t> mergeRes = o->mergeNodes(n2, n1, ways2join);
@@ -1191,7 +1191,7 @@ void test_merge_nodes()
   n2->lpos = newpos;
   assert_cmpnum(n2->flags, 0);
   n1 = o->node_new(oldpos);
-  o->node_attach(n1);
+  o->attach(n1);
 
   {
     osm_t::mergeResult<node_t> mergeRes = o->mergeNodes(n1, n2, ways2join);
@@ -1206,7 +1206,7 @@ void test_merge_nodes()
   assert_null(ways2join[1]);
 
   assert(o->original.nodes.begin()->second == o->originalObject(object_t(n2)));
-  o->node_free(n2);
+  o->wipe(n2);
   assert_cmpnum(o->nodes.size(), 0);
 
   assert_cmpnum(o->original.nodes.size(), 1);
@@ -1222,12 +1222,12 @@ void test_merge_nodes()
   // start new
   n1 = o->node_new(oldpos);
   n2 = o->node_new(newpos);
-  o->node_attach(n1);
-  o->node_attach(n2);
+  o->attach(n1);
+  o->attach(n2);
 
   // attach one node to a way, that one should be preserved
   way_t *w = new way_t();
-  o->way_attach(w);
+  o->attach(w);
   w->append_node(n2);
 
   {
@@ -1250,11 +1250,11 @@ void test_merge_nodes()
   /// ==================
   // now check with relation membership
   relation_t *r = new relation_t();
-  o->relation_attach(r);
+  o->attach(r);
   n1 = o->node_new(oldpos);
   n2 = o->node_new(newpos);
-  o->node_attach(n1);
-  o->node_attach(n2);
+  o->attach(n1);
+  o->attach(n2);
 
   r->members.push_back(member_t(object_t(n2)));
 
@@ -1283,23 +1283,23 @@ void test_merge_nodes()
   // have short ways of 2 nodes, deletion of one of the nodes should trigger deletion of the ways
   n1 = o->node_new(oldpos);
   n2 = o->node_new(newpos);
-  o->node_attach(n1);
-  o->node_attach(n2);
+  o->attach(n1);
+  o->attach(n2);
 
   // one way
   w = new way_t();
-  o->way_attach(w);
+  o->attach(w);
   w->append_node(n1);
   w->append_node(n2);
 
   node_t *n3 = o->node_new(pos_t(25, 45));
-  o->node_attach(n3);
+  o->attach(n3);
   // important: set non-trivial tags so this will not be deleted when the referencing way is deleted
   std::vector<tag_t> tags = ab_with_creator();
   n3->tags.replace(std::move(tags));
 
   way_t *w2 = new way_t();
-  o->way_attach(w2);
+  o->attach(w2);
   w2->append_node(n1);
   w2->append_node(n3);
 
@@ -1317,13 +1317,13 @@ void test_merge_nodes()
   std::vector<relation_t *> relations;
   for(int i = 0; i < 3; i++) {
     w = new way_t();
-    o->way_attach(w);
+    o->attach(w);
     lpos_t pos(i + 4, i + 4);
     n1 = o->node_new(pos);
-    o->node_attach(n1);
+    o->attach(n1);
     w->append_node(n1);
     r = new relation_t();
-    o->relation_attach(r);
+    o->attach(r);
     ways.push_back(w);
     relations.push_back(r);
   }
@@ -1336,8 +1336,8 @@ void test_merge_nodes()
 
   n1 = o->node_new(oldpos);
   n2 = o->node_new(newpos);
-  o->node_attach(n1);
-  o->node_attach(n2);
+  o->attach(n1);
+  o->attach(n2);
 
   // one way with only n1
   w = ways.back();
@@ -1424,7 +1424,7 @@ void test_merge_nodes()
   assert(w->node_chain.front() == n1);
 
   n2 = o->node_new(newpos);
-  o->node_attach(n2);
+  o->attach(n2);
   n1->ways--;
   w->node_chain.front() = n2;
   n2->ways++;
@@ -1445,11 +1445,11 @@ void test_merge_nodes()
   // this should trigger the second "mayMerge = false" in node_t::mergeNodes()
   std::vector<node_t *> nn;
   w = new way_t();
-  o->way_attach(w);
+  o->attach(w);
   for (int i = 0; i < 4; i++) {
     lpos_t p(10 + (i % 2) * 10, 10 + (i / 2) * 10);
     nn.push_back(o->node_new(p));
-    o->node_attach(nn.back());
+    o->attach(nn.back());
     w->append_node(nn.back());
   }
   n1 = nn.front();
@@ -1470,11 +1470,11 @@ void test_merge_nodes()
   // this should trigger the first "mayMerge = false" in node_t::mergeNodes()
   n1 = nn.at(1);
   w = new way_t();
-  o->way_attach(w);
+  o->attach(w);
   for (int i = 0; i < 3; i++) {
     lpos_t p(30 + (i % 2) * 10, 30 + (i / 2) * 10);
     nn.push_back(o->node_new(p));
-    o->node_attach(nn.back());
+    o->attach(nn.back());
     w->append_node(nn.back());
   }
   n2 = nn.back();
@@ -1513,7 +1513,7 @@ node_chain_t setup_ways_for_merge(const node_chain_t &nodes, osm_t::ref o, way_t
     for(int j = nodes.size() / 2 - 1; j >= 0; j--)
       w0->append_node(nodes[j]);
   }
-  o->way_attach(w0);
+  o->attach(w0);
 
   w1 = new way_t();
   for(unsigned int j = nodes.size() / 2 - 1; j < nodes.size(); j++)
@@ -1523,7 +1523,7 @@ node_chain_t setup_ways_for_merge(const node_chain_t &nodes, osm_t::ref o, way_t
     std::reverse(w1->node_chain.begin(), w1->node_chain.end());
     std::reverse(expect.begin(), expect.end());
   }
-  o->way_attach(w1);
+  o->attach(w1);
 
   switch (relations) {
   case 0:
@@ -1574,7 +1574,7 @@ void verify_merged_way(way_t *w, osm_t::ref o, const node_chain_t &nodes, const 
   for(unsigned int i = 1; i < o->relations.size(); i++)
     assert_cmpnum(o->relation_by_id(-1 - static_cast<item_id_t>(i))->members.size(), i - 1);
 
-  o->way_free(w);
+  o->wipe(w);
 
   assert_cmpnum(o->ways.size(), 0);
   assert_cmpnum(o->nodes.size(), nodecount);
@@ -1590,14 +1590,14 @@ void test_merge_ways()
   node_chain_t nodes;
   for(int i = 0; i < 8; i++) {
     nodes.push_back(o->node_new(lpos_t(i * 3, i * 3)));
-    o->node_attach(nodes.back());
+    o->attach(nodes.back());
   }
 
   for(int i = 0; i < 5; i++) {
     relation_t *r = new relation_t();
     for(int j = 1; j < i; j++)
       r->members.push_back(member_t(object_t(nodes[j])));
-    o->relation_attach(r);
+    o->attach(r);
   }
 
   const node_chain_t shortNodes(nodes.begin(), std::next(nodes.begin(), 3));
@@ -1662,28 +1662,28 @@ void test_way_merge_relation_neighbors()
   // delete a simple way
   lpos_t l(10, 20);
   node_t *n1 = osm->node_new(l);
-  osm->node_attach(n1);
+  osm->attach(n1);
   l.y = 40;
   node_t *n2 = osm->node_new(l);
-  osm->node_attach(n2);
+  osm->attach(n2);
   l.x = 30;
   node_t *n3 = osm->node_new(l);
-  osm->node_attach(n3);
+  osm->attach(n3);
 
   way_t *w1 = new way_t();
   w1->append_node(n1);
   w1->append_node(n2);
-  osm->way_attach(w1);
+  osm->attach(w1);
 
   way_t *w2 = new way_t();
   w2->append_node(n2);
   w2->append_node(n3);
-  osm->way_attach(w2);
+  osm->attach(w2);
 
   relation_t *rel = new relation_t();
-  osm->relation_attach(rel);
+  osm->attach(rel);
   relation_t *relcmp = new relation_t(); // the intended target state
-  osm->relation_attach(relcmp);
+  osm->attach(relcmp);
 
   // now put several instances of the same things into the relation to
   // see that merging happens the right way
@@ -1774,11 +1774,11 @@ void test_relation_members()
   std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
   set_bounds(osm);
   relation_t *r = new relation_t();
-  osm->relation_attach(r);
+  osm->attach(r);
   node_t *n1 = osm->node_new(lpos_t(1, 1));
-  osm->node_attach(n1);
+  osm->attach(n1);
   node_t *n2 = osm->node_new(lpos_t(2, 2));
-  osm->node_attach(n2);
+  osm->attach(n2);
 
   r->members.push_back(member_t(object_t(n1), "foo"));
   r->members.push_back(member_t(object_t(n2), "bar"));
@@ -1794,10 +1794,10 @@ void test_way_insert()
   set_bounds(osm);
 
   node_t * const n0 = osm->node_new(lpos_t(10, 10));
-  osm->node_attach(n0);
+  osm->attach(n0);
   node_t * const n1 = osm->node_new(lpos_t(20, 20));
-  osm->node_attach(n1);
-  way_t * const w = osm->way_attach(new way_t());
+  osm->attach(n1);
+  way_t * const w = osm->attach(new way_t());
   w->append_node(n0);
   w->append_node(n1);
 
@@ -1845,7 +1845,7 @@ void test_compare()
 
   // ==== NODES
   node_t * const n1 = new node_t(base_attributes(), lpos_t(0, 0), pos_t(0, 0));
-  osm->node_attach(n1);
+  osm->attach(n1);
 
   std::unique_ptr<node_t> n2(std::make_unique<node_t>(*n1));
   // same position, but different object
@@ -1894,7 +1894,7 @@ void test_compare()
 
   // ==== WAYS
   way_t * const w1 = new way_t();
-  osm->way_attach(w1);
+  osm->attach(w1);
   std::unique_ptr<way_t> w2(std::make_unique<way_t>(*w1));
 
   assert(*w1 == *w2);
@@ -1943,7 +1943,7 @@ void test_compare()
 
   // ==== RELATIONS
   relation_t * const r1 = new relation_t();
-  osm->relation_attach(r1);
+  osm->attach(r1);
   std::unique_ptr<relation_t> r2(std::make_unique<relation_t>(*r1));
 
   assert(*r1 == *r2);
@@ -2035,7 +2035,7 @@ void test_updateTags()
   ba.version = 1;
   node_t * const n = osm->node_new(startPos.toPos(osm->bounds), ba);
   const object_t objN(n);
-  osm->node_insert(n);
+  osm->insert(n);
 
   osm_t::TagMap tags;
   tags.insert(osm_t::TagMap::value_type("a", "aa"));
@@ -2050,11 +2050,11 @@ void test_updateTags()
   check_updateTags_all(osm, objN);
 
   way_t *w = new way_t(ba);
-  osm->way_insert(w);
+  osm->insert(w);
   check_updateTags_all(osm, object_t(w));
 
   relation_t *r = new relation_t(ba);
-  osm->relation_insert(r);
+  osm->insert(r);
   check_updateTags_all(osm, object_t(r));
 
   // NODE: updateTags not resetting back

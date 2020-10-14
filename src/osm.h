@@ -162,7 +162,7 @@ public:
 class osm_t {
   template<typename T> inline std::map<item_id_t, T *> &objects();
   template<typename T> inline const std::map<item_id_t, T *> &objects() const;
-  template<typename T> void attach(T *obj);
+  template<typename T> void attachObject(T *obj);
   template<typename T> inline T *find_by_id(item_id_t id) const;
   template<typename T> inline const T *findOriginalById(item_id_t id) const;
   template<typename T> inline std::unordered_map<item_id_t, const T *> &originalObjects();
@@ -244,12 +244,26 @@ public:
   /**
    * @brief insert a node and create a new temporary id
    */
-  void node_attach(node_t *node);
+  void attach(node_t *node);
 
   /**
-   * @brief insert a node using the id already set
+   * @brief insert a way and create a new temporary id
+   * @returns the way
    */
-  void node_insert(node_t *node);
+  way_t *attach(way_t *way);
+
+  /**
+   * @brief insert a relation and create a new temporary id
+   * @returns the way
+   */
+  relation_t *attach(relation_t *relation);
+
+  /**
+   * @brief insert an object using the id already set
+   */
+  void insert(node_t *node);
+  void insert(way_t *way);
+  void insert(relation_t *relation);
 
   /**
    * @brief mark a way as deleted
@@ -265,20 +279,17 @@ public:
    */
   void way_delete(way_t *way, map_t *map, void (*unref)(node_t *) = nullptr);
 
-  /**
-   * @brief insert a way and create a new temporary id
-   * @param way the new way
-   * @returns the way
-   */
-  way_t *way_attach(way_t *way);
+  void remove_from_relations(object_t obj);
 
   /**
-   * @brief insert a node using the id already set
+   * @brief completely remove the object from the maps
+   *
+   * This will remove any tracking of the object. This is the last step in deleting
+   * an object, but nothing that should be directly called by the edit action.
    */
-  void way_insert(way_t *way);
-  void remove_from_relations(object_t obj);
-  void way_free(way_t *way);
-  void node_free(node_t *node);
+  void wipe(node_t *node);
+  void wipe(way_t *way);
+  void wipe(relation_t *relation);
 
   trstring unspecified_name(const object_t &obj) const;
 
@@ -393,19 +404,6 @@ public:
   void node_delete(node_t *node, map_t *map)
   { node_delete(node, NodeDeleteShortWays, map); }
 
-  void relation_free(relation_t *relation);
-
-  /**
-   * @brief insert a relation and create a new temporary id
-   * @param relation the new relation
-   * @returns the relation
-   */
-  relation_t *relation_attach(relation_t *relation);
-
-  /**
-   * @brief insert a relation using the id already set
-   */
-  void relation_insert(relation_t *relation);
   void relation_delete(relation_t *relation);
 
   /**

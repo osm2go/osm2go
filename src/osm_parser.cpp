@@ -334,7 +334,7 @@ static void process_node(xmlTextReaderPtr reader, osm_t::ref osm) {
   node_t *node = osm->node_new(pos, ba);
   assert_cmpnum(node->flags, 0);
 
-  osm->node_insert(node);
+  osm->insert(node);
 
   /* just an empty element? then return the node as it is */
   if(xmlTextReaderIsEmptyElement(reader))
@@ -375,7 +375,7 @@ static void process_way(xmlTextReaderPtr reader, osm_t::ref osm)
   way_t *way = new way_t(ba);
   assert_cmpnum(way->flags, 0);
 
-  osm->way_insert(way);
+  osm->insert(way);
 
   /* just an empty element? then return the way as it is */
   /* (this should in fact never happen as this would be a way without nodes) */
@@ -424,7 +424,7 @@ static void process_relation(xmlTextReaderPtr reader, osm_t::ref osm)
   relation_t *relation = new relation_t(ba);
   assert_cmpnum(relation->flags, 0);
 
-  osm->relation_insert(relation);
+  osm->insert(relation);
 
   /* just an empty element? then return the relation as it is */
   /* (this should in fact never happen as this would be a relation */

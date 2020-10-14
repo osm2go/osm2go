@@ -161,7 +161,7 @@ void map_draw_nodes::operator()(node_t* node)
     /* we can be sure that no node gets inserted twice (even if twice in */
     /* the ways chain) because it gets assigned a non-ID_ILLEGAL id when */
     /* being moved to the osm node chain */
-    map->appdata.project->osm->node_attach(node);
+    map->appdata.project->osm->attach(node);
   }
 
   map->draw(node);
@@ -191,7 +191,7 @@ void map_t::way_add_ok() {
     action.way = action.extending;
   } else {
     /* now move the way itself into the main data structure */
-    osm->way_attach(action.way);
+    osm->attach(action.way);
   }
 
   /* we might already be working on the "ends_on" way as we may */
