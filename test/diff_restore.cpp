@@ -184,11 +184,25 @@ int main(int argc, char **argv)
 
   verify_diff(osm);
 
+  const way_t * const w55 = osm->way_by_id(351899455);
+  assert(w55 != nullptr);
+  assert(w55->isDeleted());
+
   xmlString rel_str(r255->generate_xml("42"));
   printf("%s\n", rel_str.get());
+  // make sure this test doesn't suddenly fail only because libxml2 decided to use the other type of quotes
+  assert((strstr(reinterpret_cast<const char *>(rel_str.get()), "<relation id=\"296255\" version=\"54\" changeset=\"42\">") != nullptr) !=
+         (strstr(reinterpret_cast<const char *>(rel_str.get()), "<relation id='296255' version='54' changeset='42'>") != nullptr));
+
+  rel_str.reset(w55->generate_xml("47"));
+  printf("%s\n", rel_str.get());
+  assert((strstr(reinterpret_cast<const char *>(rel_str.get()), "<way id=\"351899455\" version=\"1\" changeset=\"47\">") != nullptr) !=
+         (strstr(reinterpret_cast<const char *>(rel_str.get()), "<way id='351899455' version='1' changeset='47'>") != nullptr));
 
   rel_str.reset(n72->generate_xml("42"));
   printf("%s\n", rel_str.get());
+  assert((strstr(reinterpret_cast<const char *>(rel_str.get()), "<node id=\"638499572\" version=\"12\" changeset=\"42\" lat=\"52.26") != nullptr) !=
+         (strstr(reinterpret_cast<const char *>(rel_str.get()), "<node id='638499572' version='12' changeset='42' lat='52.26") != nullptr));
 
   char tmpdir[] = "/tmp/osm2go-diff_restore-XXXXXX";
 
