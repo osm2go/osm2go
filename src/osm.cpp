@@ -947,10 +947,9 @@ class node_chain_delete_functor {
   osm_t * const osm;
   const node_t * const node;
   way_chain_t &way_chain;
-  const bool check_only;
 public:
-  inline node_chain_delete_functor(osm_t *o, const node_t *n, way_chain_t &w, bool c)
-    : osm(o), node(n), way_chain(w), check_only(c) {}
+  inline node_chain_delete_functor(osm_t *o, const node_t *n, way_chain_t &w)
+    : osm(o), node(n), way_chain(w) {}
   void operator()(std::pair<item_id_t, way_t *> p);
 };
 
@@ -968,9 +967,6 @@ void node_chain_delete_functor::operator()(std::pair<item_id_t, way_t *> p)
 
       // and add the way to the list of affected ways
       way_chain.push_back(way);
-      // only record that there has been a change
-      if (check_only)
-        return;
     }
 
     // remove node from chain
@@ -1014,10 +1010,12 @@ osm_t::node_delete(node_t *node, NodeDeleteFlags flags, map_t *map)
   way_chain_t way_chain;
 
   // no need to iterate all ways if we already know in advance that none references this node
-  if (node->ways > 0)
+  if (node->ways > 0) {
+    assert(flags != NodeDeleteKeepRefs);
     /* first remove node from all ways using it */
     std::for_each(ways.begin(), ways.end(),
-                  node_chain_delete_functor(this, node, way_chain, (flags == NodeDeleteKeepRefs)));
+                  node_chain_delete_functor(this, node, way_chain));
+  }
 
   if(flags != NodeDeleteKeepRefs)
     remove_from_relations(object_t(node));
