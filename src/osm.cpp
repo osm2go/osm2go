@@ -1088,9 +1088,8 @@ public:
 
 class osm_unref_way_free {
   osm_t * const osm;
-  const way_t * const way;
 public:
-  inline osm_unref_way_free(osm_t *o, const way_t *w) : osm(o), way(w) {}
+  inline osm_unref_way_free(osm_t *o) : osm(o) {}
   void operator()(node_t *node);
 };
 
@@ -1122,7 +1121,7 @@ void osm_t::way_delete(way_t *way, map_t *map, void (*unref)(node_t *))
   /* delete all nodes that aren't in other use now */
   node_chain_t &chain = way->node_chain;
   if(unref == nullptr)
-    std::for_each(chain.begin(), chain.end(), osm_unref_way_free(this, way));
+    std::for_each(chain.begin(), chain.end(), osm_unref_way_free(this));
   else
     std::for_each(chain.begin(), chain.end(), unref);
   chain.clear();
