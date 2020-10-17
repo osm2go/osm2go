@@ -163,7 +163,6 @@ class osm_t {
   template<typename T> inline std::map<item_id_t, T *> &objects();
   template<typename T> inline const std::map<item_id_t, T *> &objects() const;
   template<typename T> void attachObject(T *obj);
-  template<typename T> inline T *find_by_id(item_id_t id) const;
   template<typename T> inline const T *findOriginalById(item_id_t id) const;
   template<typename T> inline std::unordered_map<item_id_t, const T *> &originalObjects();
   template<typename T> inline const std::unordered_map<item_id_t, const T *> &originalObjects() const;
@@ -235,9 +234,8 @@ public:
   std::map<int, std::string> users;   ///< mapping of user id to username
   UploadPolicy uploadPolicy;
 
-  node_t *node_by_id(item_id_t id) const;
-  way_t *way_by_id(item_id_t id) const;
-  relation_t *relation_by_id(item_id_t id) const;
+  template<typename T>
+  T *object_by_id(item_id_t id) const;
 
   node_t *node_new(const lpos_t lpos);
   node_t *node_new(const pos_t &pos, const base_attributes &ba = base_attributes());

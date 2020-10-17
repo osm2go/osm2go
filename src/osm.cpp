@@ -1538,7 +1538,7 @@ bool member_t::operator==(const member_t &other) const noexcept
   return role == nullptr || role == other.role || strcmp(role, other.role) == 0;
 }
 
-template<typename T> T *osm_t::find_by_id(item_id_t id) const
+template<typename T> T *osm_t::object_by_id(item_id_t id) const
 {
   const std::map<item_id_t, T *> &map = objects<T>();
   const typename std::map<item_id_t, T *>::const_iterator it = map.find(id);
@@ -1547,6 +1547,10 @@ template<typename T> T *osm_t::find_by_id(item_id_t id) const
 
   return nullptr;
 }
+
+template node_t *osm_t::object_by_id(item_id_t id) const;
+template way_t *osm_t::object_by_id(item_id_t id) const;
+template relation_t *osm_t::object_by_id(item_id_t id) const;
 
 template<typename T> const T *osm_t::findOriginalById(item_id_t id) const
 {
@@ -1582,18 +1586,6 @@ osm_t::~osm_t()
   std::for_each(original.ways.begin(), original.ways.end(), pairfree<const way_t>);
   std::for_each(original.nodes.begin(), original.nodes.end(), pairfree<const node_t>);
   std::for_each(original.relations.begin(), original.relations.end(), pairfree<const relation_t>);
-}
-
-node_t *osm_t::node_by_id(item_id_t id) const {
-  return find_by_id<node_t>(id);
-}
-
-way_t *osm_t::way_by_id(item_id_t id) const {
-  return find_by_id<way_t>(id);
-}
-
-relation_t *osm_t::relation_by_id(item_id_t id) const {
-  return find_by_id<relation_t>(id);
 }
 
 osm_t::dirty_t::dirty_t(const osm_t &osm)

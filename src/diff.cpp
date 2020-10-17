@@ -268,7 +268,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t::ref osm) {
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
-    node = osm->node_by_id(id);
+    node = osm->object_by_id<node_t>(id);
     if(likely(node != nullptr))
       node->flags |= OSM_FLAG_DELETED;
     else
@@ -291,7 +291,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t::ref osm) {
     } else {
       printf("  Valid id/position (DIRTY)\n");
 
-      node = osm->node_by_id(id);
+      node = osm->object_by_id<node_t>(id);
       if(likely(node != nullptr)) {
         osm->mark_dirty(node);
         if (node->pos == pos)
@@ -345,7 +345,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t::ref osm) {
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
-    way = osm->way_by_id(id);
+    way = osm->object_by_id<way_t>(id);
     if(likely(way != nullptr))
       way->flags |= OSM_FLAG_DELETED;
     else
@@ -363,7 +363,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t::ref osm) {
     } else {
       printf("  Valid id (DIRTY)\n");
 
-      way = osm->way_by_id(id);
+      way = osm->object_by_id<way_t>(id);
       if(likely(way != nullptr)) {
         osm->mark_dirty(way);
         break;
@@ -443,7 +443,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t::ref osm) {
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
-    relation = osm->relation_by_id(id);
+    relation = osm->object_by_id<relation_t>(id);
     if(likely(relation != nullptr))
       relation->flags |= OSM_FLAG_DELETED;
     else
@@ -461,7 +461,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t::ref osm) {
     } else {
       printf("  Valid id (DIRTY)\n");
 
-      relation = osm->relation_by_id(id);
+      relation = osm->object_by_id<relation_t>(id);
       if(likely(relation != nullptr)) {
         osm->mark_dirty(relation);
         break;

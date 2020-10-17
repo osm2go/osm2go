@@ -140,7 +140,7 @@ static node_t *parse_node_ref(const xmlString &prop, const osm_t *osm)
     item_id_t id = strtoll(prop, nullptr, 10);
 
     /* search matching node */
-    node = osm->node_by_id(id);
+    node = osm->object_by_id<node_t>(id);
     if(unlikely(node == nullptr))
       printf("Node id " ITEM_ID_FORMAT " not found\n", id);
     else
@@ -193,17 +193,17 @@ void osm_t::parse_relation_member(const xmlString &tp, const xmlString &refstr, 
   switch(type) {
   case object_t::WAY:
     /* search matching way */
-    obj.way = way_by_id(id);
+    obj.way = object_by_id<way_t>(id);
     break;
 
   case object_t::NODE:
     /* search matching node */
-    obj.node = node_by_id(id);
+    obj.node = object_by_id<node_t>(id);
     break;
 
   case object_t::RELATION:
     /* search matching relation */
-    obj.relation = relation_by_id(id);
+    obj.relation = object_by_id<relation_t>(id);
     break;
   default:
     assert_unreachable();
@@ -550,7 +550,7 @@ struct relation_ref_functor {
   void operator()(member_t &m) {
     if(m.object.type != object_t::RELATION_ID)
       return;
-    relation_t *r = osm->relation_by_id(m.object.id);
+    relation_t *r = osm->object_by_id<relation_t>(m.object.id);
     if(r == nullptr)
       return;
     m.object = r;

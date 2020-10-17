@@ -646,12 +646,12 @@ void test_split_order()
   // the ways that start and end each relation, opposing directions
   way_t *wstart = new way_t();
   o->attach(wstart);
-  wstart->append_node(o->node_by_id(1));
-  wstart->append_node(o->node_by_id(2));
+  wstart->append_node(o->object_by_id<node_t>(1));
+  wstart->append_node(o->object_by_id<node_t>(2));
   way_t *wend = new way_t();
   o->attach(wend);
-  wend->append_node(o->node_by_id(10));
-  wend->append_node(o->node_by_id(9));
+  wend->append_node(o->object_by_id<node_t>(10));
+  wend->append_node(o->object_by_id<node_t>(9));
 
   // now the ways that are split
   std::vector<way_t *> splitw;
@@ -704,7 +704,7 @@ void test_split_order()
   for(unsigned int i = 0; i < sequences.size(); i++) {
     std::vector<way_t *> sw;
     sw.push_back(splitw[i]);
-    assert(checkLinearRelation(o->relation_by_id(i + 1)));
+    assert(checkLinearRelation(o->object_by_id<relation_t>(i + 1)));
 
     for(unsigned int j = 0; j < sequences[i].size(); j++) {
       std::vector<way_t *>::iterator it = std::find_if(sw.begin(), sw.end(),
@@ -713,7 +713,7 @@ void test_split_order()
       way_t *nw = (*it)->split(o, std::find((*it)->node_chain.begin(), (*it)->node_chain.end(), sequences[i][j]), true);
       sw.push_back(nw);
     }
-    assert(checkLinearRelation(o->relation_by_id(i + 1)));
+    assert(checkLinearRelation(o->object_by_id<relation_t>(i + 1)));
   }
 }
 
@@ -969,10 +969,10 @@ void test_way_delete()
   assert_cmpnum(o->nodes.size(), 4);
   assert_cmpnum(o->ways.size(), 1);
   assert_cmpnum(o->relations.size(), 1);
-  assert(o->node_by_id(n1->id) == n1);
-  assert(o->node_by_id(n2->id) == n2);
-  assert(o->node_by_id(n3->id) == n3);
-  assert(o->node_by_id(n4->id) == n4);
+  assert(o->object_by_id<node_t>(n1->id) == n1);
+  assert(o->object_by_id<node_t>(n2->id) == n2);
+  assert(o->object_by_id<node_t>(n3->id) == n3);
+  assert(o->object_by_id<node_t>(n4->id) == n4);
   assert_cmpnum(r->members.size(), 1);
 
   // once again, with a custom unref function
@@ -1495,9 +1495,9 @@ void test_merge_nodes()
 
 void setup_way_relations_for_merge(osm_t::ref o, way_t *w0, way_t *w1)
 {
-  o->relation_by_id(-3)->members.push_back(member_t(object_t(w0), "foo"));
-  o->relation_by_id(-4)->members.push_back(member_t(object_t(w1), "bar"));
-  o->relation_by_id(-4)->members.push_back(member_t(object_t(w0)));
+  o->object_by_id<relation_t>(-3)->members.push_back(member_t(object_t(w0), "foo"));
+  o->object_by_id<relation_t>(-4)->members.push_back(member_t(object_t(w1), "bar"));
+  o->object_by_id<relation_t>(-4)->members.push_back(member_t(object_t(w0)));
 }
 
 node_chain_t setup_ways_for_merge(const node_chain_t &nodes, osm_t::ref o, way_t *&w0,
@@ -1557,16 +1557,16 @@ void verify_merged_way(way_t *w, osm_t::ref o, const node_chain_t &nodes, const 
   }
   assert(expect == w->node_chain);
 
-  assert_cmpnum(o->relation_by_id(-1)->members.size(), 0);
+  assert_cmpnum(o->object_by_id<relation_t>(-1)->members.size(), 0);
   // check the expected relation memberships of the way
   if(expectRels) {
-    relation_t *rel = o->relation_by_id(-3);
+    relation_t *rel = o->object_by_id<relation_t>(-3);
     std::vector<member_t>::iterator it = rel->find_member_object(object_t(w));
     assert(it != rel->members.end());
     assert_cmpstr(it->role, "foo");
     rel->members.erase(it);
 
-    rel = o->relation_by_id(-4);
+    rel = o->object_by_id<relation_t>(-4);
     it = rel->find_member_object(object_t(w));
     assert(it != rel->members.end());
     assert_cmpstr(it->role, "bar");
@@ -1578,7 +1578,7 @@ void verify_merged_way(way_t *w, osm_t::ref o, const node_chain_t &nodes, const 
     rel->members.erase(it);
   }
   for(unsigned int i = 1; i < o->relations.size(); i++)
-    assert_cmpnum(o->relation_by_id(-1 - static_cast<item_id_t>(i))->members.size(), i - 1);
+    assert_cmpnum(o->object_by_id<relation_t>(-1 - static_cast<item_id_t>(i))->members.size(), i - 1);
 
   o->way_delete(w, nullptr, test_osm_way_free);
 
