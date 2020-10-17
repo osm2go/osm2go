@@ -294,7 +294,7 @@ public:
   trstring unspecified_name(const object_t &obj) const;
 
 private:
-  template<typename T, typename _Predicate> inline
+  template<typename T, typename _Predicate ENABLE_IF_CONVERTIBLE(T *, base_object_t *)> inline
   T *find_object(const std::map<item_id_t, T *> &map, _Predicate pred) const {
     const typename std::map<item_id_t, T *>::const_iterator itEnd = map.end();
     const typename std::map<item_id_t, T *>::const_iterator it = std::find_if(map.begin(), itEnd, pred);
@@ -308,7 +308,7 @@ private:
   inline void cleanupOriginalObject(relation_t *) {}
 
 public:
-  template<typename T>
+  template<typename T ENABLE_IF_CONVERTIBLE(T *, base_object_t *)>
   void mark_dirty(T *obj)
   {
     std::unordered_map<item_id_t, const T *> &orig = originalObjects<T>();
@@ -326,7 +326,7 @@ public:
     obj->flags |= OSM_FLAG_DIRTY;
   }
 
-  template<typename T>
+  template<typename T ENABLE_IF_CONVERTIBLE(T *, base_object_t *)>
   void unmark_dirty(T *obj)
   {
     obj->flags &= ~OSM_FLAG_DIRTY;

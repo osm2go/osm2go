@@ -351,3 +351,9 @@ namespace std {
 
 }
 #endif
+
+#if __cplusplus < 201103L
+#define ENABLE_IF_CONVERTIBLE(T, B)
+#else
+#define ENABLE_IF_CONVERTIBLE(T, B) , typename std::enable_if<std::is_convertible<T, B>::value>::type* = nullptr
+#endif

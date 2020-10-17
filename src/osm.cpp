@@ -392,13 +392,13 @@ osm_t::mergeResult<way_t> osm_t::mergeWays(way_t *first, way_t *second, map_t *m
   return mergeResult<way_t>(first, first->merge(second, this, map, rels));
 }
 
-template<typename T>
+template<typename T ENABLE_IF_CONVERTIBLE(T, const base_object_t *)>
 static bool isDirty(const std::pair<item_id_t, T> &p)
 {
   return p.second->isDirty();
 }
 
-template<typename T>
+template<typename T ENABLE_IF_CONVERTIBLE(T, const base_object_t *)>
 static bool map_is_clean(const std::map<item_id_t, T> &map)
 {
   const typename std::map<item_id_t, T>::const_iterator itEnd = map.end();
@@ -874,7 +874,7 @@ way_t *osm_t::attach(way_t *way)
 
 namespace {
 
-template<typename T> bool
+template<typename T ENABLE_IF_CONVERTIBLE(T *, base_object_t *)> bool
 unmarkedDirty(T *obj, const base_object_t *orig, osm_t *osm)
 {
   if (*obj == *static_cast<const T *>(orig)) {
@@ -1598,7 +1598,7 @@ osm_t::dirty_t::dirty_t(const osm_t &osm)
 {
 }
 
-template<typename T>
+template<typename T ENABLE_IF_CONVERTIBLE(T *, base_object_t *)>
 class object_counter {
   osm_t::dirty_t::counter<T> &dirty;
 public:

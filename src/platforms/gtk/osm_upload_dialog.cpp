@@ -164,7 +164,7 @@ cb_focus_in(GtkTextView *view, GdkEventFocus *, GtkTextBuffer *buffer)
 }
 #endif
 
-template<typename T>
+template<typename T ENABLE_IF_CONVERTIBLE(T *, base_object_t *)>
 static void table_insert_count(GtkWidget *table, const osm_t::dirty_t::counter<T> &counter, int row)
 {
   table_attach_int(table, 1, row, counter.total);

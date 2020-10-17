@@ -63,7 +63,7 @@ check_memberParser()
   assert_cmpnum(members.back().object.get_id(), 42);
 }
 
-template<typename T>
+template<typename T ENABLE_IF_CONVERTIBLE(T *, base_object_t *)>
 struct tag_counter {
   unsigned int &tags;
   unsigned int &tag_objs;

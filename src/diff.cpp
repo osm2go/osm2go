@@ -106,7 +106,7 @@ diff_save_state_n_id(xmlNodePtr root_node, const base_object_t *obj, const char 
   return node;
 }
 
-template<typename T>
+template<typename T ENABLE_IF_CONVERTIBLE(T *, base_object_t *)>
 class diff_save_objects {
   xmlNode * const root_node;
   inline void save_additional_info(const T *m, xmlNodePtr xmlnode) const;

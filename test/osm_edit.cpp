@@ -1885,7 +1885,7 @@ void test_way_insert()
   assert(w->node_chain.at(2) == n1);
 }
 
-template<typename T> void
+template<typename T ENABLE_IF_CONVERTIBLE(T *, base_object_t *)> void
 helper_test_compare_tags(T &b1, T &b2)
 {
   assert(b1 == b2);

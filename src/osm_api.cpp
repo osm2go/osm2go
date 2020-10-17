@@ -418,7 +418,7 @@ struct osm_delete_objects_final {
   osm_upload_context_t &context;
   explicit osm_delete_objects_final(osm_upload_context_t &c)
     : context(c) {}
-  template<typename T>
+  template<typename T ENABLE_IF_CONVERTIBLE(T *, base_object_t *)>
   void operator()(T *o)
   {
     log_deletion(context, o);
