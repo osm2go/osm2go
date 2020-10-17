@@ -208,7 +208,11 @@ void project_t::diff_save() const {
     fprintf(stderr, "error %i when moving '%s' to '%s'\n", errno, ndiff.c_str(), diff_name.c_str());
 }
 
-static item_id_t xml_get_prop_int(xmlNode *node, const char *prop, item_id_t def) {
+namespace {
+
+item_id_t
+xml_get_prop_int(xmlNode *node, const char *prop, item_id_t def)
+{
   xmlString str(xmlGetProp(node, BAD_CAST prop));
 
   if(str)
@@ -217,7 +221,9 @@ static item_id_t xml_get_prop_int(xmlNode *node, const char *prop, item_id_t def
     return def;
 }
 
-static int xml_get_prop_state(xmlNode *node) {
+int
+xml_get_prop_state(xmlNode *node)
+{
   xmlString str(xmlGetProp(node, BAD_CAST "state"));
 
   if(!str)
@@ -232,7 +238,9 @@ static int xml_get_prop_state(xmlNode *node) {
   return -1;
 }
 
-static osm_t::TagMap xml_scan_tags(xmlNodePtr node) {
+osm_t::TagMap
+xml_scan_tags(xmlNodePtr node)
+{
   /* scan for tags */
   osm_t::TagMap  ret;
 
@@ -245,138 +253,98 @@ static osm_t::TagMap xml_scan_tags(xmlNodePtr node) {
   return ret;
 }
 
-static void diff_restore_node(xmlNodePtr node_node, osm_t::ref osm) {
-  printf("Restoring node");
+template<typename T ENABLE_IF_CONVERTIBLE(T *, base_object_t *)>
+T *restore_object(xmlNodePtr xml_node, osm_t::ref osm)
+{
+  printf("Restoring %s", T::api_string());
 
   /* read properties */
-  item_id_t id = xml_get_prop_int(node_node, "id", ID_ILLEGAL);
+  item_id_t id = xml_get_prop_int(xml_node, "id", ID_ILLEGAL);
   if(unlikely(id == ID_ILLEGAL)) {
-    printf("\n  Node entry missing id\n");
-    return;
+    printf("\n  %s entry missing id\n", T::api_string());
+    return nullptr;
   }
 
   printf(" " ITEM_ID_FORMAT "\n", id);
 
-  int state = xml_get_prop_state(node_node);
-  pos_t pos = pos_t::fromXmlProperties(node_node);
-  bool pos_diff = pos.valid();
-
   /* evaluate properties */
-  node_t *node;
+  T *ret;
 
-  switch(state) {
+  switch(xml_get_prop_state(xml_node)) {
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
-    node = osm->object_by_id<node_t>(id);
-    if(likely(node != nullptr))
-      node->flags |= OSM_FLAG_DELETED;
+    ret = osm->object_by_id<T>(id);
+    if(likely(ret != nullptr))
+      ret->flags |= OSM_FLAG_DELETED;
     else
       printf("  WARNING: no node with that id found\n");
-    return;
+    return nullptr;
 
   case OSM_FLAG_DIRTY:
-    if(unlikely(!pos_diff)) {
-      printf("  Node not deleted, but no valid position\n");
-      return;
-    }
-
     if(id < 0) {
       printf("  Restoring NEW node\n");
 
-      node = new node_t(base_attributes(id), lpos_t(0, 0), pos);
+      ret = new T(base_attributes(id));
 
-      osm->insert(node);
+      osm->insert(ret);
       break;
     } else {
       printf("  Valid id/position (DIRTY)\n");
 
-      node = osm->object_by_id<node_t>(id);
-      if(likely(node != nullptr)) {
-        osm->mark_dirty(node);
-        if (node->pos == pos)
-          pos_diff = false;
-        else
-          node->pos = pos;
+      ret = osm->object_by_id<T>(id);
+      if(likely(ret != nullptr)) {
+        osm->mark_dirty(ret);
         break;
       } else {
         printf("  WARNING: no node with that id found\n");
-        return;
+        return nullptr;
       }
     }
 
   default:
     // xml_get_prop_state() already warned about this
+    return nullptr;
+  }
+
+  return ret;
+}
+
+void
+diff_restore_node(xmlNodePtr node_node, osm_t::ref osm)
+{
+  node_t *node = restore_object<node_t>(node_node, osm);
+  if (node == nullptr)
     return;
+
+  pos_t pos = pos_t::fromXmlProperties(node_node);
+  if(unlikely(!pos.valid())) {
+    printf("  Node not deleted, but no valid position\n");
+    return;
+  }
+  bool pos_diff = node->pos != pos;
+  if (pos_diff) {
+    node->pos = pos;
+    node->lpos = node->pos.toLpos(osm->bounds);
   }
 
   osm_t::TagMap ntags = xml_scan_tags(node_node->children);
   /* check if the same changes have been done upstream */
-  if(state == OSM_FLAG_DIRTY && !pos_diff && node->tags == ntags) {
-    printf("node " ITEM_ID_FORMAT " has the same values and position as upstream, discarding diff\n", id);
+  if(node->flags & OSM_FLAG_DIRTY && !pos_diff && node->tags == ntags) {
+    printf("node " ITEM_ID_FORMAT " has the same values and position as upstream, discarding diff\n", node->id);
     osm->unmark_dirty(node);
     return;
   }
 
   node->tags.replace(ntags);
-
-  /* update screen position, the absolute position has already been changed */
-  if(pos_diff)
-    node->lpos = node->pos.toLpos(osm->bounds);
 }
 
-static void diff_restore_way(xmlNodePtr node_way, osm_t::ref osm) {
-  printf("Restoring way");
-
-  item_id_t id = xml_get_prop_int(node_way, "id", ID_ILLEGAL);
-  if(unlikely(id == ID_ILLEGAL)) {
-    printf("\n  entry missing id\n");
+void
+diff_restore_way(xmlNodePtr node_way, osm_t::ref osm)
+{
+  way_t *way = restore_object<way_t>(node_way, osm);
+  if (way == nullptr)
     return;
-  }
-
-  printf(" " ITEM_ID_FORMAT "\n", id);
-
-  int state = xml_get_prop_state(node_way);
-
-  /* evaluate properties */
-  way_t *way;
-  switch(state) {
-
-  case OSM_FLAG_DELETED:
-    printf("  Restoring DELETE flag\n");
-
-    way = osm->object_by_id<way_t>(id);
-    if(likely(way != nullptr))
-      way->flags |= OSM_FLAG_DELETED;
-    else
-      printf("  WARNING: no way with that id found\n");
-    return;
-
-  case OSM_FLAG_DIRTY:
-    if(id < 0) {
-      printf("  Restoring NEW way\n");
-
-      way = new way_t(base_attributes(id));
-
-      osm->insert(way);
-      break;
-    } else {
-      printf("  Valid id (DIRTY)\n");
-
-      way = osm->object_by_id<way_t>(id);
-      if(likely(way != nullptr)) {
-        osm->mark_dirty(way);
-        break;
-      } else {
-        printf("  WARNING: no way with that id found\n");
-        return;
-      }
-    }
-
-  default:
-    // xml_get_prop_state() already warned about this
-    return;
-  }
 
   /* handle hidden flag */
   if(xml_get_prop_bool(node_way, "hidden"))
@@ -411,7 +379,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t::ref osm) {
       way->tags.replace(ntags);
     } else if (!ntags.empty()) {
       if (sameChain) {
-        printf("way " ITEM_ID_FORMAT " has the same nodes and tags as upstream, discarding diff\n", id);
+        printf("way " ITEM_ID_FORMAT " has the same nodes and tags as upstream, discarding diff\n", way->id);
         osm->unmark_dirty(way);
       }
     }
@@ -424,57 +392,12 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t::ref osm) {
   }
 }
 
-static void diff_restore_relation(xmlNodePtr node_rel, osm_t::ref osm) {
-  printf("Restoring relation");
-
-  item_id_t id = xml_get_prop_int(node_rel, "id", ID_ILLEGAL);
-  if(unlikely(id == ID_ILLEGAL)) {
-    printf("\n  entry missing id\n");
+void
+diff_restore_relation(xmlNodePtr node_rel, osm_t::ref osm)
+{
+  relation_t *relation = restore_object<relation_t>(node_rel, osm);
+  if (relation == nullptr)
     return;
-  }
-
-  printf(" " ITEM_ID_FORMAT "\n", id);
-
-  int state = xml_get_prop_state(node_rel);
-
-  /* evaluate properties */
-  relation_t *relation = nullptr;
-  switch(state) {
-  case OSM_FLAG_DELETED:
-    printf("  Restoring DELETE flag\n");
-
-    relation = osm->object_by_id<relation_t>(id);
-    if(likely(relation != nullptr))
-      relation->flags |= OSM_FLAG_DELETED;
-    else
-      printf("  WARNING: no relation with that id found\n");
-    return;
-
-  case OSM_FLAG_DIRTY:
-    if(id < 0) {
-      printf("  Restoring NEW relation\n");
-
-      relation = new relation_t(base_attributes(id));
-
-      osm->insert(relation);
-      break;
-    } else {
-      printf("  Valid id (DIRTY)\n");
-
-      relation = osm->object_by_id<relation_t>(id);
-      if(likely(relation != nullptr)) {
-        osm->mark_dirty(relation);
-        break;
-      } else {
-        printf("  WARNING: no relation with that id found\n");
-        return;
-      }
-    }
-
-  default:
-    // xml_get_prop_state() already warned about this
-    return;
-  }
 
   bool was_changed = false;
   osm_t::TagMap ntags = xml_scan_tags(node_rel->children);
@@ -505,10 +428,12 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t::ref osm) {
   }
 
   if(!was_changed && (relation->flags & OSM_FLAG_DIRTY)) {
-    printf("relation " ITEM_ID_FORMAT " has the same members and tags as upstream, discarding diff\n", id);
+    printf("relation " ITEM_ID_FORMAT " has the same members and tags as upstream, discarding diff\n", relation->id);
     osm->unmark_dirty(relation);
   }
 }
+
+} // namespace
 
 unsigned int project_t::diff_restore()
 {

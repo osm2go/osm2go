@@ -257,7 +257,7 @@ public:
 
 class node_t : public visible_item_t {
 public:
-  node_t(const base_attributes &attr, const lpos_t lp, const pos_t &p) noexcept
+  node_t(const base_attributes &attr, const lpos_t lp = lpos_t(), const pos_t &p = pos_t()) noexcept
     : visible_item_t(attr) , ways(0) , pos(p) , lpos(lp) {}
 
   virtual ~node_t() {}
