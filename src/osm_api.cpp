@@ -418,17 +418,11 @@ struct osm_delete_objects_final {
   osm_upload_context_t &context;
   explicit osm_delete_objects_final(osm_upload_context_t &c)
     : context(c) {}
-  void operator()(relation_t *r) {
-    log_deletion(context, r);
-    context.osm->wipe(r);
-  }
-  void operator()(way_t *w) {
-    log_deletion(context, w);
-    context.osm->wipe(w);
-  }
-  void operator()(node_t *n) {
-    log_deletion(context, n);
-    context.osm->wipe(n);
+  template<typename T>
+  void operator()(T *o)
+  {
+    log_deletion(context, o);
+    context.osm->wipe(o);
   }
 };
 
