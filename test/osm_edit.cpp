@@ -1539,6 +1539,12 @@ node_chain_t setup_ways_for_merge(const node_chain_t &nodes, osm_t::ref o, way_t
   return expect;
 }
 
+void test_osm_way_free(node_t *n)
+{
+  assert_cmpnum_op(n->ways, >, 0);
+  n->ways--;
+}
+
 void verify_merged_way(way_t *w, osm_t::ref o, const node_chain_t &nodes, const node_chain_t &expect, bool expectRels)
 {
   assert_cmpnum(w->node_chain.size(), nodes.size());
@@ -1574,7 +1580,7 @@ void verify_merged_way(way_t *w, osm_t::ref o, const node_chain_t &nodes, const 
   for(unsigned int i = 1; i < o->relations.size(); i++)
     assert_cmpnum(o->relation_by_id(-1 - static_cast<item_id_t>(i))->members.size(), i - 1);
 
-  o->wipe(w);
+  o->way_delete(w, nullptr, test_osm_way_free);
 
   assert_cmpnum(o->ways.size(), 0);
   assert_cmpnum(o->nodes.size(), nodecount);

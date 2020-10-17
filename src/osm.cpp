@@ -640,9 +640,12 @@ void osm_node_chain_unref(node_chain_t &node_chain)
   std::for_each(node_chain.begin(), node_chain.end(), osm_unref_node);
 }
 
-void osm_t::wipe(way_t *way) {
+void osm_t::wipe(way_t *way)
+{
   ways.erase(way->id);
-  way->cleanup();
+
+  /* there must not be anything left in this chain */
+  assert_null(way->map_item);
   delete way;
 }
 
@@ -1124,9 +1127,11 @@ void osm_t::way_delete(way_t *way, map_t *map, void (*unref)(node_t *))
     std::for_each(chain.begin(), chain.end(), unref);
   chain.clear();
 
+  /* there must not be anything left in this chain */
+  assert_null(way->map_item);
+
   if(!way->isNew()) {
     markDeleted(*way);
-    way->cleanup();
   } else {
     printf("permanently delete way #" ITEM_ID_FORMAT "\n", way->id);
 

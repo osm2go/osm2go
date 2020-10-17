@@ -354,8 +354,6 @@ public:
   const node_t *first_node() const noexcept;
   void write_node_chain(xmlNodePtr way_node) const;
 
-  void cleanup();
-
   const char *apiString() const noexcept override {
     return api_string();
   }
