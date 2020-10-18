@@ -12,11 +12,12 @@
   <node id="3398616417" lat="52.2694285" lon="9.5752791" time="1426361439">
     <tag k="amenity" v="waste_basket"/>
   </node>
+  <node id="3577031221" state='deleted' /> <!-- intentionally using mixed quoting style -->
   <node id="3577031223" lat="52.2694261" lon="9.5752398" time="1433599117"/>
   <node id="3577031226" state="deleted"/>
   <way id='351899452' hidden='true'>
     <nd ref='3577031225' />
-    <nd ref='3577031221' />
+    <nd ref='3577031229' />
     <tag k='public_transport' v='platform' />
     <tag k='tactile_paving' v='yes' />
     <tag k='source' v='survey' />

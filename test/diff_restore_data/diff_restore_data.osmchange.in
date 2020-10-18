@@ -3,6 +3,7 @@
   <delete>
     <relation id="66316" version="22" changeset="42"/>
     <way id="351899455" version="1" changeset="42"/>
+    <node id="3577031221" version="1" changeset="42"/>
     <node id="3577031226" version="1" changeset="42"/>
   </delete>
 </osmChange>

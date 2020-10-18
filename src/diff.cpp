@@ -253,6 +253,35 @@ xml_scan_tags(xmlNodePtr node)
   return ret;
 }
 
+void deleteDiffObject(osm_t::ref osm, node_t *n)
+{
+  // don't touch the reference count here: if this node was part of a way is needs to be
+  // removed from it in the diff already.
+  osm->node_delete(n, osm_t::NodeDeleteKeepRefs);
+}
+
+/**
+ * @brief decrement the reference count of nodes
+ *
+ * Don't do any other processing here, this has to be part of the diff already.
+ */
+void diffWaySimpleUnref(node_t *node)
+{
+  assert_cmpnum_op(node->ways, >, 0);
+  node->ways--;
+}
+
+void deleteDiffObject(osm_t::ref osm, way_t *w)
+{
+  // the diff is loaded before the map is drawn, so no map pointer is needed at this point
+  osm->way_delete(w, nullptr, diffWaySimpleUnref);
+}
+
+void deleteDiffObject(osm_t::ref osm, relation_t *r)
+{
+  osm->relation_delete(r);
+}
+
 template<typename T ENABLE_IF_CONVERTIBLE(T *, base_object_t *)>
 T *restore_object(xmlNodePtr xml_node, osm_t::ref osm)
 {
@@ -276,7 +305,7 @@ T *restore_object(xmlNodePtr xml_node, osm_t::ref osm)
 
     ret = osm->object_by_id<T>(id);
     if(likely(ret != nullptr))
-      ret->flags |= OSM_FLAG_DELETED;
+      deleteDiffObject(osm, ret);
     else
       printf("  WARNING: no node with that id found\n");
     return nullptr;

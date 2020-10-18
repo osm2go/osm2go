@@ -31,16 +31,25 @@ static void verify_diff(osm_t::ref osm)
   assert_cmpnum(n72->flags, OSM_FLAG_DIRTY);
   assert(n72->tags.get_value("testtag") != nullptr);
   assert_cmpnum(n72->tags.asMap().size(), 5);
+  // deleted, but the way is contained is only modified
+  const node_t * const n21 = osm->object_by_id<node_t>(3577031221LL);
+  assert(n21 != nullptr);
+  assert(n21->isDeleted());
+  assert_cmpnum(n21->flags, OSM_FLAG_DELETED);
+  assert(n21->tags.empty());
+  assert_cmpnum(n21->ways, 0);
   // in diff, but the same as in .osm
   const node_t * const n23 = osm->object_by_id<node_t>(3577031223LL);
   assert(n23 != nullptr);
   assert_cmpnum(n23->flags, 0);
   assert(n23->tags.empty());
-  // deleted in diff
+  // deleted in diff, the way that contained it is also gone
   const node_t * const n26 = osm->object_by_id<node_t>(3577031226LL);
   assert(n26 != nullptr);
   assert(n26->isDeleted());
   assert_cmpnum(n26->flags, OSM_FLAG_DELETED);
+  assert(n26->tags.empty());
+  assert_cmpnum(n26->ways, 0);
   const way_t * const w = osm->object_by_id<way_t>(351899455);
   assert(w != nullptr);
   assert(w->isDeleted());
@@ -65,6 +74,14 @@ static void verify_diff(osm_t::ref osm)
   assert_cmpnum(n27->flags, 0);
   assert_cmpnum(nn2->pos.lat, n27->pos.lat);
   assert_cmpnum(nn2->pos.lon, n27->pos.lon);
+  // the node was part of the deleted way 351899455 and nothing else, the reference count must now be 0
+  assert_cmpnum(n27->ways, 0);
+  const node_t * const n29 = osm->object_by_id<node_t>(3577031229LL);
+  assert(n29 != nullptr);
+  assert_cmpnum(n27->flags, 0);
+  // this node is references in the original data by way 351899453
+  // it is also referenced by way 351899452 in the diff
+  assert_cmpnum(n29->ways, 2);
   // the upstream version has "wheelchair", we have "source"
   // our modification must survive
   const way_t * const w452 = osm->object_by_id<way_t>(351899452);
@@ -79,6 +96,8 @@ static void verify_diff(osm_t::ref osm)
   assert(r66316 != nullptr);
   assert(r66316->isDeleted());
   assert_cmpnum(r66316->flags, OSM_FLAG_DELETED);
+  assert(r66316->tags.empty());
+  assert(r66316->members.empty());
   const relation_t * const r255 = osm->object_by_id<relation_t>(296255);
   assert(r255 != nullptr);
   assert_cmpnum(r255->flags, OSM_FLAG_DIRTY);
@@ -165,12 +184,23 @@ int main(int argc, char **argv)
   assert_cmpstr(r255it->role, "stop");
   const relation_t * const r66316 = osm->object_by_id<relation_t>(66316);
   assert(r66316 != nullptr);
+  assert(!r66316->tags.empty());
   object_t rmember(object_t::RELATION_ID, 296255);
   assert(!rmember.is_real());
   const std::vector<member_t>::const_iterator r66316it = r66316->find_member_object(rmember);
   assert(r66316it != r66316->members.end());
   // the child relation exists, so it should be stored as real ref
   assert(r66316it->object.is_real());
+
+  // the node is part of way 351899455 and referenced there twice
+  const node_t * const n27 = osm->object_by_id<node_t>(3577031227LL);
+  assert(n27 != nullptr);
+  assert_cmpnum(n27->ways, 2);
+
+  // the node is part of way 351899453
+  const node_t * const n29 = osm->object_by_id<node_t>(3577031229LL);
+  assert(n29 != nullptr);
+  assert_cmpnum(n29->ways, 1);
 
   assert_cmpnum(10, osm->nodes.size());
   assert_cmpnum(3, osm->ways.size());
@@ -196,8 +226,8 @@ int main(int argc, char **argv)
 
   rel_str.reset(w55->generate_xml("47"));
   printf("%s\n", rel_str.get());
-  assert((strstr(reinterpret_cast<const char *>(rel_str.get()), "<way id=\"351899455\" version=\"1\" changeset=\"47\">") != nullptr) !=
-         (strstr(reinterpret_cast<const char *>(rel_str.get()), "<way id='351899455' version='1' changeset='47'>") != nullptr));
+  assert((strstr(reinterpret_cast<const char *>(rel_str.get()), "<way id=\"351899455\" version=\"1\" changeset=\"47\"/>") != nullptr) !=
+         (strstr(reinterpret_cast<const char *>(rel_str.get()), "<way id='351899455' version='1' changeset='47'/>") != nullptr));
 
   rel_str.reset(n72->generate_xml("42"));
   printf("%s\n", rel_str.get());

@@ -423,6 +423,11 @@ public:
   void parse_relation_member(const xmlString &tp, const xmlString &refstr, const xmlString &role, std::vector<member_t> &members);
   void parse_relation_member(xmlNode *a_node, std::vector<member_t> &members);
 
+  /**
+   * @brief parse the reference of a way to a node from XML
+   *
+   * The reference count on the node will be incremented.
+   */
   node_t *parse_way_nd(xmlNode *a_node) const;
 
   static osm_t *parse(const std::string &path, const std::string &filename);

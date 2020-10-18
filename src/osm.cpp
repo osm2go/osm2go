@@ -1013,8 +1013,7 @@ osm_t::node_delete(node_t *node, NodeDeleteFlags flags, map_t *map)
   way_chain_t way_chain;
 
   // no need to iterate all ways if we already know in advance that none references this node
-  if (node->ways > 0) {
-    assert(flags != NodeDeleteKeepRefs);
+  if (node->ways > 0 && flags != NodeDeleteKeepRefs) {
     /* first remove node from all ways using it */
     std::for_each(ways.begin(), ways.end(),
                   node_chain_delete_functor(this, node, way_chain));
