@@ -305,15 +305,18 @@ private:
   void cleanupOriginalObject(way_t *o);
   inline void cleanupOriginalObject(relation_t *) {}
 
+  template<typename T>
+  void markDeleted(T &obj);
+
 public:
   template<typename T ENABLE_IF_CONVERTIBLE(T *, base_object_t *)>
   void mark_dirty(T *obj)
   {
-    std::unordered_map<item_id_t, const T *> &orig = originalObjects<T>();
-
     // if already marked or never uploaded then don't store it in the original map
     if ((obj->flags & OSM_FLAG_DIRTY) || obj->isNew())
       return;
+
+    std::unordered_map<item_id_t, const T *> &orig = originalObjects<T>();
 
     assert(orig.find(obj->id) == orig.end());
 
@@ -328,6 +331,8 @@ public:
   void unmark_dirty(T *obj)
   {
     obj->flags &= ~OSM_FLAG_DIRTY;
+    unsigned int flags = obj->flags;
+    assert_cmpnum(flags, 0); (void)flags;
 
     std::unordered_map<item_id_t, const T *> &orig = originalObjects<T>();
 

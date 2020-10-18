@@ -892,6 +892,8 @@ void test_way_delete()
 
   assert_cmpnum(o->nodes.size(), 0);
   assert_cmpnum(o->ways.size(), 0);
+  assert(o->is_clean(true));
+  assert(o->is_clean(false));
 
   // delete a closed way
   n1 = o->node_new(l);
@@ -915,6 +917,8 @@ void test_way_delete()
 
   assert_cmpnum(o->nodes.size(), 0);
   assert_cmpnum(o->ways.size(), 0);
+  assert(o->is_clean(true));
+  assert(o->is_clean(false));
 
   // test way deletion with nodes that should be preserved
   l.x = 10;
@@ -2197,6 +2201,68 @@ void test_updateTags()
   assert_cmpnum(w->flags, OSM_FLAG_DIRTY);
 }
 
+void check_clean(osm_t::ref osm)
+{
+  assert(osm->is_clean(true));
+  assert(osm->is_clean(false));
+  assert_cmpnum(osm->original.nodes.size(), 0);
+  assert_cmpnum(osm->original.ways.size(), 0);
+  assert_cmpnum(osm->original.relations.size(), 0);
+}
+
+template<typename T> void
+toggle_deleted(osm_t::ref osm, T *o, size_t nc, size_t wc, size_t rc)
+{
+  assert(!osm->is_clean(true));
+  assert(!osm->is_clean(false));
+  assert_cmpnum(osm->original.nodes.size(), nc);
+  assert_cmpnum(osm->original.ways.size(), wc);
+  assert_cmpnum(osm->original.relations.size(), rc);
+
+  // when something like osm_t::undelete() exists use that here
+  o->flags ^= OSM_FLAG_DELETED;
+  osm->unmark_dirty(o);
+
+  check_clean(osm);
+}
+
+// test that deleting an object marks it as dirty
+void test_delete_markdirty()
+{
+  std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
+  set_bounds(osm);
+
+  const lpos_t startPos(10, 10);
+  base_attributes ba(1234);
+  ba.version = 1;
+  node_t * const n = osm->node_new(startPos.toPos(osm->bounds), ba);
+  osm->insert(n);
+
+  check_clean(osm);
+
+  osm->node_delete(n);
+
+  toggle_deleted(osm, n, 1, 0, 0);
+
+  way_t * const w = new way_t(ba);
+  osm->insert(w);
+
+  check_clean(osm);
+
+  osm->way_delete(w, nullptr);
+
+  toggle_deleted(osm, w, 0, 1, 0);
+
+  relation_t * const r = new relation_t(ba);
+  osm->insert(r);
+
+  check_clean(osm);
+
+  osm->relation_delete(r);
+
+  toggle_deleted(osm, r, 0, 0, 1);
+}
+
 } // namespace
 
 int main()
@@ -2221,6 +2287,7 @@ int main()
   test_way_insert();
   test_compare();
   test_updateTags();
+  test_delete_markdirty();
 
   xmlCleanupParser();
 

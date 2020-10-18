@@ -998,14 +998,62 @@ void node_deleted_from_ways::operator()(way_t *way)
   }
 }
 
-void markDeleted(base_object_t &obj)
+node_t *
+cloneForDeletion(node_t &o)
 {
-  printf("mark %s #" ITEM_ID_FORMAT " as deleted\n", obj.apiString(), obj.id);
-  obj.flags = OSM_FLAG_DELETED;
-  obj.tags.clear();
+  return new node_t(o);
+}
+
+way_t *
+cloneForDeletion(way_t &o)
+{
+  node_chain_t nodes;
+  nodes.swap(o.node_chain);
+  way_t *ret = new way_t(o);
+  ret->node_chain.swap(nodes);
+  return ret;
+}
+
+relation_t *
+cloneForDeletion(relation_t &o)
+{
+  std::vector<member_t> members;
+  members.swap(o.members);
+  relation_t *ret = new relation_t(o);
+  ret->members.swap(members);
+  return ret;
 }
 
 } // namespace
+
+template<typename T>
+void osm_t::markDeleted(T &obj)
+{
+  assert(!obj.isNew()); // new objects should simply be deleted
+  std::unordered_map<item_id_t, const T *> &orig = originalObjects<T>();
+
+  printf("mark %s #" ITEM_ID_FORMAT " as deleted\n", obj.apiString(), obj.id);
+
+  // no need to keep anything, it was already in the dirty map
+  if (obj.flags & OSM_FLAG_DIRTY) {
+    assert(orig.find(obj.id) != orig.end());
+    obj.tags.clear();
+  } else {
+    // A previously unmodified object is about to be deleted, put it in the originalObjects
+    // map along the way, but with less allocations than mark_dirty() would do.
+
+    assert(orig.find(obj.id) == orig.end());
+
+    tag_list_t tags;
+    tags.swap(obj.tags);
+    T *n = cloneForDeletion(obj);
+    n->tags.swap(tags);
+    cleanupOriginalObject(n);
+    orig[obj.id] = n;
+  }
+
+  obj.flags = OSM_FLAG_DELETED;
+}
 
 void
 osm_t::node_delete(node_t *node, NodeDeleteFlags flags, map_t *map)
@@ -1124,12 +1172,14 @@ void osm_t::way_delete(way_t *way, map_t *map, void (*unref)(node_t *))
     std::for_each(chain.begin(), chain.end(), osm_unref_way_free(this));
   else
     std::for_each(chain.begin(), chain.end(), unref);
-  chain.clear();
 
   /* there must not be anything left in this chain */
   assert_null(way->map_item);
 
   if(!way->isNew()) {
+    // this is already in the original list, so no need to keep the vector around
+    if (way->flags & OSM_FLAG_DIRTY)
+      chain.clear();
     markDeleted(*way);
   } else {
     printf("permanently delete way #" ITEM_ID_FORMAT "\n", way->id);
@@ -1146,7 +1196,6 @@ void osm_t::relation_delete(relation_t *relation) {
 
   if(!relation->isNew()) {
     markDeleted(*relation);
-    relation->members.clear();
   } else {
     printf("permanently delete relation #" ITEM_ID_FORMAT "\n",
 	   relation->id);

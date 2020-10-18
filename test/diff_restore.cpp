@@ -38,6 +38,7 @@ static void verify_diff(osm_t::ref osm)
   assert_cmpnum(n21->flags, OSM_FLAG_DELETED);
   assert(n21->tags.empty());
   assert_cmpnum(n21->ways, 0);
+  assert(osm->originalObject(object_t(object_t::NODE_ID, n21->id)) != nullptr);
   // in diff, but the same as in .osm
   const node_t * const n23 = osm->object_by_id<node_t>(3577031223LL);
   assert(n23 != nullptr);
@@ -50,6 +51,7 @@ static void verify_diff(osm_t::ref osm)
   assert_cmpnum(n26->flags, OSM_FLAG_DELETED);
   assert(n26->tags.empty());
   assert_cmpnum(n26->ways, 0);
+  assert(osm->originalObject(object_t(object_t::NODE_ID, n26->id)) != nullptr);
   const way_t * const w = osm->object_by_id<way_t>(351899455);
   assert(w != nullptr);
   assert(w->isDeleted());
@@ -84,6 +86,12 @@ static void verify_diff(osm_t::ref osm)
   assert_cmpnum(n29->ways, 2);
   // the upstream version has "wheelchair", we have "source"
   // our modification must survive
+  const way_t * const w55 = osm->object_by_id<way_t>(351899455);
+  assert(w55 != nullptr);
+  assert(w55->isDeleted());
+  assert(osm->originalObject(object_t(object_t::WAY_ID, w55->id)) != nullptr);
+  assert(w55->tags.empty());
+  assert(w55->node_chain.empty());
   const way_t * const w452 = osm->object_by_id<way_t>(351899452);
   assert(w452 != nullptr);
   assert(w452->tags.get_value("source") != nullptr);
@@ -98,6 +106,7 @@ static void verify_diff(osm_t::ref osm)
   assert_cmpnum(r66316->flags, OSM_FLAG_DELETED);
   assert(r66316->tags.empty());
   assert(r66316->members.empty());
+  assert(osm->originalObject(object_t(object_t::RELATION_ID, r66316->id)) != nullptr);
   const relation_t * const r255 = osm->object_by_id<relation_t>(296255);
   assert(r255 != nullptr);
   assert_cmpnum(r255->flags, OSM_FLAG_DIRTY);
@@ -214,16 +223,13 @@ int main(int argc, char **argv)
 
   verify_diff(osm);
 
-  const way_t * const w55 = osm->object_by_id<way_t>(351899455);
-  assert(w55 != nullptr);
-  assert(w55->isDeleted());
-
   xmlString rel_str(r255->generate_xml("42"));
   printf("%s\n", rel_str.get());
   // make sure this test doesn't suddenly fail only because libxml2 decided to use the other type of quotes
   assert((strstr(reinterpret_cast<const char *>(rel_str.get()), "<relation id=\"296255\" version=\"54\" changeset=\"42\">") != nullptr) !=
          (strstr(reinterpret_cast<const char *>(rel_str.get()), "<relation id='296255' version='54' changeset='42'>") != nullptr));
 
+  const way_t * const w55 = osm->object_by_id<way_t>(351899455);
   rel_str.reset(w55->generate_xml("47"));
   printf("%s\n", rel_str.get());
   assert((strstr(reinterpret_cast<const char *>(rel_str.get()), "<way id=\"351899455\" version=\"1\" changeset=\"47\"/>") != nullptr) !=

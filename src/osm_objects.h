@@ -134,6 +134,9 @@ public:
 
   void copy(const tag_list_t &other);
 
+  inline void swap(tag_list_t &other)
+  { std::swap(contents, other.contents); }
+
   /**
    * @brief replace the current tags with the given ones
    * @param ntags array of new tags
