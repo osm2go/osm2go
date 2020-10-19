@@ -129,19 +129,6 @@ item_id_t object_t::get_id() const noexcept {
   return id;
 }
 
-template<> std::map<item_id_t, node_t *> &osm_t::objects()
-{ return nodes; }
-template<> std::map<item_id_t, way_t *> &osm_t::objects()
-{ return ways; }
-template<> std::map<item_id_t, relation_t *> &osm_t::objects()
-{ return relations; }
-template<> const std::map<item_id_t, node_t *> &osm_t::objects() const
-{ return nodes; }
-template<> const std::map<item_id_t, way_t *> &osm_t::objects() const
-{ return ways; }
-template<> const std::map<item_id_t, relation_t *> &osm_t::objects() const
-{ return relations; }
-
 /* -------------------- tag handling ----------------------- */
 
 class map_value_match_functor {

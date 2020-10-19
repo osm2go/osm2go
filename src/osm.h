@@ -160,6 +160,8 @@ public:
 };
 
 class osm_t {
+  friend class verify_osm_db;
+
   template<typename T> inline std::map<item_id_t, T *> &objects();
   template<typename T> inline const std::map<item_id_t, T *> &objects() const;
   template<typename T> void attachObject(T *obj);
@@ -528,6 +530,20 @@ bool osm_t::hasHiddenWays() const noexcept
 {
   return !hiddenWays.empty();
 }
+
+template<> inline std::map<item_id_t, node_t *> &osm_t::objects()
+{ return nodes; }
+template<> inline std::map<item_id_t, way_t *> &osm_t::objects()
+{ return ways; }
+template<> inline std::map<item_id_t, relation_t *> &osm_t::objects()
+{ return relations; }
+
+template<> inline const std::map<item_id_t, node_t *> &osm_t::objects() const
+{ return nodes; }
+template<> inline const std::map<item_id_t, way_t *> &osm_t::objects() const
+{ return ways; }
+template<> inline const std::map<item_id_t, relation_t *> &osm_t::objects() const
+{ return relations; }
 
 template<> inline std::unordered_map<item_id_t, const node_t *> &osm_t::originalObjects<node_t>()
 { return original.nodes; }

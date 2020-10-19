@@ -218,12 +218,14 @@ int main(int argc, char **argv)
   assert_cmpnum(4, osm->relations.size());
 
   assert(osm->is_clean(true));
+  verify_osm_db::run(osm);
 
   assert(project.diff_file_present());
   unsigned int flags = project.diff_restore();
   assert_cmpnum(flags, DIFF_RESTORED | DIFF_HAS_HIDDEN);
 
   verify_diff(osm);
+  verify_osm_db::run(osm);
 
   xmlString rel_str(r255->generate_xml("42"));
   printf("%s\n", rel_str.get());

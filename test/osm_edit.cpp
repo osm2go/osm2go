@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+#include "test_osmdb.h"
+
 #include <icon.h>
 #include <map.h>
 #include <misc.h>
@@ -360,6 +362,7 @@ void test_replace_tags()
   o->updateTags(object_t(nd), nstags);
   assert_cmpnum(node.flags, 0);
   assert(node.tags.empty());
+  verify_osm_db::run(o);
 
   osm_t::TagMap::value_type cr_by("created_by", "test");
   assert(tag_t::is_discardable(cr_by.first.c_str()));
@@ -367,6 +370,7 @@ void test_replace_tags()
   o->updateTags(object_t(nd), nstags);
   assert_cmpnum(node.flags, 0);
   assert(node.tags.empty());
+  verify_osm_db::run(o);
 
   node.tags.replace(nstags);
   assert_cmpnum(node.flags, 0);
@@ -379,6 +383,7 @@ void test_replace_tags()
   assert_cmpnum(node.flags, OSM_FLAG_DIRTY);
   assert(!node.tags.empty());
   assert(node.tags == nstags);
+  verify_osm_db::run(o);
 
   o->unmark_dirty(nd);
 
@@ -386,6 +391,7 @@ void test_replace_tags()
   assert_cmpnum(node.flags, 0);
   assert(!node.tags.empty());
   assert(node.tags == nstags);
+  verify_osm_db::run(o);
 
   node.tags.clear();
   assert(node.tags.empty());
@@ -406,6 +412,7 @@ void test_replace_tags()
   assert_cmpnum(node.flags, 0);
   assert(!node.tags.empty());
   assert(node.tags == nstags);
+  verify_osm_db::run(o);
 }
 
 unsigned int intrnd(unsigned int r)
@@ -486,6 +493,7 @@ void test_split()
   assert_cmpnum(dirty0.ways.changed.size(), 1);
   assert_cmpnum(dirty0.ways.deleted.size(), 0);
 
+  verify_osm_db::run(o);
   // now split the remaining way at a node
   way_t *neww2 = w->split(o, std::next(w->node_chain.begin(), 2), true);
   assert(neww2 != nullptr);
@@ -497,6 +505,7 @@ void test_split()
     else
       assert_cmpnum(nodes[i]->ways, 2);
 
+  verify_osm_db::run(o);
   osm_t::dirty_t dirty1 = o->modified();
   assert_cmpnum(dirty1.nodes.changed.size(), 0);
   assert_cmpnum(dirty1.nodes.added.size(), 6);
@@ -525,6 +534,7 @@ void test_split()
   assert(origWay != w);
   assert_cmpnum(origWay->id, w->id);
 
+  verify_osm_db::run(o);
   assert_cmpnum(o->ways.size(), 4);
   // this is the original way
   assert_cmpnum(origWay->flags, 0);
@@ -565,6 +575,7 @@ void test_split()
     assert(area->node_chain[i] == nodes[i]);
     assert_cmpnum(nodes[i]->ways, 1);
   }
+  verify_osm_db::run(o);
 
   // close the way again
   area->append_node(const_cast<node_t *>(area->first_node()));
@@ -574,6 +585,7 @@ void test_split()
     assert(area->node_chain[i] == nodes[(i + 1) % nodes.size()]);
     assert_cmpnum(nodes[i]->ways, 1);
   }
+  verify_osm_db::run(o);
 
   // recreate old layout
   area->append_node(const_cast<node_t *>(area->first_node()));
@@ -583,6 +595,7 @@ void test_split()
     assert(area->node_chain[i] == nodes[(i + 1) % nodes.size()]);
     assert_cmpnum(nodes[i]->ways, 1);
   }
+  verify_osm_db::run(o);
 }
 
 bool checkLinearRelation(const relation_t *r)
@@ -807,6 +820,7 @@ void test_reverse()
   w->tags.replace(tags);
   unsigned int r, rroles;
   w->reverse(o, r, rroles);
+  verify_osm_db::run(o);
 
   assert_cmpnum(r, 6);
   assert_cmpnum(w->flags, OSM_FLAG_DIRTY);
@@ -848,6 +862,7 @@ void test_reverse()
 
   // go back
   w->reverse(o, r, rroles);
+  verify_osm_db::run(o);
 
   assert_cmpnum(r, 6);
   assert_cmpnum(rroles, 2);
@@ -862,6 +877,7 @@ void test_reverse()
 
   // the oneway key is unknown, so it is not touched.
   w->reverse(o, r, rroles);
+  verify_osm_db::run(o);
   assert(w->tags == tags);
 }
 
@@ -888,7 +904,9 @@ void test_way_delete()
   w->append_node(n2);
   o->attach(w);
 
+  verify_osm_db::run(o);
   o->way_delete(w, nullptr);
+  verify_osm_db::run(o);
 
   assert_cmpnum(o->nodes.size(), 0);
   assert_cmpnum(o->ways.size(), 0);
@@ -964,11 +982,13 @@ void test_way_delete()
 
   w->append_node(n3);
 
+  verify_osm_db::run(o);
   // now delete the way, which would reduce the use counter of all nodes
   // n1 should be preserved as it has tags on it's own
   // n2 should be preserved as it is still referenced by a relation
   // n3 should be preserved as it is used in another way
   o->way_delete(w, nullptr);
+  verify_osm_db::run(o);
 
   assert_cmpnum(o->nodes.size(), 4);
   assert_cmpnum(o->ways.size(), 1);
@@ -1005,12 +1025,14 @@ void test_way_delete()
   std::unique_ptr<map_item_t> mi(new map_item_t(object_t(w), nullptr));
   w->map_item = mi.get();
 
+  verify_osm_db::run(o);
   o->way_delete(w, nullptr);
   assert_cmpnum(n3->ways, 1);
   assert_cmpnum(n4->ways, 1);
   assert_cmpnum(w->node_chain.size(), 0);
   assert(w->flags & OSM_FLAG_DELETED);
   assert(w->tags.empty());
+  verify_osm_db::run(o);
 }
 
 void test_member_delete()
@@ -1070,9 +1092,10 @@ void test_member_delete()
   o->attach(rn);
   r->members.insert(r->members.begin(), member_t(object_t(rn), "dummy"));
 
+  verify_osm_db::run(o);
   // now delete the node that is member of both other objects
   o->node_delete(n2);
-  fflush(stdout);
+
   // since the object had a valid id it should still be there, but unreferenced
   assert_cmpnum(o->nodes.size(), 3);
   assert_cmpnum(o->ways.size(), 1);
@@ -1092,6 +1115,7 @@ void test_member_delete()
   assert_cmpnum(dirty1.relations.changed.size(), 0);
   assert_cmpnum(dirty1.relations.added.size(), 2);
   assert_cmpnum(dirty1.relations.deleted.size(), 0);
+  verify_osm_db::run(o);
 
   nodes = 0;
   ways = 0;
@@ -1584,7 +1608,9 @@ void verify_merged_way(way_t *w, osm_t::ref o, const node_chain_t &nodes, const 
   for(unsigned int i = 1; i < o->relations.size(); i++)
     assert_cmpnum(o->object_by_id<relation_t>(-1 - static_cast<item_id_t>(i))->members.size(), i - 1);
 
+  verify_osm_db::run(o);
   o->way_delete(w, nullptr, test_osm_way_free);
+  verify_osm_db::run(o);
 
   assert_cmpnum(o->ways.size(), 0);
   assert_cmpnum(o->nodes.size(), nodecount);
@@ -2068,12 +2094,16 @@ void check_updateTags_all(osm_t::ref osm, object_t obj)
 
   assert(tags != otags); // paranoia
 
+  verify_osm_db::run(osm);
+
   osm->updateTags(obj, otags);
   // nothing changed
   assert_cmpnum(osm->original.nodes.size(), 0);
   assert_cmpnum(osm->original.ways.size(), 0);
   assert_cmpnum(osm->original.relations.size(), 0);
   assert_cmpnum(obj.obj->flags, 0);
+
+  verify_osm_db::run(osm);
 
   // now actually change something
   osm->updateTags(obj, tags);
@@ -2096,6 +2126,8 @@ void check_updateTags_all(osm_t::ref osm, object_t obj)
   assert_cmpnum(obj.get_id(), orig->id);
   assert(orig->tags == otags);
   assert(obj.obj->tags == tags);
+
+  verify_osm_db::run(osm);
 
   // setting it back to original state should clear it from map
   osm->updateTags(obj, otags);
@@ -2208,11 +2240,13 @@ void check_clean(osm_t::ref osm)
   assert_cmpnum(osm->original.nodes.size(), 0);
   assert_cmpnum(osm->original.ways.size(), 0);
   assert_cmpnum(osm->original.relations.size(), 0);
+  verify_osm_db::run(osm);
 }
 
 template<typename T> void
 toggle_deleted(osm_t::ref osm, T *o, size_t nc, size_t wc, size_t rc)
 {
+  verify_osm_db::run(osm);
   assert(!osm->is_clean(true));
   assert(!osm->is_clean(false));
   assert_cmpnum(osm->original.nodes.size(), nc);
