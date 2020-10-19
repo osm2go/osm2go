@@ -182,13 +182,8 @@ public:
 
     template<typename T>
     class counter {
-      struct object_counter {
-        counter<T> &dirty;
-        explicit object_counter(counter<T> &d) : dirty(d) {}
-        void operator()(std::pair<item_id_t, T *> pair);
-      };
     public:
-      explicit counter(const std::map<item_id_t, T *> &map);
+      explicit counter(const osm_t &osm);
       const unsigned int total;
       std::vector<T *> added;
       std::vector<T *> changed;

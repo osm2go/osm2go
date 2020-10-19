@@ -1609,37 +1609,61 @@ osm_t::~osm_t()
 }
 
 osm_t::dirty_t::dirty_t(const osm_t &osm)
-  : nodes(osm.nodes)
-  , ways(osm.ways)
-  , relations(osm.relations)
+  : nodes(osm)
+  , ways(osm)
+  , relations(osm)
 {
 }
+
+namespace {
 
 template<typename T ENABLE_IF_CONVERTIBLE(T *, base_object_t *)>
 class object_counter {
   osm_t::dirty_t::counter<T> &dirty;
+  const std::map<item_id_t, T *> &map;
 public:
-  explicit inline object_counter(osm_t::dirty_t::counter<T> &d) : dirty(d) {}
-  void operator()(std::pair<item_id_t, T *> pair);
+  explicit inline object_counter(osm_t::dirty_t::counter<T> &d, const std::map<item_id_t, T *> &m) : dirty(d), map(m) {}
+  void operator()(std::pair<item_id_t, const T *> pair)
+  {
+    const T * const origObj = pair.second;
+    const typename std::map<item_id_t, T *>::const_iterator mit = map.find(origObj->id);
+    assert(mit != map.end());
+    T * const obj = mit->second;
+
+    if(obj->isDeleted()) {
+      dirty.deleted.push_back(obj);
+    } else {
+      assert(obj->flags & OSM_FLAG_DIRTY);
+      dirty.changed.push_back(obj);
+    }
+  }
 };
 
-template<typename T>
-void osm_t::dirty_t::counter<T>::object_counter::operator()(std::pair<item_id_t, T *> pair)
+inline bool objectCompare(const base_object_t *a, const base_object_t *b)
 {
-  T * const obj = pair.second;
-  if(obj->isDeleted())
-    dirty.deleted.push_back(obj);
-  else if(obj->isNew())
-    dirty.added.push_back(obj);
-  else if(obj->flags & OSM_FLAG_DIRTY)
-    dirty.changed.push_back(obj);
+  return a->id < b->id;
 }
 
+} // namespace
+
 template<typename T>
-osm_t::dirty_t::counter<T>::counter(const std::map<item_id_t, T *> &map)
-  : total(map.size())
+osm_t::dirty_t::counter<T>::counter(const osm_t &osm)
+  : total(osm.objects<T>().size())
 {
-  std::for_each(map.begin(), map.end(), object_counter(*this));
+  const std::map<item_id_t, T *> &map = osm.objects<T>();
+  typename std::map<item_id_t, T *>::const_iterator it = map.begin();
+  typename std::map<item_id_t, T *>::const_iterator itEnd = map.end();
+
+  while (it != itEnd && it->second->isNew()) {
+    added.push_back(it->second);
+    it++;
+  }
+
+  std::for_each(osm.originalObjects<T>().begin(), osm.originalObjects<T>().end(), object_counter<T>(*this, osm.objects<T>()));
+
+  // the originalObjects maps are unordered
+  std::sort(deleted.begin(), deleted.end(), objectCompare);
+  std::sort(changed.begin(), changed.end(), objectCompare);
 }
 
 namespace {
