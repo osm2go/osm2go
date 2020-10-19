@@ -1,3 +1,5 @@
+#include "test_osmdb.h"
+
 #include <appdata.h>
 #include <diff.h>
 #include <icon.h>

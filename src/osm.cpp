@@ -392,19 +392,6 @@ osm_t::mergeResult<way_t> osm_t::mergeWays(way_t *first, way_t *second, map_t *m
   return mergeResult<way_t>(first, first->merge(second, this, map, rels));
 }
 
-template<typename T ENABLE_IF_CONVERTIBLE(T, const base_object_t *)>
-static bool isDirty(const std::pair<item_id_t, T> &p)
-{
-  return p.second->isDirty();
-}
-
-template<typename T ENABLE_IF_CONVERTIBLE(T, const base_object_t *)>
-static bool map_is_clean(const std::map<item_id_t, T> &map)
-{
-  const typename std::map<item_id_t, T>::const_iterator itEnd = map.end();
-  return itEnd == std::find_if(map.begin(), itEnd, isDirty<T>);
-}
-
 /* return true if no diff needs to be saved */
 bool osm_t::is_clean(bool honor_hidden_flags) const
 {
@@ -421,11 +408,9 @@ bool osm_t::is_clean(bool honor_hidden_flags) const
     return false;
 
   // now check all objects for modifications
-  if(!map_is_clean(nodes))
-    return false;
-  if(!map_is_clean(ways))
-    return false;
-  return map_is_clean(relations);
+  return original.nodes.empty() &&
+         original.ways.empty() &&
+         original.relations.empty();
 }
 
 class tag_match_functor {
