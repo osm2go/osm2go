@@ -111,13 +111,11 @@ bool osm_download(osm2go_platform::Widget *parent, project_t *project)
 
     // now remove the old file
     unlink(oldfname.c_str());
+  } else if(project->osmFile[0] == '/') {
+    rename(update.c_str(), project->osmFile.c_str());
   } else {
-    if(project->osmFile[0] == '/') {
-      rename(update.c_str(), project->osmFile.c_str());
-    } else {
-      const std::string fname = project->path + project->osmFile;
-      rename(update.c_str(), fname.c_str());
-    }
+    const std::string fname = project->path + project->osmFile;
+    rename(update.c_str(), fname.c_str());
   }
 
   return true;
