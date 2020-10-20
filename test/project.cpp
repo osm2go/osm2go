@@ -97,18 +97,18 @@ testSave(const std::string &tmpdir, const std::string &readonly, const char *emp
 
   assert_cmpmem(empty.data(), empty.length(), proj.data(), proj.length());
 
-  const std::array<const char *, 3> fext = { { "jpg", "gif", "png" } };
-  for (unsigned int i = 0; i < fext.size(); i++) {
-    const std::string fname = std::string("wms.") + fext.at(i);
+  const std::array<const char *, 3> fnames = { { "wms.jpg", "wms.gif", "wms.png" } };
+  for (unsigned int i = 0; i < fnames.size(); i++) {
+    const char * const fname = fnames.at(i);
     {
-      fdguard fd(openat(project->dirfd, fname.c_str(), O_WRONLY | O_CREAT | O_EXCL));
+      fdguard fd(openat(project->dirfd, fname, O_WRONLY | O_CREAT | O_EXCL));
       assert_cmpnum_op(static_cast<int>(fd), >=, 0);
     }
     struct stat st;
-    int ret = fstatat(project->dirfd, fname.c_str(), &st, 0);
+    int ret = fstatat(project->dirfd, fname, &st, 0);
     assert_cmpnum(ret, 0);
     wms_remove_file(*project);
-    ret = fstatat(project->dirfd, fname.c_str(), &st, 0);
+    ret = fstatat(project->dirfd, fname, &st, 0);
     assert_cmpnum(ret, -1);
     assert_cmpnum(errno, ENOENT);
   }
