@@ -16,6 +16,11 @@ int main()
   trstring foo = trstring("abc %1 def %2 ghi").arg("nkw").arg(1);
   assert_cmpstr(foo, "abc nkw def 1 ghi");
 
+  // using the same placeholder more than once must work
+  foo = trstring("abc %1 def %1 ghi").arg("nkw");
+  assert_cmpstr(foo, _("abc nkw def nkw ghi"));
+
+  // and passing additional arguments must not change anything (but may print warnings to the console)
   foo = trstring("abc %1 def %1 ghi").arg("nkw").arg(1);
   assert_cmpstr(foo, _("abc nkw def nkw ghi"));
 

@@ -168,37 +168,42 @@ namespace {
 /**
  * @brief helper to replace a given placeholder by the pattern
  */
-std::string trstring_argn(std::string smsg, const char spattern[3], const char *a, size_t alen, std::string::size_type pos)
+std::string trstring_argn(std::string smsg, char pattern, const char *a, size_t alen, std::string::size_type pos)
 {
-  while (pos != std::string::npos) {
-    smsg.replace(pos, 2, a, alen);
-    pos = smsg.find(spattern, pos + alen, 2);
+  if(unlikely(pos == std::string::npos)) {
+    g_debug("no placeholder %%%c found in string: '%s'", pattern, smsg.c_str());
+  } else {
+    char spattern[3] = { '%', pattern, '\0' };
+    do {
+      smsg.replace(pos, sizeof(spattern) - 1, a, alen);
+      pos = smsg.find(spattern, pos + alen, sizeof(spattern) - 1);
+    // it is unlikely that we use the same placeholder more than once, but still permitted
+    } while (unlikely(pos != std::string::npos));
   }
 
   return smsg;
 }
 
 struct placeholderReturn {
-  placeholderReturn() { spattern[0] = '%'; spattern[1] = '1'; spattern[2] = '\0'; }
-  // increase as needed
-  char spattern[3];
   std::string::size_type pos;
+  char pattern;
 };
 
 placeholderReturn
 placeholderPosition(const std::string &str)
 {
+  std::string::size_type percent = str.find('%');
+
+  char spattern[3] = "%1";
   placeholderReturn ret;
-  ret.pos = str.find(ret.spattern, 0, 2);
+  ret.pos = str.find(spattern, percent, 2);
 
   // just the simple way, only support one char long placeholder indexes
   for (int i = 2; i < 10 && ret.pos == std::string::npos; i++) {
-    ret.spattern[1] = '0' + i;
-    ret.pos = str.find(ret.spattern, 0, 2);
+    spattern[1] = '0' + i;
+    ret.pos = str.find(spattern, percent, 2);
   }
-
-  if(unlikely(ret.pos == std::string::npos))
-    g_debug("no placeholder found in string: '%s'", str.c_str());
+  ret.pattern = spattern[1];
 
   return ret;
 }
@@ -211,25 +216,21 @@ trstring::trstring(const char *msg, const char *, int n)
 
   const trstring msgStr(msg);
 
-  std::string::size_type replacePos = msgStr.find("%n");
-  if (unlikely(replacePos == std::string::npos))
-    g_debug("no number placeholder found in string: '%s'", msg);
-
-  static_cast<std::string &>(*this) = trstring_argn(msgStr, "%n", nstr.c_str(), nstr.size(), replacePos);
+  static_cast<std::string &>(*this) = trstring_argn(msgStr, 'n', nstr.c_str(), nstr.size(), msgStr.find("%n"));
 }
 
 trstring trstring::arg(const std::string &a) const
 {
   placeholderReturn pos = placeholderPosition(*this);
 
-  return trstring(trstring_argn(*this, pos.spattern, a.c_str(), a.size(), pos.pos));
+  return trstring(trstring_argn(*this, pos.pattern, a.c_str(), a.size(), pos.pos));
 }
 
 trstring trstring::arg(const char *a) const
 {
   placeholderReturn pos = placeholderPosition(*this);
 
-  return trstring(trstring_argn(*this, pos.spattern, a, strlen(a), pos.pos));
+  return trstring(trstring_argn(*this, pos.pattern, a, strlen(a), pos.pos));
 }
 
 trstring trstring::argFloatHelper(double a) const
