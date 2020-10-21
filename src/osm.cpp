@@ -1501,18 +1501,6 @@ osm_t::TagMap tag_list_t::asMap() const
   return new_tags;
 }
 
-class tag_vector_copy_functor {
-  std::vector<tag_t> &tags;
-public:
-  explicit inline tag_vector_copy_functor(std::vector<tag_t> &t) : tags(t) {}
-  void operator()(const tag_t &otag) {
-    if(unlikely(otag.is_discardable()))
-      return;
-
-    tags.push_back(otag);
-  }
-};
-
 void tag_list_t::copy(const tag_list_t &other)
 {
   assert_null(contents);
@@ -1523,7 +1511,7 @@ void tag_list_t::copy(const tag_list_t &other)
   contents = new typeof(*contents);
   contents->reserve(other.contents->size());
 
-  std::for_each(other.contents->begin(), other.contents->end(), tag_vector_copy_functor(*contents));
+  std::remove_copy_if(other.contents->begin(), other.contents->end(), std::back_inserter(*contents), tag_t::isDiscardable);
 }
 
 member_t::member_t(object_t::type_t t) noexcept

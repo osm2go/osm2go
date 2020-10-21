@@ -36,6 +36,9 @@ public:
   inline bool is_discardable() const noexcept
   { return is_discardable(key); }
   static bool is_discardable(const char *key) noexcept;
+  // for use as predicate
+  static inline bool isDiscardable(const tag_t &tag) noexcept
+  { return tag.is_discardable(); }
   // also inversion to be able to use it directly as predicate
   static inline bool is_non_discardable(const tag_t &tag) noexcept
   { return !tag.is_discardable(); }
