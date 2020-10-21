@@ -1001,7 +1001,15 @@ cloneForDeletion(relation_t &o)
 template<typename T>
 void osm_t::markDeleted(T &obj)
 {
-  assert(!obj.isNew()); // new objects should simply be deleted
+  // new objects should simply be deleted
+  if (obj.isNew()) {
+    printf("permanently delete %s #" ITEM_ID_FORMAT "\n", obj.apiString(), obj.id);
+
+    assert(originalObjects<T>().find(obj.id) == originalObjects<T>().end());
+    wipe(&obj);
+    return;
+  }
+
   std::unordered_map<item_id_t, const T *> &orig = originalObjects<T>();
 
   printf("mark %s #" ITEM_ID_FORMAT " as deleted\n", obj.apiString(), obj.id);
@@ -1045,13 +1053,7 @@ osm_t::node_delete(node_t *node, NodeDeleteFlags flags, map_t *map)
   /* remove that nodes map representations */
   node->item_chain_destroy(nullptr);
 
-  if(!node->isNew()) {
-    markDeleted(*node);
-  } else {
-    printf("permanently delete node #" ITEM_ID_FORMAT "\n", node->id);
-
-    wipe(node);
-  }
+  markDeleted(*node);
 
   if (flags == NodeDeleteShortWays)
     std::for_each(way_chain.begin(), way_chain.end(), node_deleted_from_ways(map, this));
@@ -1152,12 +1154,9 @@ void osm_t::way_delete(way_t *way, map_t *map, void (*unref)(node_t *))
     // this is already in the original list, so no need to keep the vector around
     if (way->flags & OSM_FLAG_DIRTY)
       chain.clear();
-    markDeleted(*way);
-  } else {
-    printf("permanently delete way #" ITEM_ID_FORMAT "\n", way->id);
-
-    wipe(way);
   }
+
+  markDeleted(*way);
 }
 
 void osm_t::relation_delete(relation_t *relation) {
@@ -1166,14 +1165,7 @@ void osm_t::relation_delete(relation_t *relation) {
   /* the deletion of a relation doesn't affect the members as they */
   /* don't have any reference to the relation they are part of */
 
-  if(!relation->isNew()) {
-    markDeleted(*relation);
-  } else {
-    printf("permanently delete relation #" ITEM_ID_FORMAT "\n",
-	   relation->id);
-
-    wipe(relation);
-  }
+  markDeleted(*relation);
 }
 
 /* Reverse direction-sensitive tags like "oneway". Marks the way as dirty if
