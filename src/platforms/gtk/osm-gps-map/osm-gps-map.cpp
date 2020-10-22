@@ -380,7 +380,8 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
         else
         {
             soup_session_requeue_message(session, msg);
-            dl.release();
+            // dl is still managed by msg
+            (void)dl.release();
             return;
         }
     }
