@@ -42,11 +42,11 @@ lon2pixel(  int zoom,
             float lon);
 
 float
-pixel2lon(  float zoom,
+pixel2lon(  int zoom,
             int pixel_x);
 
 float
-pixel2lat(  float zoom,
+pixel2lat(  int zoom,
             int pixel_y);
 
 #ifdef __cplusplus

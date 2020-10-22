@@ -67,19 +67,19 @@ lon2pixel(  int zoom,
 }
 
 float
-pixel2lon(  float zoom,
+pixel2lon(  int zoom,
             int pixel_x)
 {
-    return ((pixel_x - ( exp(zoom * M_LN2) * (TILESIZE/2) ) ) *2*M_PI) /
-        (TILESIZE * exp(zoom * M_LN2) );
+    return ((pixel_x - ( (1 << zoom) * (TILESIZE/2) ) ) *2*M_PI) /
+        (TILESIZE * (1 << zoom) );
 }
 
 float
-pixel2lat(  float zoom,
+pixel2lat(  int zoom,
             int pixel_y)
 {
-    float lat_m = (-( pixel_y - ( exp(zoom * M_LN2) * (TILESIZE/2) ) ) * (2*M_PI)) /
-        (TILESIZE * exp(zoom * M_LN2));
+    float lat_m = (-( pixel_y - ( (1 << zoom) * (TILESIZE/2) ) ) * (2*M_PI)) /
+        (TILESIZE * (1 << zoom));
 
     return asinf(tanhf(lat_m));
 }
