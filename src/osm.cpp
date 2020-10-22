@@ -45,20 +45,7 @@ bool object_t::operator==(const object_t &other) const noexcept
   if ((type & ~_REF_FLAG) != (other.type & ~_REF_FLAG))
     return false;
 
-  switch(type) {
-  case NODE:
-  case WAY:
-  case RELATION:
-    return obj->id == other.get_id();
-  case NODE_ID:
-  case WAY_ID:
-  case RELATION_ID:
-    return id == other.get_id();
-  case ILLEGAL:
-    return true;
-  default:
-    assert_unreachable();
-  }
+  return get_id() == other.get_id();
 }
 
 bool object_t::operator==(const node_t *n) const noexcept {
