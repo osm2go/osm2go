@@ -424,17 +424,16 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y)
     {
         g_debug("Tile already downloading (or missing)");
     } else {
-        tile_download_t *dl = new tile_download_t(priv->repo_uri, map, zoom, x, y);
+        std::unique_ptr<tile_download_t> dl(new tile_download_t(priv->repo_uri, map, zoom, x, y));
 
         g_debug("Download tile: %d,%d z:%d\n\t%s", x, y, zoom, dl->uri.c_str());
 
         SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, dl->uri.c_str());
-        if (msg) {
+        if (G_LIKELY(msg != nullptr)) {
             (*priv->tile_queue)[dl->hashkey] = msg;
-            soup_session_queue_message (priv->soup_session, msg, osm_gps_map_tile_download_complete, dl);
+            soup_session_queue_message (priv->soup_session, msg, osm_gps_map_tile_download_complete, dl.release());
         } else {
             g_warning("Could not create soup message");
-            delete dl;
         }
     }
 }
