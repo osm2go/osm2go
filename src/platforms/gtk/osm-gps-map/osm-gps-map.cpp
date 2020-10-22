@@ -216,7 +216,7 @@ struct url_pattern_replace {
   {
       char s[16];
 
-      g_snprintf(s, sizeof(s), "%d", p.second);
+      g_snprintf(s, sizeof(s), "%u", p.second);
       std::string::size_type pos = url.find(p.first);
       if (G_LIKELY(pos != std::string::npos))
           url.replace(pos, strlen(p.first), s);
@@ -224,14 +224,14 @@ struct url_pattern_replace {
 };
 
 std::string
-replace_map_uri(const gchar *uri, int zoom, int x, int y)
+replace_map_uri(const gchar *uri, unsigned int zoom, unsigned int x, unsigned int y)
 {
     std::string url = uri;
 
-    const std::array<std::pair<const char *, int>, 3> patterns = { {
-        std::pair<const char *, int>(URI_MARKER_X, x),
-        std::pair<const char *, int>(URI_MARKER_Y, y),
-        std::pair<const char *, int>(URI_MARKER_Z, zoom)
+    const std::array<std::pair<const char *, unsigned int>, 3> patterns = { {
+        std::pair<const char *, unsigned int>(URI_MARKER_X, x),
+        std::pair<const char *, unsigned int>(URI_MARKER_Y, y),
+        std::pair<const char *, unsigned int>(URI_MARKER_Z, zoom)
     } };
 
     std::for_each(patterns.begin(), patterns.end(), url_pattern_replace(url));
