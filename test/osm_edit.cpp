@@ -1995,7 +1995,7 @@ void test_compare()
   assert(*otherN != *n2);
 
   // create a complete copy and see that this matches
-  std::unique_ptr<node_t> otherCopy(new node_t(*otherN));
+  std::unique_ptr<node_t> otherCopy(std::make_unique<node_t>(*otherN));
   assert(*n1 != *otherCopy);
   assert(*otherN == *otherCopy);
 
@@ -2028,7 +2028,7 @@ void test_compare()
   assert(*w1 != *w2);
 
   // check way copies
-  std::unique_ptr<way_t> w3(new way_t(*w2));
+  std::unique_ptr<way_t> w3(std::make_unique<way_t>(*w2));
   assert(*w2 == *w3);
 
   // ==== MEMBERS
@@ -2075,7 +2075,7 @@ void test_compare()
   assert(*r1 == *r2);
 
   // check relation copies
-  std::unique_ptr<relation_t> r3(new relation_t(*r1));
+  std::unique_ptr<relation_t> r3(std::make_unique<relation_t>(*r1));
   assert(*r1 == *r3);
   assert(*r3 == *r2);
 }
