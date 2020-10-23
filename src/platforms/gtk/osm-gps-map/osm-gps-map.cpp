@@ -253,57 +253,56 @@ osm_gps_map_draw_gps_point (OsmGpsMap *map)
     OsmGpsMapPrivate *priv = map->priv;
 
     //incase we get called before we have got a gps point
-    if (priv->gps_valid) {
-        int x, y;
-        int r = UI_GPS_POINT_INNER_RADIUS;
-        int mr = 3*r;
+    if (!priv->gps_valid)
+        return;
 
-        int map_x0 = priv->map_x - EXTRA_BORDER;
-        int map_y0 = priv->map_y - EXTRA_BORDER;
-        x = lon2pixel(priv->map_zoom, priv->gps.rlon) - map_x0;
-        y = lat2pixel(priv->map_zoom, priv->gps.rlat) - map_y0;
+    int x, y;
+    int r = UI_GPS_POINT_INNER_RADIUS;
+    int mr = 3*r;
 
-        cairo_t *cr = gdk_cairo_create(priv->pixmap);
+    int map_x0 = priv->map_x - EXTRA_BORDER;
+    int map_y0 = priv->map_y - EXTRA_BORDER;
+    x = lon2pixel(priv->map_zoom, priv->gps.rlon) - map_x0;
+    y = lat2pixel(priv->map_zoom, priv->gps.rlat) - map_y0;
 
-        // draw ball gradient
-        if (r > 0) {
-            // draw direction arrow
-            if(!std::isnan(priv->gps_heading))
-            {
-                cairo_move_to (cr, x-r*cos(priv->gps_heading), y-r*sin(priv->gps_heading));
-                cairo_line_to (cr, x+3*r*sin(priv->gps_heading), y-3*r*cos(priv->gps_heading));
-                cairo_line_to (cr, x+r*cos(priv->gps_heading), y+r*sin(priv->gps_heading));
-                cairo_close_path (cr);
+    cairo_t *cr = gdk_cairo_create(priv->pixmap);
 
-                cairo_set_source_rgba (cr, 0.3, 0.3, 1.0, 0.5);
-                cairo_fill_preserve (cr);
+    // draw ball gradient
+    if (r > 0) {
+        // draw direction arrow
+        if(!std::isnan(priv->gps_heading))
+        {
+            cairo_move_to (cr, x-r*cos(priv->gps_heading), y-r*sin(priv->gps_heading));
+            cairo_line_to (cr, x+3*r*sin(priv->gps_heading), y-3*r*cos(priv->gps_heading));
+            cairo_line_to (cr, x+r*cos(priv->gps_heading), y+r*sin(priv->gps_heading));
+            cairo_close_path (cr);
 
-                cairo_set_line_width (cr, 1.0);
-                cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 0.5);
-                cairo_stroke(cr);
-            }
+            cairo_set_source_rgba (cr, 0.3, 0.3, 1.0, 0.5);
+            cairo_fill_preserve (cr);
 
-            cairo_pattern_t *pat = cairo_pattern_create_radial (x-(r/5), y-(r/5), (r/5), x,  y, r);
-            cairo_pattern_add_color_stop_rgba (pat, 0, 1, 1, 1, 1.0);
-            cairo_pattern_add_color_stop_rgba (pat, 1, 0, 0, 1, 1.0);
-            cairo_set_source (cr, pat);
-            cairo_arc (cr, x, y, r, 0, 2 * M_PI);
-            cairo_fill (cr);
-            cairo_pattern_destroy (pat);
-            // draw ball border
             cairo_set_line_width (cr, 1.0);
-            cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
-            cairo_arc (cr, x, y, r, 0, 2 * M_PI);
+            cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 0.5);
             cairo_stroke(cr);
         }
 
-        cairo_destroy(cr);
-        gtk_widget_queue_draw_area (GTK_WIDGET(map),
-                                    x-mr,
-                                    y-mr,
-                                    mr*2,
-                                    mr*2);
+        cairo_pattern_t *pat = cairo_pattern_create_radial (x-(r/5), y-(r/5), (r/5), x,  y, r);
+        cairo_pattern_add_color_stop_rgba (pat, 0, 1, 1, 1, 1.0);
+        cairo_pattern_add_color_stop_rgba (pat, 1, 0, 0, 1, 1.0);
+        cairo_set_source (cr, pat);
+        cairo_arc (cr, x, y, r, 0, 2 * M_PI);
+        cairo_fill (cr);
+        cairo_pattern_destroy (pat);
+        // draw ball border
+        cairo_set_line_width (cr, 1.0);
+        cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
+        cairo_arc (cr, x, y, r, 0, 2 * M_PI);
+        cairo_stroke(cr);
     }
+
+    cairo_destroy(cr);
+    gtk_widget_queue_draw_area (GTK_WIDGET(map),
+                                x - mr, y - mr,
+                                mr * 2, mr * 2);
 }
 
 void
