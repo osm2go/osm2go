@@ -107,9 +107,9 @@ int canvas_item_info_poly::get_segment(int x, int y, float fuzziness) const
 
       float n;
       if(abs(dx) > abs(dy))
-        n = fabsf(sqrtf(len) * (pos.y + m * dy - y) / dx);
+        n = fabsf(sqrtf(len) * (pos.y - y + m * dy) / dx);
       else
-        n = fabsf(sqrtf(len) * -(pos.x + m * dx - x) / dy);
+        n = fabsf(sqrtf(len) * -(pos.x - x + m * dx) / dy);
 
       /* check if this is actually on the line and closer than anything */
       /* we found so far */
