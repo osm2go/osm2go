@@ -89,6 +89,8 @@
 #define UI_GPS_TRACK_WIDTH 4
 #define UI_GPS_POINT_INNER_RADIUS 10
 
+namespace {
+
 struct OsmCachedTile
 {
     GdkPixbuf *pixbuf;
@@ -100,11 +102,13 @@ struct OsmCachedTile
 typedef std::unordered_map<uint64_t, SoupMessage *> tile_queue_t;
 typedef std::unordered_map<uint64_t, OsmCachedTile *> tile_cache_t;
 
+} // namespace
+
 struct _OsmGpsMapPrivate
 {
-    tile_queue_t *tile_queue;
+    tile_queue_t *tile_queue; // gcc 4.2 warns about usage of anonymous namespace here, ignore it
     std::unordered_set<uint64_t> *missing_tiles;
-    tile_cache_t *tile_cache;
+    tile_cache_t *tile_cache; // gcc 4.2 warns about usage of anonymous namespace here, ignore it
 
     int map_zoom;
     int max_zoom;
@@ -773,7 +777,7 @@ osm_gps_map_map_redraw (OsmGpsMap *map)
 }
 
 void
-osm_gps_map_map_redraw_idle (OsmGpsMap *map)
+osm_gps_map_map_redraw_idle(OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
 
