@@ -26,12 +26,6 @@
 #include <math.h>
 #include <stdio.h>
 
-float
-deg2rad(float deg)
-{
-    return (deg * M_PI / 180.0);
-}
-
 static float
 arc2pixel(int zoom, float arc)
 {

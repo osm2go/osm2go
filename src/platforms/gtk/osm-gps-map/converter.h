@@ -27,8 +27,14 @@
 extern "C" {
 #endif
 
-float
-deg2rad(float deg);
+#include <math.h>
+
+static inline float
+deg2rad(float deg)
+{
+    return (deg * M_PI / 180.0);
+}
+
 
 float
 lat2pixel(  int zoom,
