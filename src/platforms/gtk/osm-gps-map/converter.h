@@ -33,11 +33,11 @@ deg2rad(float deg);
 float
 rad2deg(float rad);
 
-int
+float
 lat2pixel(  int zoom,
             float lat);
 
-int
+float
 lon2pixel(  int zoom,
             float lon);
 

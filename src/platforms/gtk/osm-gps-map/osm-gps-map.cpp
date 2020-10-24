@@ -256,22 +256,22 @@ osm_gps_map_draw_gps_point (OsmGpsMap *map)
     if (!priv->gps_valid)
         return;
 
-    const int r = UI_GPS_POINT_INNER_RADIUS;
-    const int mr = 3*r;
+    const float r = UI_GPS_POINT_INNER_RADIUS;
+    const int mr = 3 * UI_GPS_POINT_INNER_RADIUS;
 
     const int map_x0 = priv->map_x - EXTRA_BORDER;
     const int map_y0 = priv->map_y - EXTRA_BORDER;
-    const int x = lon2pixel(priv->map_zoom, priv->gps.rlon) - map_x0;
-    const int y = lat2pixel(priv->map_zoom, priv->gps.rlat) - map_y0;
+    const float x = lon2pixel(priv->map_zoom, priv->gps.rlon) - map_x0;
+    const float y = lat2pixel(priv->map_zoom, priv->gps.rlat) - map_y0;
 
     cairo_t *cr = gdk_cairo_create(priv->pixmap);
 
     // draw direction arrow
     if(!std::isnan(priv->gps_heading))
     {
-        cairo_move_to (cr, x-r*cos(priv->gps_heading), y-r*sin(priv->gps_heading));
-        cairo_line_to (cr, x+3*r*sin(priv->gps_heading), y-3*r*cos(priv->gps_heading));
-        cairo_line_to (cr, x+r*cos(priv->gps_heading), y+r*sin(priv->gps_heading));
+        cairo_move_to (cr, x - r * cosf(priv->gps_heading), y - r * sinf(priv->gps_heading));
+        cairo_line_to (cr, x + 3 * r * sinf(priv->gps_heading), y - 3 * r * cosf(priv->gps_heading));
+        cairo_line_to (cr, x + r * cosf(priv->gps_heading), y + r * sinf(priv->gps_heading));
         cairo_close_path (cr);
 
         cairo_set_source_rgba (cr, 0.3, 0.3, 1.0, 0.5);
@@ -298,7 +298,7 @@ osm_gps_map_draw_gps_point (OsmGpsMap *map)
 
     cairo_destroy(cr);
     gtk_widget_queue_draw_area (GTK_WIDGET(map),
-                                x - mr, y - mr,
+                                static_cast<int>(x) - mr, static_cast<int>(y) - mr,
                                 mr * 2, mr * 2);
 }
 
@@ -465,7 +465,7 @@ osm_gps_map_find_bigger_tile (OsmGpsMap *map, int zoom, int x, int y,
     int next_y = y / 2;
 
     GdkPixbuf *pixbuf = osm_gps_map_load_cached_tile (map, next_zoom, next_x, next_y);
-    if (pixbuf)
+    if (pixbuf != nullptr)
         *zoom_found = next_zoom;
     else
         pixbuf = osm_gps_map_find_bigger_tile (map, next_zoom, next_x, next_y,
@@ -566,8 +566,8 @@ osm_gps_map_fill_tiles_pixel (OsmGpsMap *map)
     int tiles_nx = (width  - offset_x) / TILESIZE + 1;
     int tiles_ny = (height - offset_y) / TILESIZE + 1;
 
-    int tile_x0 =  floorf((float)priv->map_x / (float)TILESIZE);
-    int tile_y0 =  floorf((float)priv->map_y / (float)TILESIZE);
+    int tile_x0 = static_cast<int>(floorf(static_cast<float>(priv->map_x) / TILESIZE));
+    int tile_y0 = static_cast<int>(floorf(static_cast<float>(priv->map_y) / TILESIZE));
 
     //TODO: implement wrap around
     for (int i=tile_x0; i<(tile_x0+tiles_nx);i++)
@@ -609,21 +609,21 @@ osm_gps_map_print_track(OsmGpsMap *map, const std::pair<OsmGpsMapPoint, OsmGpsMa
     cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
 
     // screen offsets
-    const int map_x0 = priv->map_x - EXTRA_BORDER;
-    const int map_y0 = priv->map_y - EXTRA_BORDER;
+    const float map_x0 = priv->map_x - EXTRA_BORDER;
+    const float map_y0 = priv->map_y - EXTRA_BORDER;
 
     // the edge coordinates of the rectangle
-    const int pix_x0 = lon2pixel(priv->map_zoom, trackpoint_list.first.rlon) - map_x0;
-    const int pix_y0 = lat2pixel(priv->map_zoom, trackpoint_list.first.rlat) - map_y0;
-    const int pix_x1 = lon2pixel(priv->map_zoom, trackpoint_list.second.rlon) - map_x0;
-    const int pix_y1 = lat2pixel(priv->map_zoom, trackpoint_list.second.rlat) - map_y0;
+    const float pix_x0 = lon2pixel(priv->map_zoom, trackpoint_list.first.rlon) - map_x0;
+    const float pix_y0 = lat2pixel(priv->map_zoom, trackpoint_list.first.rlat) - map_y0;
+    const float pix_x1 = lon2pixel(priv->map_zoom, trackpoint_list.second.rlon) - map_x0;
+    const float pix_y1 = lat2pixel(priv->map_zoom, trackpoint_list.second.rlat) - map_y0;
 
     // now construct a rectangle from the coordinates
-    const std::array<std::pair<int, int>, 4> coords = { {
-      std::pair<int, int>(pix_x0, pix_y0),
-      std::pair<int, int>(pix_x1, pix_y0),
-      std::pair<int, int>(pix_x1, pix_y1),
-      std::pair<int, int>(pix_x0, pix_y1)
+    const std::array<std::pair<double, double>, 4> coords = { {
+      std::pair<double, double>(pix_x0, pix_y0),
+      std::pair<double, double>(pix_x1, pix_y0),
+      std::pair<double, double>(pix_x1, pix_y1),
+      std::pair<double, double>(pix_x0, pix_y1)
     }};
 
     // the first line drawn is now the line from last corner to first one
@@ -778,7 +778,7 @@ osm_gps_map_map_redraw_idle (OsmGpsMap *map)
     OsmGpsMapPrivate *priv = map->priv;
 
     if (priv->idle_map_redraw == 0)
-        priv->idle_map_redraw = g_idle_add ((GSourceFunc)osm_gps_map_map_redraw, map);
+        priv->idle_map_redraw = g_idle_add(reinterpret_cast<GSourceFunc>(osm_gps_map_map_redraw), map);
 }
 
 void
@@ -844,8 +844,8 @@ osm_gps_map_set_center (OsmGpsMap *map, float latitude, float longitude)
     priv->center_rlon = deg2rad(longitude);
 
     // pixel_x,y, offsets
-    int pixel_x = lon2pixel(priv->map_zoom, priv->center_rlon);
-    int pixel_y = lat2pixel(priv->map_zoom, priv->center_rlat);
+    int pixel_x = static_cast<int>(lon2pixel(priv->map_zoom, priv->center_rlon));
+    int pixel_y = static_cast<int>(lat2pixel(priv->map_zoom, priv->center_rlat));
 
     priv->map_x = pixel_x - GTK_WIDGET(map)->allocation.width/2;
     priv->map_y = pixel_y - GTK_WIDGET(map)->allocation.height/2;
@@ -868,8 +868,8 @@ osm_gps_map_set_zoom (OsmGpsMap *map, int zoom)
         //constrain zoom min_zoom -> max_zoom
         priv->map_zoom = CLAMP(zoom, priv->min_zoom, priv->max_zoom);
 
-        priv->map_x = lon2pixel(priv->map_zoom, priv->center_rlon) - width_center;
-        priv->map_y = lat2pixel(priv->map_zoom, priv->center_rlat) - height_center;
+        priv->map_x = static_cast<int>(lon2pixel(priv->map_zoom, priv->center_rlon) - width_center);
+        priv->map_y = static_cast<int>(lat2pixel(priv->map_zoom, priv->center_rlat) - height_center);
 
         g_debug("Zoom changed from %d to %d x:%d",
                 zoom_old, priv->map_zoom, priv->map_x);
@@ -1350,8 +1350,8 @@ osm_gps_map_configure(GtkWidget *widget, G_GNUC_UNUSED GdkEventConfigure *event)
                         -1);
 
     // pixel_x,y, offsets
-    gint pixel_x = lon2pixel(priv->map_zoom, priv->center_rlon);
-    gint pixel_y = lat2pixel(priv->map_zoom, priv->center_rlat);
+    gint pixel_x = static_cast<int>(lon2pixel(priv->map_zoom, priv->center_rlon));
+    gint pixel_y = static_cast<int>(lat2pixel(priv->map_zoom, priv->center_rlat));
 
     priv->map_x = pixel_x - widget->allocation.width/2;
     priv->map_y = pixel_y - widget->allocation.height/2;

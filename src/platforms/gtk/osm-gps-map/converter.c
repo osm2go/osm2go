@@ -38,32 +38,30 @@ rad2deg(float rad)
     return (rad / M_PI * 180.0);
 }
 
-
-int
-lat2pixel(  int zoom,
-            float lat)
+static float
+arc2pixel(int zoom, float arc)
 {
-    float lat_m = atanhf(sinf(lat));
-
     /* the formula is
      *
      * pixel_y = -(2^zoom * TILESIZE * lat_m) / 2PI + (2^zoom * TILESIZE) / 2
      */
-    return -(int)( (lat_m * TILESIZE * (1 << zoom) ) / (2*M_PI)) +
+    return ( (arc * TILESIZE * (1 << zoom) ) / (2*M_PI)) +
         ((1 << zoom) * (TILESIZE/2) );
 }
 
+float
+lat2pixel(  int zoom,
+            float lat)
+{
+    return arc2pixel(zoom, -atanhf(sinf(lat)));
+}
 
-int
+
+float
 lon2pixel(  int zoom,
             float lon)
 {
-    /* the formula is
-     *
-     * pixel_x = (2^zoom * TILESIZE * lon) / 2PI + (2^zoom * TILESIZE) / 2
-     */
-    return (int)(( lon * TILESIZE * (1 << zoom) ) / (2*M_PI)) +
-        ( (1 << zoom) * (TILESIZE/2) );
+    return arc2pixel(zoom, lon);
 }
 
 float
