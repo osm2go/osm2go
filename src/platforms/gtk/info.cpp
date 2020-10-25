@@ -449,7 +449,7 @@ tag_widget(info_tag_context_t &context)
 {
   /* setup both columns */
   std::vector<list_view_column> columns;
-  columns.push_back(list_view_column(_("Key"),   LIST_FLAG_ELLIPSIZE | LIST_FLAG_CAN_HIGHLIGHT, TAG_COL_COLLISION));
+  columns.push_back(list_view_column(_("Key"),   LIST_FLAG_ELLIPSIZE | LIST_FLAG_CAN_HIGHLIGHT, -1, TAG_COL_COLLISION));
   columns.push_back(list_view_column(_("Value"), LIST_FLAG_ELLIPSIZE));
 
   std::vector<list_button> buttons;

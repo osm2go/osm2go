@@ -36,17 +36,21 @@ enum flag_values {
 };
 
 /* list item flags */
-#define LIST_FLAG_EXPAND         (1<<0)   /* column expands with dialog size */
-#define LIST_FLAG_ELLIPSIZE      (1<<1)   /* column expands and text is ellipsized */
-#define LIST_FLAG_CAN_HIGHLIGHT  (1<<2)   /* column can be highlighted */
-#define LIST_FLAG_STOCK_ICON     (1<<3)   /* column contains stock icons */
+enum ListFlags {
+  LIST_FLAG_EXPAND         = (1<<0),   /* column expands with dialog size */
+  LIST_FLAG_ELLIPSIZE      = (1<<1),   /* column expands and text is ellipsized */
+  LIST_FLAG_STOCK_ICON     = (1<<2),   /* column contains stock icons */
+  LIST_FLAG_MARK_MODIFIED  = (1<<3),   /* items can be marked as being changed */
+  LIST_FLAG_CAN_HIGHLIGHT  = (1<<4)    /* column can be highlighted, requires LIST_FLAG_MARK_MODIFIED */
+};
 
 struct list_view_column {
-  explicit list_view_column(trstring::native_type_arg n, unsigned int fl, int hk = -1)
-    : name(n), flags(fl), hlkey(hk) {}
+  explicit list_view_column(trstring::native_type_arg n, unsigned int fl, int hm = -1, int hk = -1)
+    : name(n), flags(fl), hlkey(hk), modifiedKey(hm) {}
   trstring::native_type name;
   unsigned int flags;
   int hlkey; ///< highlight key in case LIST_FLAG_CAN_HIGHLIGHT is set
+  int modifiedKey; ///< write key/value underlined if LIST_FLAG_MARK_NEW is set
 };
 
 class list_button {

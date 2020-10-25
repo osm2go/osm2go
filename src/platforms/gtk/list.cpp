@@ -97,6 +97,7 @@ list_set_columns(GtkTreeView *view, const std::vector<list_view_column> &columns
   for(unsigned int key = 0; key < columns.size(); key++) {
     trstring::native_type name = columns[key].name;
     int hlkey = columns[key].hlkey;
+    int underlinekey = columns[key].modifiedKey;
     int flags = columns[key].flags;
 
     GtkTreeViewColumn *column;
@@ -108,17 +109,32 @@ list_set_columns(GtkTreeView *view, const std::vector<list_view_column> &columns
     } else {
       GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
 
-      if(flags & LIST_FLAG_CAN_HIGHLIGHT)
+      if(flags & LIST_FLAG_MARK_MODIFIED) {
+        assert(underlinekey >= 0);
+        g_object_set(renderer, "underline", PANGO_UNDERLINE_SINGLE, nullptr);
+      }
+
+      if(flags & LIST_FLAG_CAN_HIGHLIGHT) {
+        // they are independent but will not be used as such, so simplify the code below:
+        // otherwise it must be ensured that there are no nullptr-gaps in the attribute list
+        assert(flags & LIST_FLAG_MARK_MODIFIED);
+        assert(hlkey >= 0);
         g_object_set(renderer, "background", "red", nullptr );
+      }
 
       if(flags & LIST_FLAG_ELLIPSIZE)
         g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, nullptr);
 
-      // if LIST_FLAG_CAN_HIGHLIGHT is not set this will be nullptr, so the function
-      // will ignore the following int attribute anyway
-      const char *hlattr = (flags & LIST_FLAG_CAN_HIGHLIGHT) ? "background-set" : nullptr;
-      column = gtk_tree_view_column_new_with_attributes(static_cast<const gchar *>(name), renderer, "text", key,
-                                                        hlattr, hlkey, nullptr);
+      // if the flags are not set the attributes will be nullptr, so gtk_tree_view_column_new_with_attributes()
+      // will ignore the following int attribute anyway as it takes the attribute nullptr as end marker
+      const char *hlattr =        (flags & LIST_FLAG_CAN_HIGHLIGHT) ? "background-set" : nullptr;
+      const char *underlineattr = (flags & LIST_FLAG_MARK_MODIFIED) ? "underline-set" : nullptr;
+
+      column = gtk_tree_view_column_new_with_attributes(static_cast<const gchar *>(name), renderer,
+                                                        "text", key,
+                                                        underlineattr, underlinekey,
+                                                        hlattr, hlkey,
+                                                        nullptr);
 
       gtk_tree_view_column_set_expand(column,
                                       (flags & (LIST_FLAG_EXPAND | LIST_FLAG_ELLIPSIZE)) ? TRUE : FALSE);
