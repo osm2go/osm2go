@@ -28,12 +28,14 @@ enum {
   TAG_COL_KEY = 0,
   TAG_COL_VALUE,
   TAG_COL_COLLISION,
+  TAG_COL_MODIFIED_KEY,
+  TAG_COL_MODIFIED_VALUE,
   TAG_NUM_COLS
 };
 
 class info_tag_context_t : public tag_context_t {
 public:
-  explicit info_tag_context_t(map_t *m, osm_t::ref os, presets_items *p, const object_t &o, GtkWidget *dlg);
+  explicit info_tag_context_t(map_t *m, osm_t::ref os, presets_items *p, const object_t &o, GtkWidget *dlg, osm_t::TagMap otags);
   info_tag_context_t() O2G_DELETED_FUNCTION;
   info_tag_context_t(const info_tag_context_t &) O2G_DELETED_FUNCTION;
   info_tag_context_t &operator=(const info_tag_context_t &) O2G_DELETED_FUNCTION;
@@ -48,7 +50,8 @@ public:
   presets_items * const presets;
   GtkWidget *list;
   std::unique_ptr<GtkListStore, g_object_deleter> store;
-  osm_t::TagMap m_tags;
+  osm_t::TagMap m_tags; ///< the tags currently displayed
+  const osm_t::TagMap m_originalTags; ///< the original tags from the OSM database
 
   void update_collisions(const std::string &k);
 };
@@ -291,6 +294,31 @@ select_item(const std::string &k, const std::string &v, info_tag_context_t *cont
   gtk_tree_model_foreach(GTK_TREE_MODEL(context->store.get()), select_item_foreach, &ctx);
 }
 
+/**
+ * @brief check if the given key is present in the original object
+ */
+bool
+isOriginalTag(const std::string &key, const osm_t::TagMap &ot)
+{
+  const osm_t::TagMap::const_iterator it = ot.find(key);
+
+  return (it != ot.end());
+}
+
+/**
+ * @brief check if the given key/value is present in the original object
+ */
+bool
+isOriginalTag(const std::string &key, const std::string &value, const osm_t::TagMap &ot)
+{
+  const osm_t::TagMap::const_iterator it = ot.find(key);
+
+  if (it == ot.end())
+    return false;
+
+  return it->second == value;
+}
+
 void
 on_tag_edit(info_tag_context_t *context)
 {
@@ -359,6 +387,8 @@ on_tag_edit(info_tag_context_t *context)
   gtk_list_store_set(context->store.get(), &iter,
                      TAG_COL_KEY, k.c_str(),
                      TAG_COL_VALUE, v.c_str(),
+                     TAG_COL_MODIFIED_KEY, isOriginalTag(k, context->m_originalTags) ? FALSE : TRUE,
+                     TAG_COL_MODIFIED_VALUE, isOriginalTag(k, v, context->m_originalTags) ? FALSE : TRUE,
                      -1);
 }
 
@@ -394,13 +424,16 @@ on_tag_last(info_tag_context_t *context)
 }
 
 GtkTreeIter
-store_append(GtkListStore *store, const std::string &key, const std::string &value, bool collision)
+store_append(GtkListStore *store, const std::string &key, const std::string &value, bool collision, const osm_t::TagMap &ot)
 {
   GtkTreeIter iter;
+
   gtk_list_store_insert_with_values(store, &iter, -1,
                                     TAG_COL_KEY,       key.c_str(),
                                     TAG_COL_VALUE,     value.c_str(),
                                     TAG_COL_COLLISION, collision ? TRUE : FALSE,
+                                    TAG_COL_MODIFIED_KEY,  isOriginalTag(key, ot) ? FALSE : TRUE,
+                                    TAG_COL_MODIFIED_VALUE,  isOriginalTag(key, value, ot) ? FALSE : TRUE,
                                     -1);
   return iter;
 }
@@ -416,7 +449,7 @@ on_tag_add(info_tag_context_t *context)
   // there can't be a new collision as the ok button in tag_edit() is not enabled then
   context->m_tags.insert(osm_t::TagMap::value_type(k, v));
   /* append a row for the new data */
-  GtkTreeIter iter = store_append(context->store.get(), k, v, false);
+  GtkTreeIter iter = store_append(context->store.get(), k, v, false, context->m_originalTags);
 
   gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
 }
@@ -425,16 +458,18 @@ on_tag_add(info_tag_context_t *context)
 struct tag_replace_functor {
   GtkListStore * const store;
   const osm_t::TagMap &tags;
-  inline tag_replace_functor(GtkListStore *s, const osm_t::TagMap &t) : store(s), tags(t) {}
+  const osm_t::TagMap &originalTags;
+  inline tag_replace_functor(GtkListStore *s, const osm_t::TagMap &t, const osm_t::TagMap &ot)
+    : store(s), tags(t), originalTags(ot) {}
   void operator()(const osm_t::TagMap::value_type &pair) {
-    store_append(store, pair.first, pair.second, tags.count(pair.first) > 1);
+    store_append(store, pair.first, pair.second, tags.count(pair.first) > 1, originalTags);
   }
 };
 
 void
-store_fill(GtkListStore *store, const osm_t::TagMap &tags)
+store_fill(GtkListStore *store, const osm_t::TagMap &tags, const osm_t::TagMap &origTags)
 {
-  std::for_each(tags.begin(), tags.end(), tag_replace_functor(store, tags));
+  std::for_each(tags.begin(), tags.end(), tag_replace_functor(store, tags, origTags));
 }
 
 void
@@ -449,8 +484,10 @@ tag_widget(info_tag_context_t &context)
 {
   /* setup both columns */
   std::vector<list_view_column> columns;
-  columns.push_back(list_view_column(_("Key"),   LIST_FLAG_ELLIPSIZE | LIST_FLAG_CAN_HIGHLIGHT, -1, TAG_COL_COLLISION));
-  columns.push_back(list_view_column(_("Value"), LIST_FLAG_ELLIPSIZE));
+  columns.push_back(list_view_column(_("Key"),   LIST_FLAG_ELLIPSIZE | LIST_FLAG_MARK_MODIFIED | LIST_FLAG_CAN_HIGHLIGHT,
+                                     TAG_COL_MODIFIED_KEY, TAG_COL_COLLISION));
+  columns.push_back(list_view_column(_("Value"), LIST_FLAG_ELLIPSIZE | LIST_FLAG_MARK_MODIFIED,
+                                     TAG_COL_MODIFIED_VALUE));
 
   std::vector<list_button> buttons;
   buttons.push_back(list_button::addButton(G_CALLBACK(on_tag_add)));
@@ -461,8 +498,9 @@ tag_widget(info_tag_context_t &context)
   buttons.push_back(list_button(_("Relations"), G_CALLBACK(on_relations)));
 
   context.store.reset(gtk_list_store_new(TAG_NUM_COLS,
-                                          G_TYPE_STRING, G_TYPE_STRING,
-                                          G_TYPE_BOOLEAN, G_TYPE_POINTER));
+                                         G_TYPE_STRING, G_TYPE_STRING,
+                                         G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
+                                         G_TYPE_BOOLEAN, G_TYPE_POINTER));
 
   context.list = list_new(LIST_HILDON_WITHOUT_HEADERS | LIST_BTN_2ROW, &context, changed,
                           buttons, columns, GTK_TREE_MODEL(context.store.get()));
@@ -480,7 +518,7 @@ tag_widget(info_tag_context_t &context)
     list_button_enable(context.list, LIST_BUTTON_USER0, FALSE);
 
   /* --------- build and fill the store ------------ */
-  store_fill(context.store.get(), context.tags);
+  store_fill(context.store.get(), context.tags, context.m_originalTags);
 
   return context.list;
 }
@@ -659,6 +697,8 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *p
 
   assert(object.is_real());
 
+  const base_object_t * const original = osm->originalObject(object);
+
   info_tag_context_t context(map, osm, presets, object,
                              gtk_dialog_new_with_buttons(static_cast<const gchar *>(objid(object)),
                                                          GTK_WINDOW(parent), GTK_DIALOG_MODAL,
@@ -667,7 +707,7 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *p
 #endif
                                                GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                                GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                               nullptr));
+                                               nullptr), original ? original->tags.asMap() : object.obj->tags.asMap());
 
   osm2go_platform::dialog_size_hint(context.dialog, osm2go_platform::MISC_DIALOG_LARGE);
   gtk_dialog_set_default_response(context.dialog, GTK_RESPONSE_ACCEPT);
@@ -711,10 +751,11 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *p
   return ok;
 }
 
-tag_context_t::tag_context_t(const object_t &o, const osm_t::TagMap &t, osm2go_platform::Widget *dlg)
+tag_context_t::tag_context_t(const object_t &o, const osm_t::TagMap &t, const osm_t::TagMap &ot, osm2go_platform::Widget *dlg)
   : dialog(dlg)
   , object(o)
   , tags(t)
+  , originalTags(ot)
 {
 }
 
@@ -726,16 +767,17 @@ void tag_context_t::info_tags_replace(const osm_t::TagMap &ntags)
 
   ictx->m_tags = ntags;
 
-  store_fill(store, tags);
+  store_fill(store, tags, originalTags);
 }
 
-info_tag_context_t::info_tag_context_t(map_t *m, osm_t::ref os, presets_items *p, const object_t &o, GtkWidget *dlg)
-  : tag_context_t(o, m_tags, dlg)
+info_tag_context_t::info_tag_context_t(map_t *m, osm_t::ref os, presets_items *p, const object_t &o, GtkWidget *dlg, osm_t::TagMap otags)
+  : tag_context_t(o, m_tags, m_originalTags, dlg)
   , map(m)
   , osm(os)
   , presets(p)
   , list(nullptr)
   , m_tags(object.obj->tags.asMap())
+  , m_originalTags(std::move(otags))
 {
 }
 

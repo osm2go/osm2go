@@ -18,7 +18,7 @@ class presets_items;
 
 class tag_context_t {
 protected:
-  tag_context_t(const object_t &o, const osm_t::TagMap &t, osm2go_platform::Widget *dlg);
+  tag_context_t(const object_t &o, const osm_t::TagMap &t, const osm_t::TagMap &ot, osm2go_platform::Widget *dlg);
 public:
   tag_context_t() O2G_DELETED_FUNCTION;
   tag_context_t(const tag_context_t &) O2G_DELETED_FUNCTION;
@@ -31,6 +31,7 @@ public:
   osm2go_platform::DialogGuard dialog;
   object_t object;
   const osm_t::TagMap &tags;
+  const osm_t::TagMap &originalTags;
 
   void info_tags_replace(const osm_t::TagMap &ntags);
 };
