@@ -398,6 +398,8 @@ enum {
   RELATION_COL_TYPE = 0,
   RELATION_COL_NAME,
   RELATION_COL_MEMBERS,
+  RELATION_COL_TAGS_MODIFIED,
+  RELATION_COL_MEMBERS_MODIFIED,
   RELATION_COL_DATA,
   RELATION_NUM_COLS
 };
@@ -736,7 +738,8 @@ on_relation_remove(relation_context_t *context)
 
 struct relation_list_widget_functor {
   GtkListStore * const store;
-  explicit inline relation_list_widget_functor(GtkListStore *s) : store(s) {}
+  osm_t::ref osm;
+  explicit inline relation_list_widget_functor(GtkListStore *s, osm_t::ref o) : store(s), osm(o) {}
   void operator()(const relation_t *rel);
   inline void operator()(std::pair<item_id_t, relation_t *> pair) {
     operator()(pair.second);
@@ -749,12 +752,15 @@ void relation_list_widget_functor::operator()(const relation_t *rel)
     return;
 
   const std::string &name = rel->descriptive_name();
+  const relation_t * const orig = static_cast<const relation_t *>(osm->originalObject(object_t(object_t::RELATION_ID, rel->id)));
 
   /* Append a row and fill in some data */
   gtk_list_store_insert_with_values(store, nullptr, -1,
                                     RELATION_COL_TYPE, rel->tags.get_value("type"),
                                     RELATION_COL_NAME, name.c_str(),
+                                    RELATION_COL_TAGS_MODIFIED, rel->isNew() || (orig && orig->tags != rel->tags) ? TRUE : FALSE,
                                     RELATION_COL_MEMBERS, rel->members.size(),
+                                    RELATION_COL_MEMBERS_MODIFIED, rel->isNew() || (orig && orig->members != rel->members) ? TRUE : FALSE,
                                     RELATION_COL_DATA, rel,
                                     -1);
 }
@@ -764,8 +770,8 @@ relation_list_widget(relation_context_t &context)
 {
   std::vector<list_view_column> columns;
   columns.push_back(list_view_column(_("Type"),    0));
-  columns.push_back(list_view_column(_("Name"),    LIST_FLAG_ELLIPSIZE));
-  columns.push_back(list_view_column(_("Members"), 0));
+  columns.push_back(list_view_column(_("Name"),    LIST_FLAG_ELLIPSIZE | LIST_FLAG_MARK_MODIFIED, RELATION_COL_TAGS_MODIFIED));
+  columns.push_back(list_view_column(_("Members"), LIST_FLAG_MARK_MODIFIED, RELATION_COL_MEMBERS_MODIFIED));
 
   std::vector<list_button> buttons;
   buttons.push_back(list_button::addButton(G_CALLBACK(on_relation_add)));
@@ -776,8 +782,9 @@ relation_list_widget(relation_context_t &context)
 
   /* build and fill the store */
   context.store.reset(gtk_list_store_new(RELATION_NUM_COLS,
-                                         G_TYPE_STRING, G_TYPE_STRING, G_TYPE_UINT,
-                                         G_TYPE_POINTER));
+                                         G_TYPE_STRING, G_TYPE_STRING,
+                                         G_TYPE_UINT, G_TYPE_BOOLEAN,
+                                         G_TYPE_BOOLEAN, G_TYPE_POINTER));
 
   context.list = list_new(LIST_HILDON_WITH_HEADERS, &context,
                           relation_list_changed, buttons, columns,
@@ -788,7 +795,7 @@ relation_list_widget(relation_context_t &context)
   gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context.store.get()),
                                        RELATION_COL_NAME, GTK_SORT_ASCENDING);
 
-  relation_list_widget_functor fc(context.store.get());
+  relation_list_widget_functor fc(context.store.get(), context.osm);
 
   const std::map<item_id_t, relation_t *> &rchain = context.osm->relations;
   std::for_each(rchain.begin(), rchain.end(), fc);
