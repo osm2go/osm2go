@@ -475,6 +475,9 @@ enum {
   MEMBER_COL_NAME,
   MEMBER_COL_ROLE,
   MEMBER_COL_REF_ONLY,
+  MEMBER_COL_TYPE_CHANGED,
+  MEMBER_COL_ID_CHANGED,
+  MEMBER_COL_ROLE_CHANGED,
   MEMBER_COL_DATA,
   MEMBER_NUM_COLS
 };
@@ -496,31 +499,6 @@ member_list_selection_func(GtkTreeSelection *, GtkTreeModel *model, GtkTreePath 
   return FALSE;
 }
 
-struct members_list_functor {
-  GtkListStore * const store;
-  osm_t::ref osm;
-  explicit inline members_list_functor(GtkListStore *s, osm_t::ref o) : store(s), osm(o) {}
-  void operator()(const member_t &member);
-};
-
-void members_list_functor::operator()(const member_t &member)
-{
-  GtkTreeIter iter;
-
-  const std::string &id = member.object.id_string();
-
-  /* Append a row and fill in some data */
-  bool realObj = member.object.is_real();
-  gtk_list_store_insert_with_values(store, &iter, -1,
-                                    MEMBER_COL_TYPE,     static_cast<const gchar *>(member.object.type_string()),
-                                    MEMBER_COL_ID,       id.c_str(),
-                                    MEMBER_COL_NAME,     realObj ? static_cast<const gchar *>(member.object.get_name(*osm)) : nullptr,
-                                    MEMBER_COL_ROLE,     member.role,
-                                    MEMBER_COL_REF_ONLY, realObj ? FALSE : TRUE,
-                                    MEMBER_COL_DATA,     &member,
-                                    -1);
-}
-
 GtkWidget *
 member_list_widget(member_context_t &context)
 {
@@ -533,19 +511,23 @@ member_list_widget(member_context_t &context)
   /* --- "type" column --- */
   GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
   g_object_set(renderer, "foreground", "grey", nullptr);
+  g_object_set(renderer, "underline", PANGO_UNDERLINE_SINGLE, nullptr);
   GtkTreeViewColumn *column =
     gtk_tree_view_column_new_with_attributes(static_cast<const gchar *>(_("Type")), renderer,
-		     "text", MEMBER_COL_TYPE,
-		     "foreground-set", MEMBER_COL_REF_ONLY,  nullptr);
+                                             "text", MEMBER_COL_TYPE,
+                                             "underline-set", MEMBER_COL_TYPE_CHANGED,
+                                             "foreground-set", MEMBER_COL_REF_ONLY,  nullptr);
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_TYPE);
   gtk_tree_view_insert_column(view, column, -1);
 
   /* --- "id" column --- */
   renderer = gtk_cell_renderer_text_new();
   g_object_set(renderer, "foreground", "grey", nullptr);
+  g_object_set(renderer, "underline", PANGO_UNDERLINE_SINGLE, nullptr);
   column = gtk_tree_view_column_new_with_attributes(static_cast<const gchar *>(_("Id")), renderer,
-		     "text", MEMBER_COL_ID,
-		     "foreground-set", MEMBER_COL_REF_ONLY,  nullptr);
+                                                    "text", MEMBER_COL_ID,
+                                                    "underline-set", MEMBER_COL_ID_CHANGED,
+                                                    "foreground-set", MEMBER_COL_REF_ONLY,  nullptr);
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_ID);
   gtk_tree_view_insert_column(view, column, -1);
 
@@ -563,23 +545,47 @@ member_list_widget(member_context_t &context)
   /* --- "role" column --- */
   renderer = gtk_cell_renderer_text_new();
   g_object_set(renderer, "foreground", "grey", nullptr);
+  g_object_set(renderer, "underline", PANGO_UNDERLINE_SINGLE, nullptr);
   column = gtk_tree_view_column_new_with_attributes(static_cast<const gchar *>(_("Role")), renderer,
-		     "text", MEMBER_COL_ROLE,
-		     "foreground-set", MEMBER_COL_REF_ONLY,  nullptr);
+                                                    "text", MEMBER_COL_ROLE,
+                                                    "underline-set", MEMBER_COL_ROLE_CHANGED,
+                                                    "foreground-set", MEMBER_COL_REF_ONLY,  nullptr);
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_ROLE);
   gtk_tree_view_insert_column(view, column, -1);
-
 
   /* build and fill the store */
   GtkListStore * const store = gtk_list_store_new(MEMBER_NUM_COLS,
                                                   G_TYPE_STRING, G_TYPE_STRING,
                                                   G_TYPE_STRING, G_TYPE_STRING,
-                                                  G_TYPE_BOOLEAN, G_TYPE_POINTER);
+                                                  G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
+                                                  G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
+                                                  G_TYPE_POINTER);
 
   gtk_tree_view_set_model(view, GTK_TREE_MODEL(store));
 
-  std::for_each(context.relation->members.begin(), context.relation->members.end(),
-                members_list_functor(store, context.osm));
+  const relation_t *origRel = static_cast<const relation_t *>(context.osm->originalObject(object_t(object_t::RELATION_ID, context.relation->id)));
+
+  for (size_t i = 0; i < context.relation->members.size(); i++) {
+    const member_t &member = context.relation->members.at(i);
+
+    const member_t origMember = (origRel == nullptr || i >= origRel->members.size()) ? member_t(object_t()) :
+                                origRel->members.at(i);
+
+    /* Append a row and fill in some data */
+    bool realObj = member.object.is_real();
+    GtkTreeIter iter;
+    gtk_list_store_insert_with_values(store, &iter, -1,
+                                      MEMBER_COL_TYPE,         static_cast<const gchar *>(member.object.type_string()),
+                                      MEMBER_COL_TYPE_CHANGED, origMember.object.type != member.object.type ? TRUE : FALSE,
+                                      MEMBER_COL_ID,           member.object.id_string().c_str(),
+                                      MEMBER_COL_ID_CHANGED,   origMember.object.get_id() != member.object.get_id() ? TRUE : FALSE,
+                                      MEMBER_COL_NAME,         realObj ? static_cast<const gchar *>(member.object.get_name(*context.osm)) : nullptr,
+                                      MEMBER_COL_ROLE,         member.role,
+                                      MEMBER_COL_ROLE_CHANGED, origMember.role != member.role ? TRUE : FALSE,
+                                      MEMBER_COL_REF_ONLY,     realObj ? FALSE : TRUE,
+                                      MEMBER_COL_DATA,         &member,
+                                      -1);
+  }
 
   gtk_box_pack_start(GTK_BOX(vbox), osm2go_platform::scrollable_container(GTK_WIDGET(view)), TRUE, TRUE, 0);
 
