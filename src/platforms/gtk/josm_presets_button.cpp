@@ -440,8 +440,7 @@ bool
 preset_group_is_used(const presets_item_group *item, const osm_t::TagMap &tags)
 {
   assert(item->type & presets_item_t::TY_GROUP);
-  return std::find_if(item->items.begin(), item->items.end(),
-                      group_member_used(tags)) != item->items.end();
+  return std::any_of(item->items.begin(), item->items.end(), group_member_used(tags));
 }
 
 bool group_member_used::operator()(const presets_item_t *item)
@@ -763,8 +762,7 @@ presets_context_t::presets_picker(const std::vector<presets_item_t *> &items,
   std::for_each(items.begin(), items.end(), fc);
   const std::vector<const presets_item_t *> &lru = static_cast<const presets_items_internal *>(presets)->lru;
 
-  if(top_level &&
-     std::find_if(lru.begin(), lru.end(), matching_type_functor(presets_mask)) != lru.end())
+  if(top_level && std::any_of(lru.begin(), lru.end(), matching_type_functor(presets_mask)))
     gtk_list_store_insert_with_values(store, nullptr, 0,
                        PRESETS_PICKER_COL_NAME, static_cast<const gchar *>(_("Last used presets")),
                        PRESETS_PICKER_COL_SUBMENU_ICON, subpix,

@@ -349,6 +349,17 @@ namespace std {
       return __x;
     }
 
+  template<class _InputIterator, class Predicate>
+  inline bool any_of(_InputIterator first, _InputIterator last, Predicate p)
+  {
+      return std::find_if(first, last, p) != last;
+  }
+
+  template<class _InputIterator, class Predicate>
+  inline bool none_of(_InputIterator first, _InputIterator last, Predicate p)
+  {
+      return !any_of(first, last, p);
+  }
 }
 #endif
 

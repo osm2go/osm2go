@@ -408,7 +408,7 @@ bool find_link_parent::operator()(presets_item_t *t)
 {
   if(t->type & presets_item_t::TY_GROUP) {
     const presets_item_group * const gr = static_cast<presets_item_group *>(t);
-    return std::find_if(gr->items.begin(), gr->items.end(), *this) != gr->items.end();
+    return std::any_of(gr->items.begin(), gr->items.end(), *this);
   }
 
   if(!t->isItem())
@@ -434,7 +434,7 @@ void PresetSax::find_link_ref::operator()(PresetSax::LLinks::value_type &l)
     // delete the link widget everywhere it was inserted
     find_link_parent fc(l.first);
     const std::vector<presets_item_t *>::const_iterator itEnd = px.presets.items.end();
-    if(std::find_if(std::cbegin(px.presets.items), itEnd, fc) == itEnd) {
+    if(std::none_of(std::cbegin(px.presets.items), itEnd, fc)) {
       const ChunkMap::const_iterator cit = std::find_if(px.chunks.begin(), px.chunks.end(), fc);
       assert(cit != px.chunks.end());
     }
@@ -1413,8 +1413,7 @@ presets_element_checkbox::presets_element_checkbox(const std::string &k, const s
 
 bool presets_element_reference::is_interactive() const
 {
-  return std::find_if(item->widgets.begin(), item->widgets.end(), presets_element_t::isInteractive) !=
-         item->widgets.end();
+  return std::any_of(item->widgets.begin(), item->widgets.end(), presets_element_t::isInteractive);
 }
 
 unsigned int presets_element_reference::rows() const

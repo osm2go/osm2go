@@ -149,8 +149,7 @@ public:
 
 bool osm_t::tagSubset(const TagMap &sub, const TagMap &super)
 {
-  const TagMap::const_iterator itEnd = sub.end();
-  return std::find_if(sub.begin(), itEnd, check_subset(super)) == itEnd;
+  return std::none_of(sub.begin(), sub.end(), check_subset(super));
 }
 
 void relation_object_replacer::operator()(relation_t *r)
@@ -414,9 +413,8 @@ bool tag_list_t::merge(tag_list_t &other)
 
   /* ---------- transfer tags from way[1] to way[0] ----------- */
   const std::vector<tag_t>::const_iterator itEnd = other.contents->end();
-  for(std::vector<tag_t>::iterator srcIt = other.contents->begin();
-      srcIt != itEnd; srcIt++) {
-    tag_t &src = *srcIt;
+  for(std::vector<tag_t>::const_iterator srcIt = std::cbegin(*other.contents); srcIt != itEnd; srcIt++) {
+    const tag_t &src = *srcIt;
     /* don't copy discardable tags or tags that already
      * exist in identical form */
     if(!src.is_discardable() && !contains(tag_match_functor(src, true))) {
@@ -554,11 +552,11 @@ bool tag_list_t::operator!=(const osm_t::TagMap &t2) const {
 }
 
 class collision_functor {
-  const tag_t &tag;
+  const char *key;
 public:
-  explicit inline collision_functor(const tag_t &t) : tag(t) { }
+  explicit inline collision_functor(const tag_t &t) : key(t.key) { }
   inline bool operator()(const tag_t &t) const {
-    return (strcasecmp(t.key, tag.key) == 0);
+    return (strcasecmp(t.key, key) == 0);
   }
 };
 
@@ -570,7 +568,7 @@ bool tag_list_t::hasTagCollisions() const
   const std::vector<tag_t>::const_iterator itEnd = contents->end();
   for(std::vector<tag_t>::const_iterator it = contents->begin();
       std::next(it) != itEnd; it++) {
-    if (std::find_if(std::next(it), itEnd, collision_functor(*it)) != itEnd)
+    if (std::any_of(std::next(it), itEnd, collision_functor(*it)))
       return true;
   }
   return false;

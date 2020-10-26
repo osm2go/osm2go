@@ -222,8 +222,7 @@ public:
 bool
 parse_boolean(const char *bool_str, const std::array<const char *, 3> &value_strings)
 {
-  return std::find_if(value_strings.begin(), value_strings.end(), case_match(bool_str))
-         != value_strings.end();
+  return std::any_of(value_strings.begin(), value_strings.end(), case_match(bool_str));
 }
 
 StyleSax::StyleSax()
@@ -568,7 +567,7 @@ void colorize_node::operator()(const elemstyle_t *elemstyle)
 
   // if any condition mismatches->rule mismatches
   const std::vector<elemstyle_condition_t>::const_iterator itEnd = elemstyle->conditions.end();
-  if(std::find_if(elemstyle->conditions.begin(), itEnd, condition_not_matches_obj(node)) != itEnd)
+  if(std::any_of(elemstyle->conditions.begin(), itEnd, condition_not_matches_obj(node)))
     return;
 
   somematch = true;
@@ -676,9 +675,8 @@ void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const ele
   if(elemstyle->type == ES_TYPE_NONE)
     return;
 
-  if(std::find_if(elemstyle->conditions.begin(),
-                  elemstyle->conditions.end(),
-                  condition_not_matches_obj(way)) != elemstyle->conditions.end())
+  if(std::any_of(elemstyle->conditions.begin(), elemstyle->conditions.end(),
+                 condition_not_matches_obj(way)))
     return;
 
   if(elemstyle->type & ES_TYPE_LINE_MOD) {

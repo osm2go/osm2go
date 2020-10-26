@@ -48,8 +48,7 @@ struct find_discardable_key {
 
 bool tag_t::is_discardable(const char *key) noexcept
 {
-  return std::find_if(discardable_tags.begin(), discardable_tags.end(),
-                      find_discardable_key(key)) != discardable_tags.end();
+  return std::any_of(discardable_tags.begin(), discardable_tags.end(), find_discardable_key(key));
 }
 
 tag_list_t::~tag_list_t()
@@ -78,7 +77,7 @@ bool tag_list_t::hasNonDiscardableTags() const noexcept
     return false;
 
   const std::vector<tag_t>::const_iterator itEnd = contents->end();
-  return std::find_if(std::cbegin(*contents), itEnd, tag_t::is_non_discardable) != itEnd;
+  return std::any_of(std::cbegin(*contents), itEnd, tag_t::is_non_discardable);
 }
 
 static bool isRealTag(const tag_t &tag)
@@ -92,7 +91,7 @@ bool tag_list_t::hasRealTags() const noexcept
     return false;
 
   const std::vector<tag_t>::const_iterator itEnd = contents->end();
-  return std::find_if(std::cbegin(*contents), itEnd, isRealTag) != itEnd;
+  return std::any_of(std::cbegin(*contents), itEnd, isRealTag);
 }
 
 const tag_t *tag_list_t::singleTag() const noexcept
@@ -104,7 +103,7 @@ const tag_t *tag_list_t::singleTag() const noexcept
   const std::vector<tag_t>::const_iterator it = std::find_if(std::cbegin(*contents), itEnd, isRealTag);
   if(unlikely(it == itEnd))
     return nullptr;
-  if (std::find_if(std::next(it), itEnd, isRealTag) != itEnd)
+  if (std::any_of(std::next(it), itEnd, isRealTag))
     return nullptr;
 
   return &(*it);

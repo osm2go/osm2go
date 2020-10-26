@@ -362,7 +362,7 @@ on_tag_edit(info_tag_context_t *context)
     // collision flags only need to be updated if there is more than one entry with that key
     if(unlikely(match_cnt > 1)) {
       // check if the entry is now equal to another entry
-      if(std::find_if(matches.first, matches.second, value_match_functor(v)) != matches.second) {
+      if(std::any_of(matches.first, matches.second, value_match_functor(v))) {
         // the item is now a duplicate, so it can be removed
         gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
         context->m_tags.erase(it);

@@ -147,12 +147,8 @@ checkItem(const presets_item_t *item)
   if(vis == nullptr)
     return;
 
-  if(!vis->icon.empty()) {
-    const std::vector<std::string>::const_iterator it = std::find_if(
-                      basedirs.begin(), basedirs.end(), check_icon(vis));
-    if(it == basedirs.end())
-      missingIcons.insert(vis->icon);
-  }
+  if(!vis->icon.empty() && std::none_of(basedirs.begin(), basedirs.end(), check_icon(vis)))
+    missingIcons.insert(vis->icon);
 
   const presets_item_group * const group = dynamic_cast<const presets_item_group *>(vis);
   if(group != nullptr)

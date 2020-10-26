@@ -478,10 +478,8 @@ wms_get_layers(osm2go_platform::Widget *parent, wms_t &wms)
   requestable_layers_functor fc(layers);
 
   std::for_each(wms.cap.layers.begin(), wms.cap.layers.end(), fc);
-  bool at_least_one_ok = std::find_if(layers.begin(), layers.end(), layer_is_usable) !=
-                         layers.end();
 
-  if(!at_least_one_ok) {
+  if(std::none_of(layers.begin(), layers.end(), layer_is_usable)) {
     error_dlg(_("Server provides no data in the required format!\n\n"
                 "(epsg4326 and LatLonBoundingBox are mandatory for osm2go)"));
     layers.clear();

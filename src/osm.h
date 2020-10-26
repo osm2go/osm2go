@@ -373,7 +373,7 @@ public:
     const typename std::map<item_id_t, way_t *>::const_iterator it = std::find_if(ways.begin(), itEnd, pred);
     if(it == itEnd)
       return nullptr;
-    if (std::find_if(std::next(it), itEnd, pred) != itEnd)
+    if (std::any_of(std::next(it), itEnd, pred))
       return nullptr;
     return it->second;
   }

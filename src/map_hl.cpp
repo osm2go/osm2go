@@ -54,12 +54,11 @@ bool find_highlighted::operator()(canvas_item_t* c) const
   return hl_item != nullptr && hl_item->object == item.object;
 }
 
-bool map_highlight_t::isHighlighted(const map_item_t& item) const
+bool map_highlight_t::isHighlighted(const map_item_t &item) const
 {
   if(isEmpty())
     return false;
-  const std::vector<canvas_item_t *>::const_iterator itEnd = items.end();
-  return std::find_if(items.begin(), itEnd, find_highlighted(item)) != itEnd;
+  return std::any_of(items.begin(), items.end(), find_highlighted(item));
 }
 
 void map_highlight_t::circle_new(map_t *map, canvas_group_t group, node_t *node,

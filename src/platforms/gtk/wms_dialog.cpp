@@ -198,20 +198,19 @@ on_server_remove(wms_server_context_t *context)
 void
 callback_modified_name(GtkWidget *widget)
 {
+  GtkWidget *toplevel = gtk_widget_get_toplevel(widget);
+  if(!GTK_IS_DIALOG(toplevel))
+    return;
+
   const gchar *name = gtk_entry_get_text(GTK_ENTRY(widget));
 
   /* search all entries except the last (which is the one we are editing) */
   settings_t::ref settings = settings_t::instance();
   std::vector<wms_server_t *> &servers = settings->wms_server;
   const std::vector<wms_server_t *>::iterator itEnd = std::prev(servers.end());
-  std::vector<wms_server_t *>::iterator it = std::find_if(servers.begin(), itEnd,
-                                                          find_wms_functor(name));
+  bool uniqueName = std::none_of(servers.begin(), itEnd, find_wms_functor(name));
 
-  GtkWidget *toplevel = gtk_widget_get_toplevel(widget);
-  /* toplevel is a dialog only of dialog has been realized */
-  if(GTK_IS_DIALOG(toplevel))
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(toplevel), GTK_RESPONSE_ACCEPT,
-                                      it == itEnd ? TRUE : FALSE);
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(toplevel), GTK_RESPONSE_ACCEPT, uniqueName ? TRUE : FALSE);
 }
 
 /* edit url and path of a given wms server entry */

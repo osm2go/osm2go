@@ -87,7 +87,7 @@ bool presets_item_t::matches(const osm_t::TagMap &tags, bool interactive) const
   used_preset_functor fc(tags, is_interactive, hasPositive);
   if(isItem()) {
     const std::vector<presets_element_t *> &widgets = static_cast<const presets_item *>(this)->widgets;
-    if(std::find_if(widgets.begin(), widgets.end(), fc) != widgets.end())
+    if(std::any_of(widgets.begin(), widgets.end(), fc))
       return false;
   }
 
@@ -115,8 +115,7 @@ bool relation_preset_functor::operator()(const presets_item_t *item)
 {
   if(item->type & presets_item_t::TY_GROUP) {
     const std::vector<presets_item_t *> &items = static_cast<const presets_item_group *>(item)->items;
-    const std::vector<presets_item_t *>::const_iterator itEnd = items.end();
-    return std::find_if(items.begin(), itEnd, *this) != itEnd;
+    return std::any_of(items.begin(), items.end(), *this);
   }
 
   if(!(item->type & typemask))
@@ -177,7 +176,7 @@ std::set<std::string> presets_items_internal::roles(const relation_t *relation, 
   const std::vector<presets_item_t *>::const_iterator itEnd = items.end();
   role_collect_functor rfc(ret, existingRoles, presets_type_mask(obj));
 
-  if(std::find_if(items.begin(), itEnd, fc) != itEnd)
+  if(std::any_of(items.begin(), itEnd, fc))
     std::for_each(item->roles.begin(), item->roles.end(), rfc);
 
   return ret;
