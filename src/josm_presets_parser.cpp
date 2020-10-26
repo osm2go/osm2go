@@ -1132,13 +1132,11 @@ void PresetSax::endElement(const xmlChar *name)
   }
 }
 
-struct move_chunks_functor {
-  std::vector<presets_item_t *> &chunks;
-  explicit inline move_chunks_functor(std::vector<presets_item_t *> &c) : chunks(c) {}
-  void operator()(const ChunkMap::value_type &p) {
-    chunks.push_back(p.second);
-  }
-};
+inline presets_item_t *
+chunkFromPair(const ChunkMap::value_type &p)
+{
+  return p.second;
+}
 
 } // namespace
 
@@ -1152,7 +1150,7 @@ bool presets_items_internal::addFile(const std::string &filename, const std::str
 
   // now move all chunks to the presets list
   chunks.reserve(chunks.size() + p.chunks.size());
-  std::for_each(p.chunks.begin(), p.chunks.end(), move_chunks_functor(chunks));
+  std::transform(p.chunks.begin(), p.chunks.end(), std::back_inserter(chunks), chunkFromPair);
 
   return true;
 }

@@ -79,7 +79,10 @@ void visible_item_t::item_chain_destroy(map_t *map)
   map_item = nullptr;
 }
 
-static void map_object_select(map_t *map, node_t *node)
+namespace {
+
+void
+map_object_select(map_t *map, node_t *node)
 {
   map_item_t *map_item = &map->selected;
 
@@ -119,14 +122,11 @@ static void map_object_select(map_t *map, node_t *node)
                               map->style->node.radius, map->style->highlight.node_color);
 }
 
-class set_point_pos {
-  std::vector<lpos_t> &points;
-public:
-  explicit inline set_point_pos(std::vector<lpos_t> &p) : points(p) {}
-  inline void operator()(const node_t *n) {
-    points.push_back(n->lpos);
-  }
-};
+inline lpos_t
+nodePos(const node_t *n)
+{
+  return n->lpos;
+}
 
 /**
  * @brief create a canvas point array for a way
@@ -134,7 +134,7 @@ public:
  * @return canvas node array if at least 2 nodes were present
  * @retval nullptr the way has less than 2 nodes
  */
-static std::vector<lpos_t>  __attribute__((nonnull(1)))
+std::vector<lpos_t>  __attribute__((nonnull(1)))
 points_from_node_chain(const way_t *way)
 {
   const unsigned int nodes = way->node_chain.size();
@@ -148,8 +148,8 @@ points_from_node_chain(const way_t *way)
     return points;
 
   /* allocate space for nodes */
-  std::for_each(way->node_chain.begin(), way->node_chain.end(),
-                set_point_pos(points));
+  std::transform(way->node_chain.begin(), way->node_chain.end(),
+                 std::back_inserter(points), nodePos);
 
   return points;
 }
@@ -207,6 +207,8 @@ void draw_selected_way_functor::operator()(node_t *node)
 
   last = node;
 }
+
+} // namespace
 
 void map_t::select_way(way_t *way) {
   assert(highlight.isEmpty());
