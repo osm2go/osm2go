@@ -551,6 +551,8 @@ bool tag_list_t::operator!=(const osm_t::TagMap &t2) const {
   return false;
 }
 
+namespace {
+
 class collision_functor {
   const char *key;
 public:
@@ -559,6 +561,8 @@ public:
     return (strcasecmp(t.key, key) == 0);
   }
 };
+
+} // namespace
 
 bool tag_list_t::hasTagCollisions() const
 {
@@ -574,15 +578,28 @@ bool tag_list_t::hasTagCollisions() const
   return false;
 }
 
+template<typename T>
+void osm_t::wipeImpl(T *obj)
+{
+  if (likely(obj->id != ID_ILLEGAL)) {
+    size_t rcnt = objects<T>().erase(obj->id);
+    assert_cmpnum(rcnt, 1);
+
+    rcnt = originalObjects<T>().erase(obj->id);
+    assert_cmpnum_op(rcnt, <=, 1);
+  }
+
+  delete obj;
+}
+
 /* ------------------- node handling ------------------- */
 
-void osm_t::wipe(node_t *node) {
-  nodes.erase(node->id);
-
+void osm_t::wipe(node_t *node)
+{
   /* there must not be anything left in this chain */
   assert_null(node->map_item);
 
-  delete node;
+  wipeImpl(node);
 }
 
 /* ------------------- way handling ------------------- */
@@ -599,11 +616,10 @@ void osm_node_chain_unref(node_chain_t &node_chain)
 
 void osm_t::wipe(way_t *way)
 {
-  ways.erase(way->id);
-
   /* there must not be anything left in this chain */
   assert_null(way->map_item);
-  delete way;
+
+  wipeImpl(way);
 }
 
 /* ------------------- relation handling ------------------- */
@@ -656,8 +672,7 @@ void relation_t::generate_member_xml(xmlNodePtr xml_node) const
 
 void osm_t::wipe(relation_t *relation)
 {
-  relations.erase(relation->id);
-  delete relation;
+  wipeImpl(relation);
 }
 
 /* try to find something descriptive */

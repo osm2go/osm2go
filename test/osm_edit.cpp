@@ -1004,6 +1004,7 @@ void test_way_delete()
   // not attached here as map_edit also keeps separate
   w->append_node(n3);
   w->append_node(n4);
+  o->attach(w);
 
   assert_cmpnum(nn_cnt, 0);
   o->way_delete(w, nullptr, node_noop);
@@ -1233,18 +1234,14 @@ void test_merge_nodes()
   assert_null(ways2join[0]);
   assert_null(ways2join[1]);
 
+  assert_cmpnum(o->original.nodes.size(), 1);
   assert(o->original.nodes.begin()->second == o->originalObject(object_t(n2)));
   o->wipe(n2);
   assert_cmpnum(o->nodes.size(), 0);
 
-  assert_cmpnum(o->original.nodes.size(), 1);
+  assert_cmpnum(o->original.nodes.size(), 0);
   assert_cmpnum(o->original.ways.size(), 0);
   assert_cmpnum(o->original.relations.size(), 0);
-  assert_cmpnum(o->original.nodes.begin()->first, ba.id);
-  assert_cmpnum(o->original.nodes.begin()->second->id, ba.id);
-  assert(o->original.nodes.begin()->second == o->originalObject(object_t(object_t::NODE_ID, ba.id)));
-  delete o->original.nodes.begin()->second;
-  o->original.nodes.clear();
 
   /// ==================
   // start new

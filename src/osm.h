@@ -285,7 +285,10 @@ public:
   void wipe(node_t *node);
   void wipe(way_t *way);
   void wipe(relation_t *relation);
+private:
+  template<typename T> void wipeImpl(T *obj);
 
+public:
   trstring unspecified_name(const object_t &obj) const;
 
 private:
