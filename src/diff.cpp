@@ -351,7 +351,7 @@ diff_restore_node(xmlNodePtr node_node, osm_t::ref osm)
     printf("  Node not deleted, but no valid position\n");
     return;
   }
-  bool pos_diff = node->pos != pos;
+  bool pos_diff = node->isNew() || node->pos != pos;
   if (pos_diff) {
     node->pos = pos;
     node->lpos = node->pos.toLpos(osm->bounds);
