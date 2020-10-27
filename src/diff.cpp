@@ -307,12 +307,12 @@ T *restore_object(xmlNodePtr xml_node, osm_t::ref osm)
     if(likely(ret != nullptr))
       deleteDiffObject(osm, ret);
     else
-      printf("  WARNING: no node with that id found\n");
+      printf("  WARNING: no object with that id found\n");
     return nullptr;
 
   case OSM_FLAG_DIRTY:
     if(id < 0) {
-      printf("  Restoring NEW node\n");
+      printf("  Restoring NEW object\n");
 
       ret = new T(base_attributes(id));
 
@@ -326,7 +326,7 @@ T *restore_object(xmlNodePtr xml_node, osm_t::ref osm)
         osm->mark_dirty(ret);
         break;
       } else {
-        printf("  WARNING: no node with that id found\n");
+        printf("  WARNING: no object with that id found\n");
         return nullptr;
       }
     }
