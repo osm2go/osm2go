@@ -31,6 +31,7 @@ target_sources(osm2go_lib PRIVATE
 	platform.cpp
 	project_widgets.cpp
 	relation_edit.cpp
+	relation_members.cpp
 	settings.cpp
 	statusbar.h
 	style_widgets.cpp
