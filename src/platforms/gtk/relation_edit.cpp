@@ -101,13 +101,20 @@ relation_list_changed(GtkTreeSelection *selection, gpointer userdata)
 }
 
 struct member_context_t {
-  inline member_context_t(const relation_t *r, osm_t::ref o, GtkWidget *parent)
+  inline member_context_t(relation_t *r, osm_t::ref o, GtkWidget *parent)
     : relation(r)
     , dialog(gtk_dialog_new_with_buttons(static_cast<const gchar *>(trstring("Members of relation \"%1\"").arg(relation->descriptive_name())),
                                          GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          nullptr))
     , osm(o)
+#ifdef FREMANTLE
+    , buttonUp(osm2go_platform::button_new_with_label(_("Up")))
+    , buttonDown(osm2go_platform::button_new_with_label(_("Down")))
+#else
+    , buttonUp(gtk_button_new_with_mnemonic(static_cast<const gchar *>(_("_Up"))))
+    , buttonDown(gtk_button_new_with_mnemonic(static_cast<const gchar *>(_("_Down"))))
+#endif
   {
   }
 
@@ -118,9 +125,12 @@ struct member_context_t {
   member_context_t(member_context_t &&) = delete;
   member_context_t &operator=(member_context_t &&) = delete;
 #endif
-  const relation_t * const relation;
+  relation_t * const relation;
   GtkWidget * const dialog;
+  GtkTreeView *view;
   osm_t::ref osm;
+  GtkWidget * const buttonUp;
+  GtkWidget * const buttonDown;
 };
 
 enum {
@@ -136,28 +146,37 @@ enum {
   MEMBER_NUM_COLS
 };
 
+struct g_tree_path_deleter {
+  inline void operator()(gpointer mem) {
+    gtk_tree_path_free(static_cast<GtkTreePath *>(mem));
+  }
+};
+
 gboolean
-member_list_selection_func(GtkTreeSelection *, GtkTreeModel *model, GtkTreePath *path, gboolean, gpointer)
+member_list_selection_func(GtkTreeSelection *, GtkTreeModel *model, GtkTreePath *path, gboolean, gpointer ctx)
 {
   GtkTreeIter iter;
 
   if(gtk_tree_model_get_iter(model, &iter, path) == TRUE) {
     assert_cmpnum(gtk_tree_path_get_depth(path), 1);
 
-    const member_t *member = nullptr;
-    gtk_tree_model_get(model, &iter, MEMBER_COL_DATA, &member, -1);
-    if(member != nullptr && member->object.is_real())
-      return TRUE;
+    member_context_t *context = static_cast<member_context_t *>(ctx);
+
+    gint *ind = gtk_tree_path_get_indices(path);
+    assert(ind != nullptr);
+
+    gtk_widget_set_sensitive(context->buttonUp, *ind > 0 ? TRUE : FALSE);
+    gtk_widget_set_sensitive(context->buttonDown, gtk_tree_model_iter_next(model, &iter));
   }
 
-  return FALSE;
+  return TRUE;
 }
 
 GtkWidget *
 member_list_widget(member_context_t &context)
 {
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
-  GtkTreeView * const view = osm2go_platform::tree_view_new();
+  GtkTreeView *view = context.view = osm2go_platform::tree_view_new();
 
   gtk_tree_selection_set_select_function(gtk_tree_view_get_selection(view),
                                          member_list_selection_func, &context, nullptr);
@@ -222,8 +241,8 @@ member_list_widget(member_context_t &context)
   for (size_t i = 0; i < context.relation->members.size(); i++) {
     const member_t &member = context.relation->members.at(i);
 
-    const member_t origMember = (origRel == nullptr || i >= origRel->members.size()) ? member_t(object_t()) :
-                                origRel->members.at(i);
+    const member_t origMember = (origRel == nullptr) ? member :
+                                (i >= origRel->members.size()) ? member_t(object_t()) : origRel->members.at(i);
 
     /* Append a row and fill in some data */
     bool realObj = member.object.is_real();
@@ -246,19 +265,156 @@ member_list_widget(member_context_t &context)
   return vbox;
 }
 
+GtkTreeModel *get_selected_row(member_context_t *context, GtkTreeIter *iter)
+{
+  GtkTreeSelection *selection = gtk_tree_view_get_selection(context->view);
+  GtkTreeModel *model;
+
+  if(gtk_tree_selection_get_selected(selection, &model, iter) == FALSE)
+    assert_unreachable();
+
+  return model;
+}
+
+gint indexFromIter(GtkTreeModel *model, GtkTreeIter *iter)
+{
+  std::unique_ptr<GtkTreePath, g_tree_path_deleter> path(gtk_tree_model_get_path(model, iter));
+  assert(path);
+  gint *ind = gtk_tree_path_get_indices(path.get());
+  assert(ind != nullptr);
+  assert_cmpnum_op(*ind, >=, 0);
+  return *ind;
+}
+
+void __attribute__ ((nonnull(1,2,3,5)))
+memberListUpdate(GtkTreeModel *model, GtkTreeIter *iter, const relation_t *rel, int index, const relation_t *orig)
+{
+  gboolean tChanged, iChanged, rChanged;
+
+  if (static_cast<unsigned int>(index) >= orig->members.size()) {
+    tChanged = TRUE;
+    iChanged = TRUE;
+    rChanged = TRUE;
+  } else {
+    const member_t &origMember = orig->members.at(index);
+    const member_t &member = rel->members.at(index);
+    tChanged =  origMember.object.type != member.object.type ? TRUE : FALSE;
+    iChanged = origMember.object.get_id() != member.object.get_id() ? TRUE : FALSE;
+    rChanged = origMember.role != member.role ? TRUE : FALSE;
+  }
+
+  gtk_list_store_set(GTK_LIST_STORE(model), iter,
+                     MEMBER_COL_TYPE_CHANGED, tChanged,
+                     MEMBER_COL_ID_CHANGED,   iChanged,
+                     MEMBER_COL_ROLE_CHANGED, rChanged,
+                     -1);
+}
+
+/**
+ * @brief reorder 2 relation members
+ * @param from the selected row in the model
+ * @param to the row the member should be moved to
+ */
+void reorderMembers(member_context_t *context, GtkTreeModel *model, GtkTreeIter *from, GtkTreeIter *to)
+{
+  gint idxFrom = indexFromIter(model, from);
+  gint idxTo = indexFromIter(model, to);
+  relation_t *rel = context->relation;
+
+  gtk_list_store_swap(GTK_LIST_STORE(model), from, to);
+
+  assert_cmpnum_op(static_cast<unsigned int>(idxFrom), <, rel->members.size());
+  assert_cmpnum_op(static_cast<unsigned int>(idxTo), <, rel->members.size());
+
+  context->osm->mark_dirty(rel);
+
+  member_t tmp = rel->members[idxFrom];
+  rel->members[idxFrom] = rel->members[idxTo];
+  rel->members[idxTo] = tmp;
+
+  // no update is needed if the relation is new, all members are modified there anyway
+  if (!rel->isNew()) {
+    const relation_t *origRel = static_cast<const relation_t *>(context->osm->originalObject(object_t(rel)));
+    assert(origRel != nullptr);
+    // the values have already be exchanged, now update the possible changes to the original object
+    // the idx values and the iterators are swapped, as gtk_list_store_swap modifies the GtkTreeIter values
+    memberListUpdate(model, from, rel, idxTo, origRel);
+    memberListUpdate(model, to, rel, idxFrom, origRel);
+  }
+
+  // idxSecond is the new position of the selected index
+  gtk_widget_set_sensitive(context->buttonUp, idxTo > 0 ? TRUE : FALSE);
+  gtk_widget_set_sensitive(context->buttonDown, static_cast<unsigned int>(idxTo) < rel->members.size() - 1 ? TRUE : FALSE);
+}
+
+void
+on_up_clicked(member_context_t *context)
+{
+  GtkTreeIter iter;
+  GtkTreeModel *model = get_selected_row(context, &iter);
+
+  std::unique_ptr<GtkTreePath, g_tree_path_deleter> path(gtk_tree_model_get_path(model, &iter));
+  assert(path);
+  if (gtk_tree_path_prev(path.get()) == FALSE) {
+    g_warning("up clicked on first member");
+    return;
+  }
+
+  GtkTreeIter prev;
+  gboolean b = gtk_tree_model_get_iter(model, &prev, path.get());
+  assert(b == TRUE); (void)b;
+
+  reorderMembers(context, model, &iter, &prev);
+}
+
+void
+on_down_clicked(member_context_t *context)
+{
+  GtkTreeIter iter;
+  GtkTreeModel *model = get_selected_row(context, &iter);
+
+  GtkTreeIter next = iter;
+  if (gtk_tree_model_iter_next(model, &next) == FALSE) {
+    g_warning("down clicked on last member");
+    return;
+  }
+
+  reorderMembers(context, model, &iter, &next);
+}
+
 } // namespace
 
-void relation_show_members(GtkWidget *parent, const relation_t *relation, osm_t::ref osm) {
+void relation_show_members(GtkWidget *parent, relation_t *relation, osm_t::ref osm)
+{
   member_context_t mcontext(relation, osm, parent);
 
   osm2go_platform::dialog_size_hint(GTK_WINDOW(mcontext.dialog), osm2go_platform::MISC_DIALOG_MEDIUM);
   gtk_dialog_set_default_response(GTK_DIALOG(mcontext.dialog),
 				  GTK_RESPONSE_CLOSE);
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(mcontext.dialog)->vbox),
-      		     member_list_widget(mcontext), TRUE, TRUE, 0);
+  GtkBox *box = GTK_BOX(GTK_DIALOG(mcontext.dialog)->vbox);
+  gtk_box_pack_start(box, member_list_widget(mcontext), TRUE, TRUE, 0);
 
-  /* ----------------------------------- */
+  GtkWidget *table = gtk_table_new(1, 2, TRUE);
+  gtk_box_pack_start(box, table, FALSE, FALSE, 0);
+
+  if (relation->members.size() > 1) {
+    gtk_table_attach_defaults(GTK_TABLE(table), mcontext.buttonUp, 0, 1, 0, 1);
+    g_signal_connect_swapped(mcontext.buttonUp, "clicked", G_CALLBACK(on_up_clicked), &mcontext);
+
+#ifndef FREMANTLE
+    GtkWidget *iconw = gtk_image_new_from_icon_name("go-up", GTK_ICON_SIZE_BUTTON);
+    gtk_button_set_image(GTK_BUTTON(mcontext.buttonUp), iconw);
+#endif
+
+    gtk_table_attach_defaults(GTK_TABLE(table), mcontext.buttonDown, 1, 2, 0, 1);
+    g_signal_connect_swapped(mcontext.buttonDown, "clicked", G_CALLBACK(on_down_clicked), &mcontext);
+
+#ifndef FREMANTLE
+    iconw = gtk_image_new_from_icon_name("go-down", GTK_ICON_SIZE_BUTTON);
+    gtk_button_set_image(GTK_BUTTON(mcontext.buttonDown), iconw);
+#endif
+  }
 
   gtk_widget_show_all(mcontext.dialog);
   gtk_dialog_run(GTK_DIALOG(mcontext.dialog));
