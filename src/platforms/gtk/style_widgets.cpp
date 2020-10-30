@@ -56,7 +56,7 @@ style_select_widget(const std::string &currentstyle, const std::map<std::string,
   return ret;
 }
 
-}
+} // namespace
 
 #ifndef FREMANTLE
 

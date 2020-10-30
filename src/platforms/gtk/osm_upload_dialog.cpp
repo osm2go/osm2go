@@ -41,6 +41,7 @@ public:
 #if __cplusplus >= 201103L
   osm_upload_context_gtk(osm_upload_context_gtk &&) = delete;
   osm_upload_context_gtk &operator=(osm_upload_context_gtk &&) = delete;
+  ~osm_upload_context_gtk() = default;
 #endif
 
   GtkTextBuffer * const logbuffer;

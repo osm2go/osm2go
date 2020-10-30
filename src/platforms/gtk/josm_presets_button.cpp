@@ -802,7 +802,7 @@ button_press(GtkWidget *widget, GdkEventButton *event, presets_context_t *contex
                                  build_menu(pinternal->lru, nullptr),
                                  GTK_MENU_SHELL(context->menu.get()));
     }
-    if(matches)
+    if(matches != nullptr)
       add_context_sensitive_menu(_("Used presets"), matches, GTK_MENU_SHELL(context->menu.get()));
   }
   gtk_widget_show_all(context->menu.get());
@@ -1019,7 +1019,7 @@ presets_element_t::attach_key *presets_element_checkbox::attach(preset_attach_co
   return reinterpret_cast<presets_element_t::attach_key *>(ret);
 }
 
-bool presets_element_checkbox::widgetValue(presets_element_t::attach_key* akey) const
+bool presets_element_checkbox::widgetValue(presets_element_t::attach_key *akey)
 {
   GtkWidget * const widget = reinterpret_cast<GtkWidget *>(akey);
   assert(osm2go_platform::isCheckButtonWidget(widget));

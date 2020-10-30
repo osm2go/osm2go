@@ -355,7 +355,7 @@ relation_item_list_widget(relitem_context_t &context)
   return osm2go_platform::scrollable_container(GTK_WIDGET(view));
 }
 
-}
+} // namespace
 
 void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
                                 osm_t::ref osm, object_t &object) {

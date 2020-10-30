@@ -342,7 +342,7 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
     {
         /* parse file directly from memory */
         GdkPixbufLoader *loader = gdk_pixbuf_loader_new_with_type (priv->image_format, nullptr);
-        if (!gdk_pixbuf_loader_write(loader, reinterpret_cast<const guchar *>(msg->response_body->data), msg->response_body->length, nullptr))
+        if (gdk_pixbuf_loader_write(loader, reinterpret_cast<const guchar *>(msg->response_body->data), msg->response_body->length, nullptr) == FALSE)
         {
             g_warning("Error: Decoding of image failed");
         }

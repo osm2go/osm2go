@@ -68,7 +68,7 @@ project_diff_name(const project_t *project)
 struct diff_save_tags_functor {
   xmlNode * const node;
   explicit inline diff_save_tags_functor(xmlNodePtr n) : node(n) {}
-  void operator()(const tag_t &tag) {
+  void operator()(const tag_t &tag) const {
     xmlNodePtr tag_node = xmlNewChild(node, nullptr,
                                       BAD_CAST "tag", nullptr);
     xmlNewProp(tag_node, BAD_CAST "k", BAD_CAST tag.key);
@@ -112,7 +112,7 @@ class diff_save_objects {
   inline void save_additional_info(const T *m, xmlNodePtr xmlnode) const;
 public:
   explicit inline diff_save_objects(xmlNodePtr r) : root_node(r) {}
-  void operator()(const std::pair<item_id_t, T *> &pair) {
+  void operator()(const std::pair<item_id_t, T *> &pair) const {
     if(!pair.second->isDirty())
       return;
 
@@ -138,10 +138,10 @@ struct diff_save_ways {
   xmlNode * const root_node;
   osm_t::ref osm;
   explicit inline diff_save_ways(xmlNodePtr r, osm_t::ref o) : root_node(r), osm(o) { }
-  void operator()(const std::pair<item_id_t, way_t *> &pair);
+  void operator()(const std::pair<item_id_t, way_t *> &pair) const;
 };
 
-void diff_save_ways::operator()(const std::pair<item_id_t, way_t *> &pair)
+void diff_save_ways::operator()(const std::pair<item_id_t, way_t *> &pair) const
 {
   const way_t * const way = pair.second;
   bool hidden = osm->wayIsHidden(way);
@@ -226,9 +226,7 @@ xml_get_prop_state(xmlNode *node)
 {
   xmlString str(xmlGetProp(node, BAD_CAST "state"));
 
-  if(!str)
-    return OSM_FLAG_DIRTY;
-  else if(strcmp(str, "new") == 0)
+  if(!str || strcmp(str, "new") == 0)
     return OSM_FLAG_DIRTY;
   else if(likely(strcmp(str, "deleted") == 0))
     return OSM_FLAG_DELETED;
@@ -600,7 +598,7 @@ struct osmchange_delete_functor {
   const char * const changeset; ///< changeset string
   inline osmchange_delete_functor(xmlNodePtr delnode, const char *cs)
     : xml_node(delnode), changeset(cs) {}
-  void operator()(const base_object_t *obj) {
+  void operator()(const base_object_t *obj) const {
     obj->osmchange_delete(xml_node, changeset);
   }
 };

@@ -124,6 +124,7 @@ struct member_context_t {
 #if __cplusplus >= 201103L
   member_context_t(member_context_t &&) = delete;
   member_context_t &operator=(member_context_t &&) = delete;
+  ~member_context_t() = default;
 #endif
   relation_t * const relation;
   GtkWidget * const dialog;
@@ -483,6 +484,7 @@ on_relation_add(relation_context_t *context)
 }
 
 struct relation_edit_context {
+  inline relation_edit_context(const relation_t *s, GtkWidget *l) : sel(s), list(l) {}
   const relation_t *sel;
   GtkWidget *list;
 };
@@ -523,9 +525,7 @@ on_relation_edit(relation_context_t *context)
   if (!relation_info_dialog(context, sel))
     return;
 
-  relation_edit_context ctx;
-  ctx.sel = sel;
-  ctx.list = context->list;
+  relation_edit_context ctx(sel, context->list);
   gtk_tree_model_foreach(GTK_TREE_MODEL(context->store.get()), relation_edit_foreach, &ctx);
 }
 
@@ -628,7 +628,7 @@ relation_list_widget(relation_context_t &context)
   return context.list;
 }
 
-}
+} // namespace
 
 /* a global view on all relations */
 void relation_list(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *presets) {

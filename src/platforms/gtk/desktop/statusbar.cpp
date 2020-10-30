@@ -45,7 +45,7 @@ public:
   void banner_busy_stop() override;
 };
 
-}
+} // namespace
 
 /*
  * For non-Hildon builds, use the "brief" message in the statusbar to show

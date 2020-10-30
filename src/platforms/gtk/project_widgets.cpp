@@ -219,6 +219,7 @@ struct name_callback_context_t {
 #if __cplusplus >= 201103L
   name_callback_context_t(name_callback_context_t &&) = delete;
   name_callback_context_t &operator=(name_callback_context_t &&) = delete;
+  ~name_callback_context_t() = default;
 #endif
   GtkWidget *dialog;
   fdguard &basefd;

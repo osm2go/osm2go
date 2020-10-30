@@ -145,7 +145,7 @@ list_set_columns(GtkTreeView *view, const std::vector<list_view_column> &columns
   }
 }
 
-}
+} // namespace
 
 GtkWidget *
 list_get_custom_button(GtkWidget *list)

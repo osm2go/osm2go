@@ -46,7 +46,7 @@ struct canvas_points_deleter {
 
 typedef std::unique_ptr<GooCanvasPoints, canvas_points_deleter> pointGuard;
 
-}
+} // namespace
 
 struct canvas_dimensions {
   canvas_dimensions(double w, double h)
@@ -399,7 +399,7 @@ struct g_list_deleter {
   { g_list_free(list); }
 };
 
-}
+} // namespace
 
 /* try to find the object at position x/y by searching through the */
 /* item_info list */
@@ -476,7 +476,7 @@ canvas_points_create(const std::vector<lpos_t> &points)
   return gpoints;
 }
 
-}
+} // namespace
 
 canvas_item_polyline *canvas_t::polyline_new(canvas_group_t group, const std::vector<lpos_t> &points,
                                       unsigned int width, color_t color) {

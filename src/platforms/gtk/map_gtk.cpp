@@ -52,7 +52,7 @@ static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event, map_t *map)
 
   if(event->type == GDK_SCROLL) {
     double zoom = map->appdata.project->map_state.zoom;
-    if(event->direction)
+    if(event->direction == GDK_SCROLL_DOWN)
       zoom /= ZOOM_FACTOR_WHEEL;
     else
       zoom *= ZOOM_FACTOR_WHEEL;

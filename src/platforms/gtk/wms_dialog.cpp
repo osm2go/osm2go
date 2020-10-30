@@ -62,6 +62,7 @@ struct wms_server_context_t {
 #if __cplusplus >= 201103L
   wms_server_context_t(wms_server_context_t &&) = delete;
   wms_server_context_t &operator=(wms_server_context_t &&) = delete;
+  ~wms_server_context_t() = default;
 #endif
 
   const std::string &wms_server;
@@ -73,7 +74,7 @@ struct wms_server_context_t {
    * @brief select the server referenced in wms in the treeview
    * @returns the matching entry in the settings list
    */
-  const wms_server_t *select_server() const;
+  const wms_server_t * __attribute__ ((warn_unused_result)) select_server() const;
 };
 
 wms_server_t *

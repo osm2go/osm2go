@@ -93,7 +93,7 @@ struct appdata_internal : public appdata_t {
   GtkWidget *btn_zoom_in, *btn_zoom_out;
 };
 
-}
+} // namespace
 
 /* disable/enable main screen control dependant on presence of open project */
 void appdata_t::main_ui_enable() {

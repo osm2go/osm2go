@@ -32,7 +32,7 @@ public:
   std::unique_ptr<GdkPixbuf, g_object_deleter> buf;
   int use;
 
-  inline GdkPixbuf *buffer() const {
+  inline GdkPixbuf * __attribute__ ((warn_unused_result)) buffer() const {
     return buf.get();
   }
 };
@@ -80,7 +80,7 @@ icon_file_exists(const std::string &file)
 
   std::string iname = "icons/" + file + icon_exts.front();
   std::string::size_type olen = strlen(icon_exts.front());
-  int wpos = iname.length() - olen;
+  std::string::size_type wpos = iname.length() - olen;
 
   for(unsigned int i = 0; i < icon_exts.size(); i++) {
     std::string::size_type nlen = strlen(icon_exts.at(i));

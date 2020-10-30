@@ -86,7 +86,7 @@ load_functor<T, U, GETTER>::operator()(const std::pair<const char *, T *> &p)
     *(p.second) = GETTER(value.get());
 }
 
-}
+} // namespace
 
 settings_t::ref settings_t::instance() {
   static std::weak_ptr<settings_t> inst;

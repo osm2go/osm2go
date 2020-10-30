@@ -306,7 +306,7 @@ net_io_do(osm2go_platform::Widget *parent, net_io_request_t *rq, const std::stri
   return true;
 }
 
-}
+} // namespace
 
 bool net_io_download_file(osm2go_platform::Widget *parent,
                           const std::string &url, const std::string &filename,

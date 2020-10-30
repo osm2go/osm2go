@@ -57,7 +57,7 @@ struct wms_cap_t {
 };
 
 struct wms_t {
-  wms_t(const std::string &s)
+  explicit wms_t(const std::string &s)
     : server(s) {}
 
   std::string server;
