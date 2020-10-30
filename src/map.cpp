@@ -220,10 +220,8 @@ void map_t::select_way(way_t *way) {
   appdata.iconbar->map_item_selected(selected.object);
   appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_MAP_HIDE_SEL, true);
 
-  float arrow_width = way->draw.flags & OSM_DRAW_FLAG_BG ?
-                        way->draw.bg.width : way->draw.width;
-  arrow_width = (style->highlight.width + arrow_width / 2)
-                       * appdata.project->map_state.detail;
+  const float arrow_width = (style->highlight.width + way->draw.drawWidth() / 2) *
+                            appdata.project->map_state.detail;
 
   const node_chain_t &node_chain = way->node_chain;
   std::for_each(node_chain.begin(), node_chain.end(),
@@ -267,9 +265,7 @@ void relation_select_functor::operator()(member_t& member)
         item = map->canvas->polygon_new(CANVAS_GROUP_WAYS_HL, points, 0, 0,
                                   map->style->highlight.color);
       } else {
-        float hwdth = way->draw.flags & OSM_DRAW_FLAG_BG ?
-                      way->draw.bg.width : way->draw.width;
-        hwdth += 2 * map->style->highlight.width;
+        const float hwdth = way->draw.drawWidth() + 2 * map->style->highlight.width;
         item = map->canvas->polyline_new(CANVAS_GROUP_WAYS_HL, points, hwdth,
                                    map->style->highlight.color);
       }

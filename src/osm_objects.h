@@ -329,6 +329,11 @@ public:
         unsigned int color;
       } area;
     };
+
+    inline unsigned int drawWidth() const
+    {
+      return flags & OSM_DRAW_FLAG_BG ? bg.width : width;
+    }
   } draw;
 
   node_chain_t node_chain;
