@@ -30,7 +30,7 @@ void set_bounds(osm_t::ref o)
 }
 
 template<typename T> void
-helper_node(const osm_t::TagMap tags, T name)
+helper_node(const osm_t::TagMap &tags, T name)
 {
   std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
   set_bounds(osm);
@@ -67,7 +67,7 @@ way_t *construct_way(std::unique_ptr<osm_t> &osm, int nodes)
 
 // if nodes is negative close the way
 template<typename T> void
-helper_way(const osm_t::TagMap tags, T name, int nodes)
+helper_way(const osm_t::TagMap &tags, T name, int nodes)
 {
   std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
   way_t * const w = construct_way(osm, nodes);
