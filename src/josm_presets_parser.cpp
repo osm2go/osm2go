@@ -1033,23 +1033,21 @@ void PresetSax::endElement(const xmlChar *name)
   }
   case TagChunk: {
     assert(!items.empty());
-    presets_item * const chunk = static_cast<presets_item *>(items.top());
+    std::unique_ptr<presets_item> chunk(static_cast<presets_item *>(items.top()));
     assert_cmpnum(chunk->type, presets_item_t::TY_ALL);
     items.pop();
     if(unlikely(chunk->name.empty())) {
       dumpState("ignoring", "chunk without id");
-      delete chunk;
       return;
     }
 
     const std::string &id = chunk->name;
 
-    if(unlikely(chunks.find(id) != chunks.end())) {
+    if(unlikely(chunks.find(id) != chunks.end()))
       dumpState("ignoring", "chunk with duplicate id ", id.c_str());
-      delete chunk;
-    } else {
-      chunks[id] = chunk;
-    }
+    else
+      chunks[id] = chunk.release();
+
     // if this was a top level chunk no active widgets should remain
     assert(!items.empty() || widgets.empty());
     break;
@@ -1058,30 +1056,26 @@ void PresetSax::endElement(const xmlChar *name)
     assert(!items.empty());
     assert(items.top()->isItem());
     assert(!widgets.empty());
-    presets_element_reference * const ref = static_cast<presets_element_reference *>(widgets.top());
+    std::unique_ptr<presets_element_reference> ref(static_cast<presets_element_reference *>(widgets.top()));
     widgets.pop();
     assert_cmpnum(ref->type, WIDGET_TYPE_REFERENCE);
-    if(unlikely(ref->item == nullptr))
-      delete ref;
+    if(unlikely(ref->item == nullptr)) {
     // if this is just a collection of elements that has been inserted
     // then drop the pseudo widget, all information is in the actual item now
-    else if(ref->item->widgets.size() == 1 && ref->item->widgets.front()->type >= WIDGET_TYPE_CHUNK_CONTAINER)
-      delete ref;
-    else
-      static_cast<presets_item *>(items.top())->widgets.push_back(ref);
+    } else if(ref->item->widgets.size() == 1 && ref->item->widgets.front()->type >= WIDGET_TYPE_CHUNK_CONTAINER) {
+    } else
+      static_cast<presets_item *>(items.top())->widgets.push_back(ref.release());
     break;
   }
   case TagLabel: {
     assert(!items.empty());
     assert(!widgets.empty());
-    presets_element_label * const label = static_cast<presets_element_label *>(widgets.top());
+    std::unique_ptr<presets_element_label> label(static_cast<presets_element_label *>(widgets.top()));
     widgets.pop();
-    if(unlikely(label->text.empty())) {
+    if(unlikely(label->text.empty()))
       dumpState("ignoring", "label without text");
-      delete label;
-    } else {
-      static_cast<presets_item *>(items.top())->widgets.push_back(label);
-    }
+    else
+      static_cast<presets_item *>(items.top())->widgets.push_back(label.release());
     break;
   }
   case TagSpace:
