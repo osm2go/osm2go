@@ -368,8 +368,7 @@ map_node_new(map_t *map, node_t *node, float radius, int width, color_t fill, co
   map_item->item->set_zoom_max(node->zoom_max / (2 * detail));
 
   /* attach map_item to nodes map_item_chain */
-  if(node->map_item != nullptr)
-    delete node->map_item->item;
+  delete node->map_item->item;
   node->map_item = map_item;
 
   map_item->item->set_user_data(map_item);
