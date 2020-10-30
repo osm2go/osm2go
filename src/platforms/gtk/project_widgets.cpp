@@ -44,9 +44,8 @@ struct project_context_t {
 #if __cplusplus >= 201103L
   project_context_t(project_context_t &&) = delete;
   project_context_t &operator=(project_context_t &&) = delete;
+  ~project_context_t() = default;
 #endif
-  ~project_context_t()
-  { delete area_edit; }
 
   project_t * const project;
   appdata_t &appdata;
@@ -58,7 +57,7 @@ struct project_context_t {
 #ifdef SERVER_EDITABLE
   GtkWidget * const server;
 #endif
-  area_edit_t *area_edit;
+  std::unique_ptr<area_edit_t> area_edit;
   const std::vector<project_t *> &projects;
 };
 
@@ -118,7 +117,6 @@ project_context_t::project_context_t(appdata_t &a, project_t *p, bool n,
 #ifdef SERVER_EDITABLE
   , server(entry_new(osm2go_platform::EntryFlagsNoAutoCap))
 #endif
-  , area_edit(nullptr)
   , projects(j)
 {
 }
@@ -736,9 +734,9 @@ on_edit_clicked(project_context_t *context)
                   "the area may cause pending changes to be "
                   "lost if they are outside the updated area."), context->dialog);
 
-  if(context->area_edit == nullptr)
-    context->area_edit = new area_edit_t(context->appdata.gps_state.get(), project->bounds,
-                                         context->dialog);
+  if(!context->area_edit)
+    context->area_edit.reset(new area_edit_t(context->appdata.gps_state.get(), project->bounds,
+                                             context->dialog));
 
   context->area_edit->other_bounds.clear();
   std::for_each(context->projects.begin(), context->projects.end(),
