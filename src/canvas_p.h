@@ -10,6 +10,7 @@
 #include "pos.h"
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include <osm2go_cpp.h>
@@ -54,5 +55,5 @@ public:
   /**
    * @brief get the polygon/polyway segment a certain coordinate is over
    */
-  int get_segment(int x, int y, float fuzziness) const;
+  std::optional<unsigned int> get_segment(int x, int y, float fuzziness) const;
 };

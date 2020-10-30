@@ -31,8 +31,9 @@ void testSegment()
   canvas_item_t * const line = canvas->polyline_new(CANVAS_GROUP_WAYS, points, 1, 0);
   assert(line);
 
-  int segnum = canvas->get_item_segment(line, lpos_t((4 + 16) / 2, (8 + 32) / 2));
-  assert_cmpnum(segnum, 1);
+  std::optional<unsigned int> segnum = canvas->get_item_segment(line, lpos_t((4 + 16) / 2, (8 + 32) / 2));
+  assert(segnum);
+  assert_cmpnum(*segnum, 1);
 }
 
 void testInObject()

@@ -234,7 +234,7 @@ void map_t::way_add_ok() {
 /* -------------------------- way_node_add ----------------------- */
 
 void map_t::way_node_add_highlight(map_item_t *item, lpos_t pos) {
-  if(item_is_selected_way(item) && canvas->get_item_segment(item->item, pos) >= 0)
+  if(item_is_selected_way(item) && canvas->get_item_segment(item->item, pos))
     hl_cursor_draw(pos, style->node.radius);
 }
 
@@ -243,13 +243,13 @@ void map_t::way_node_add(lpos_t pos) {
   map_item_t *item = item_at(pos);
   if(item_is_selected_way(item)) {
     /* convert mouse position to canvas (world) position */
-    const int insert_after = canvas->get_item_segment(item->item, pos);
-    if(insert_after >= 0) {
+    std::optional<unsigned int> insert_after = canvas->get_item_segment(item->item, pos);
+    if(insert_after) {
       /* insert it into ways chain of nodes */
       way_t *way = item->object.way;
 
       /* create new node */
-      node_t* node = way->insert_node(appdata.project->osm, insert_after + 1, pos);
+      node_t* node = way->insert_node(appdata.project->osm, *insert_after + 1, pos);
 
       /* clear selection */
       item_deselect();
@@ -274,14 +274,14 @@ void map_t::way_node_add(lpos_t pos) {
 void map_t::way_cut_highlight(map_item_t *item, lpos_t pos) {
 
   if(item_is_selected_way(item)) {
-    int seg = canvas->get_item_segment(item->item, pos);
-    if(seg >= 0) {
+    std::optional<unsigned int> seg = canvas->get_item_segment(item->item, pos);
+    if(seg) {
       unsigned int width = (item->object.way->draw.flags & OSM_DRAW_FLAG_BG) ?
                            2 * item->object.way->draw.bg.width :
                            3 * item->object.way->draw.width;
       std::vector<lpos_t> coords(2);
-      coords[0] = item->object.way->node_chain[seg]->lpos;
-      coords[1] = item->object.way->node_chain[seg + 1]->lpos;
+      coords[0] = item->object.way->node_chain[*seg]->lpos;
+      coords[1] = item->object.way->node_chain[*seg + 1]->lpos;
       cursor.reset(canvas->polyline_new(CANVAS_GROUP_DRAW, coords, width, style->highlight.node_color));
     }
   } else if(item_is_selected_node(item)) {
@@ -322,12 +322,12 @@ void map_t::way_cut(lpos_t pos) {
 
   } else {
     printf("  cut at segment\n");
-    int c = canvas->get_item_segment(item->item, pos);
-    if(c < 0)
+    std::optional<unsigned int> c = canvas->get_item_segment(item->item, pos);
+    if(!c)
       return;
     way = item->object.way;
     // add one since to denote the end of the segment
-    cut_at = std::next(way->node_chain.begin(), c + 1);
+    cut_at = std::next(way->node_chain.begin(), *c + 1);
   }
 
   assert(way != nullptr);

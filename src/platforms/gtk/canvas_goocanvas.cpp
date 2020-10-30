@@ -373,8 +373,7 @@ bool item_at_functor::operator()(const canvas_item_info_t *item) const
 
   case CANVAS_ITEM_POLY: {
     const canvas_item_info_poly *poly = static_cast<const canvas_item_info_poly *>(item);
-    int on_segment = poly->get_segment(x, y, ffuzziness);
-    return ((on_segment >= 0) || (poly->is_polygon && inpoly(poly, x, y)));
+    return poly->get_segment(x, y, ffuzziness) || (poly->is_polygon && inpoly(poly, x, y));
   }
   }
   assert_unreachable();

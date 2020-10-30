@@ -27,7 +27,7 @@ canvas_t::canvas_t(osm2go_platform::Widget *w)
 {
 }
 
-int canvas_t::get_item_segment(const canvas_item_t *item, lpos_t pos) const
+std::optional<unsigned int> canvas_t::get_item_segment(const canvas_item_t *item, lpos_t pos) const
 {
   const item_mapping_t::const_iterator it = item_mapping.find(item);
   assert(it != item_mapping.end());
@@ -89,9 +89,10 @@ canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_item_t* it,
   memcpy(points.get(), p.data(), p.size() * sizeof(points[0]));
 }
 
-int canvas_item_info_poly::get_segment(int x, int y, float fuzziness) const
+std::optional<unsigned int> canvas_item_info_poly::get_segment(int x, int y, float fuzziness) const
 {
-  int retval = -1;
+  unsigned int retval;
+  bool found = false;
   float mindist = static_cast<float>(width) / 2 + fuzziness;
   for(unsigned int i = 0; i < num_points - 1; i++) {
     const lpos_t pos = points[i];
@@ -115,6 +116,7 @@ int canvas_item_info_poly::get_segment(int x, int y, float fuzziness) const
       /* we found so far */
       if(n < mindist) {
         retval = i;
+        found = true;
         mindist = n;
       }
     }
@@ -125,7 +127,10 @@ int canvas_item_info_poly::get_segment(int x, int y, float fuzziness) const
   /* us from having to check the last->first connection for polygons */
   /* seperately */
 
-  return retval;
+  if (found)
+    return retval;
+  else
+    return std::optional<unsigned int>();
 }
 
 void map_item_destroyer::run(canvas_item_t *)

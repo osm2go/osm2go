@@ -10,6 +10,7 @@
 #include "pos.h"
 
 #include <array>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
@@ -206,7 +207,7 @@ public:
   /**
    * @brief get the polygon/polyway segment a certain coordinate is over
    */
-  int get_item_segment(const canvas_item_t *item, lpos_t pos) const;
+  std::optional<unsigned int> get_item_segment(const canvas_item_t *item, lpos_t pos) const;
 
   /**
    * @brief make sure the given coordinate is visible on screen
