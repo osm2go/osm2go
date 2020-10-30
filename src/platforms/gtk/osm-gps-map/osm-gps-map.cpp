@@ -342,7 +342,7 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
     {
         /* parse file directly from memory */
         GdkPixbufLoader *loader = gdk_pixbuf_loader_new_with_type (priv->image_format, nullptr);
-        if (!gdk_pixbuf_loader_write (loader, (unsigned char*)msg->response_body->data, msg->response_body->length, nullptr))
+        if (!gdk_pixbuf_loader_write(loader, reinterpret_cast<const guchar *>(msg->response_body->data), msg->response_body->length, nullptr))
         {
             g_warning("Error: Decoding of image failed");
         }
@@ -1241,8 +1241,8 @@ osm_gps_map_button_press (GtkWidget *widget, GdkEventButton *event)
     }
 
     priv->drag_counter = 0;
-    priv->drag_start_mouse_x = (int) event->x;
-    priv->drag_start_mouse_y = (int) event->y;
+    priv->drag_start_mouse_x = static_cast<int>(event->x);
+    priv->drag_start_mouse_y = static_cast<int>(event->y);
     priv->drag_start_map_x = priv->map_x;
     priv->drag_start_map_y = priv->map_y;
 
@@ -1262,8 +1262,8 @@ osm_gps_map_button_release (GtkWidget *widget, GdkEventButton *event)
         priv->map_x = priv->drag_start_map_x;
         priv->map_y = priv->drag_start_map_y;
 
-        priv->map_x += (priv->drag_start_mouse_x - (int) event->x);
-        priv->map_y += (priv->drag_start_mouse_y - (int) event->y);
+        priv->map_x += (priv->drag_start_mouse_x - static_cast<int>(event->x));
+        priv->map_y += (priv->drag_start_mouse_y - static_cast<int>(event->y));
 
         center_coord_update(widget);
 
@@ -1332,7 +1332,7 @@ osm_gps_map_motion_notify (GtkWidget *widget, GdkEventMotion  *event)
     /* instead of redrawing directly just add an idle function */
     if (!priv->drag_expose)
         priv->drag_expose =
-            g_idle_add ((GSourceFunc)osm_gps_map_map_expose, widget);
+            g_idle_add(reinterpret_cast<GSourceFunc>(osm_gps_map_map_expose), widget);
 
     return FALSE;
 }
