@@ -81,7 +81,6 @@ public:
 class tag_list_t {
 public:
   inline tag_list_t() noexcept : contents(nullptr) {}
-  ~tag_list_t();
 
   bool operator==(const tag_list_t &other) const;
   inline bool operator!=(const tag_list_t &other) const
@@ -128,7 +127,10 @@ public:
   /**
    * @brief remove all elements and free their memory
    */
-  void clear();
+  inline void clear()
+  {
+    contents.reset();
+  }
 
   /**
    * @brief copy the contained tags
@@ -181,7 +183,7 @@ public:
 private:
   // do not directly use a vector here as many objects do not have
   // any tags and that would waste too much memory
-  std::vector<tag_t> *contents;
+  std::unique_ptr<std::vector<tag_t> > contents;
 };
 
 class base_object_t : public base_attributes {

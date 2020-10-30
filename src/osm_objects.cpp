@@ -51,11 +51,6 @@ bool tag_t::is_discardable(const char *key) noexcept
   return std::any_of(discardable_tags.begin(), discardable_tags.end(), find_discardable_key(key));
 }
 
-tag_list_t::~tag_list_t()
-{
-  clear();
-}
-
 bool
 tag_list_t::operator==(const tag_list_t &other) const
 {
@@ -68,7 +63,7 @@ tag_list_t::operator==(const tag_list_t &other) const
 
 bool tag_list_t::empty() const noexcept
 {
-  return contents == nullptr || contents->empty();
+  return !contents || contents->empty();
 }
 
 bool tag_list_t::hasNonDiscardableTags() const noexcept
@@ -141,12 +136,6 @@ const char* tag_list_t::get_value(const char *key) const
   return nullptr;
 }
 
-void tag_list_t::clear()
-{
-  delete contents;
-  contents = nullptr;
-}
-
 #if __cplusplus < 201103L
 // workaround for the fact that the default constructor is unavailable
 template<>
@@ -170,11 +159,11 @@ void tag_list_t::replace(std::vector<tag_t> &&ntags)
     return;
   }
 
-  if(contents == nullptr) {
+  if(!contents) {
 #if __cplusplus >= 201103L
-    contents = new std::vector<tag_t>(std::move(ntags));
+    contents.reset(new std::vector<tag_t>(std::move(ntags)));
 #else
-    contents = new std::vector<tag_t>(ntags.size(), tag_t::uncached(nullptr, nullptr));
+    contents.reset(new std::vector<tag_t>(ntags.size(), tag_t::uncached(nullptr, nullptr)));
     contents->swap(ntags);
 #endif
   } else {
@@ -210,7 +199,7 @@ void tag_list_t::replace(const osm_t::TagMap &ntags)
   if(ntags.empty())
     return;
 
-  contents = new std::vector<tag_t>();
+  contents.reset(new std::vector<tag_t>());
   contents->reserve(ntags.size());
   std::for_each(ntags.begin(), ntags.end(), tag_fill_functor(*contents));
 }

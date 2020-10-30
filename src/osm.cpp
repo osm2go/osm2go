@@ -403,9 +403,7 @@ bool tag_list_t::merge(tag_list_t &other)
     return false;
 
   if(empty()) {
-    delete contents; // just to be sure not to leak if an empty vector is around
-    contents = other.contents;
-    other.contents = nullptr;
+    contents.swap(other.contents);
     return false;
   }
 
@@ -425,8 +423,7 @@ bool tag_list_t::merge(tag_list_t &other)
     }
   }
 
-  delete other.contents;
-  other.contents = nullptr;
+  other.contents.reset();
 
   return conflict;
 }
@@ -457,8 +454,9 @@ public:
  * @retval false further checks have to be done
  */
 template<typename T>
-static std::optional<bool> tag_list_compare_base(const tag_list_t &list, const std::vector<tag_t> *contents,
-                           const T &other, unsigned int &t1discardables)
+static std::optional<bool> tag_list_compare_base(const tag_list_t &list,
+                                                 const std::unique_ptr<std::vector<tag_t> > &contents,
+                                                 const T &other, unsigned int &t1discardables)
 {
   if(list.empty() && other.empty())
     return false;
@@ -1503,12 +1501,12 @@ osm_t::TagMap tag_list_t::asMap() const
 
 void tag_list_t::copy(const tag_list_t &other)
 {
-  assert_null(contents);
+  assert(!contents);
 
   if(other.empty())
     return;
 
-  contents = new typeof(*contents);
+  contents.reset(new std::vector<tag_t>());
   contents->reserve(other.contents->size());
 
   std::remove_copy_if(other.contents->begin(), other.contents->end(), std::back_inserter(*contents), tag_t::isDiscardable);
