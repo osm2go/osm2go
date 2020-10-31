@@ -123,6 +123,16 @@ struct project_t {
    * @returns status values from enum diff_restore_results
    */
   unsigned int diff_restore();
+
+  /**
+   * @brief create an empty project and save it to disk
+   * @param name name of the new project
+   * @param base_path project directory base
+   * @param parent parent widget for possible save errors
+   * @returns the new project
+   * @retval nullptr saving the project failed
+   */
+  static project_t *create(const std::string &name, const std::string &base_path, osm2go_platform::Widget *parent) __attribute__((warn_unused_result));
 };
 
 bool project_load(appdata_t &appdata, const std::string &name);

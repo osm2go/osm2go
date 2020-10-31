@@ -612,3 +612,25 @@ void project_t::adjustServer(const char *nserver, const std::string &def)
   else
     rserver = nserver;
 }
+
+project_t *project_t::create(const std::string &name, const std::string &base_path, osm2go_platform::Widget *parent)
+{
+  std::unique_ptr<project_t> project(std::make_unique<project_t>(name, base_path));
+
+  /* no data downloaded yet */
+  project->data_dirty = true;
+
+  /* build project osm file name */
+  project->osmFile = project->name + ".osm.gz";
+
+  project->bounds.min = pos_t(NAN, NAN);
+  project->bounds.max = pos_t(NAN, NAN);
+
+  /* create project file on disk */
+  if(!project->save(parent)) {
+    project_delete(project);
+    return nullptr;
+  }
+
+  return project.release();
+}

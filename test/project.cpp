@@ -372,6 +372,17 @@ testRename(const std::string &tmpdir, const char *diff_file)
   project_delete(project);
 }
 
+void
+testCreate(const std::string &tmpdir, const std::string &readonly)
+{
+  std::unique_ptr<project_t> project(project_t::create("newly_created", tmpdir, nullptr));
+  assert(project);
+  project_delete(project);
+
+  project.reset(project_t::create("foobar", readonly, nullptr));
+  assert(!project);
+}
+
 } // namespace
 
 appdata_t::appdata_t()
@@ -416,6 +427,7 @@ int main(int argc, char **argv)
   testServer(osm_path);
   testLoad(osm_path, osmfile);
   testRename(osm_path, argv[3]);
+  testCreate(osm_path, readonly);
 
   assert_cmpnum(rmdir(readonly.c_str()), 0);
   assert_cmpnum(rmdir(tmpdir), 0);

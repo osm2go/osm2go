@@ -295,19 +295,9 @@ project_new(select_context_t *context)
   if(name.empty())
     return nullptr;
 
-  std::unique_ptr<project_t> project(std::make_unique<project_t>(name, settings_t::instance()->base_path));
+  std::unique_ptr<project_t> project(project_t::create(name, settings_t::instance()->base_path, context->dialog));
 
-  /* no data downloaded yet */
-  project->data_dirty = true;
-
-  /* build project osm file name */
-  project->osmFile = project->name + ".osm";
-
-  project->bounds.min = pos_t(NAN, NAN);
-  project->bounds.max = pos_t(NAN, NAN);
-
-  /* create project file on disk */
-  if(!project->save(context->dialog) || !project_edit(context, project.get(), true)) {
+  if(!project_edit(context, project.get(), true)) {
     g_debug("creation of project '%s' cancelled, deleting", project->name.c_str());
     project_delete(project);
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, FALSE);
