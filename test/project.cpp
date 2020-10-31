@@ -383,6 +383,80 @@ testCreate(const std::string &tmpdir, const std::string &readonly)
   assert(!project);
 }
 
+void
+testLoadSave(const std::string &tmpdir)
+{
+  const std::string defaultserver = "https://example.com/default";
+  const std::string otherserver = "https://example.com/other";
+  const std::string wmsserver = "https://example.org/wms_base/";
+  const char *nserver;
+
+  std::srand(reinterpret_cast<uintptr_t>(&nserver)); // random because of ASLR
+
+  for (unsigned int j = 0; j < 10; j++) {
+    unsigned int i = std::rand();
+    // these 2 are mutually exclusive
+    switch (i & ((1 << 4) | (1 << 5))) {
+    case 0:
+      nserver = nullptr;
+      break;
+    case (1 << 4):
+      nserver = defaultserver.c_str();
+      break;
+    case (1 << 5):
+      nserver = otherserver.c_str();
+      break;
+    default:
+      j--; // try again
+      continue;
+    }
+
+    const std::string prjname = "load_save_" + std::to_string(i);
+    std::unique_ptr<project_t> project(project_t::create(prjname, tmpdir, nullptr));
+    assert(project);
+
+    project->isDemo = i & (1 << 0);
+    project->data_dirty = i & (1 << 1);
+
+    project->bounds.min.lat = (std::rand() % 360) - 180;
+    project->bounds.min.lon = ((std::rand() % (4 *360)) - 4 * 180) / 4.0;
+
+    project->bounds.max.lat = ((std::rand() % (8 *360)) - 8 * 180) / 8.0;
+    project->bounds.max.lon = (std::rand() % 360) - 180;
+
+    if (i & (1 << 2))
+      project->desc = "has description" + std::to_string(i);
+    if (nserver != nullptr)
+      project->adjustServer(nserver, defaultserver);
+    if (i & (1 << 6))
+      project->wms_server = wmsserver;
+
+    assert(project->save());
+
+    const std::unique_ptr<project_t> rproject(std::make_unique<project_t>(prjname, tmpdir));
+    const std::string pfile = tmpdir + '/' + prjname + '/' + prjname + ".proj";
+
+    assert(project_read(pfile, rproject, std::string(), -1));
+
+    assert_cmpnum(project->isDemo ? 1 : 0, rproject->isDemo ? 1 : 0);
+    assert_cmpnum(project->data_dirty ? 1 : 0, rproject->data_dirty ? 1 : 0);
+    assert_cmpstr(project->desc, rproject->desc);
+    assert_cmpstr(project->server(defaultserver), rproject->server(defaultserver));
+    assert_cmpstr(project->wms_server, rproject->wms_server);
+    // newly created projects will use .osm.gz, but if that file not found on project start
+    // the code will fall back to the old name
+    assert_cmpstr(project->osmFile, rproject->osmFile + ".gz");
+
+    assert_cmpnum(project->bounds.min.lat, rproject->bounds.min.lat);
+    assert_cmpnum(project->bounds.min.lon, rproject->bounds.min.lon);
+    assert_cmpnum(project->bounds.max.lat, rproject->bounds.max.lat);
+    assert_cmpnum(project->bounds.max.lon, rproject->bounds.max.lon);
+    assert_cmpnum(project->bounds.valid() ? 1 : 0, rproject->bounds.valid() ? 1 : 0);
+
+    project_delete(project);
+  }
+}
+
 } // namespace
 
 appdata_t::appdata_t()
@@ -428,6 +502,7 @@ int main(int argc, char **argv)
   testLoad(osm_path, osmfile);
   testRename(osm_path, argv[3]);
   testCreate(osm_path, readonly);
+  testLoadSave(osm_path);
 
   assert_cmpnum(rmdir(readonly.c_str()), 0);
   assert_cmpnum(rmdir(tmpdir), 0);
