@@ -301,22 +301,21 @@ on_server_add(wms_server_context_t *context)
   std::unique_ptr<wms_server_t> newserver(std::make_unique<wms_server_t>());
   // in case the project has a server set, but the global list is empty,
   // fill the data of the project server
-  if(settings_t::instance()->wms_server.empty() &&
-     !context->wms_server.empty())
+  settings_t::ref settings(settings_t::instance());
+  std::vector<wms_server_t *> &servers = settings->wms_server;
+  if(servers.empty() && !context->wms_server.empty())
     newserver->server = context->wms_server;
 
   if(wms_server_edit(context, true, newserver.get())) {
     /* attach a new server item to the chain */
-    settings_t::instance()->wms_server.push_back(newserver.get());
+    servers.push_back(newserver.release());
 
-    GtkTreeIter iter = store_fill_functor(context->store.get())(newserver.get());
+    GtkTreeIter iter = store_fill_functor(context->store.get())(servers.back());
 
     GtkTreeSelection *selection = list_get_selection(context->list);
     gtk_tree_selection_select_iter(selection, &iter);
 
-    wms_server_selected(context, newserver.get());
-
-    newserver.release();
+    wms_server_selected(context, servers.back());
   }
 }
 
