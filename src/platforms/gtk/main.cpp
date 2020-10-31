@@ -1224,7 +1224,7 @@ icon_button(void *context, const char *icon, GCallback cb, GtkWidget *box)
 }
 
 int
-application_run(const char *proj, bool startGps)
+application_run(const char *proj, bool startGps, bool project_dialog)
 {
   /* user specific init */
   settings_t::ref settings = settings_t::instance();
@@ -1343,14 +1343,13 @@ application_run(const char *proj, bool startGps)
     return -1;
   }
 
-  if(proj != nullptr) {
-    if(strcmp(proj, "-p") == 0) {
-      cb_menu_project_open(&appdata);
-    } else if(!project_load(appdata, proj)) {
-      warning_dlg(trstring("You passed '%1' on the command line, but it was neither"
-                           "recognized as option nor could it be loaded as project.").arg(proj));
-    }
+  if(project_dialog) {
+    cb_menu_project_open(&appdata);
+  } else if(proj != nullptr && !project_load(appdata, proj)) {
+    warning_dlg(trstring("You passed '%1' on the command line, but it was neither"
+                          "recognized as option nor could it be loaded as project.").arg(proj));
   }
+
   /* load project if one is specified in the settings */
   if(!appdata.project && !settings->project.empty())
     project_load(appdata, settings->project);
@@ -1428,11 +1427,19 @@ int main(int argc, char *argv[]) {
   g_thread_init(nullptr);
 #endif
 
-  gtk_init(&argc, &argv);
+  gboolean project_dialog = FALSE;
+  GOptionEntry entries[2] = {
+    { "projects", 'p', 0, G_OPTION_ARG_NONE, &project_dialog, static_cast<const gchar *>(_("open the project selection dialog")), nullptr },
+    { nullptr, 0, 0, G_OPTION_ARG_NONE, nullptr, nullptr, nullptr }
+  };
+
+  // the const_cast is for the old Gtk version on the N900
+  if (gtk_init_with_args(&argc, &argv, const_cast<gchar *>(static_cast<const gchar *>(_("[project]"))), entries, nullptr, nullptr) == FALSE)
+    return 2;
   bool startGps;
   int ret = osm2go_platform::init(startGps) ? 0 : 1;
   if (ret == 0) {
-    ret = application_run(argc > 1 ? argv[1] : nullptr, startGps);
+    ret = application_run(argc > 1 ? argv[1] : nullptr, startGps, project_dialog == TRUE);
 
     osm2go_platform::cleanup();
   }
