@@ -75,3 +75,6 @@ if (NETWORK_TESTS)
 	osm_test(net_io "${CMAKE_SOURCE_DIR}/LICENSES/GPL-3.0-or-later")
 	osm_test(osm_api_download)
 endif ()
+
+add_test(NAME application_help COMMAND osm2go --help)
+set_property(TEST application_help PROPERTY PASS_REGULAR_EXPRESSION "--projects[ \t]")
