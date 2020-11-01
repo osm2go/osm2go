@@ -457,6 +457,92 @@ testLoadSave(const std::string &tmpdir)
   }
 }
 
+struct scan_project_creator {
+  const std::string &tmpdir;
+  const std::string &defaultserver;
+  scan_project_creator(const std::string &dir, const std::string &srv) : tmpdir(dir), defaultserver(srv) {}
+
+  void operator()(const std::string &prjname)
+  {
+    std::unique_ptr<project_t> p(project_t::create(prjname, tmpdir, nullptr));
+    assert(p);
+  }
+};
+
+struct scan_project_verifier {
+  scan_project_verifier(std::vector<std::string> &n) : names(n) {}
+  std::vector<std::string> &names;
+
+  void operator()(project_t *prj)
+  {
+    std::unique_ptr<project_t> p(prj);
+    const std::vector<std::string>::iterator it = std::find(names.begin(), names.end(), p->name);
+    assert(it != names.end());
+    names.erase(it); // make sure there is only one match, simplifies later check if all expected names were found
+    project_delete(p);
+  }
+};
+
+void
+helper_testScan(const std::string &tmpdir, const dirguard &dir, std::vector<std::string> names)
+{
+  const std::string defaultserver = "https://example.com/default";
+
+  std::for_each(names.begin(), names.end(), scan_project_creator(tmpdir, defaultserver));
+
+  std::vector<project_t *> scan = project_scan(tmpdir, dir.dirfd(), defaultserver);
+  assert_cmpnum(scan.size(), names.size());
+
+  std::for_each(scan.begin(), scan.end(), scan_project_verifier(names));
+  assert_cmpnum(names.size(), 0);
+}
+
+void
+testScan(const std::string &tmpdir)
+{
+  const std::string defaultserver = "https://example.com/default";
+  dirguard dir(tmpdir);
+
+  std::vector<project_t *> scan = project_scan(tmpdir, dir.dirfd(), defaultserver);
+  assert_cmpnum(scan.size(), 0);
+
+  // empty directories should be ignored
+  assert_cmpnum(mkdirat(dir.dirfd(), "emptydir", 0755), 0);
+
+  scan = project_scan(tmpdir, dir.dirfd(), defaultserver);
+  assert_cmpnum(scan.size(), 0);
+
+  // same as files
+  const char *junkfilename = "unrelated file";
+  fdguard junkfile(dir.dirfd(), junkfilename, O_CREAT | O_EXCL);
+  assert(junkfile);
+
+  scan = project_scan(tmpdir, dir.dirfd(), defaultserver);
+  assert_cmpnum(scan.size(), 0);
+
+  // a correctly named project file, but can't be opened as it's empty
+  assert_cmpnum(mkdirat(dir.dirfd(), "emptyproj", 0755), 0);
+  const char *emptyprojname = "emptyproj/emptyproj.proj";
+  fdguard projfile(dir.dirfd(), emptyprojname, O_CREAT | O_EXCL);
+  assert(projfile);
+
+  scan = project_scan(tmpdir, dir.dirfd(), defaultserver);
+  assert_cmpnum(scan.size(), 0);
+
+  std::vector<std::string> names;
+  names.push_back("first");
+  helper_testScan(tmpdir, dir, names);
+  names.push_back("second");
+  helper_testScan(tmpdir, dir, names);
+  names.insert(names.begin(), "third");
+  helper_testScan(tmpdir, dir, names);
+
+  assert_cmpnum(unlinkat(dir.dirfd(), emptyprojname, 0), 0);
+  assert_cmpnum(unlinkat(dir.dirfd(), "emptyproj", AT_REMOVEDIR), 0);
+  assert_cmpnum(unlinkat(dir.dirfd(), "emptydir", AT_REMOVEDIR), 0);
+  assert_cmpnum(unlinkat(dir.dirfd(), junkfilename, 0), 0);
+}
+
 } // namespace
 
 appdata_t::appdata_t()
@@ -503,6 +589,7 @@ int main(int argc, char **argv)
   testRename(osm_path, argv[3]);
   testCreate(osm_path, readonly);
   testLoadSave(osm_path);
+  testScan(osm_path);
 
   assert_cmpnum(rmdir(readonly.c_str()), 0);
   assert_cmpnum(rmdir(tmpdir), 0);
