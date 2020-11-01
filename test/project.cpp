@@ -281,95 +281,140 @@ testLoad(const std::string &tmpdir, osm2go_platform::MappedFile &osmfile)
 void
 testRename(const std::string &tmpdir, const char *diff_file)
 {
-  std::unique_ptr<project_t> project(std::make_unique<project_t>("diff_restore_data", tmpdir));
-  assert(project->save());
-  project->osmFile = "diff_restore_data.osm.gz";
-  const std::string oldpath = project->path;
-
   // wronly flagged as gzip
   const char *not_gzip = "<?xml version='1.0' encoding='UTF-8'?>\n<osm></osm>";
-  {
-    fdguard osmfd(openat(project->dirfd, project->osmFile.c_str(), O_CREAT | O_WRONLY, 0644));
-    assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
-    write(osmfd, not_gzip, strlen(not_gzip));
+
+  // run 3 times, with different settings of the global project
+  for (int i = 0; i < 3; i++) {
+    std::unique_ptr<project_t> project(std::make_unique<project_t>("diff_restore_data", tmpdir));
+    assert(project->save());
+    project->osmFile = "diff_restore_data.osm.gz";
+    const std::string oldpath = project->path;
+
+    {
+      fdguard osmfd(openat(project->dirfd, project->osmFile.c_str(), O_CREAT | O_WRONLY, 0644));
+      assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
+      write(osmfd, not_gzip, strlen(not_gzip));
+    }
+
+    {
+    fdguard osmfd(openat(project->dirfd, (project->name + ".trk").c_str(), O_CREAT | O_WRONLY, 0644));
+      assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
+    }
+
+    // use an already existing diff
+    osm2go_platform::MappedFile mf(diff_file);
+    assert(static_cast<bool>(mf));
+    {
+      fdguard osmfd(openat(project->dirfd, (project->name + ".diff").c_str(), O_CREAT | O_WRONLY, 0644));
+      assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
+      assert_cmpnum(write(osmfd, mf.data(), mf.length()), mf.length());
+    }
+
+    std::unique_ptr<project_t> global;
+    switch (i) {
+    case 0:
+      // empty global
+      break;
+    case 1:
+      // different global project
+      global.reset(new project_t("unrelated", tmpdir));
+      assert(global->save());
+      break;
+    case 2:
+      // referencing the same project
+      global.reset(new project_t(project->name, tmpdir));
+      break;
+    default:
+      assert_unreachable();
+    }
+
+    assert(project->rename("newproj", global));
+
+    // verify what it has done to the global project
+    switch (i) {
+    case 0:
+      assert(!global);
+      break;
+    case 1:
+      // different global project
+      assert_cmpstr(global->name, "unrelated");
+      project_delete(global);
+      assert(!global);
+      break;
+    case 2:
+      // global project should also be renamed
+      assert_cmpstr(project->name, global->name);
+      // descriptor was reopened to point to the same directory, but must be distinct
+      assert_cmpnum_op(project->dirfd.fd, !=, global->dirfd.fd);
+      assert_cmpstr(project->path, global->path);
+      global.reset();
+      break;
+    default:
+      assert_unreachable();
+    }
+
+    // the non-gzip file should have been properly renamed
+    assert(ends_with(project->osmFile, ".osm"));
+
+    struct stat st;
+    assert_cmpnum(stat(oldpath.c_str(), &st), -1);
+    assert_cmpnum(errno, ENOENT);
+
+    // dir exists
+    assert_cmpnum(stat(project->path.c_str(), &st), 0);
+    // project file exists and is not empty
+    assert_cmpnum(stat((project->path + project->name + ".proj").c_str(), &st), 0);
+    assert_cmpnum_op(st.st_size, >, project->name.size() + 20);
+    // OSM file exists
+    assert_cmpnum(stat((project->path + project->osmFile).c_str(), &st), 0);
+    assert_cmpnum(st.st_size, strlen(not_gzip));
+    // track file exists
+    assert_cmpnum(stat((project->path + project->name + ".trk").c_str(), &st), 0);
+    assert_cmpnum(st.st_size, 0);
+    // diff exists
+    const std::string ndiffname = project->path + project->name + ".diff";
+    osm2go_platform::MappedFile ndiff(ndiffname);
+    assert(static_cast<bool>(ndiff));
+    const char *dnold = strstr(mf.data(), "diff_restore_data");
+    const char *dnnew = strstr(ndiff.data(), project->name.c_str());
+    assert_cmpmem(mf.data(), dnold - mf.data(), ndiff.data(), dnnew - ndiff.data());
+    // only compare the next few bytes. The rest of the file may be differently formatted
+    // (e.g. ' vs ", spaces before /> or not.
+    assert_cmpmem(dnold + strlen("diff_restore_data"), 60, dnnew + project->name.size(), 60);
+    dnnew = nullptr; // sanity
+    ndiff.reset();
+
+    bool b = project->parse_osm();
+    assert(b);
+
+    unsigned int u = project->diff_restore();
+    assert_cmpnum(u, 0);
+
+    // remove diff and check it's really gone
+    project->diff_remove_file();
+    assert_cmpnum(stat(ndiffname.c_str(), &st), -1);
+    assert_cmpnum(errno, ENOENT);
+    assert(!project->diff_file_present());
+
+    // recreate it with the unmodified diff
+    {
+      fdguard osmfd(open(ndiffname.c_str(), O_CREAT | O_WRONLY, 0644));
+      assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
+      assert_cmpnum(write(osmfd, mf.data(), mf.length()), mf.length());
+    }
+    assert(project->diff_file_present());
+
+    // throw away all changes
+    b = project->parse_osm();
+    assert(b);
+
+    // this should warn
+    u = project->diff_restore();
+    assert_cmpnum(u, DIFF_PROJECT_MISMATCH);
+
+    project_delete(project);
   }
-
-  {
-   fdguard osmfd(openat(project->dirfd, (project->name + ".trk").c_str(), O_CREAT | O_WRONLY, 0644));
-    assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
-  }
-
-  // use an already existing diff
-  osm2go_platform::MappedFile mf(diff_file);
-  assert(static_cast<bool>(mf));
-  {
-    fdguard osmfd(openat(project->dirfd, (project->name + ".diff").c_str(), O_CREAT | O_WRONLY, 0644));
-    assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
-    assert_cmpnum(write(osmfd, mf.data(), mf.length()), mf.length());
-  }
-
-  std::unique_ptr<project_t> global;
-  assert(project->rename("newproj", global));
-  // the non-gzip file should have been properly renamed
-  assert(ends_with(project->osmFile, ".osm"));
-
-  struct stat st;
-  assert_cmpnum(stat(oldpath.c_str(), &st), -1);
-  assert_cmpnum(errno, ENOENT);
-
-  // dir exists
-  assert_cmpnum(stat(project->path.c_str(), &st), 0);
-  // project file exists and is not empty
-  assert_cmpnum(stat((project->path + project->name + ".proj").c_str(), &st), 0);
-  assert_cmpnum_op(st.st_size, >, project->name.size() + 20);
-  // OSM file exists
-  assert_cmpnum(stat((project->path + project->osmFile).c_str(), &st), 0);
-  assert_cmpnum(st.st_size, strlen(not_gzip));
-  // track file exists
-  assert_cmpnum(stat((project->path + project->name + ".trk").c_str(), &st), 0);
-  assert_cmpnum(st.st_size, 0);
-  // diff exists
-  const std::string ndiffname = project->path + project->name + ".diff";
-  osm2go_platform::MappedFile ndiff(ndiffname);
-  assert(static_cast<bool>(ndiff));
-  const char *dnold = strstr(mf.data(), "diff_restore_data");
-  const char *dnnew = strstr(ndiff.data(), project->name.c_str());
-  assert_cmpmem(mf.data(), dnold - mf.data(), ndiff.data(), dnnew - ndiff.data());
-  // only compare the next few bytes. The rest of the file may be differently formatted
-  // (e.g. ' vs ", spaces before /> or not.
-  assert_cmpmem(dnold + strlen("diff_restore_data"), 60, dnnew + project->name.size(), 60);
-  dnnew = nullptr; // sanity
-  ndiff.reset();
-
-  bool b = project->parse_osm();
-  assert(b);
-
-  unsigned int u = project->diff_restore();
-  assert_cmpnum(u, 0);
-
-  // remove diff and check it's really gone
-  project->diff_remove_file();
-  assert_cmpnum(stat(ndiffname.c_str(), &st), -1);
-  assert_cmpnum(errno, ENOENT);
-  assert(!project->diff_file_present());
-
-  // recreate it with the unmodified diff
-  {
-    fdguard osmfd(open(ndiffname.c_str(), O_CREAT | O_WRONLY, 0644));
-    assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
-    assert_cmpnum(write(osmfd, mf.data(), mf.length()), mf.length());
-  }
-  assert(project->diff_file_present());
-
-  // throw away all changes
-  b = project->parse_osm();
-  assert(b);
-
-  // this should warn
-  u = project->diff_restore();
-  assert_cmpnum(u, DIFF_PROJECT_MISMATCH);
-
-  project_delete(project);
 }
 
 void
