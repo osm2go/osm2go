@@ -858,7 +858,7 @@ void map_t::touchnode_update(lpos_t pos) {
 
   /* during way creation also nodes of the new way */
   /* need to be searched */
-  if(touchnode == nullptr && action.way != nullptr && action.way->node_chain.size() > 1) {
+  else if(touchnode == nullptr && action.way != nullptr && action.way->node_chain.size() > 1) {
     const node_chain_t &chain = action.way->node_chain;
     std::for_each(chain.begin(), std::prev(chain.end()), fc);
   }
@@ -1234,7 +1234,6 @@ void map_t::set_action(map_action_t act) {
   else
     appdata.uicontrol->showNotification(statusbar_text);
 }
-
 
 void map_t::action_ok() {
   /* reset action now as this erases the statusbar and some */
