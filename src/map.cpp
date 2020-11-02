@@ -848,17 +848,15 @@ void map_t::touchnode_update(lpos_t pos) {
   std::for_each(nodes.begin(), nodes.end(), fc);
 
   if(rnode != nullptr) {
-    delete touchnode;
-
-    touchnode = canvas->circle_new(CANVAS_GROUP_DRAW, rnode->lpos,
-                                   2 * style->node.radius, 0, style->highlight.touch_color);
+    touchnode.reset(canvas->circle_new(CANVAS_GROUP_DRAW, rnode->lpos,
+                                       2 * style->node.radius, 0, style->highlight.touch_color));
 
     touchnode_node = rnode;
   }
 
   /* during way creation also nodes of the new way */
   /* need to be searched */
-  else if(touchnode == nullptr && action.way != nullptr && action.way->node_chain.size() > 1) {
+  else if(!touchnode && action.way != nullptr && action.way->node_chain.size() > 1) {
     const node_chain_t &chain = action.way->node_chain;
     std::for_each(chain.begin(), std::prev(chain.end()), fc);
   }
@@ -1082,7 +1080,6 @@ map_t::map_t(appdata_t &a, canvas_t *c)
   : gps_item(nullptr)
   , appdata(a)
   , canvas(c)
-  , touchnode(nullptr)
   , touchnode_node(nullptr)
   , bg_offset(0, 0)
   , style(appdata.style)
@@ -1097,7 +1094,8 @@ map_t::~map_t()
   // no need to clear background_items here, the items were all deleted when
   // destroying the canvas
   map_free_map_item_chains(appdata);
-  cursor.release();
+  (void)cursor.release();
+  (void)touchnode.release();
   appdata.map = nullptr;
 }
 
@@ -1718,7 +1716,7 @@ void map_t::detail_normal() {
 }
 
 node_t *map_t::touchnode_get_node() {
-  if(touchnode == nullptr)
+  if(!touchnode)
     return nullptr;
   node_t *ret = touchnode_node;
   touchnode_clear();
@@ -1726,8 +1724,7 @@ node_t *map_t::touchnode_get_node() {
 }
 
 void map_t::touchnode_clear() {
-  delete touchnode;
-  touchnode = nullptr;
+  touchnode.reset();
   touchnode_node = nullptr;
 }
 

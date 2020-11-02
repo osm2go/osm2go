@@ -402,7 +402,7 @@ void map_t::node_move(map_item_t *map_item, const osm2go_platform::screenpos &p)
   /* check if it was dropped onto another node */
   bool joined_with_touchnode = false;
 
-  if(touchnode != nullptr) {
+  if(touchnode) {
     node_t *tn = touchnode_get_node();
 
     if(osm2go_platform::yes_no(_("Join nodes?"),
