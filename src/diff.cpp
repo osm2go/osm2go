@@ -315,26 +315,21 @@ T *restore_object(xmlNodePtr xml_node, osm_t::ref osm)
       ret = new T(base_attributes(id));
 
       osm->insert(ret);
-      break;
     } else {
       printf("  Valid id/position (DIRTY)\n");
 
       ret = osm->object_by_id<T>(id);
-      if(likely(ret != nullptr)) {
+      if(likely(ret != nullptr))
         osm->mark_dirty(ret);
-        break;
-      } else {
+      else
         printf("  WARNING: no object with that id found\n");
-        return nullptr;
-      }
     }
+    return ret;
 
   default:
     // xml_get_prop_state() already warned about this
     return nullptr;
   }
-
-  return ret;
 }
 
 void
