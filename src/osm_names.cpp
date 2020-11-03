@@ -66,7 +66,7 @@ inline void clean_underscores_inplace(std::string &s)
   std::replace(s.begin(), s.end(), '_', ' ');
 }
 
-inline std::string __attribute__((nonnull(1))) __attribute__ ((__warn_unused_result__)) clean_underscores(const char *s)
+inline std::string __attribute__((nonnull(1))) __attribute__ ((warn_unused_result)) clean_underscores(const char *s)
 {
   std::string ret = s;
   clean_underscores_inplace(ret);
@@ -85,8 +85,8 @@ struct nameParts {
     trstring::native_type nt;
 #else
     struct {
-      inline bool isEmpty() const { return true; };
-      inline operator trstring() const __attribute__((noreturn))
+      [[nodiscard]] static inline constexpr bool isEmpty() { return true; }
+      [[noreturn]] explicit inline operator trstring() const
       {
         // should always be optimized away
         assert_unreachable();
