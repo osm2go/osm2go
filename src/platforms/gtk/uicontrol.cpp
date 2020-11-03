@@ -21,6 +21,7 @@
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
+#include "osm2go_platform_gtk_icon.h"
 
 // declared here so it is available for all lib users (i.e. testcases)
 osm2go_platform::Widget *appdata_t::window;
@@ -78,7 +79,7 @@ MainUiGtk::createMenuItem(trstring::native_type_arg label, const char *icon_name
 #ifndef FREMANTLE
   // Icons
   if(icon_name != nullptr) {
-    GtkWidget *image = icon_t::instance().widget_load(icon_name);
+    GtkWidget *image = gtk_platform_icon_t::instance().widget_load(icon_name);
     if (image == nullptr)
       image = gtk_image_new_from_icon_name(icon_name, GTK_ICON_SIZE_MENU);
     assert(image != nullptr);

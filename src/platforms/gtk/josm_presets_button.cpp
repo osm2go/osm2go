@@ -26,8 +26,9 @@
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
-#include <osm2go_platform.h>
-#include <osm2go_platform_gtk.h>
+#include "osm2go_platform.h"
+#include "osm2go_platform_gtk.h"
+#include "osm2go_platform_gtk_icon.h"
 
 /* --------------------- the items dialog -------------------- */
 
@@ -364,7 +365,7 @@ create_menuitem(const presets_item_named *item)
     menu_item = gtk_image_menu_item_new_with_label(item->name.c_str());
 
     gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(menu_item),
-                                  presets_context_t::instance->icons.widget_load(item->icon, 16));
+                                  gtk_platform_icon_t::instance().widget_load(item->icon, 16));
   }
 
   return menu_item;
@@ -1037,7 +1038,7 @@ presets_element_t::attach_key *presets_element_link::attach(preset_attach_contex
   const trstring label = trstring("[Preset] %1").arg(item->name);
   GtkWidget *button = osm2go_platform::button_new_with_label(label);
   if (!item->icon.empty()) {
-    GtkWidget *img = icon_t::instance().widget_load(item->icon, 16);
+    GtkWidget *img = gtk_platform_icon_t::instance().widget_load(item->icon, 16);
     if(img != nullptr) {
       gtk_button_set_image(GTK_BUTTON(button), img);
       // make sure the image is always shown, Hildon seems to hide it by default

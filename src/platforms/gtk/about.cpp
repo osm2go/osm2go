@@ -30,6 +30,7 @@
 #include "osm2go_i18n.h"
 #include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
+#include "osm2go_platform_gtk_icon.h"
 
 namespace {
 
@@ -120,7 +121,7 @@ license_page_new()
 }
 
 GtkWidget *
-copyright_page_new(icon_t &icons)
+copyright_page_new(gtk_platform_icon_t &icons)
 {
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 
@@ -245,7 +246,7 @@ authors_page_new()
 }
 
 GtkWidget *
-donate_page_new(icon_t &icons)
+donate_page_new(gtk_platform_icon_t &icons)
 {
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 
@@ -319,7 +320,7 @@ void MainUi::about_box()
 
   GtkWidget *notebook = osm2go_platform::notebook_new();
 
-  icon_t &icons = icon_t::instance();
+  gtk_platform_icon_t &icons = gtk_platform_icon_t::instance();
   osm2go_platform::notebook_append_page(notebook, copyright_page_new(icons), _("Copyright"));
   osm2go_platform::notebook_append_page(notebook, license_page_new(),        _("License"));
   osm2go_platform::notebook_append_page(notebook, authors_page_new(),        _("Authors"));

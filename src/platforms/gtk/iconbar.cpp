@@ -19,6 +19,7 @@
 
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
+#include "osm2go_platform_gtk_icon.h"
 
 namespace {
 
@@ -102,7 +103,7 @@ menu_add(GtkWidget *menu, appdata_t &appdata, const char *icon_str, const char *
   GtkWidget *item = gtk_image_menu_item_new_with_label(menu_str);
 
   gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
-                                appdata.icons.widget_load(icon_str));
+                                static_cast<gtk_platform_icon_t &>(appdata.icons).widget_load(icon_str));
 
   g_signal_connect_swapped(item, "activate", func, appdata.map);
 
@@ -218,7 +219,7 @@ GtkWidget * __attribute__((nonnull(1,3,4)))
 icon_add(GtkWidget *vbox, appdata_t &appdata, const char *icon_str, void(*func)(map_t *))
 {
   GtkWidget *but = gtk_button_new();
-  GtkWidget *icon = appdata.icons.widget_load(icon_str);
+  GtkWidget *icon = static_cast<gtk_platform_icon_t &>(appdata.icons).widget_load(icon_str);
   gtk_button_set_image(GTK_BUTTON(but), icon);
   g_signal_connect_swapped(but, "clicked", G_CALLBACK(func), appdata.map);
 
@@ -236,7 +237,7 @@ tool_button_label(icon_t &icons, GtkToolbar *toolbar, trstring::native_type_arg 
   gtk_label_set_attributes(GTK_LABEL(label), attrs);
   pango_attr_list_unref(attrs);
 
-  GtkToolItem *item = gtk_tool_button_new(icons.widget_load(icon_str), nullptr);
+  GtkToolItem *item = gtk_tool_button_new(static_cast<gtk_platform_icon_t &>(icons).widget_load(icon_str), nullptr);
 
   gtk_tool_button_set_label_widget(GTK_TOOL_BUTTON(item), label);
 

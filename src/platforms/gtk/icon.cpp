@@ -5,6 +5,7 @@
  */
 
 #include "icon.h"
+#include "osm2go_platform_gtk_icon.h"
 
 #include <algorithm>
 #include <array>
@@ -20,6 +21,7 @@
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
+#include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
 #include <osm2go_stl.h>
 
@@ -37,7 +39,7 @@ public:
   }
 };
 
-class icon_buffer : public icon_t {
+class icon_buffer : public gtk_platform_icon_t {
 public:
   icon_buffer() {}
   icon_buffer(const icon_buffer &) O2G_DELETED_FUNCTION;
@@ -129,7 +131,9 @@ icon_item *icon_t::load(const std::string &sname, int limit)
   return nullptr;
 }
 
-GtkWidget *icon_t::widget_load(const std::string &name, int limit) {
+GtkWidget *
+gtk_platform_icon_t::widget_load(const std::string &name, int limit)
+{
   icon_item *pix = load(name, limit);
   if(pix == nullptr)
     return nullptr;
@@ -192,10 +196,11 @@ icon_buffer::~icon_buffer()
 
 icon_t &icon_t::instance()
 {
-  static icon_buffer icons;
-  return icons;
+  return gtk_platform_icon_t::instance();
 }
 
-icon_t::~icon_t()
+gtk_platform_icon_t &gtk_platform_icon_t::instance()
 {
+  static icon_buffer icons;
+  return icons;
 }

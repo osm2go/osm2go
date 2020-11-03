@@ -62,6 +62,7 @@
 #include "osm2go_i18n.h"
 #include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
+#include "osm2go_platform_gtk_icon.h"
 
 #define LOCALEDIR PREFIX "/locale"
 
@@ -1076,7 +1077,7 @@ menu_create(appdata_internal &appdata, GtkBox *)
 appdata_t::appdata_t()
   : uicontrol(new MainUiGtk())
   , map(nullptr)
-  , icons(icon_t::instance())
+  , icons(gtk_platform_icon_t::instance())
   , style(style_t::load(settings_t::instance()->style))
   , gps_state(gps_state_t::create(track_t::gps_position_callback, this))
 {
@@ -1193,7 +1194,7 @@ on_window_realize(GtkWidget *widget, gpointer)
 #endif
 
 GtkWidget *  __attribute__((nonnull(2,4)))
-icon_button(void *context, const char *icon, GCallback cb, GtkWidget *box)
+icon_button(void *context, const char *icon, GCallback cb, GtkWidget *box, gtk_platform_icon_t &icons)
 {
   GtkWidget *but = gtk_button_new();
   const int icon_scale =
@@ -1202,7 +1203,7 @@ icon_button(void *context, const char *icon, GCallback cb, GtkWidget *box)
 #else
     24;
 #endif
-  GtkWidget *iconw = icon_t::instance().widget_load(icon, icon_scale);
+  GtkWidget *iconw = icons.widget_load(icon, icon_scale);
 #ifndef FREMANTLE
   // explicitely assign image so the button does not show the action text
   if(iconw == nullptr)
@@ -1298,29 +1299,29 @@ application_run(const char *proj, bool startGps, bool project_dialog)
 
   /* fremantle has seperate zoom/details buttons on the right screen side */
 #ifndef FREMANTLE
-  icon_button(appdata.map, "detailup_thumb",   G_CALLBACK(cb_menu_view_detail_inc), sbar);
-  icon_button(appdata.map, "detaildown_thumb", G_CALLBACK(cb_menu_view_detail_dec), sbar);
-  appdata.btn_zoom_out = icon_button(appdata.map, "zoom-in", G_CALLBACK(cb_menu_zoomout), sbar);
-  appdata.btn_zoom_in = icon_button(appdata.map, "zoom-out", G_CALLBACK(cb_menu_zoomin), sbar);
+  icon_button(appdata.map, "detailup_thumb",   G_CALLBACK(cb_menu_view_detail_inc), sbar, static_cast<gtk_platform_icon_t &>(appdata.icons));
+  icon_button(appdata.map, "detaildown_thumb", G_CALLBACK(cb_menu_view_detail_dec), sbar, static_cast<gtk_platform_icon_t &>(appdata.icons));
+  appdata.btn_zoom_out = icon_button(appdata.map, "zoom-in", G_CALLBACK(cb_menu_zoomout), sbar, static_cast<gtk_platform_icon_t &>(appdata.icons));
+  appdata.btn_zoom_in = icon_button(appdata.map, "zoom-out", G_CALLBACK(cb_menu_zoomin), sbar, static_cast<gtk_platform_icon_t &>(appdata.icons));
 #else
   /* fremantle has a set of buttons on the right screen side as well */
   vbox = gtk_vbox_new(FALSE, 0);
 
   GtkWidget *ivbox = gtk_vbox_new(FALSE, 0);
   appdata.btn_zoom_in =
-    icon_button(appdata.map, "zoomin_thumb",   G_CALLBACK(cb_menu_zoomin), ivbox);
+    icon_button(appdata.map, "zoomin_thumb",   G_CALLBACK(cb_menu_zoomin), ivbox, static_cast<gtk_platform_icon_t &>(appdata.icons));
   appdata.btn_zoom_out =
-    icon_button(appdata.map, "zoomout_thumb",  G_CALLBACK(cb_menu_zoomout), ivbox);
+    icon_button(appdata.map, "zoomout_thumb",  G_CALLBACK(cb_menu_zoomout), ivbox, static_cast<gtk_platform_icon_t &>(appdata.icons));
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, FALSE, FALSE, 0);
 
   ivbox = gtk_vbox_new(FALSE, 0);
-  icon_button(appdata.map, "detailup_thumb",   G_CALLBACK(cb_menu_view_detail_inc), ivbox);
-  icon_button(appdata.map, "detaildown_thumb", G_CALLBACK(cb_menu_view_detail_dec), ivbox);
+  icon_button(appdata.map, "detailup_thumb",   G_CALLBACK(cb_menu_view_detail_inc), ivbox, static_cast<gtk_platform_icon_t &>(appdata.icons));
+  icon_button(appdata.map, "detaildown_thumb", G_CALLBACK(cb_menu_view_detail_dec), ivbox, static_cast<gtk_platform_icon_t &>(appdata.icons));
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, TRUE, FALSE, 0);
 
   ivbox = gtk_vbox_new(FALSE, 0);
-  GtkWidget *ok = icon_button(nullptr, "ok_thumb", nullptr, ivbox);
-  GtkWidget *cancel = icon_button(nullptr, "cancel_thumb", nullptr, ivbox);
+  GtkWidget *ok = icon_button(nullptr, "ok_thumb", nullptr, ivbox, static_cast<gtk_platform_icon_t &>(appdata.icons));
+  GtkWidget *cancel = icon_button(nullptr, "cancel_thumb", nullptr, ivbox, static_cast<gtk_platform_icon_t &>(appdata.icons));
   iconbar_register_buttons(appdata, ok, cancel);
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, FALSE, FALSE, 0);
 

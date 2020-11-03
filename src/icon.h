@@ -8,8 +8,6 @@
 
 #include <string>
 
-#include <osm2go_platform.h>
-
 class icon_item {
 protected:
   inline icon_item() {}
@@ -22,7 +20,6 @@ protected:
   inline icon_t() {}
 public:
   static icon_t &instance();
-  ~icon_t();
 
   /**
    * @brief load an icon from disk, limited to given dimensions
@@ -34,8 +31,6 @@ public:
    * The limit is only applied if the icon is not already cached.
    */
   icon_item *load(const std::string &sname, int limit = -1);
-
-  osm2go_platform::Widget *widget_load(const std::string &name, int limit = -1);
 
   void icon_free(icon_item *buf);
 };
