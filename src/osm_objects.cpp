@@ -349,9 +349,9 @@ bool way_t::merge(way_t *other, osm_t *osm, map_t *map, const std::vector<relati
 }
 
 std::vector<member_t>::const_iterator
-relation_t::find_member_object(const object_t &o) const
+relation_t::find_member_object(const object_t &o, std::vector<member_t>::const_iterator it) const
 {
-  return std::find_if(members.begin(), members.end(), find_member_object_functor(o));
+  return std::find_if(it, members.end(), find_member_object_functor(o));
 }
 
 namespace {

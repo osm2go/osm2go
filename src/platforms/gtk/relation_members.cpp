@@ -182,8 +182,8 @@ changed_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer 
   gtk_tree_model_get(model, iter, RELITEM_COL_DATA, &relation, -1);
   assert(relation != nullptr);
 
-  const std::vector<member_t>::const_iterator itEnd = relation->members.end();
-  const std::vector<member_t>::const_iterator it = relation->find_member_object(context->item);
+  std::vector<member_t>::const_iterator itEnd = relation->members.end();
+  std::vector<member_t>::const_iterator it = relation->find_member_object(context->item);
 
   gboolean isSelected = gtk_tree_selection_iter_is_selected(context->selection, iter);
 
@@ -192,24 +192,34 @@ changed_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer 
 
     /* either accept this or unselect again */
     if(relation_add_item(context->dialog.get(), relation, context->item, context->presets, context->osm)) {
+      // vector was modified, update the iterator
+      itEnd = relation->members.end();
       // the item is now the last one in the chain
-      const member_t &member = relation->members.back();
-      gtk_list_store_set(GTK_LIST_STORE(model), iter, RELITEM_COL_ROLE, member.role, -1);
-    } else
+      it = std::prev(itEnd);
+    } else {
       gtk_tree_selection_unselect_iter(context->selection, iter);
-
-    return TRUE;
+      return TRUE;
+    }
   } else if(it != itEnd && isSelected == FALSE) {
     g_debug("deselected: " ITEM_ID_FORMAT, relation->id);
 
     context->osm->mark_dirty(relation);
-    relation->eraseMember(it);
-    gtk_list_store_set(GTK_LIST_STORE(model), iter, RELITEM_COL_ROLE, nullptr, -1);
+    it = relation->eraseMember(it);
 
-    return TRUE;
+    // vector was modified, update the iterator
+    itEnd = relation->members.end();
+
+    // there could have been multiple instances, so check if there is more
+    it = relation->find_member_object(context->item, it);
+  } else {
+    return FALSE;
   }
 
-  return FALSE;
+  gtk_list_store_set(GTK_LIST_STORE(model), iter,
+                     RELITEM_COL_ROLE, (it != itEnd) ? it->role : nullptr,
+                     -1);
+
+  return TRUE;
 }
 
 void

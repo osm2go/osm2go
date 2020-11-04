@@ -419,7 +419,9 @@ public:
 
   std::vector<member_t> members;
 
-  std::vector<member_t>::const_iterator find_member_object(const object_t &o) const;
+  std::vector<member_t>::const_iterator find_member_object(const object_t &o, std::vector<member_t>::const_iterator it) const;
+  inline std::vector<member_t>::const_iterator find_member_object(const object_t &o) const
+  { return find_member_object(o, members.begin()); }
 
   /**
    * @brief call members->erase(it) with a const_iterator
