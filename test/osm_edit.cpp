@@ -1586,21 +1586,21 @@ void verify_merged_way(way_t *w, osm_t::ref o, const node_chain_t &nodes, const 
   // check the expected relation memberships of the way
   if(expectRels) {
     relation_t *rel = o->object_by_id<relation_t>(-3);
-    std::vector<member_t>::iterator it = rel->find_member_object(object_t(w));
+    std::vector<member_t>::const_iterator it = rel->find_member_object(object_t(w));
     assert(it != rel->members.end());
     assert_cmpstr(it->role, "foo");
-    rel->members.erase(it);
+    rel->eraseMember(it);
 
     rel = o->object_by_id<relation_t>(-4);
     it = rel->find_member_object(object_t(w));
     assert(it != rel->members.end());
     assert_cmpstr(it->role, "bar");
-    rel->members.erase(it);
+    rel->eraseMember(it);
 
     it = rel->find_member_object(object_t(w));
     assert(it != rel->members.end());
     assert_null(it->role);
-    rel->members.erase(it);
+    rel->eraseMember(it);
   }
   for(unsigned int i = 1; i < o->relations.size(); i++)
     assert_cmpnum(o->object_by_id<relation_t>(-1 - static_cast<item_id_t>(i))->members.size(), i - 1);
@@ -1887,7 +1887,7 @@ void test_relation_members()
   r->members.push_back(member_t(object_t(n1), "foo"));
   r->members.push_back(member_t(object_t(n2), "bar"));
 
-  r->members.erase(r->find_member_object(object_t(n2)));
+  r->eraseMember(r->find_member_object(object_t(n2)));
 
   assert_cmpnum(r->members.size(), 1);
 }

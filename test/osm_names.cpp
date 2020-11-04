@@ -403,9 +403,9 @@ void test_relation_precedence()
   // a relation with name takes precedence
   assert_cmpstr(o.get_name(*osm), "way/area: member of associatedStreet '21 Jump Street'");
   // drop the member with empty role
-  r->members.erase(r->find_member_object(object_t(w)));
+  r->eraseMember(r->find_member_object(object_t(w)));
   assert_cmpstr(o.get_name(*osm), "way/area: 'house' in associatedStreet '21 Jump Street'");
-  r->members.erase(r->find_member_object(object_t(w)));
+  r->eraseMember(r->find_member_object(object_t(w)));
 
   assert_cmpstr(o.get_name(*osm), "way/area: member of relation '<ID #-3>'");
   simple_r->members.clear();

@@ -419,9 +419,23 @@ public:
 
   std::vector<member_t> members;
 
-  std::vector<member_t>::iterator find_member_object(const object_t &o);
-  inline std::vector<member_t>::const_iterator find_member_object(const object_t &o) const
-  { return const_cast<relation_t *>(this)->find_member_object(o); }
+  std::vector<member_t>::const_iterator find_member_object(const object_t &o) const;
+
+  /**
+   * @brief call members->erase(it) with a const_iterator
+   *
+   * This just wraps the missing overload before C++11.
+   */
+  std::vector<member_t>::const_iterator eraseMember(std::vector<member_t>::const_iterator it)
+  {
+    /* this is part of C++11, but some compilers with preliminary C++11 support do not implement
+     * this (gcc 4.8, clang 5.0), so just leave it out in that version entirely. */
+#if __cplusplus <= 201103L
+    return members.erase(std::next(members.begin(), std::distance(std::cbegin(members), it)));
+#else
+    return members.erase(it);
+#endif
+  }
 
   void members_by_type(unsigned int &nodes, unsigned int &ways, unsigned int &relations) const;
   std::string descriptive_name() const;

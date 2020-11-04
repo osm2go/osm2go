@@ -182,8 +182,8 @@ changed_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer 
   gtk_tree_model_get(model, iter, RELITEM_COL_DATA, &relation, -1);
   assert(relation != nullptr);
 
-  const std::vector<member_t>::iterator itEnd = relation->members.end();
-  const std::vector<member_t>::iterator it = relation->find_member_object(context->item);
+  const std::vector<member_t>::const_iterator itEnd = relation->members.end();
+  const std::vector<member_t>::const_iterator it = relation->find_member_object(context->item);
 
   gboolean isSelected = gtk_tree_selection_iter_is_selected(context->selection, iter);
 
@@ -203,7 +203,7 @@ changed_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer 
     g_debug("deselected: " ITEM_ID_FORMAT, relation->id);
 
     context->osm->mark_dirty(relation);
-    relation->members.erase(it);
+    relation->eraseMember(it);
     gtk_list_store_set(GTK_LIST_STORE(model), iter, RELITEM_COL_ROLE, nullptr, -1);
 
     return TRUE;
