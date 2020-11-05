@@ -354,6 +354,59 @@ relation_t::find_member_object(const object_t &o, std::vector<member_t>::const_i
   return std::find_if(it, members.end(), find_member_object_functor(o));
 }
 
+unsigned int
+relation_t::objectMembershipState(const object_t &obj, const relation_t *orig) const
+{
+  const std::vector<member_t>::const_iterator newMembership = find_member_object(obj);
+  const std::vector<member_t>::const_iterator newEnd = members.end();
+  const bool isNewMember = (newMembership != newEnd);
+
+  if (orig == nullptr) {
+    if (!isNewMember)
+      return MembershipUnmodified;
+
+    // consider new relations as always modified
+    if (isNew())
+      return newMembership->role == nullptr ?
+             MembershipChanged :
+             MembershipChanged | RoleChanged;
+
+    return MembershipUnmodified;
+  }
+
+  const std::vector<member_t>::const_iterator oldMembership = orig->find_member_object(obj);
+  const std::vector<member_t>::const_iterator oldEnd = orig->members.end();
+  const bool isOldMember = (oldMembership != oldEnd);
+
+  // not in any, everything is fine
+  if (!isNewMember && !isOldMember)
+    return MembershipUnmodified;
+
+  // membership changed
+  if (isNewMember != isOldMember) {
+    // the role changed if either new or old role is checked
+    if ((isOldMember && oldMembership->role != nullptr) ||
+        (isNewMember && newMembership->role != nullptr))
+      return MembershipChanged | RoleChanged;
+    return MembershipChanged;
+  }
+
+  unsigned int ret = (newMembership->role != oldMembership->role) ? RoleChanged : MembershipUnmodified;
+
+  // Now things get nasty. If one has a relation containing object O as this:
+  //    O, role forward
+  //    O, role forward
+  // If you delete the first membership nothing seems to have changed. So now
+  // the remaining entries have to be checked, and if their number has changed
+  // this is considered a membership change.
+  const find_member_object_functor fc(obj);
+  if (std::count_if(std::next(newMembership), newEnd, fc) !=
+      std::count_if(std::next(oldMembership), oldEnd, fc))
+    ret |= MembershipChanged;
+
+  return ret;
+}
+
 namespace {
 
 class member_counter {

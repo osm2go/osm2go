@@ -406,6 +406,12 @@ protected:
 
 class relation_t : public base_object_t {
 public:
+  enum MembershipState {
+    MembershipUnmodified = 0,
+    MembershipChanged = 0x1,   ///< the membership state itself has changed
+    RoleChanged = 0x2          ///< the membership is unchanged, but the role has changed
+  };
+
   explicit relation_t(const base_attributes &attr = base_attributes())
     : base_object_t(attr) {}
   virtual ~relation_t() {}
@@ -438,6 +444,18 @@ public:
     return members.erase(it);
 #endif
   }
+
+  /**
+   * @brief check if the given objects membership state has changed
+   * @returns MembershipState flags
+   *
+   * This only looks on the first occurrence in the members vector, i.e. if the
+   * object is member twice and the role of the second entry has changed this
+   * method will still return MembershipUnmodified.
+   *
+   * This does not reflect any changes in the ordering.
+   */
+  unsigned int objectMembershipState(const object_t &obj, const relation_t *orig) const;
 
   void members_by_type(unsigned int &nodes, unsigned int &ways, unsigned int &relations) const;
   std::string descriptive_name() const;

@@ -48,7 +48,9 @@ struct relitem_context_t {
 
 enum {
   RELITEM_COL_TYPE = 0,
-  RELITEM_COL_ROLE,
+  RELITEM_COL_MEMBER_MODIFIED, ///< if the membership state of this entry in the given relation has changed
+  RELITEM_COL_ROLE, ///< the current role in the relation
+  RELITEM_COL_ROLE_MODIFIED, ///< if the membership has not changed, but the role
   RELITEM_COL_NAME,
   RELITEM_COL_DATA,
   RELITEM_NUM_COLS
@@ -174,6 +176,14 @@ relation_add_item(GtkWidget *parent, relation_t *relation, const object_t &objec
   return true;
 }
 
+unsigned int
+isOriginalRelation(osm_t::ref osm, const relation_t *rel, object_t &obj)
+{
+  const relation_t *orig = static_cast<const relation_t *>(osm->originalObject(object_t(object_t::RELATION_ID, rel->id)));
+
+  return rel->objectMembershipState(obj, orig);
+}
+
 gboolean
 changed_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer data)
 {
@@ -205,7 +215,6 @@ changed_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer 
 
     context->osm->mark_dirty(relation);
     it = relation->eraseMember(it);
-
     // vector was modified, update the iterator
     itEnd = relation->members.end();
 
@@ -215,8 +224,12 @@ changed_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpointer 
     return FALSE;
   }
 
+  const unsigned int mflags = isOriginalRelation(context->osm, relation, context->item);
+
   gtk_list_store_set(GTK_LIST_STORE(model), iter,
                      RELITEM_COL_ROLE, (it != itEnd) ? it->role : nullptr,
+                     RELITEM_COL_ROLE_MODIFIED, (mflags & relation_t::RoleChanged) ? TRUE : FALSE,
+                     RELITEM_COL_MEMBER_MODIFIED, (mflags & relation_t::MembershipChanged) ? TRUE : FALSE,
                      -1);
 
   return TRUE;
@@ -280,11 +293,15 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
   const std::vector<member_t>::const_iterator it = relation->find_member_object(context.item);
   const bool isMember = it != relation->members.end();
 
+  const unsigned int mflags = isOriginalRelation(context.osm, relation, context.item);
+
   /* Append a row and fill in some data */
   gtk_list_store_insert_with_values(context.store.get(), &iter, -1,
                                     RELITEM_COL_TYPE, relation->tags.get_value("type"),
                                     RELITEM_COL_ROLE, isMember ? it->role : nullptr,
                                     RELITEM_COL_NAME, name.c_str(),
+                                    RELITEM_COL_ROLE_MODIFIED, (mflags & relation_t::RoleChanged) ? TRUE : FALSE,
+                                    RELITEM_COL_MEMBER_MODIFIED, (mflags & relation_t::MembershipChanged) ? TRUE : FALSE,
                                     RELITEM_COL_DATA, relation,
                                     -1);
 
@@ -330,17 +347,28 @@ relation_item_list_widget(relitem_context_t &context)
 
   /* --- "Type" column --- */
   renderer = gtk_cell_renderer_text_new();
-  gtk_tree_view_insert_column_with_attributes(view,
-      -1, static_cast<const gchar *>(_("Type")), renderer, "text", RELITEM_COL_TYPE, nullptr);
+  g_object_set(renderer, "underline", PANGO_UNDERLINE_SINGLE, nullptr);
+  gtk_tree_view_insert_column_with_attributes(view, -1, static_cast<const gchar *>(_("Type")), renderer,
+                                              "text", RELITEM_COL_TYPE,
+                                              "underline-set", RELITEM_COL_MEMBER_MODIFIED,
+                                              nullptr);
 
   /* --- "Role" column --- */
   renderer = gtk_cell_renderer_text_new();
-  gtk_tree_view_insert_column_with_attributes(view,
-      -1, static_cast<const gchar *>(_("Role")), renderer, "text", RELITEM_COL_ROLE, nullptr);
+  g_object_set(renderer, "underline", PANGO_UNDERLINE_SINGLE, nullptr);
+  gtk_tree_view_insert_column_with_attributes(view, -1, static_cast<const gchar *>(_("Role")), renderer,
+                                              "text", RELITEM_COL_ROLE,
+                                              "underline-set", RELITEM_COL_ROLE_MODIFIED,
+                                              nullptr);
 
   /* build and fill the store */
-  context.store.reset(gtk_list_store_new(RELITEM_NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
-                                         G_TYPE_STRING, G_TYPE_POINTER));
+  context.store.reset(gtk_list_store_new(RELITEM_NUM_COLS,
+                                         G_TYPE_STRING,    // RELITEM_COL_TYPE
+                                         G_TYPE_BOOLEAN,   // RELITEM_COL_MEMBER_MODIFIED
+                                         G_TYPE_STRING,    // RELITEM_COL_ROLE
+                                         G_TYPE_BOOLEAN,   // RELITEM_COL_ROLE_MODIFIED
+                                         G_TYPE_STRING,    // RELITEM_COL_NAME
+                                         G_TYPE_POINTER)); // RELITEM_COL_DATA
 
   gtk_tree_view_set_model(view, GTK_TREE_MODEL(context.store.get()));
 

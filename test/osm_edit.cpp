@@ -2294,6 +2294,85 @@ void test_delete_markdirty()
   toggle_deleted(osm, r, 0, 0, 1);
 }
 
+void test_membership_state()
+{
+  std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
+  set_bounds(osm);
+
+  const lpos_t startPos(10, 10);
+  base_attributes ba(1234);
+  ba.version = 1;
+  node_t * const n = osm->node_new(startPos.toPos(osm->bounds), ba);
+  osm->insert(n);
+  ba.id = 43;
+  node_t * const n2 = osm->node_new(startPos.toPos(osm->bounds), ba);
+  osm->insert(n2);
+
+  relation_t * const r = new relation_t(ba);
+  r->members.push_back(member_t(object_t(n), "foo"));
+  r->members.push_back(member_t(object_t(n), "bar"));
+  osm->insert(r);
+
+  relation_t * const r2 = new relation_t();
+  r2->members.push_back(member_t(object_t(n), "bar"));
+  r2->members.push_back(member_t(object_t(n)));
+  osm->attach(r2);
+
+  // has a role set in a new relation, both things are considered changed
+  assert_cmpnum(r2->objectMembershipState(object_t(n), nullptr), relation_t::MembershipChanged | relation_t::RoleChanged);
+  r2->members.erase(r2->members.begin());
+  // no role set anymore
+  assert_cmpnum(r2->objectMembershipState(object_t(n), nullptr), relation_t::MembershipChanged);
+  // no member, nothing changed
+  assert_cmpnum(r2->objectMembershipState(object_t(n2), nullptr), relation_t::MembershipUnmodified);
+
+  // no member, nothing changed
+  assert_cmpnum(r->objectMembershipState(object_t(n2), nullptr), relation_t::MembershipUnmodified);
+  // member, but not marked dirty
+  assert_cmpnum(r->objectMembershipState(object_t(n), nullptr), relation_t::MembershipUnmodified);
+
+  osm->mark_dirty(r);
+  const relation_t *oR = static_cast<const relation_t *>(osm->originalObject(object_t(r)));
+  assert(oR != nullptr);
+
+  // the relation is actually unmodified, so this should still say everything is fine
+  assert_cmpnum(r->objectMembershipState(object_t(n), oR), relation_t::MembershipUnmodified);
+  assert_cmpnum(r->objectMembershipState(object_t(n2), oR), relation_t::MembershipUnmodified);
+
+  // use this method to ensure it does the right thing
+  r->eraseMember(std::cbegin(r->members));
+
+  assert_cmpnum(r->objectMembershipState(object_t(n), oR), relation_t::MembershipChanged | relation_t::RoleChanged);
+
+  // set the role back to the original value, but it should still detect that the membership count doesn't match
+  r->members.front() = oR->members.front();
+  assert_cmpnum(r->objectMembershipState(object_t(n), oR), relation_t::MembershipChanged);
+
+  // reset the members back to normal, and add a new one
+  r->members = oR->members;
+  r->members.push_back(member_t(object_t(n2)));
+
+  assert_cmpnum(r->objectMembershipState(object_t(n), oR), relation_t::MembershipUnmodified);
+
+  // add another new one, this time of the same object
+  r->members.push_back(member_t(object_t(n)));
+
+  assert_cmpnum(r->objectMembershipState(object_t(n), oR), relation_t::MembershipChanged);
+
+  // membership and role gone away
+  r->members.clear();
+  assert_cmpnum(r->objectMembershipState(object_t(n), oR), relation_t::MembershipChanged | relation_t::RoleChanged);
+
+  // added membership, no role
+  r->members = oR->members;
+  r->members.push_back(member_t(object_t(n2)));
+  assert_cmpnum(r->objectMembershipState(object_t(n2), oR), relation_t::MembershipChanged);
+
+  // with role
+  std::prev(r->members.end())->role = "foo";
+  assert_cmpnum(r->objectMembershipState(object_t(n2), oR), relation_t::MembershipChanged | relation_t::RoleChanged);
+}
+
 } // namespace
 
 int main()
@@ -2319,6 +2398,7 @@ int main()
   test_compare();
   test_updateTags();
   test_delete_markdirty();
+  test_membership_state();
 
   xmlCleanupParser();
 
