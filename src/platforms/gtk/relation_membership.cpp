@@ -3,6 +3,12 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
+/**
+ * @file relation_membership
+ *
+ * This file contains the dialog that shows all relation and if the given object
+ * is member of any of these, and if it is the role of the first occurrence.
+ */
 
 #include "relation_edit.h"
 
