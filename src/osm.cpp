@@ -1331,7 +1331,9 @@ bool way_t::is_closed() const noexcept {
   return node_chain.front() == node_chain.back();
 }
 
-static bool implicit_area(const tag_t &tg)
+namespace {
+
+bool implicit_area(const tag_t &tg)
 {
   std::array<const char *, 5> keys = { {
     "building", "landuse", "leisure", "natural", "aeroway"
@@ -1348,6 +1350,8 @@ static bool implicit_area(const tag_t &tg)
   return false;
 }
 
+} // namespace
+
 bool way_t::is_area() const
 {
   if(!is_closed())
@@ -1360,25 +1364,33 @@ bool way_t::is_area() const
   return tags.contains(implicit_area);
 }
 
+namespace {
+
 class relation_transfer {
   osm_t::ref osm;
   way_t * const dst;
   const way_t * const src;
 public:
   inline relation_transfer(osm_t::ref o, way_t *d, const way_t *s) : osm(o), dst(d), src(s) {}
-  void operator()(const std::pair<item_id_t, relation_t *> &pair);
+  void operator()(const std::pair<item_id_t, relation_t *> &pair) const;
 };
 
-void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pair)
+void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pair) const
 {
   relation_t * const relation = pair.second;
   /* walk member chain. save role of way if its being found. */
   const object_t osrc(const_cast<way_t *>(src));
   find_member_object_functor fc(osrc);
-  std::vector<member_t>::iterator itBegin = relation->members.begin();
+  const std::vector<member_t>::iterator itBegin = relation->members.begin();
   std::vector<member_t>::iterator itEnd = relation->members.end();
   std::vector<member_t>::iterator it = std::find_if(itBegin, itEnd, fc);
-  for(; it != itEnd; it = std::find_if(it, itEnd, fc)) {
+
+  if (it == itEnd)
+    return;
+
+  osm->mark_dirty(relation);
+
+  for(; it != itEnd; it = std::find_if(std::next(it), itEnd, fc)) {
     printf("way #" ITEM_ID_FORMAT " is part of relation #" ITEM_ID_FORMAT " at position %zu, adding way #" ITEM_ID_FORMAT "\n",
            src->id, relation->id, std::distance(relation->members.begin(), it), dst->id);
 
@@ -1399,7 +1411,6 @@ void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pai
                      next_way->ends_with_node(src->node_chain.back());
     } // if this is both itEnd and itBegin it is the only member, so the ordering is irrelevant
 
-    osm->mark_dirty(relation);
     // make dst member of the same relation
     if(insertBefore) {
       printf("\tinserting before way #" ITEM_ID_FORMAT " to keep relation ordering\n", src->id);
@@ -1407,14 +1418,14 @@ void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pai
       // skip this object when calling fc again, it can't be the searched one
       it++;
     } else {
-      it = relation->members.insert(++it, m);
+      it = relation->members.insert(std::next(it), m);
     }
-    // skip this object when calling fc again, it can't be the searched one
-    it++;
     // refresh the end iterator as the container was modified
     itEnd = relation->members.end();
   }
 }
+
+} // namespace
 
 way_t *way_t::split(osm_t::ref osm, node_chain_t::iterator cut_at, bool cut_at_node)
 {

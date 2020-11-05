@@ -21,7 +21,7 @@ struct relation_object_replacer {
 struct find_member_object_functor {
   const object_t &object;
   explicit inline find_member_object_functor(const object_t &o) : object(o) {}
-  bool operator()(const member_t &member) {
+  inline bool operator()(const member_t &member) {
     return member.object == object;
   }
 };

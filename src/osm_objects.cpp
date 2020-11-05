@@ -363,8 +363,6 @@ public:
   void operator()(const member_t &member) noexcept;
 };
 
-} // namespace
-
 void member_counter::operator()(const member_t &member) noexcept
 {
   switch(member.object.type) {
@@ -384,6 +382,8 @@ void member_counter::operator()(const member_t &member) noexcept
     assert_unreachable();
   }
 }
+
+} // namespace
 
 void relation_t::members_by_type(unsigned int &nodes, unsigned int &ways, unsigned int &relations) const {
   std::for_each(members.begin(), members.end(),
