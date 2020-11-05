@@ -529,7 +529,7 @@ void test_split()
   // just split the last node out of the way
   o->unmark_dirty(w);
   assert_null(w->split(o, std::next(w->node_chain.begin(), 2), false));
-  const way_t *origWay = static_cast<const way_t *>(o->originalObject(object_t(w)));
+  const way_t *origWay = o->originalObject(w);
   assert(origWay != nullptr);
   assert(origWay != w);
   assert_cmpnum(origWay->id, w->id);
@@ -1203,7 +1203,7 @@ void test_merge_nodes()
   assert_cmpnum(o->original.relations.size(), 0);
   assert_cmpnum(o->original.nodes.begin()->first, n2->id);
   assert_cmpnum(o->original.nodes.begin()->second->id, n2->id);
-  assert(o->original.nodes.begin()->second == o->originalObject(object_t(n2)));
+  assert(o->original.nodes.begin()->second == o->originalObject(n2));
   assert(o->original.nodes.begin()->second != n2); // must be a distinct instance
   assert(*(o->original.nodes.begin()->second) != *n2);
   // now do an update, which should detect that things are still different
@@ -1235,7 +1235,7 @@ void test_merge_nodes()
   assert_null(ways2join[1]);
 
   assert_cmpnum(o->original.nodes.size(), 1);
-  assert(o->original.nodes.begin()->second == o->originalObject(object_t(n2)));
+  assert(o->original.nodes.begin()->second == o->originalObject(n2));
   o->wipe(n2);
   assert_cmpnum(o->nodes.size(), 0);
 
@@ -1744,7 +1744,7 @@ void test_merge_existing_ways()
     assert_cmpnum((*it)->ways, 1);
 
   // the relation should have been saved
-  const relation_t * const origR = static_cast<const relation_t *>(o->originalObject(object_t(r)));
+  const relation_t * const origR = o->originalObject(r);
   assert(origR != nullptr);
   assert_cmpnum(origR->members.size(), 1);
   assert(origR->members.front() == object_t(w0));
@@ -1752,7 +1752,7 @@ void test_merge_existing_ways()
   o->relation_delete(r);
 
   // deleting the relation must not invalidate the original
-  assert(origR == static_cast<const relation_t *>(o->originalObject(object_t(object_t::RELATION_ID, origR->id))));
+  assert(origR == o->originalObject(origR));
   assert_cmpnum(origR->members.size(), 1);
   assert(origR->members.front() == object_t(w0));
 }
@@ -2332,7 +2332,7 @@ void test_membership_state()
   assert_cmpnum(r->objectMembershipState(object_t(n), nullptr), relation_t::MembershipUnmodified);
 
   osm->mark_dirty(r);
-  const relation_t *oR = static_cast<const relation_t *>(osm->originalObject(object_t(r)));
+  const relation_t *oR = osm->originalObject(r);
   assert(oR != nullptr);
 
   // the relation is actually unmodified, so this should still say everything is fine

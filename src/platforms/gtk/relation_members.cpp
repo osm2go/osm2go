@@ -179,7 +179,7 @@ relation_add_item(GtkWidget *parent, relation_t *relation, const object_t &objec
 unsigned int
 isOriginalRelation(osm_t::ref osm, const relation_t *rel, object_t &obj)
 {
-  const relation_t *orig = static_cast<const relation_t *>(osm->originalObject(object_t(object_t::RELATION_ID, rel->id)));
+  const relation_t *orig = osm->originalObject(rel);
 
   return rel->objectMembershipState(obj, orig);
 }

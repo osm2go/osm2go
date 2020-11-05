@@ -165,7 +165,7 @@ class osm_t {
   template<typename T> inline std::map<item_id_t, T *> &objects();
   template<typename T> inline const std::map<item_id_t, T *> &objects() const;
   template<typename T> void attachObject(T *obj);
-  template<typename T> inline const T *findOriginalById(item_id_t id) const;
+  template<typename T> const T *findOriginalById(item_id_t id) const;
   template<typename T> inline std::unordered_map<item_id_t, const T *> &originalObjects();
   template<typename T> inline const std::unordered_map<item_id_t, const T *> &originalObjects() const;
 public:
@@ -357,6 +357,12 @@ public:
    * @brief return the original object to the given object if there is one
    */
   const base_object_t *originalObject(object_t o) const;
+
+  template<typename T ENABLE_IF_CONVERTIBLE(T *, base_object_t *)>
+  const T *originalObject(const T *o) const
+  {
+    return findOriginalById<T>(o->id);
+  }
 
   /**
    * @brief find a way matching the given predicate

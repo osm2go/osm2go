@@ -237,7 +237,7 @@ member_list_widget(member_context_t &context)
 
   gtk_tree_view_set_model(view, GTK_TREE_MODEL(store));
 
-  const relation_t *origRel = static_cast<const relation_t *>(context.osm->originalObject(object_t(object_t::RELATION_ID, context.relation->id)));
+  const relation_t *origRel = context.osm->originalObject(context.relation);
 
   for (size_t i = 0; i < context.relation->members.size(); i++) {
     const member_t &member = context.relation->members.at(i);
@@ -335,7 +335,7 @@ void reorderMembers(member_context_t *context, GtkTreeModel *model, GtkTreeIter 
 
   // no update is needed if the relation is new, all members are modified there anyway
   if (!rel->isNew()) {
-    const relation_t *origRel = static_cast<const relation_t *>(context->osm->originalObject(object_t(rel)));
+    const relation_t *origRel = context->osm->originalObject(rel);
     assert(origRel != nullptr);
     // the values have already be exchanged, now update the possible changes to the original object
     // the idx values and the iterators are swapped, as gtk_list_store_swap modifies the GtkTreeIter values
@@ -575,7 +575,7 @@ void relation_list_widget_functor::operator()(const relation_t *rel)
     return;
 
   const std::string &name = rel->descriptive_name();
-  const relation_t * const orig = static_cast<const relation_t *>(osm->originalObject(object_t(object_t::RELATION_ID, rel->id)));
+  const relation_t * const orig = osm->originalObject(rel);
 
   /* Append a row and fill in some data */
   gtk_list_store_insert_with_values(store, nullptr, -1,
