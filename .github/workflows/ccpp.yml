@@ -1,0 +1,89 @@
+name: C/C++ CI
+
+env:
+  VALGRIND_SUPP_DIR: /tmp/valgrind-suppressions
+  OSM2GO_BUILD_DIR: /tmp/osm2go_ci_build
+
+on:
+  push:
+    branches:
+     - '*'
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: build-${{ matrix.config.name }}-${{ matrix.setup.name }}
+    runs-on: ubuntu-16.04
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+         - {
+             name: "GCC 5",
+             cc: "gcc-5",
+             cxx: "g++-5"
+           }
+         - {
+             name: "GCC 7",
+             cc: "gcc-7",
+             cxx: "g++-7"
+           }
+          # 2 glib warnings, fails to run 4 tests
+#         - {
+#             name: "GCC 8",
+#             cc: "gcc-8",
+#             cxx: "g++-8"
+#           }
+          # 4 glib warnings
+#         - {
+#             name: "GCC 9",
+#             cc: "gcc-9",
+#             cxx: "g++-9"
+#           }
+          # many warnings about libssl version mismatches
+#         - {
+#             name: "Clang",
+#             cc: "clang",
+#             cxx: "clang++"
+#           }
+        setup:
+          - {
+              name: "default",
+              options: "-DUSE_SVG_ICONS=On;-DNETWORK_TESTS=On"
+            }
+          - {
+              name: "picker",
+              options: "-DSERVER_EDITABLE=Off;-DPICKER_MENU=On;-DUSE_SVG_ICONS=Off;-DNETWORK_TESTS=On"
+            }
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+
+    - name: cache valgrind suppression
+      id: cache-valgrind
+      uses: actions/cache@v2
+      with:
+        path: /tmp/valgrind-suppressions
+        key: ${{ runner.os }}-valgrind
+
+    - name: test_deps
+      run: sudo apt-get install libgoocanvas-dev libcurl4-openssl-dev libsoup2.4-dev libgps-dev libgtk2.0-dev libgnomevfs2-dev valgrind
+
+    - name: generate valgrind suppression
+      if: steps.cache-valgrind.outputs.cache-hit != 'true'
+      run: mkdir -p ${OSM2GO_BUILD_DIR} ${VALGRIND_SUPP_DIR} && pushd ${OSM2GO_BUILD_DIR} && cmake -D CMAKE_BUILD_TYPE=Debug ${GITHUB_WORKSPACE} && make suppression-dummy && valgrind --leak-check=full --gen-suppressions=all --show-leak-kinds=all ./test/suppression-dummy 2>&1 | grep -v '^=' > ${VALGRIND_SUPP_DIR}/valgrind-auto.supp
+
+    - name: configure
+      run: mkdir -p ${OSM2GO_BUILD_DIR}; echo -e "set(OSM2GO_BUILD_DIR \"${OSM2GO_BUILD_DIR}\")\nset(dashboard_model \"Continuous\")\nset(CTEST_SITE github.com)\nset(CTEST_BUILD_NAME \"CI ${CC_NAME} ${TYPE_NAME}\")\nset(CTEST_MEMORYCHECK_COMMAND_OPTIONS \"--suppressions=${VALGRIND_SUPP_DIR}/valgrind-auto.supp\")\ninclude(${GITHUB_WORKSPACE}/ctest_osm2go.cmake)" > my_osm2go.cmake
+      env:
+        CC_NAME: ${{ matrix.config.name }}
+        TYPE_NAME: ${{ matrix.setup.name }}
+
+    - name: build
+      run: CFLAGS="-O0 -fprofile-arcs -ftest-coverage" CXXFLAGS="-O0 -fprofile-arcs -ftest-coverage" ctest -V -S my_osm2go.cmake -D "CONF_OPTIONS=${CONF_OPTIONS}" || true
+      env:
+        CC: ${{ matrix.config.cc }}
+        CXX: ${{ matrix.config.cxx }}
+        CONF_OPTIONS: ${{ matrix.setup.options }}
