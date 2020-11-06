@@ -79,26 +79,6 @@ struct entry_insert_text {
   }
 };
 
-struct relation_context_t {
-  inline relation_context_t(map_t *m, osm_t::ref o, presets_items *p, GtkWidget *d)
-    : map(m), osm(o), presets(p), dialog(d), list(nullptr) {}
-  relation_context_t() O2G_DELETED_FUNCTION;
-  relation_context_t(const relation_context_t &) O2G_DELETED_FUNCTION;
-  relation_context_t &operator=(const relation_context_t &) O2G_DELETED_FUNCTION;
-#if __cplusplus >= 201103L
-  relation_context_t(relation_context_t &&) = delete;
-  relation_context_t &operator=(relation_context_t &&) = delete;
-  ~relation_context_t() = default;
-#endif
-
-  map_t * const map;
-  osm_t::ref osm;
-  presets_items * const presets;
-  osm2go_platform::DialogGuard dialog;
-  GtkWidget *list;
-  std::unique_ptr<GtkListStore, g_object_deleter> store;
-};
-
 bool
 relation_add_item(GtkWidget *parent, relation_t *relation, const object_t &object, const presets_items *presets, osm_t::ref osm)
 {
