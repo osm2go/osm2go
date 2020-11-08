@@ -2373,6 +2373,99 @@ void test_membership_state()
   assert_cmpnum(r->objectMembershipState(object_t(n2), oR), relation_t::MembershipChanged | relation_t::RoleChanged);
 }
 
+void test_updateMembers()
+{
+  std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
+  set_bounds(osm);
+
+  const lpos_t startPos(10, 10);
+  base_attributes ba(1234);
+  ba.version = 1;
+  node_t * const n = osm->node_new(startPos.toPos(osm->bounds), ba);
+  osm->insert(n);
+  ba.id = 43;
+  node_t * const n2 = osm->node_new(startPos.toPos(osm->bounds), ba);
+  osm->insert(n2);
+
+  relation_t * const r = new relation_t(ba);
+  r->members.push_back(member_t(object_t(n), "foo"));
+  r->members.push_back(member_t(object_t(n), "bar"));
+  const std::vector<member_t> origMembers = r->members;
+  osm->insert(r);
+
+  // update with same members again
+  {
+    std::vector<member_t> nMembers = r->members;
+    r->updateMembers(nMembers, osm);
+    assert_null(osm->originalObject(r));
+  }
+
+  // actually modify
+  {
+    std::vector<member_t> nMembers = r->members;
+    std::reverse(nMembers.begin(), nMembers.end());
+    r->updateMembers(nMembers, osm);
+    assert(osm->originalObject(r) != nullptr);
+  }
+
+  // reset back
+  {
+    std::vector<member_t> nMembers = origMembers;
+    r->updateMembers(nMembers, osm);
+    assert_null(osm->originalObject(r));
+  }
+
+  // modify again
+  {
+    std::vector<member_t> nMembers = r->members;
+    std::reverse(nMembers.begin(), nMembers.end());
+    r->updateMembers(nMembers, osm);
+    assert(osm->originalObject(r) != nullptr);
+  }
+
+  // now modify the tags
+  {
+    std::vector<tag_t> nTags = ab_with_creator();
+    r->tags.replace(std::move(nTags));
+  }
+
+  // reset back, should still be dirty because the tags have changed
+  {
+    std::vector<member_t> nMembers = origMembers;
+    r->updateMembers(nMembers, osm);
+    assert(osm->originalObject(r) != nullptr);
+  }
+
+  r->tags.clear();
+  r->members.clear();
+
+  // now again set back, should be back to original state now
+  {
+    std::vector<member_t> nMembers = origMembers;
+    r->updateMembers(nMembers, osm);
+    assert_null(osm->originalObject(r));
+  }
+
+  ///////////////// now test with a new relation
+  relation_t * const rNew = new relation_t();
+  osm->attach(rNew);
+  assert(rNew->isNew());
+
+  {
+    std::vector<member_t> nMembers = origMembers;
+    rNew->updateMembers(nMembers, osm);
+    assert(osm->originalObject(rNew) == nullptr);
+    assert(rNew->members == origMembers);
+  }
+
+  {
+    std::vector<member_t> nMembers;
+    rNew->updateMembers(nMembers, osm);
+    assert(osm->originalObject(rNew) == nullptr);
+    assert(rNew->members.empty());
+  }
+}
+
 } // namespace
 
 int main()
@@ -2399,6 +2492,7 @@ int main()
   test_updateTags();
   test_delete_markdirty();
   test_membership_state();
+  test_updateMembers();
 
   xmlCleanupParser();
 

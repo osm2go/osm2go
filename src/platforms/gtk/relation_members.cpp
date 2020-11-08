@@ -32,11 +32,14 @@
 namespace {
 
 struct member_context_t {
+  static std::vector<member_t> emptyMembers;  ///< dummy list to show all new relation members as modified
+
   inline member_context_t(relation_t *r, osm_t::ref o, GtkWidget *parent)
     : relation(r)
     , dialog(gtk_dialog_new_with_buttons(static_cast<const gchar *>(trstring("Members of relation \"%1\"").arg(relation->descriptive_name())),
                                          GTK_WINDOW(parent), GTK_DIALOG_MODAL,
-                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                         GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                          nullptr))
     , osm(o)
 #ifdef FREMANTLE
@@ -46,6 +49,9 @@ struct member_context_t {
     , buttonUp(gtk_button_new_with_mnemonic(static_cast<const gchar *>(_("_Up"))))
     , buttonDown(gtk_button_new_with_mnemonic(static_cast<const gchar *>(_("_Down"))))
 #endif
+    , origRelation(osm->originalObject(relation))
+    , origMembers(origRelation != nullptr ? origRelation->members : relation->isNew() ? emptyMembers : relation->members)
+    , currentMembers(relation->members)
   {
   }
 
@@ -58,12 +64,17 @@ struct member_context_t {
   ~member_context_t() = default;
 #endif
   relation_t * const relation;
-  GtkWidget * const dialog;
+  const osm2go_platform::DialogGuard dialog;
   GtkTreeView *view;
   osm_t::ref osm;
   GtkWidget * const buttonUp;
   GtkWidget * const buttonDown;
+  const relation_t * const origRelation;
+  const std::vector<member_t> &origMembers;
+  std::vector<member_t> currentMembers;
 };
+
+std::vector<member_t> member_context_t::emptyMembers;
 
 enum {
   MEMBER_COL_TYPE = 0,
@@ -168,13 +179,10 @@ member_list_widget(member_context_t &context)
 
   gtk_tree_view_set_model(view, GTK_TREE_MODEL(store));
 
-  const relation_t *origRel = context.osm->originalObject(context.relation);
+  for (size_t i = 0; i < context.currentMembers.size(); i++) {
+    const member_t &member = context.currentMembers.at(i);
 
-  for (size_t i = 0; i < context.relation->members.size(); i++) {
-    const member_t &member = context.relation->members.at(i);
-
-    const member_t origMember = (origRel == nullptr) ? member :
-                                (i >= origRel->members.size()) ? member_t(object_t()) : origRel->members.at(i);
+    const member_t origMember = (i >= context.origMembers.size()) ? member_t(object_t()) : context.origMembers.at(i);
 
     /* Append a row and fill in some data */
     bool realObj = member.object.is_real();
@@ -218,18 +226,18 @@ gint indexFromIter(GtkTreeModel *model, GtkTreeIter *iter)
   return *ind;
 }
 
-void __attribute__ ((nonnull(1,2,3,5)))
-memberListUpdate(GtkTreeModel *model, GtkTreeIter *iter, const relation_t *rel, int index, const relation_t *orig)
+void __attribute__ ((nonnull(1,2)))
+memberListUpdate(GtkTreeModel *model, GtkTreeIter *iter, const std::vector<member_t> &currentMembers, int index, const std::vector<member_t> &origMembers)
 {
   gboolean tChanged, iChanged, rChanged;
 
-  if (static_cast<unsigned int>(index) >= orig->members.size()) {
+  if (static_cast<unsigned int>(index) >= origMembers.size()) {
     tChanged = TRUE;
     iChanged = TRUE;
     rChanged = TRUE;
   } else {
-    const member_t &origMember = orig->members.at(index);
-    const member_t &member = rel->members.at(index);
+    const member_t &origMember = origMembers.at(index);
+    const member_t &member = currentMembers.at(index);
     tChanged =  origMember.object.type != member.object.type ? TRUE : FALSE;
     iChanged = origMember.object.get_id() != member.object.get_id() ? TRUE : FALSE;
     rChanged = origMember.role != member.role ? TRUE : FALSE;
@@ -251,32 +259,24 @@ void reorderMembers(member_context_t *context, GtkTreeModel *model, GtkTreeIter 
 {
   gint idxFrom = indexFromIter(model, from);
   gint idxTo = indexFromIter(model, to);
-  relation_t *rel = context->relation;
 
   gtk_list_store_swap(GTK_LIST_STORE(model), from, to);
 
-  assert_cmpnum_op(static_cast<unsigned int>(idxFrom), <, rel->members.size());
-  assert_cmpnum_op(static_cast<unsigned int>(idxTo), <, rel->members.size());
+  assert_cmpnum_op(static_cast<unsigned int>(idxFrom), <, context->currentMembers.size());
+  assert_cmpnum_op(static_cast<unsigned int>(idxTo), <, context->currentMembers.size());
 
-  context->osm->mark_dirty(rel);
+  member_t tmp = context->currentMembers[idxFrom];
+  context->currentMembers[idxFrom] = context->currentMembers[idxTo];
+  context->currentMembers[idxTo] = tmp;
 
-  member_t tmp = rel->members[idxFrom];
-  rel->members[idxFrom] = rel->members[idxTo];
-  rel->members[idxTo] = tmp;
-
-  // no update is needed if the relation is new, all members are modified there anyway
-  if (!rel->isNew()) {
-    const relation_t *origRel = context->osm->originalObject(rel);
-    assert(origRel != nullptr);
-    // the values have already be exchanged, now update the possible changes to the original object
-    // the idx values and the iterators are swapped, as gtk_list_store_swap modifies the GtkTreeIter values
-    memberListUpdate(model, from, rel, idxTo, origRel);
-    memberListUpdate(model, to, rel, idxFrom, origRel);
-  }
+  // the values have already be exchanged, now update the possible changes to the original members
+  // the idx values and the iterators are swapped, as gtk_list_store_swap modifies the GtkTreeIter values
+  memberListUpdate(model, from, context->currentMembers, idxTo, context->origMembers);
+  memberListUpdate(model, to, context->currentMembers, idxFrom, context->origMembers);
 
   // idxSecond is the new position of the selected index
   gtk_widget_set_sensitive(context->buttonUp, idxTo > 0 ? TRUE : FALSE);
-  gtk_widget_set_sensitive(context->buttonDown, static_cast<unsigned int>(idxTo) < rel->members.size() - 1 ? TRUE : FALSE);
+  gtk_widget_set_sensitive(context->buttonDown, static_cast<unsigned int>(idxTo) < context->currentMembers.size() - 1 ? TRUE : FALSE);
 }
 
 void
@@ -320,17 +320,16 @@ void relation_show_members(GtkWidget *parent, relation_t *relation, osm_t::ref o
 {
   member_context_t mcontext(relation, osm, parent);
 
-  osm2go_platform::dialog_size_hint(GTK_WINDOW(mcontext.dialog), osm2go_platform::MISC_DIALOG_MEDIUM);
-  gtk_dialog_set_default_response(GTK_DIALOG(mcontext.dialog),
-				  GTK_RESPONSE_CLOSE);
+  osm2go_platform::dialog_size_hint(static_cast<GtkWindow *>(mcontext.dialog), osm2go_platform::MISC_DIALOG_MEDIUM);
+  gtk_dialog_set_default_response(static_cast<GtkDialog *>(mcontext.dialog), GTK_RESPONSE_CLOSE);
 
-  GtkBox *box = GTK_BOX(GTK_DIALOG(mcontext.dialog)->vbox);
+  GtkBox *box = GTK_BOX(static_cast<GtkDialog *>(mcontext.dialog)->vbox);
   gtk_box_pack_start(box, member_list_widget(mcontext), TRUE, TRUE, 0);
 
   GtkWidget *table = gtk_table_new(1, 2, TRUE);
   gtk_box_pack_start(box, table, FALSE, FALSE, 0);
 
-  if (relation->members.size() > 1) {
+  if (mcontext.currentMembers.size() > 1) {
     gtk_table_attach_defaults(GTK_TABLE(table), mcontext.buttonUp, 0, 1, 0, 1);
     g_signal_connect_swapped(mcontext.buttonUp, "clicked", G_CALLBACK(on_up_clicked), &mcontext);
 
@@ -348,7 +347,7 @@ void relation_show_members(GtkWidget *parent, relation_t *relation, osm_t::ref o
 #endif
   }
 
-  gtk_widget_show_all(mcontext.dialog);
-  gtk_dialog_run(GTK_DIALOG(mcontext.dialog));
-  gtk_widget_destroy(mcontext.dialog);
+  gtk_widget_show_all(mcontext.dialog.get());
+  if (gtk_dialog_run(static_cast<GtkDialog *>(mcontext.dialog)) == GTK_RESPONSE_ACCEPT)
+    relation->updateMembers(mcontext.currentMembers, osm);
 }

@@ -407,6 +407,29 @@ relation_t::objectMembershipState(const object_t &obj, const relation_t *orig) c
   return ret;
 }
 
+void relation_t::updateMembers(std::vector<member_t> &newMembers, osm_t::ref osm)
+{
+  if (newMembers == members)
+    return;
+
+  assert(std::find(newMembers.begin(), newMembers.end(), member_t(object_t())) == newMembers.end());
+
+  const relation_t * const orig = osm->originalObject(this);
+  if (orig == nullptr) {
+    // members have changed and it wasn't dirty before, so it must be dirty now
+    osm->mark_dirty(this);
+    members.swap(newMembers);
+    return;
+  }
+
+  // the object is already marked dirty, so we can modify at will
+  members.swap(newMembers);
+
+  // everything back to normal
+  if (*this == *orig)
+    osm->unmark_dirty(this);
+}
+
 namespace {
 
 class member_counter {

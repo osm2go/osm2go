@@ -457,6 +457,13 @@ public:
    */
   unsigned int objectMembershipState(const object_t &obj, const relation_t *orig) const;
 
+  /**
+   * @brief update the member vector
+   *
+   * This will mark the relation as modified or unmodified as needed.
+   */
+  void updateMembers(std::vector<member_t> &newMembers, osm_t::ref osm);
+
   void members_by_type(unsigned int &nodes, unsigned int &ways, unsigned int &relations) const;
   std::string descriptive_name() const;
   void generate_member_xml(xmlNodePtr xml_node) const;
