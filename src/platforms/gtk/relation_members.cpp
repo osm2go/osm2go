@@ -17,6 +17,7 @@
 #include <map.h>
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstring>
 #include <set>
@@ -72,7 +73,32 @@ struct member_context_t {
   const relation_t * const origRelation;
   const std::vector<member_t> &origMembers;
   std::vector<member_t> currentMembers;
+
+  /**
+   * @brief returns the new values for the *_CHANGED columns
+   * @returns the values for the MEMBER_COL_TYPE_CHANGED, MEMBER_COL_ID_CHANGED, and MEMBER_COL_ROLE_CHANGED columns
+   */
+  std::array<gboolean, 3> valuesChanged(size_t index) const;
 };
+
+std::array<gboolean, 3> member_context_t::valuesChanged(size_t index) const
+{
+  std::array<gboolean, 3> ret;
+
+  if (index >= origMembers.size()) {
+    ret[0] = TRUE;
+    ret[1] = TRUE;
+    ret[2] = TRUE;
+  } else {
+    const member_t &origMember = origMembers.at(index);
+    const member_t &member = currentMembers.at(index);
+    ret[0] =  origMember.object.type != member.object.type ? TRUE : FALSE;
+    ret[1] = origMember.object.get_id() != member.object.get_id() ? TRUE : FALSE;
+    ret[2] = origMember.role != member.role ? TRUE : FALSE;
+  }
+
+  return ret;
+}
 
 std::vector<member_t> member_context_t::emptyMembers;
 
@@ -182,19 +208,19 @@ member_list_widget(member_context_t &context)
   for (size_t i = 0; i < context.currentMembers.size(); i++) {
     const member_t &member = context.currentMembers.at(i);
 
-    const member_t origMember = (i >= context.origMembers.size()) ? member_t(object_t()) : context.origMembers.at(i);
+    const std::array<gboolean, 3> changedVals = context.valuesChanged(i);
 
     /* Append a row and fill in some data */
     bool realObj = member.object.is_real();
     GtkTreeIter iter;
     gtk_list_store_insert_with_values(store, &iter, -1,
                                       MEMBER_COL_TYPE,         static_cast<const gchar *>(member.object.type_string()),
-                                      MEMBER_COL_TYPE_CHANGED, origMember.object.type != member.object.type ? TRUE : FALSE,
+                                      MEMBER_COL_TYPE_CHANGED, changedVals[0],
                                       MEMBER_COL_ID,           member.object.id_string().c_str(),
-                                      MEMBER_COL_ID_CHANGED,   origMember.object.get_id() != member.object.get_id() ? TRUE : FALSE,
+                                      MEMBER_COL_ID_CHANGED,   changedVals[1],
                                       MEMBER_COL_NAME,         realObj ? static_cast<const gchar *>(member.object.get_name(*context.osm)) : nullptr,
                                       MEMBER_COL_ROLE,         member.role,
-                                      MEMBER_COL_ROLE_CHANGED, origMember.role != member.role ? TRUE : FALSE,
+                                      MEMBER_COL_ROLE_CHANGED, changedVals[2],
                                       MEMBER_COL_REF_ONLY,     realObj ? FALSE : TRUE,
                                       MEMBER_COL_DATA,         &member,
                                       -1);
@@ -227,26 +253,14 @@ gint indexFromIter(GtkTreeModel *model, GtkTreeIter *iter)
 }
 
 void __attribute__ ((nonnull(1,2)))
-memberListUpdate(GtkTreeModel *model, GtkTreeIter *iter, const std::vector<member_t> &currentMembers, int index, const std::vector<member_t> &origMembers)
+memberListUpdate(GtkTreeModel *model, GtkTreeIter *iter, member_context_t &context, int index)
 {
-  gboolean tChanged, iChanged, rChanged;
-
-  if (static_cast<unsigned int>(index) >= origMembers.size()) {
-    tChanged = TRUE;
-    iChanged = TRUE;
-    rChanged = TRUE;
-  } else {
-    const member_t &origMember = origMembers.at(index);
-    const member_t &member = currentMembers.at(index);
-    tChanged =  origMember.object.type != member.object.type ? TRUE : FALSE;
-    iChanged = origMember.object.get_id() != member.object.get_id() ? TRUE : FALSE;
-    rChanged = origMember.role != member.role ? TRUE : FALSE;
-  }
+  const std::array<gboolean, 3> changedVals = context.valuesChanged(index);
 
   gtk_list_store_set(GTK_LIST_STORE(model), iter,
-                     MEMBER_COL_TYPE_CHANGED, tChanged,
-                     MEMBER_COL_ID_CHANGED,   iChanged,
-                     MEMBER_COL_ROLE_CHANGED, rChanged,
+                     MEMBER_COL_TYPE_CHANGED, changedVals[0],
+                     MEMBER_COL_ID_CHANGED,   changedVals[1],
+                     MEMBER_COL_ROLE_CHANGED, changedVals[2],
                      -1);
 }
 
@@ -271,10 +285,10 @@ void reorderMembers(member_context_t *context, GtkTreeModel *model, GtkTreeIter 
 
   // the values have already be exchanged, now update the possible changes to the original members
   // the idx values and the iterators are swapped, as gtk_list_store_swap modifies the GtkTreeIter values
-  memberListUpdate(model, from, context->currentMembers, idxTo, context->origMembers);
-  memberListUpdate(model, to, context->currentMembers, idxFrom, context->origMembers);
+  memberListUpdate(model, from, *context, idxTo);
+  memberListUpdate(model, to, *context, idxFrom);
 
-  // idxSecond is the new position of the selected index
+  // idxTo is the new position of the selected index
   gtk_widget_set_sensitive(context->buttonUp, idxTo > 0 ? TRUE : FALSE);
   gtk_widget_set_sensitive(context->buttonDown, static_cast<unsigned int>(idxTo) < context->currentMembers.size() - 1 ? TRUE : FALSE);
 }
