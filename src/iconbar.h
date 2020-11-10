@@ -13,7 +13,7 @@
 #include <osm2go_platform.h>
 
 struct appdata_t;
-struct object_t;
+class object_t;
 
 class iconbar_t {
 protected:

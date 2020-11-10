@@ -161,6 +161,12 @@ void role_collect_functor::operator()(const presets_item::role &role)
 
 std::set<std::string> presets_items_internal::roles(const relation_t *relation, const object_t &obj) const
 {
+  std::set<std::string> ret;
+
+  // members that are only references can't be really checked, so just return an empty list
+  if (!obj.is_real())
+    return ret;
+
   // collect existing roles first
   role_collect_functor::RoleCountMap existingRoles;
   const std::vector<member_t>::const_iterator mitEnd = relation->members.end();
@@ -170,7 +176,6 @@ std::set<std::string> presets_items_internal::roles(const relation_t *relation, 
     mit++;
   }
 
-  std::set<std::string> ret;
   const presets_item *item = nullptr;
   relation_preset_functor fc(relation, &item);
   const std::vector<presets_item_t *>::const_iterator itEnd = items.end();

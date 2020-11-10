@@ -218,6 +218,14 @@ test_roles(const presets_items *presets)
   relation_t r2;
   roles = presets->roles(&r, object_t(&r2));
   assert_cmpnum(roles.size(), 0);
+
+  // roles on invalid objects should just be empty
+  roles = presets->roles(&r, object_t());
+  assert_cmpnum(roles.size(), 0);
+
+  assert_cmpnum(presets->roles(&r, object_t(object_t::NODE_ID, 1234)).size(), 0);
+  assert_cmpnum(presets->roles(&r, object_t(object_t::WAY_ID, 1234)).size(), 0);
+  assert_cmpnum(presets->roles(&r, object_t(object_t::RELATION_ID, 1234)).size(), 0);
 }
 
 } // namespace
