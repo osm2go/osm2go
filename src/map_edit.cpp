@@ -246,7 +246,7 @@ void map_t::way_node_add(lpos_t pos) {
     std::optional<unsigned int> insert_after = canvas->get_item_segment(item->item, pos);
     if(insert_after) {
       /* insert it into ways chain of nodes */
-      way_t *way = item->object.way;
+      way_t *way = static_cast<way_t *>(item->object);
 
       /* create new node */
       node_t* node = way->insert_node(appdata.project->osm, *insert_after + 1, pos);
@@ -276,18 +276,20 @@ void map_t::way_cut_highlight(map_item_t *item, lpos_t pos) {
   if(item_is_selected_way(item)) {
     std::optional<unsigned int> seg = canvas->get_item_segment(item->item, pos);
     if(seg) {
-      unsigned int width = (item->object.way->draw.flags & OSM_DRAW_FLAG_BG) ?
-                           2 * item->object.way->draw.bg.width :
-                           3 * item->object.way->draw.width;
+      const way_t *way = static_cast<way_t *>(item->object);
+      unsigned int width = (way->draw.flags & OSM_DRAW_FLAG_BG) ?
+                           2 * way->draw.bg.width :
+                           3 * way->draw.width;
       std::vector<lpos_t> coords(2);
-      coords[0] = item->object.way->node_chain[*seg]->lpos;
-      coords[1] = item->object.way->node_chain[*seg + 1]->lpos;
+      coords[0] = way->node_chain[*seg]->lpos;
+      coords[1] = way->node_chain[*seg + 1]->lpos;
       cursor.reset(canvas->polyline_new(CANVAS_GROUP_DRAW, coords, width, style->highlight.node_color));
     }
   } else if(item_is_selected_node(item)) {
     /* cutting a way at its first or last node doesn't make much sense ... */
-    if(!selected.object.way->ends_with_node(item->object.node))
-      hl_cursor_draw(item->object.node->lpos, 2 * style->node.radius);
+    node_t *node = static_cast<node_t *>(item->object);
+    if(!static_cast<way_t *>(selected.object)->ends_with_node(node))
+      hl_cursor_draw(node->lpos, 2 * style->node.radius);
   }
 }
 
@@ -310,11 +312,11 @@ void map_t::way_cut(lpos_t pos) {
     /* node must not be first or last node of way */
     assert(selected.object.type == object_t::WAY);
 
-    if(!selected.object.way->ends_with_node(item->object.node)) {
-      way = selected.object.way;
+    way = static_cast<way_t *>(selected.object);
+    if(!way->ends_with_node(static_cast<node_t *>(item->object))) {
 
       cut_at = std::find(way->node_chain.begin(), way->node_chain.end(),
-                         item->object.node);
+                         static_cast<node_t *>(item->object));
     } else {
       printf("  won't cut as it's last or first node\n");
       return;
@@ -325,7 +327,7 @@ void map_t::way_cut(lpos_t pos) {
     std::optional<unsigned int> c = canvas->get_item_segment(item->item, pos);
     if(!c)
       return;
-    way = item->object.way;
+    way = static_cast<way_t *>(item->object);
     // add one since to denote the end of the segment
     cut_at = std::next(way->node_chain.begin(), *c + 1);
   }
@@ -394,7 +396,7 @@ void map_t::node_move(map_item_t *map_item, const osm2go_platform::screenpos &p)
   osm_t::ref osm = appdata.project->osm;
 
   assert(map_item->object.type == object_t::NODE);
-  node_t *node = map_item->object.node;
+  node_t *node = static_cast<node_t *>(map_item->object);
 
   printf("released dragged node #" ITEM_ID_FORMAT ", was at %d %d (%f %f)\n",
          node->id, node->lpos.x, node->lpos.y, node->pos.lat, node->pos.lon);
@@ -500,9 +502,9 @@ void map_t::way_reverse() {
 
   unsigned int n_tags_flipped;
   unsigned int n_roles_flipped;
-  sel.way->reverse(appdata.project->osm, n_tags_flipped, n_roles_flipped);
+  static_cast<way_t *>(sel)->reverse(appdata.project->osm, n_tags_flipped, n_roles_flipped);
 
-  select_way(sel.way);
+  select_way(static_cast<way_t *>(sel));
 
   if (n_tags_flipped == 0 && n_roles_flipped == 0)
     return;

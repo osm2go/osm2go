@@ -154,7 +154,7 @@ iconbar_toggle_way_widgets(iconbar_gtk *iconbar, bool value, const object_t &sel
     assert(selected.type != object_t::ILLEGAL);
 
   gtk_widget_set_sensitive(iconbar->way_cut,
-                           (value && selected.way->node_chain.size() > 2) ? TRUE : FALSE);
+                           (value && static_cast<way_t *>(selected)->node_chain.size() > 2) ? TRUE : FALSE);
 }
 
 } // namespace

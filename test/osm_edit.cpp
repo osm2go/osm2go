@@ -145,8 +145,8 @@ void test_trivial()
   relation_t *r = osm->attach(new relation_t());
   object_t robj(r);
   // check compare
-  assert(robj == r);
-  assert(robj != w);
+  assert(robj.operator==(r));
+  assert(robj.operator!=(w));
 
   object_t inv;
   assert_cmpnum(inv.get_id(), ID_ILLEGAL);
@@ -608,7 +608,7 @@ bool checkLinearRelation(const relation_t *r)
   if(it->object.type == object_t::NODE)
     it++;
   assert_cmpnum(it->object.type, object_t::WAY);
-  const way_t *last = it->object.way;
+  const way_t *last = static_cast<way_t *>(it->object);
 
   std::cout << "WAY " << last->id << " start " << last->first_node()->id
             << " end " << last->last_node()->id << " length " << last->node_chain.size()
@@ -616,7 +616,7 @@ bool checkLinearRelation(const relation_t *r)
 
   for(++it; it != itEnd; it++) {
     assert_cmpnum(it->object.type, object_t::WAY);
-    const way_t *w = it->object.way;
+    const way_t *w = static_cast<way_t *>(it->object);
     std::cout << "WAY " << w->id << " start " << w->first_node()->id
               << " end " << w->last_node()->id << " length " << w->node_chain.size()
               << std::endl;
@@ -627,7 +627,7 @@ bool checkLinearRelation(const relation_t *r)
       ret = false;
     }
 
-    last = it->object.way;
+    last = static_cast<way_t *>(it->object);
   }
 
   return ret;
@@ -847,17 +847,17 @@ void test_reverse()
   // rels[1] has matching type, first member role should be changed
   assert_cmpnum(rels[1]->members.size(), 2);
   assert_cmpstr(rels[1]->members.front().role, "backward");
-  assert(rels[1]->members.front().object == w);
+  assert(rels[1]->members.front().object.operator==(w));
   assert_cmpstr(rels[1]->members.back().role, "forward");
   // rels[2] has matching type, first member role should be changed (other direction)
   assert_cmpnum(rels[1]->members.size(), 2);
   assert_cmpstr(rels[2]->members.front().role, "forward");
-  assert(rels[2]->members.front().object == w);
+  assert(rels[2]->members.front().object.operator==(w));
   assert_cmpstr(rels[2]->members.back().role, "backward");
   // rels[3] has matching type, but roles are empty
   assert_cmpnum(rels[1]->members.size(), 2);
   assert_null(rels[3]->members.front().role);
-  assert(rels[3]->members.front().object == w);
+  assert(rels[3]->members.front().object.operator==(w));
   assert_null(rels[3]->members.back().role);
 
   // go back
@@ -1292,7 +1292,7 @@ void test_merge_nodes()
   assert_cmpnum(o->nodes.size(), 1);
   assert_cmpnum(n2->flags, OSM_FLAG_DIRTY);
   assert_cmpnum(r->members.size(), 1);
-  assert(r->members.front().object == n2);
+  assert(r->members.front().object.operator==(n2));
   assert_null(ways2join[0]);
   assert_null(ways2join[1]);
 
@@ -1397,8 +1397,8 @@ void test_merge_nodes()
   assert(w->ends_with_node(n2));
   assert_cmpnum(n1->ways, 2);
   assert_cmpnum(n2->ways, 2);
-  assert(relations.back()->members.front().object == n1);
-  assert(r->members.front().object == n2);
+  assert(relations.back()->members.front().object.operator==(n1));
+  assert(r->members.front().object.operator==(n2));
   assert_cmpnum(o->nodes.size(), 5);
 
   {
@@ -1419,10 +1419,10 @@ void test_merge_nodes()
   assert(w->isNew());
 
   assert_cmpnum(n1->ways, 3);
-  assert(relations.back()->members.front().object == n1);
+  assert(relations.back()->members.front().object.operator==(n1));
   // test member_t::operator==(object_t)
   assert(relations.back()->members.front() == object_t(n1));
-  assert(r->members.front().object == n1);
+  assert(r->members.front().object.operator==(n1));
   assert_cmpnum(r->flags, 0); // not marked dirty as it is a new object
   assert(r->isNew());
   assert_null(ways2join[0]);
@@ -2085,7 +2085,7 @@ void check_updateTags_all(osm_t::ref osm, object_t obj)
   tags.insert(osm_t::TagMap::value_type("a", "aa"));
 
   osm_t::TagMap otags = tags;
-  obj.obj->tags.replace(otags);
+  static_cast<base_object_t *>(obj)->tags.replace(otags);
 
   tags.insert(osm_t::TagMap::value_type("b", "bb"));
 
@@ -2098,7 +2098,7 @@ void check_updateTags_all(osm_t::ref osm, object_t obj)
   assert_cmpnum(osm->original.nodes.size(), 0);
   assert_cmpnum(osm->original.ways.size(), 0);
   assert_cmpnum(osm->original.relations.size(), 0);
-  assert_cmpnum(obj.obj->flags, 0);
+  assert_cmpnum(static_cast<base_object_t *>(obj)->flags, 0);
 
   verify_osm_db::run(osm);
 
@@ -2116,13 +2116,13 @@ void check_updateTags_all(osm_t::ref osm, object_t obj)
     assert_cmpnum(osm->original.relations.size(), 1);
   else
     assert_cmpnum(osm->original.relations.size(), 0);
-  assert_cmpnum(obj.obj->flags, OSM_FLAG_DIRTY);
+  assert_cmpnum(static_cast<base_object_t *>(obj)->flags, OSM_FLAG_DIRTY);
   const base_object_t *orig = osm->originalObject(obj);
   assert(orig != nullptr);
-  assert(orig != obj.obj);
+  assert(orig != static_cast<base_object_t *>(obj));
   assert_cmpnum(obj.get_id(), orig->id);
   assert(orig->tags == otags);
-  assert(obj.obj->tags == tags);
+  assert(static_cast<base_object_t *>(obj)->tags == tags);
 
   verify_osm_db::run(osm);
 
@@ -2132,7 +2132,7 @@ void check_updateTags_all(osm_t::ref osm, object_t obj)
   assert_cmpnum(osm->original.nodes.size(), 0);
   assert_cmpnum(osm->original.ways.size(), 0);
   assert_cmpnum(osm->original.relations.size(), 0);
-  assert_cmpnum(obj.obj->flags, 0);
+  assert_cmpnum(static_cast<base_object_t *>(obj)->flags, 0);
 }
 
 void test_updateTags()

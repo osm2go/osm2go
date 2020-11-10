@@ -147,8 +147,11 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
 {
   nameParts ret;
 
+  assert(obj.is_real());
+  const tag_list_t &tags = static_cast<base_object_t *>(obj)->tags;
+
   /* try to figure out _what_ this is */
-  ret.name = obj.obj->tags.get_value("name");
+  ret.name = tags.get_value("name");
 
   /* search for some kind of "type" */
   const std::array<const char *, 9> type_tags =
@@ -157,13 +160,13 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
                               "natural", "man_made" } };
 
   for(unsigned int i = 0; i < type_tags.size(); i++) {
-    ret.type.key = obj.obj->tags.get_value(type_tags[i]);
+    ret.type.key = tags.get_value(type_tags[i]);
     if (ret.type.key)
       return ret;
   }
 
   // ### LEISURE
-  const char *rawValue = obj.obj->tags.get_value("leisure");
+  const char *rawValue = tags.get_value("leisure");
   if (rawValue != nullptr) {
     // these leisure values will get an extra description from sport=*
     const std::array<const char *, 4> sport_leisure = { {
@@ -171,7 +174,7 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
     } };
     for (unsigned int i = 0; i < sport_leisure.size(); i++) {
       if (strcmp(rawValue, sport_leisure[i]) == 0) {
-        const char *sp = obj.obj->tags.get_value("sport");
+        const char *sp = tags.get_value("sport");
         if (sp != nullptr) {
           ret.type = trstring("%1 %2").arg(clean_underscores(sp)).arg(clean_underscores(rawValue));
           return ret;
@@ -185,10 +188,10 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
   }
 
   // ### BUILDINGS
-  rawValue = obj.obj->tags.get_value("building");
+  rawValue = tags.get_value("building");
   if (rawValue != nullptr && strcmp(rawValue, "no") != 0) {
-    const char *street = obj.obj->tags.get_value("addr:street");
-    const char *hn = obj.obj->tags.get_value("addr:housenumber");
+    const char *street = tags.get_value("addr:street");
+    const char *hn = tags.get_value("addr:housenumber");
 
     // simplify further checks
     if (strcmp(rawValue, "yes") == 0)
@@ -220,14 +223,14 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
       else
         ret.type = trstring("%1 building").arg(clean_underscores(rawValue));
       if(ret.name == nullptr)
-        ret.name = obj.obj->tags.get_value("addr:housename");
+        ret.name = tags.get_value("addr:housename");
     }
 
     return ret;
   }
 
   // ### HIGHWAYS
-  rawValue = obj.obj->tags.get_value("highway");
+  rawValue = tags.get_value("highway");
   if(rawValue != nullptr) {
     /* highways are a little bit difficult */
     if(!strcmp(rawValue, "primary")     || !strcmp(rawValue, "secondary") ||
@@ -239,16 +242,16 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
     }
 
     else if(obj.type == object_t::WAY && strcmp(rawValue, "pedestrian") == 0) {
-      if(obj.way->is_area())
+      if(static_cast<way_t *>(obj)->is_area())
         ret.type = _("pedestrian area");
       else
         ret.type = _("pedestrian way");
     }
 
     else if(!strcmp(rawValue, "construction")) {
-      const char *cstr = obj.obj->tags.get_value("construction:highway");
+      const char *cstr = tags.get_value("construction:highway");
       if(cstr == nullptr)
-        cstr = obj.obj->tags.get_value("construction");
+        cstr = tags.get_value("construction");
       if(cstr == nullptr) {
         ret.type = _("road/street under construction");
       } else {
@@ -263,14 +266,14 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
   }
 
   // ### EMERGENCY
-  rawValue = obj.obj->tags.get_value("emergency");
+  rawValue = tags.get_value("emergency");
   if (rawValue != nullptr) {
     ret.type.key = rawValue;
     return ret;
   }
 
   // ### PUBLIC TRANSORT
-  rawValue = obj.obj->tags.get_value("public_transport");
+  rawValue = tags.get_value("public_transport");
   if (rawValue != nullptr) {
     ret.type.key = rawValue;
 
@@ -290,7 +293,7 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
   }
 
   // ### BARRIER
-  rawValue = obj.obj->tags.get_value("barrier");
+  rawValue = tags.get_value("barrier");
   if(rawValue != nullptr) {
     if(strcmp("yes", rawValue) == 0)
       ret.type = _("barrier");
@@ -300,7 +303,7 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
   }
 
   // look if this has only one real tag and use that one
-  const tag_t *stag = obj.obj->tags.singleTag();
+  const tag_t *stag = tags.singleTag();
   if (stag != nullptr && strcmp(stag->value, "no") != 0) {
     // rule out a single name tag first
     if (ret.name == nullptr)
@@ -309,7 +312,7 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
   }
 
   // ### last chance
-  rawValue = obj.obj->tags.get_value("building:part");
+  rawValue = tags.get_value("building:part");
   trstring tret;
   if(rawValue != nullptr && strcmp(rawValue, "yes") == 0)
     ret.type = trstring("building part");

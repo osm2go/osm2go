@@ -526,8 +526,7 @@ tag_widget(info_tag_context_t &context)
 void
 on_relation_members(GtkWidget *, const info_tag_context_t *context)
 {
-  assert_cmpnum(context->object.type, object_t::RELATION);
-  relation_show_members(context->dialog.get(), context->object.relation, context->osm);
+  relation_show_members(context->dialog.get(), static_cast<relation_t *>(context->object), context->osm);
 }
 
 void
@@ -540,8 +539,9 @@ GtkWidget *
 details_widget(const info_tag_context_t &context, bool big)
 {
   GtkWidget *table = gtk_table_new(big?4:2, 2, FALSE);  // y, x
+  const base_object_t * const obj = static_cast<base_object_t *>(context.object);
 
-  const std::map<int, std::string>::const_iterator userIt = context.osm->users.find(context.object.obj->user);
+  const std::map<int, std::string>::const_iterator userIt = context.osm->users.find(obj->user);
   GtkWidget *label;
 
   /* ------------ user ----------------- */
@@ -556,12 +556,12 @@ details_widget(const info_tag_context_t &context, bool big)
   /* ------------ time ----------------- */
 
   if(big) table_attach(table, gtk_label_new(_("Date/Time:")), 0, 1);
-  if(context.object.obj->time > 0) {
+  if(obj->time > 0) {
     struct tm loctime;
-    localtime_r(&context.object.obj->time, &loctime);
+    localtime_r(&obj->time, &loctime);
     char time_str[32];
     strftime(time_str, sizeof(time_str), "%x %X", &loctime);
-    const trstring dv_str = trstring("%1 (# %2)").arg(time_str).arg(context.object.obj->version);
+    const trstring dv_str = trstring("%1 (# %2)").arg(time_str).arg(obj->version);
     label = gtk_label_new(static_cast<const gchar *>(dv_str));
   } else {
     label = gtk_label_new(_("Not yet uploaded"));
@@ -572,18 +572,20 @@ details_widget(const info_tag_context_t &context, bool big)
   switch(context.object.type) {
   case object_t::NODE: {
     char pos_str[32];
-    pos_lat_str(pos_str, sizeof(pos_str), context.object.node->pos.lat);
+    const pos_t &pos = static_cast<node_t *>(context.object)->pos;
+    pos_lat_str(pos_str, sizeof(pos_str), pos.lat);
     label = gtk_label_new(pos_str);
     if(big) table_attach(table, gtk_label_new(_("Latitude:")), 0, 2);
     table_attach(table, label, big?1:0, big?2:1);
-    pos_lon_str(pos_str, sizeof(pos_str), context.object.node->pos.lon);
+    pos_lon_str(pos_str, sizeof(pos_str), pos.lon);
     label = gtk_label_new(pos_str);
     if(big) table_attach(table, gtk_label_new(_("Longitude:")), 0, 3);
     table_attach(table, label, 1, big?3:1);
   } break;
 
   case object_t::WAY: {
-    size_t ncount = context.object.way->node_chain.size();
+    const way_t * const way = static_cast<way_t *>(context.object);
+    size_t ncount = way->node_chain.size();
     g_string nodes_str(g_strdup_printf(big ?
                                              ngettext("%zu node", "%zu nodes", ncount) :
                                              ngettext("Length: %zu node", "Length: %zu nodes", ncount),
@@ -594,9 +596,9 @@ details_widget(const info_tag_context_t &context, bool big)
     table_attach(table, label, big?1:0, big?2:1);
 
     trstring::native_type type_str;
-    if(context.object.way->is_area())
+    if(way->is_area())
       type_str = _("area");
-    else if(context.object.way->is_closed())
+    else if(way->is_closed())
       type_str = _("closed way");
     else
       type_str = _("open way");
@@ -609,7 +611,7 @@ details_widget(const info_tag_context_t &context, bool big)
   case object_t::RELATION: {
     /* relations tell something about their members */
     guint nodes = 0, ways = 0, relations = 0;
-    context.object.relation->members_by_type(nodes, ways, relations);
+    static_cast<relation_t *>(context.object)->members_by_type(nodes, ways, relations);
 
     const trstring str = trstring("Members: %1 nodes, %2 ways, %3 relations").arg(nodes).arg(ways).arg(relations);
 
@@ -653,30 +655,31 @@ objid(const object_t &object)
 {
   /* use implicit selection if not explicitely given */
   trstring msgtpl;
+  const base_object_t * const obj = static_cast<base_object_t *>(object);
 
   switch(object.type) {
   case object_t::NODE:
-    if (object.obj->isNew())
+    if (obj->isNew())
       msgtpl = trstring("Node #%1 (new)");
-    else if (object.obj->isDirty())
+    else if (obj->isDirty())
       msgtpl = trstring("Node #%1 (modified)");
     else
       msgtpl = trstring("Node #%1");
     break;
 
   case object_t::WAY:
-    if (object.obj->isNew())
+    if (obj->isNew())
       msgtpl = trstring("Way #%1 (new)");
-    else if (object.obj->isDirty())
+    else if (obj->isDirty())
       msgtpl = trstring("Way #%1 (modified)");
     else
       msgtpl = trstring("Way #%1");
     break;
 
   case object_t::RELATION:
-    if (object.obj->isNew())
+    if (obj->isNew())
       msgtpl = trstring("Relation #%1 (new)");
-    else if (object.obj->isDirty())
+    else if (obj->isDirty())
       msgtpl = trstring("Relation #%1 (modified)");
     else
       msgtpl = trstring("Relation #%1");
@@ -686,7 +689,7 @@ objid(const object_t &object)
     assert_unreachable();
   }
 
-  return msgtpl.arg(object.obj->id);
+  return msgtpl.arg(obj->id);
 }
 
 } // namespace
@@ -707,7 +710,7 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *p
 #endif
                                                GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                                GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                               nullptr), original ? original->tags.asMap() : object.obj->tags.asMap());
+                                               nullptr), original ? original->tags.asMap() : static_cast<base_object_t *>(object)->tags.asMap());
 
   osm2go_platform::dialog_size_hint(context.dialog, osm2go_platform::MISC_DIALOG_LARGE);
   gtk_dialog_set_default_response(context.dialog, GTK_RESPONSE_ACCEPT);
@@ -776,7 +779,7 @@ info_tag_context_t::info_tag_context_t(map_t *m, osm_t::ref os, presets_items *p
   , osm(os)
   , presets(p)
   , list(nullptr)
-  , m_tags(object.obj->tags.asMap())
+  , m_tags(static_cast<base_object_t *>(object)->tags.asMap())
   , m_originalTags(std::move(otags))
 {
 }

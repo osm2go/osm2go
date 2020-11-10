@@ -50,7 +50,15 @@ class tag_t;
 typedef std::vector<way_t *> way_chain_t;
 class xmlString;
 
-struct object_t {
+class object_t {
+  union {
+    node_t *node;
+    way_t *way;
+    relation_t *relation;
+    item_id_t id;
+    base_object_t *obj;
+  };
+public:
   enum type_t {
     ILLEGAL = 0,
     NODE = 1,
@@ -63,22 +71,15 @@ struct object_t {
   };
 
   type_t type;
-  union {
-    node_t *node;
-    way_t *way;
-    relation_t *relation;
-    item_id_t id;
-    base_object_t *obj;
-  };
 
   explicit inline object_t(type_t t = ILLEGAL, item_id_t i = ID_ILLEGAL) noexcept
-    : type(t), id(i) {}
+    : id(i), type(t) {}
   explicit inline object_t(node_t *n) noexcept
-    : type(NODE), node(n) { }
+    : node(n), type(NODE) { }
   explicit inline object_t(way_t *w) noexcept
-    : type(WAY), way(w) { }
+    : way(w), type(WAY) { }
   explicit inline object_t(relation_t *r) noexcept
-    : type(RELATION), relation(r) { }
+    : relation(r), type(RELATION) { }
 
   inline object_t &operator=(node_t *n) noexcept
   { type = NODE; node = n; return *this; }
@@ -86,6 +87,12 @@ struct object_t {
   { type = WAY; way = w; return *this; }
   inline object_t &operator=(relation_t *r) noexcept
   { type = RELATION; relation = r; return *this; }
+
+  // NOTE: it may be necessary to call these operators explicitely,
+  // i.e. as operator==() because gcc 4.2 does not support the
+  // explicit keyword on the conversion operators, so it complains
+  // that it is not defined if it should use a.operator==(b) or
+  // a.cast<typeof b>() == b
 
   bool operator==(const object_t &other) const noexcept;
   inline bool operator!=(const object_t &other) const noexcept
@@ -109,6 +116,27 @@ struct object_t {
   std::string id_string() const;
   item_id_t get_id() const noexcept;
   trstring get_name(const osm_t &osm) const;
+
+  O2G_OPERATOR_EXPLICIT inline operator node_t *() const
+  {
+    assert_cmpnum(type, NODE);
+    return node;
+  }
+  O2G_OPERATOR_EXPLICIT inline operator way_t *() const
+  {
+    assert_cmpnum(type, WAY);
+    return way;
+  }
+  O2G_OPERATOR_EXPLICIT inline operator relation_t *() const
+  {
+    assert_cmpnum(type, RELATION);
+    return relation;
+  }
+  O2G_OPERATOR_EXPLICIT inline operator base_object_t *() const
+  {
+    assert(is_real());
+    return obj;
+  }
 };
 
 struct member_t {

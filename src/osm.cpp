@@ -220,11 +220,13 @@ bool osm_t::checkObjectPersistence(const object_t &first, const object_t &second
   std::vector<relation_t *> removeRels, keepRels;
 
   std::for_each(relations.begin(), relations.end(), relation_membership_functor(remove, keep, removeRels, keepRels));
+  const base_object_t * const keepObj = static_cast<base_object_t *>(keep);
+  const base_object_t * const removeObj = static_cast<base_object_t *>(remove);
 
   // find out which node to keep
   bool nret =
               // if one is new: keep the other one
-              (keep.obj->isNew() && !remove.obj->isNew()) ||
+              (keepObj->isNew() && !removeObj->isNew()) ||
               // or keep the one with most relations
               removeRels.size() > keepRels.size() ||
               // or the one with most ways (if nodes)
@@ -232,22 +234,22 @@ bool osm_t::checkObjectPersistence(const object_t &first, const object_t &second
 #if 0
                                               remove.type == keep.type &&
 #endif
-               remove.node->ways > keep.node->ways) ||
+               static_cast<node_t *>(remove)->ways > static_cast<node_t *>(keep)->ways) ||
               // or the one with most nodes (if ways)
               (keep.type == object_t::WAY &&
 #if 0
                                              remove.type == keep.type &&
 #endif
-               remove.way->node_chain.size() > keep.way->node_chain.size()) ||
+               static_cast<way_t *>(remove)->node_chain.size() > static_cast<way_t *>(keep)->node_chain.size()) ||
 #if 0
               // or the one with most members (if relations)
               (keep.type == object_t::RELATION && remove.type == keep.type &&
                remove.relation->members.size() > keep.relation->members.size()) ||
 #endif
               // or the one with the longest history
-              remove.obj->version > keep.obj->version ||
+              removeObj->version > keepObj->version ||
               // or simply the older one
-              (remove.obj->id > 0 && remove.obj->id < keep.obj->id);
+              (removeObj->id > 0 && removeObj->id < keepObj->id);
 
   if(nret)
     rels.swap(keepRels);
@@ -864,28 +866,28 @@ void
 osm_t::updateTags(object_t o, const TagMap &ntags)
 {
   // when no tags have changed at this point nothing has to be updated
-  if (o.obj->tags == ntags)
+  if (static_cast<base_object_t *>(o)->tags == ntags)
     return;
 
   const base_object_t * const origobj = originalObject(o);
   bool tagsUpdated = false;
 
   if (origobj != nullptr) {
-    o.obj->tags.replace(ntags);
+    static_cast<base_object_t *>(o)->tags.replace(ntags);
     tagsUpdated = true;
 
     // reset the objects to being unmodified if possible
     switch (o.type) {
     case object_t::NODE:
-      if (unmarkedDirty(o.node, origobj, this))
+      if (unmarkedDirty(static_cast<node_t *>(o), origobj, this))
         return;
       break;
     case object_t::WAY:
-      if (unmarkedDirty(o.way, origobj, this))
+      if (unmarkedDirty(static_cast<way_t *>(o), origobj, this))
         return;
       break;
     case object_t::RELATION:
-      if (unmarkedDirty(o.relation, origobj, this))
+      if (unmarkedDirty(static_cast<relation_t *>(o), origobj, this))
         return;
       break;
     default:
@@ -894,16 +896,16 @@ osm_t::updateTags(object_t o, const TagMap &ntags)
   }
 
   // only mark dirty if this will actually change something
-  if (o.obj->tags != ntags) {
+  if (static_cast<base_object_t *>(o)->tags != ntags) {
     switch (o.type) {
     case object_t::NODE:
-      mark_dirty(o.node);
+      mark_dirty(static_cast<node_t *>(o));
       break;
     case object_t::WAY:
-      mark_dirty(o.way);
+      mark_dirty(static_cast<way_t *>(o));
       break;
     case object_t::RELATION:
-      mark_dirty(o.relation);
+      mark_dirty(static_cast<relation_t *>(o));
       break;
     default:
       assert_unreachable();
@@ -911,7 +913,7 @@ osm_t::updateTags(object_t o, const TagMap &ntags)
   }
 
   if (!tagsUpdated)
-    o.obj->tags.replace(ntags);
+    static_cast<base_object_t *>(o)->tags.replace(ntags);
 }
 
 namespace {
@@ -1084,7 +1086,7 @@ void remove_member_functor::operator()(std::pair<item_id_t, relation_t *> pair)
 /* remove the given object from all relations. used if the object is to */
 /* be deleted */
 void osm_t::remove_from_relations(object_t obj) {
-  printf("removing %s #" ITEM_ID_FORMAT " from all relations:\n", obj.obj->apiString(), obj.get_id());
+  printf("removing %s #" ITEM_ID_FORMAT " from all relations:\n", static_cast<base_object_t *>(obj)->apiString(), obj.get_id());
 
   std::for_each(relations.begin(), relations.end(),
                 remove_member_functor(this, obj));
@@ -1400,12 +1402,12 @@ void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pai
     // be inserted in a sensible order to keep the relation intact
     bool insertBefore = false;
     if(it != itBegin && std::prev(it)->object.type == object_t::WAY) {
-      const way_t *prev_way = std::prev(it)->object.way;
+      const way_t *prev_way = static_cast<way_t *>(std::prev(it)->object);
 
       insertBefore = prev_way->ends_with_node(dst->node_chain.front()) ||
                      prev_way->ends_with_node(dst->node_chain.back());
     } else if (std::next(it) != itEnd && std::next(it)->object.type == object_t::WAY) {
-      const way_t *next_way = std::next(it)->object.way;
+      const way_t *next_way = static_cast<way_t *>(std::next(it)->object);
 
       insertBefore = next_way->ends_with_node(src->node_chain.front()) ||
                      next_way->ends_with_node(src->node_chain.back());

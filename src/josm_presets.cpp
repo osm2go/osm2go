@@ -32,7 +32,7 @@ unsigned int presets_type_mask(const object_t &obj)
   case object_t::WAY:
     r = presets_item_t::TY_WAY;
 
-    if(obj.way->is_closed())
+    if(static_cast<way_t *>(obj)->is_closed())
       r |= presets_item_t::TY_CLOSED_WAY;
 
     break;
@@ -40,7 +40,7 @@ unsigned int presets_type_mask(const object_t &obj)
   case object_t::RELATION:
     r = presets_item_t::TY_RELATION;
 
-    if(obj.relation->is_multipolygon())
+    if(static_cast<relation_t *>(obj)->is_multipolygon())
       r |= presets_item_t::TY_MULTIPOLYGON;
     break;
 

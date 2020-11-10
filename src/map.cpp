@@ -58,7 +58,7 @@ void map_bg_modifier::remove(map_t *map, visible_item_t *way)
 
 static void map_statusbar(const std::unique_ptr<MainUi> &uicontrol, const object_t &object,
                           osm_t::ref osm) {
-  MainUi::NotificationFlags flags = object.obj->tags.hasTagCollisions() ?
+  MainUi::NotificationFlags flags = static_cast<base_object_t *>(object)->tags.hasTagCollisions() ?
                                     MainUi::Highlight : MainUi::NoFlags;
   uicontrol->showNotification(object.get_name(*osm), flags);
 }
@@ -228,7 +228,7 @@ void map_t::select_way(way_t *way) {
                 draw_selected_way_functor(arrow_width, this, way));
 
   /* a way needs at least 2 points to be drawn */
-  assert(selected.object == way);
+  assert(selected.object.operator==(way));
   const std::vector<lpos_t> &points = points_from_node_chain(way);
   if(likely(!points.empty()))
     /* create a copy of this map item and mark it as being a highlight */
@@ -248,7 +248,7 @@ void relation_select_functor::operator()(member_t& member)
 
   switch(member.object.type) {
   case object_t::NODE: {
-    node_t *node = member.object.node;
+    node_t *node = static_cast<node_t *>(member.object);
     printf("  -> node " ITEM_ID_FORMAT "\n", node->id);
 
     item = map->canvas->circle_new(CANVAS_GROUP_NODES_HL, node->lpos,
@@ -257,7 +257,7 @@ void relation_select_functor::operator()(member_t& member)
     break;
     }
   case object_t::WAY: {
-    way_t *way = member.object.way;
+    way_t *way = static_cast<way_t *>(member.object);
     /* a way needs at least 2 points to be drawn */
     const std::vector<lpos_t> &points = points_from_node_chain(way);
     if(likely(!points.empty())) {
@@ -308,13 +308,13 @@ static void map_object_select(map_t *map, const object_t &object)
 {
   switch(object.type) {
   case object_t::NODE:
-    map_object_select(map, object.node);
+    map_object_select(map, static_cast<node_t *>(object));
     break;
   case object_t::WAY:
-    map->select_way(object.way);
+    map->select_way(static_cast<way_t *>(object));
     break;
   case object_t::RELATION:
-    map->select_relation(object.relation);
+    map->select_relation(static_cast<relation_t *>(object));
     break;
   default:
     assert_unreachable();
@@ -324,11 +324,11 @@ static void map_object_select(map_t *map, const object_t &object)
 void map_t::item_deselect() {
 
   /* save tags for "last" function in info dialog */
-  if(selected.object.is_real() && selected.object.obj->tags.hasRealTags()) {
+  if(selected.object.is_real() && static_cast<base_object_t *>(selected.object)->tags.hasRealTags()) {
     if(selected.object.type == object_t::NODE)
-      last_node_tags = selected.object.obj->tags.asMap();
+      last_node_tags = static_cast<base_object_t *>(selected.object)->tags.asMap();
     else if(selected.object.type == object_t::WAY)
-      last_way_tags = selected.object.obj->tags.asMap();
+      last_way_tags = static_cast<base_object_t *>(selected.object)->tags.asMap();
   }
 
   /* remove statusbar message */
@@ -516,7 +516,7 @@ template<typename T>
 void map_t::redraw_item(T *obj)
 {
   /* check if the item to be redrawn is the selected one */
-  bool is_selected = (selected.object == obj);
+  bool is_selected = (selected.object.operator==(obj));
   // object must not be passed by reference or by pointer because of this:
   // map_t::item_deselect would modify object.type of the selected object, if
   // exactly that is passed in the switch statements below would see an
@@ -655,7 +655,7 @@ void map_t::pen_down_item(canvas_item_t *citem)
   /* get the item (parent) this item is the highlight of */
   assert(pen_down.on_item->object.type == object_t::NODE || pen_down.on_item->object.type == object_t::WAY);
 
-  visible_item_t * const vis = static_cast<visible_item_t *>(pen_down.on_item->object.obj);
+  visible_item_t * const vis = static_cast<visible_item_t *>(static_cast<base_object_t *>(pen_down.on_item->object));
   if(vis->map_item != nullptr) {
     printf("  using parent item %s #" ITEM_ID_FORMAT "\n", vis->apiString(), vis->id);
     pen_down.on_item = vis->map_item;
@@ -692,7 +692,7 @@ void map_t::set_zoom(double zoom, bool update_scroll_offsets) {
   /* Deselects the current way or node if its zoom_max
    * means that it's not going to render at the current map zoom. */
   if(selected.object.type == object_t::WAY || selected.object.type == object_t::NODE) {
-    float zmax = static_cast<visible_item_t *>(selected.object.obj)->zoom_max;
+    float zmax = static_cast<visible_item_t *>(static_cast<base_object_t *>(selected.object))->zoom_max;
 
     if(state.zoom < zmax)
       item_deselect();
@@ -742,7 +742,7 @@ bool map_t::item_is_selected_node(const map_item_t *map_item) const
   if(selected.object.type == object_t::NODE) {
     return selected.object == map_item->object;
   } else if(selected.object.type == object_t::WAY) {
-    return selected.object.way->contains_node(map_item->object.node);
+    return static_cast<way_t *>(selected.object)->contains_node(static_cast<node_t *>(map_item->object));
   } else {
     printf("%s: selected item is unknown (%u [%i])\n", __PRETTY_FUNCTION__,
            selected.object.type, selected.object.type);
@@ -834,7 +834,7 @@ void map_t::touchnode_update(lpos_t pos) {
   case MAP_ACTION_IDLE:
     assert(pen_down.on_item != nullptr);
     assert_cmpnum(pen_down.on_item->object.type, object_t::NODE);
-    cur_node = pen_down.on_item->object.node;
+    cur_node = static_cast<node_t *>(pen_down.on_item->object);
     break;
 
   default:
@@ -1311,7 +1311,7 @@ void map_t::delete_selected() {
   case object_t::NODE: {
     /* check if this node is part of a way with two nodes only. */
     /* we cannot delete this as this would also delete the way */
-    if(osm->find_way(short_way(sel.node)) != nullptr &&
+    if(osm->find_way(short_way(static_cast<node_t *>(sel))) != nullptr &&
        !osm2go_platform::yes_no(_("Delete node in short way(s)?"),
                                 _("Deleting this node will also delete one or more ways "
                                 "since they'll contain only one node afterwards. "
@@ -1319,17 +1319,17 @@ void map_t::delete_selected() {
       return;
 
     /* and mark it "deleted" in the database */
-    osm->node_delete(sel.node, this);
+    osm->node_delete(static_cast<node_t *>(sel), this);
 
     break;
   }
 
   case object_t::WAY:
-    osm->way_delete(sel.way, this);
+    osm->way_delete(static_cast<way_t *>(sel), this);
     break;
 
   case object_t::RELATION:
-    osm->relation_delete(sel.relation);
+    osm->relation_delete(static_cast<relation_t *>(sel));
     break;
 
   default:
@@ -1658,7 +1658,7 @@ void map_t::hide_selected() {
     return;
   }
 
-  way_t *way = selected.object.way;
+  way_t *way = static_cast<way_t *>(selected.object);
   printf("hiding way #" ITEM_ID_FORMAT "\n", way->id);
 
   item_deselect();
@@ -1737,10 +1737,10 @@ void map_t::info_selected()
   if(ret) {
     switch(selected.object.type) {
     case object_t::NODE:
-      redraw_item(selected.object.node);
+      redraw_item(static_cast<node_t *>(selected.object));
       break;
     case object_t::WAY:
-      redraw_item(selected.object.way);
+      redraw_item(static_cast<way_t *>(selected.object));
       break;
     case object_t::RELATION:
       break;

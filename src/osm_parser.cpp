@@ -193,26 +193,24 @@ void osm_t::parse_relation_member(const xmlString &tp, const xmlString &refstr, 
   switch(type) {
   case object_t::WAY:
     /* search matching way */
-    obj.way = object_by_id<way_t>(id);
+    obj = object_by_id<way_t>(id);
     break;
 
   case object_t::NODE:
     /* search matching node */
-    obj.node = object_by_id<node_t>(id);
+    obj = object_by_id<node_t>(id);
     break;
 
   case object_t::RELATION:
     /* search matching relation */
-    obj.relation = object_by_id<relation_t>(id);
+    obj = object_by_id<relation_t>(id);
     break;
   default:
     assert_unreachable();
   }
 
-  if(obj.obj == nullptr) {
-    obj.type = static_cast<object_t::type_t>(type | object_t::_REF_FLAG);
-    obj.id = id;
-  }
+  if(static_cast<base_object_t *>(obj) == nullptr)
+    obj = object_t(static_cast<object_t::type_t>(type | object_t::_REF_FLAG), id);
 
   const char *rstr = role.empty() ? nullptr : static_cast<const char *>(role);
   members.push_back(member_t(obj, rstr));
@@ -550,7 +548,7 @@ struct relation_ref_functor {
   void operator()(member_t &m) {
     if(m.object.type != object_t::RELATION_ID)
       return;
-    relation_t *r = osm->object_by_id<relation_t>(m.object.id);
+    relation_t *r = osm->object_by_id<relation_t>(m.object.get_id());
     if(r == nullptr)
       return;
     m.object = r;
