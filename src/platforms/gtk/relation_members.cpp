@@ -141,14 +141,28 @@ member_list_selection_func(GtkTreeSelection *, GtkTreeModel *model, GtkTreePath 
   return TRUE;
 }
 
+void
+member_selection_changed(GtkTreeSelection *sel, member_context_t *context)
+{
+  GtkTreeModel *model;
+  GtkTreeIter iter;
+
+  if(unlikely(gtk_tree_selection_get_selected(sel, &model, &iter) == FALSE)) {
+    gtk_widget_set_sensitive(context->buttonUp, FALSE);
+    gtk_widget_set_sensitive(context->buttonDown, FALSE);
+  }
+}
+
 GtkWidget *
 member_list_widget(member_context_t &context)
 {
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
   GtkTreeView *view = context.view = osm2go_platform::tree_view_new();
 
-  gtk_tree_selection_set_select_function(gtk_tree_view_get_selection(view),
-                                         member_list_selection_func, &context, nullptr);
+  GtkTreeSelection *sel = gtk_tree_view_get_selection(view);
+  gtk_tree_selection_set_select_function(sel, member_list_selection_func, &context, nullptr);
+  g_signal_connect(sel, "changed", G_CALLBACK(member_selection_changed), &context);
+
 
   /* --- "type" column --- */
   GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
@@ -237,7 +251,7 @@ GtkTreeModel *get_selected_row(member_context_t *context, GtkTreeIter *iter)
   GtkTreeModel *model;
 
   if(gtk_tree_selection_get_selected(selection, &model, iter) == FALSE)
-    assert_unreachable();
+    return nullptr;
 
   return model;
 }
@@ -299,6 +313,12 @@ on_up_clicked(member_context_t *context)
   GtkTreeIter iter;
   GtkTreeModel *model = get_selected_row(context, &iter);
 
+  /* likely nothing selected anymore, fix the button enable */
+  if (unlikely(model == nullptr)) {
+    gtk_widget_set_sensitive(context->buttonUp, FALSE);
+    return;
+  }
+
   std::unique_ptr<GtkTreePath, g_tree_path_deleter> path(gtk_tree_model_get_path(model, &iter));
   assert(path);
   if (gtk_tree_path_prev(path.get()) == FALSE) {
@@ -318,6 +338,12 @@ on_down_clicked(member_context_t *context)
 {
   GtkTreeIter iter;
   GtkTreeModel *model = get_selected_row(context, &iter);
+
+  /* likely nothing selected anymore, fix the button enable */
+  if (unlikely(model == nullptr)) {
+    gtk_widget_set_sensitive(context->buttonDown, FALSE);
+    return;
+  }
 
   GtkTreeIter next = iter;
   if (gtk_tree_model_iter_next(model, &next) == FALSE) {
