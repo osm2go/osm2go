@@ -19,6 +19,7 @@
 
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
+#include "osm2go_platform_gtk.h"
 #include "osm2go_platform_gtk_icon.h"
 
 namespace {
@@ -372,11 +373,12 @@ iconbar_t::map_cancel_ok(bool cancel, bool ok)
   static_cast<iconbar_gtk *>(this)->map_cancel_ok(cancel, ok);
 }
 
-#if defined(FINGER_UI)
+#ifdef FINGER_UI
 /* the ok and cancel buttons are moved to the right screen side on */
 /* fremantle. technically they are still part of the iconbar and thus */
 /* are registered there */
-void iconbar_register_buttons(appdata_t &appdata, GtkWidget *ok, GtkWidget *cancel) {
+void osm2go_platform::iconbar_register_buttons(appdata_t &appdata, GtkWidget *ok, GtkWidget *cancel)
+{
   assert(appdata.iconbar);
   iconbar_gtk * const iconbar = static_cast<iconbar_gtk *>(appdata.iconbar.get());
 

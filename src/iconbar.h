@@ -42,7 +42,3 @@ public:
   bool isOkEnabled() const;
   bool isTrashEnabled() const;
 };
-
-#ifdef FINGER_UI
-void iconbar_register_buttons(appdata_t &appdata, osm2go_platform::Widget *ok, osm2go_platform::Widget *cancel);
-#endif

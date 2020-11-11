@@ -1322,7 +1322,7 @@ application_run(const char *proj, bool startGps, bool project_dialog)
   ivbox = gtk_vbox_new(FALSE, 0);
   GtkWidget *ok = icon_button(nullptr, "ok_thumb", nullptr, ivbox, static_cast<gtk_platform_icon_t &>(appdata.icons));
   GtkWidget *cancel = icon_button(nullptr, "cancel_thumb", nullptr, ivbox, static_cast<gtk_platform_icon_t &>(appdata.icons));
-  iconbar_register_buttons(appdata, ok, cancel);
+  osm2go_platform::iconbar_register_buttons(appdata, ok, cancel);
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, FALSE, FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
