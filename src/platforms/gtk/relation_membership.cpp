@@ -11,6 +11,7 @@
  */
 
 #include "relation_edit.h"
+#include "relation_p.h"
 
 #include <josm_presets.h>
 #include "list.h"
@@ -73,17 +74,28 @@ relitem_context_t::relitem_context_t(object_t &o, const presets_items *pr, osm_t
 
 struct entry_insert_text {
   GtkWidget * const entry;
-  explicit entry_insert_text(GtkWidget *en) : entry(en) {}
-  inline void operator()(const std::string &role) {
+  explicit inline entry_insert_text(GtkWidget *en) : entry(en) {}
+  inline void operator()(const std::string &role) const
+  {
     osm2go_platform::combo_box_append_text(entry, role.c_str());
   }
 };
 
-bool
-relation_add_item(GtkWidget *parent, relation_t *relation, const object_t &object, const presets_items *presets, osm_t::ref osm)
-{
-  g_debug("add object of type %d to relation #" ITEM_ID_FORMAT, object.type, relation->id);
+} // namespace
 
+#if __cplusplus < 201103L
+namespace std {
+
+// this extra specialization is needed as member_t can't be default-constructed
+template<>
+optional<member_t>::optional() : match(false), result(member_t(object_t())) {}
+
+} // namespace std
+#endif
+
+std::optional<member_t>
+selectObjectRole(GtkWidget *parent, const relation_t *relation, const object_t &object, const presets_items *presets, const char *role)
+{
   const std::set<std::string> &roles = presets->roles(relation, object);
 
   /* ask the user for the role of the new object in this relation */
@@ -122,9 +134,21 @@ relation_add_item(GtkWidget *parent, relation_t *relation, const object_t &objec
     entry = osm2go_platform::combo_box_entry_new(static_cast<const char *>(_("Role")));
 
     /* fill combo box with presets */
-    std::for_each(roles.begin(), roles.end(), entry_insert_text(entry));
-  } else
+    const std::set<std::string>::const_iterator itBegin = roles.begin();
+    const std::set<std::string>::const_iterator itEnd = roles.end();
+    std::for_each(itBegin, itEnd, entry_insert_text(entry));
+    if (role != nullptr) {
+      const std::set<std::string>::const_iterator it = std::find(itBegin, itEnd, role);
+      if (it != itEnd)
+        osm2go_platform::combo_box_set_active(entry, std::distance(itBegin, it));
+      else
+        osm2go_platform::combo_box_set_active_text(entry, role);
+    }
+  } else {
     entry = osm2go_platform::entry_new();
+    if (role != nullptr)
+      osm2go_platform::setEntryText(GTK_ENTRY(entry), role, _("Role"));
+  }
 
   gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
   gtk_box_pack_start(dialog.vbox(), hbox, TRUE, TRUE, 0);
@@ -132,32 +156,49 @@ relation_add_item(GtkWidget *parent, relation_t *relation, const object_t &objec
   gtk_widget_show_all(dialog.get());
   if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(dialog)) {
     g_debug("user clicked cancel");
-    return false;
+    return member_t(object_t());
   }
 
   g_debug("user clicked ok");
 
   /* get role from dialog */
-  const char *role = nullptr;
+  const char *newRole = nullptr;
   std::string rstr;
 
   if(osm2go_platform::isComboBoxEntryWidget(entry)) {
     rstr = osm2go_platform::combo_box_get_active_text(entry);
     if(!rstr.empty())
-      role = rstr.c_str();
+      newRole = rstr.c_str();
   } else {
     const gchar *ptr = gtk_entry_get_text(GTK_ENTRY(entry));
     if(ptr != nullptr && *ptr != '\0')
-      role = ptr;
+      newRole = ptr;
   }
+
+  if (newRole == role || (newRole && role && strcmp(newRole, role) == 0))
+    return std::optional<member_t>();
+
+  return member_t(object, newRole);
+}
+
+namespace {
+
+bool
+relation_add_item(GtkWidget *parent, relation_t *relation, const object_t &object, const presets_items *presets, osm_t::ref osm)
+{
+  g_debug("add object of type %d to relation #" ITEM_ID_FORMAT, object.type, relation->id);
+  assert(object.is_real());
+
+  const std::optional<member_t> change = selectObjectRole(parent, relation, object, presets, nullptr);
+
+  if (!change)
+    return false;
 
   osm->mark_dirty(relation);
   // create new member
   // must be done before the widget is destroyed as it may reference the
   // internal string from the text entry
-  relation->members.push_back(member_t(object, role));
-
-  assert(object.is_real());
+  relation->members.push_back(*change);
 
   return true;
 }

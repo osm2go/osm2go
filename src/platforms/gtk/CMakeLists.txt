@@ -33,6 +33,7 @@ target_sources(osm2go_lib PRIVATE
 	relation_edit.cpp
 	relation_members.cpp
 	relation_membership.cpp
+	relation_p.h
 	settings.cpp
 	statusbar.h
 	style_widgets.cpp

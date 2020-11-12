@@ -526,7 +526,7 @@ tag_widget(info_tag_context_t &context)
 void
 on_relation_members(GtkWidget *, const info_tag_context_t *context)
 {
-  relation_show_members(context->dialog.get(), static_cast<relation_t *>(context->object), context->osm);
+  relation_show_members(context->dialog.get(), static_cast<relation_t *>(context->object), context->osm, context->presets);
 }
 
 void

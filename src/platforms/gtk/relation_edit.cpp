@@ -107,7 +107,7 @@ on_relation_members(relation_context_t *context)
   relation_t *sel = get_selected_relation(context);
 
   if(sel != nullptr)
-    relation_show_members(context->dialog.get(), sel, context->osm);
+    relation_show_members(context->dialog.get(), sel, context->osm, context->presets);
 }
 
 /* user clicked "select" button in relation list */

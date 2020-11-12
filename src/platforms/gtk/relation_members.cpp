@@ -10,6 +10,7 @@
  */
 
 #include "relation_edit.h"
+#include "relation_p.h"
 
 #include <info.h>
 #include <josm_presets.h>
@@ -35,7 +36,7 @@ namespace {
 struct member_context_t {
   static std::vector<member_t> emptyMembers;  ///< dummy list to show all new relation members as modified
 
-  inline member_context_t(relation_t *r, osm_t::ref o, GtkWidget *parent)
+  inline member_context_t(relation_t *r, osm_t::ref o, GtkWidget *parent, const presets_items *p)
     : relation(r)
     , dialog(gtk_dialog_new_with_buttons(static_cast<const gchar *>(trstring("Members of relation \"%1\"").arg(relation->descriptive_name())),
                                          GTK_WINDOW(parent), GTK_DIALOG_MODAL,
@@ -43,6 +44,7 @@ struct member_context_t {
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                          nullptr))
     , osm(o)
+    , presets(p)
 #ifdef FREMANTLE
     , buttonUp(osm2go_platform::button_new_with_label(_("Up")))
     , buttonDown(osm2go_platform::button_new_with_label(_("Down")))
@@ -50,6 +52,7 @@ struct member_context_t {
     , buttonUp(gtk_button_new_with_mnemonic(static_cast<const gchar *>(_("_Up"))))
     , buttonDown(gtk_button_new_with_mnemonic(static_cast<const gchar *>(_("_Down"))))
 #endif
+    , roleColumn(nullptr)
     , origRelation(osm->originalObject(relation))
     , origMembers(origRelation != nullptr ? origRelation->members : relation->isNew() ? emptyMembers : relation->members)
     , currentMembers(relation->members)
@@ -68,8 +71,10 @@ struct member_context_t {
   const osm2go_platform::DialogGuard dialog;
   GtkTreeView *view;
   osm_t::ref osm;
+  const presets_items * const presets;
   GtkWidget * const buttonUp;
   GtkWidget * const buttonDown;
+  GtkTreeViewColumn *roleColumn;
   const relation_t * const origRelation;
   const std::vector<member_t> &origMembers;
   std::vector<member_t> currentMembers;
@@ -116,7 +121,8 @@ enum {
 };
 
 struct g_tree_path_deleter {
-  inline void operator()(gpointer mem) {
+  inline void operator()(gpointer mem) const
+  {
     gtk_tree_path_free(static_cast<GtkTreePath *>(mem));
   }
 };
@@ -153,16 +159,88 @@ member_selection_changed(GtkTreeSelection *sel, member_context_t *context)
   }
 }
 
+gboolean
+on_view_clicked(GtkWidget *widget, GdkEventButton *event, member_context_t *context)
+{
+  GtkTreeView *view = GTK_TREE_VIEW(widget);
+  if(event->window != gtk_tree_view_get_bin_window(view))
+    return FALSE;
+
+  GtkTreePath *path;
+  GtkTreeViewColumn *column;
+
+  if(gtk_tree_view_get_path_at_pos(view, event->x, event->y, &path,
+                                    &column, nullptr, nullptr) != TRUE)
+    return FALSE;
+
+  if (column != context->roleColumn)
+    return FALSE;
+
+  gint *ind = gtk_tree_path_get_indices(path);
+  assert(ind != nullptr);
+
+  relation_t *rel = context->relation;
+  const member_t &oldmember = context->currentMembers.at(*ind);
+
+  GtkTreeSelection *sel = gtk_tree_view_get_selection(view);
+  gboolean wasSelected = gtk_tree_selection_path_is_selected(sel, path);
+  GtkTreeModel *model = gtk_tree_view_get_model(view);
+  GtkTreeIter iter;
+  gboolean b = gtk_tree_model_get_iter(model, &iter, path);
+
+  // Fremantle would do a multi-selection by default
+#ifdef FREMANTLE
+  if (wasSelected == FALSE) {
+    // update the selection here, so the correct selection is visible in the background while
+    // the combobox dialog is in the foreground
+    gtk_tree_selection_unselect_all(sel);
+    gtk_tree_selection_select_iter(sel, &iter);
+    wasSelected = TRUE;
+  }
+#endif
+
+  const std::optional<member_t> change = selectObjectRole(context->dialog.get(), rel, oldmember.object, context->presets, oldmember.role);
+
+  if (change) {
+    context->currentMembers.at(*ind) = *change;
+    const char *newRole = (*change).role;
+
+    gboolean rChanged;
+    if (rel->isNew()) {
+      rChanged = TRUE;
+    } else {
+      if (static_cast<unsigned int>(*ind) >= context->origMembers.size())
+        rChanged = TRUE;
+      else
+        rChanged = context->origMembers.at(*ind).role != newRole ? TRUE : FALSE;
+    }
+
+    assert(b == TRUE);(void)b;
+    gtk_list_store_set(GTK_LIST_STORE(model), &iter,
+                      MEMBER_COL_ROLE, newRole,
+                      MEMBER_COL_ROLE_CHANGED, rChanged,
+                      -1);
+  }
+
+  // Stop other handlers, i.e. selection, if the row is already selected,
+  // to prevent it becoming deselected.
+  // Otherwise allow this role to also be selected by the dialog code.
+  return wasSelected;
+}
+
 GtkWidget *
 member_list_widget(member_context_t &context)
 {
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
   GtkTreeView *view = context.view = osm2go_platform::tree_view_new();
 
+  /* catch views button-press event for our custom handling */
+  g_signal_connect(view, "button-press-event", G_CALLBACK(on_view_clicked), &context);
+
   GtkTreeSelection *sel = gtk_tree_view_get_selection(view);
   gtk_tree_selection_set_select_function(sel, member_list_selection_func, &context, nullptr);
+  gtk_tree_selection_set_mode(sel, GTK_SELECTION_SINGLE);
   g_signal_connect(sel, "changed", G_CALLBACK(member_selection_changed), &context);
-
 
   /* --- "type" column --- */
   GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
@@ -206,6 +284,7 @@ member_list_widget(member_context_t &context)
                                                     "text", MEMBER_COL_ROLE,
                                                     "underline-set", MEMBER_COL_ROLE_CHANGED,
                                                     "foreground-set", MEMBER_COL_REF_ONLY,  nullptr);
+  context.roleColumn = column;
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_ROLE);
   gtk_tree_view_insert_column(view, column, -1);
 
@@ -356,9 +435,9 @@ on_down_clicked(member_context_t *context)
 
 } // namespace
 
-void relation_show_members(GtkWidget *parent, relation_t *relation, osm_t::ref osm)
+void relation_show_members(GtkWidget *parent, relation_t *relation, osm_t::ref osm, const presets_items *p)
 {
-  member_context_t mcontext(relation, osm, parent);
+  member_context_t mcontext(relation, osm, parent, p);
 
   osm2go_platform::dialog_size_hint(static_cast<GtkWindow *>(mcontext.dialog), osm2go_platform::MISC_DIALOG_MEDIUM);
   gtk_dialog_set_default_response(static_cast<GtkDialog *>(mcontext.dialog), GTK_RESPONSE_CLOSE);
