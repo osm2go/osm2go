@@ -435,7 +435,8 @@ on_down_clicked(member_context_t *context)
 
 } // namespace
 
-void relation_show_members(GtkWidget *parent, relation_t *relation, osm_t::ref osm, const presets_items *p)
+bool
+relation_show_members(GtkWidget *parent, relation_t *relation, osm_t::ref osm, const presets_items *p)
 {
   member_context_t mcontext(relation, osm, parent, p);
 
@@ -467,6 +468,9 @@ void relation_show_members(GtkWidget *parent, relation_t *relation, osm_t::ref o
   }
 
   gtk_widget_show_all(mcontext.dialog.get());
-  if (gtk_dialog_run(static_cast<GtkDialog *>(mcontext.dialog)) == GTK_RESPONSE_ACCEPT)
-    relation->updateMembers(mcontext.currentMembers, osm);
+  if (gtk_dialog_run(static_cast<GtkDialog *>(mcontext.dialog)) != GTK_RESPONSE_ACCEPT)
+    return false;
+
+  relation->updateMembers(mcontext.currentMembers, osm);
+  return true;
 }

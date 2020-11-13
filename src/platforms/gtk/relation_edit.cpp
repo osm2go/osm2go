@@ -59,16 +59,21 @@ enum {
 };
 
 relation_t *
-get_selected_relation(relation_context_t *context)
+get_selected_relation(relation_context_t *context, GtkTreeIter *iter = nullptr, GtkTreeModel **model = nullptr)
 {
   GtkTreeSelection *selection;
-  GtkTreeModel     *model;
-  GtkTreeIter       iter;
+  GtkTreeModel     *tmpmodel;
+  GtkTreeIter       tmpiter;
+
+  if (iter == nullptr)
+    iter = &tmpiter;
+  if (model == nullptr)
+    model = &tmpmodel;
 
   selection = list_get_selection(context->list);
-  if(gtk_tree_selection_get_selected(selection, &model, &iter) == TRUE) {
+  if(gtk_tree_selection_get_selected(selection, model, iter) == TRUE) {
     relation_t *relation;
-    gtk_tree_model_get(model, &iter, RELATION_COL_DATA, &relation, -1);
+    gtk_tree_model_get(*model, iter, RELATION_COL_DATA, &relation, -1);
     return(relation);
   }
   return nullptr;
@@ -104,10 +109,22 @@ relation_list_changed(GtkTreeSelection *selection, gpointer userdata)
 void
 on_relation_members(relation_context_t *context)
 {
-  relation_t *sel = get_selected_relation(context);
+  GtkTreeIter iter;
+  GtkTreeModel *model;
+  relation_t *sel = get_selected_relation(context, &iter, &model);
 
-  if(sel != nullptr)
-    relation_show_members(context->dialog.get(), sel, context->osm, context->presets);
+  if(sel == nullptr)
+    return;
+
+  if (!relation_show_members(context->dialog.get(), sel, context->osm, context->presets))
+    return;
+
+  const relation_t * const orig = context->osm->originalObject(sel);
+
+  gtk_list_store_set(GTK_LIST_STORE(model), &iter,
+                     RELATION_COL_MEMBERS, sel->members.size(),
+                     RELATION_COL_MEMBERS_MODIFIED, sel->isNew() || (orig && orig->members != sel->members) ? TRUE : FALSE,
+                     -1);
 }
 
 /* user clicked "select" button in relation list */
