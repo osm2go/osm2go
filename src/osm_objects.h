@@ -436,9 +436,7 @@ public:
    */
   std::vector<member_t>::const_iterator eraseMember(std::vector<member_t>::const_iterator it)
   {
-    /* this is part of C++11, but some compilers with preliminary C++11 support do not implement
-     * this (gcc 4.8, clang 5.0), so just leave it out in that version entirely. */
-#if __cplusplus <= 201103L
+#if __cplusplus < 201103L
     return members.erase(std::next(members.begin(), std::distance(std::cbegin(members), it)));
 #else
     return members.erase(it);
