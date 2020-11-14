@@ -9,13 +9,12 @@
  * This file contains the dialog that shows all members of a given relation.
  */
 
-#include "relation_edit.h"
 #include "relation_p.h"
 
-#include <info.h>
 #include <josm_presets.h>
 #include "list.h"
 #include <map.h>
+#include <object_dialogs.h>
 
 #include <algorithm>
 #include <array>

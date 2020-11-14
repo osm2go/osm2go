@@ -17,6 +17,7 @@ target_sources(osm2go_lib PRIVATE
 	iconbar.cpp
 	josm_presets_button.cpp
 	info.cpp
+	info_p.h
 	list.cpp
 	list.h
 	MainUiGtk.h

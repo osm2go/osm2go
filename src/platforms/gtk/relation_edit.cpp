@@ -4,9 +4,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-#include "relation_edit.h"
+#include <object_dialogs.h>
 
-#include <info.h>
 #include <josm_presets.h>
 #include "list.h"
 #include <map.h>

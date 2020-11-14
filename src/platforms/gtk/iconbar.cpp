@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-#include "iconbar.h"
+#include <iconbar.h>
 
-#include "appdata.h"
-#include "icon.h"
-#include "info.h"
-#include "map.h"
-#include "osm.h"
-#include "project.h"
+#include <appdata.h>
+#include <icon.h>
+#include <map.h>
+#include <object_dialogs.h>
+#include <osm.h>
+#include <project.h>
 
 #include <array>
 #include <cassert>

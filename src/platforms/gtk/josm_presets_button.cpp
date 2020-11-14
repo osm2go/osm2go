@@ -4,12 +4,13 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-#include "josm_presets.h"
-#include "josm_presets_p.h"
+#include <josm_presets.h>
+#include <josm_presets_p.h>
 
-#include "icon.h"
-#include "info.h"
-#include "osm.h"
+#include <icon.h>
+#include "info_p.h"
+#include <object_dialogs.h>
+#include <osm.h>
 
 #include <algorithm>
 #include <cassert>

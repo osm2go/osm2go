@@ -13,6 +13,8 @@
 class map_t;
 class presets_items;
 
+bool info_dialog(osm2go_platform::Widget *parent, map_t *map, osm_t::ref osm, presets_items *presets, object_t &object);
+
 void relation_membership_dialog(osm2go_platform::Widget *parent, const presets_items *presets,
                                 osm_t::ref osm, object_t &object);
 

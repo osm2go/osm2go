@@ -134,7 +134,6 @@ add_library(osm2go_lib STATIC
 	src/gps_state.h
 	src/icon.h
 	src/iconbar.h
-	src/info.h
 	src/josm_elemstyles.cpp
 	src/josm_elemstyles.h
 	src/josm_elemstyles_p.h
@@ -153,6 +152,7 @@ add_library(osm2go_lib STATIC
 	src/notifications.h
 	src/net_io.cpp
 	src/net_io.h
+	src/object_dialogs.h
 	src/osm.cpp
 	src/osm_names.cpp
 	src/osm.h
@@ -171,7 +171,6 @@ add_library(osm2go_lib STATIC
 	src/project.cpp
 	src/project.h
 	src/project_p.h
-	src/relation_edit.h
 	src/settings.h
 	src/style.cpp
 	src/style.h

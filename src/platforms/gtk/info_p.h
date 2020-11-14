@@ -35,5 +35,3 @@ public:
 
   void info_tags_replace(const osm_t::TagMap &ntags);
 };
-
-bool info_dialog(osm2go_platform::Widget *parent, map_t *map, osm_t::ref osm, presets_items *presets, object_t &object);

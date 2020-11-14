@@ -11,7 +11,7 @@
 #include "canvas_goocanvas.h"
 #include <diff.h>
 #include <iconbar.h>
-#include <info.h>
+#include <object_dialogs.h>
 #include "osm2go_platform.h"
 #include <project.h>
 #include <style.h>
