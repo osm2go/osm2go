@@ -158,23 +158,24 @@ checkItem(const presets_item_t *item)
 void
 test_roles(const presets_items *presets)
 {
-  relation_t r;
+  relation_t mp;
   osm_t::TagMap tags;
   tags.insert(osm_t::TagMap::value_type("type", "multipolygon"));
-  r.tags.replace(tags);
+  mp.tags.replace(tags);
 
   // object type does not match
   node_t n(base_attributes(), lpos_t(0, 0), pos_t(0, 0));
-  std::set<std::string> roles = presets->roles(&r, object_t(&n));
+  std::set<std::string> roles = presets->roles(&mp, object_t(&n));
   assert(roles.empty());
 
   way_t w;
-  roles = presets->roles(&r, object_t(&w));
+  roles = presets->roles(&mp, object_t(&w));
   assert_cmpnum(roles.size(), 2);
   assert(roles.find("inner") != roles.end());
   assert(roles.find("outer") != roles.end());
 
   // check count restriction
+  relation_t r;
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("type", "boundary"));
   r.tags.replace(tags);
@@ -226,6 +227,35 @@ test_roles(const presets_items *presets)
   assert_cmpnum(presets->roles(&r, object_t(object_t::NODE_ID, 1234)).size(), 0);
   assert_cmpnum(presets->roles(&r, object_t(object_t::WAY_ID, 1234)).size(), 0);
   assert_cmpnum(presets->roles(&r, object_t(object_t::RELATION_ID, 1234)).size(), 0);
+
+  // check that the roles for some special types are returned correctly
+  relation_t site;
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("type", "site"));
+  site.tags.replace(tags);
+
+  roles = presets->roles(&site, object_t(&w));
+  assert_cmpnum(roles.size(), 1);
+  assert_cmpstr(*roles.begin(), std::string());
+
+  // closed way
+  way_t cw;
+  cw.node_chain.push_back(&n);
+  cw.node_chain.push_back(&n2);
+  cw.node_chain.push_back(&n);
+
+  roles = presets->roles(&site, object_t(&cw));
+  assert_cmpnum(roles.size(), 2);
+  assert(std::find(roles.begin(), roles.end(), std::string()) != roles.end());
+  assert(std::find(roles.begin(), roles.end(), "perimeter") != roles.end());
+
+  roles = presets->roles(&site, object_t(&r));
+  assert_cmpnum(roles.size(), 0);
+
+  roles = presets->roles(&site, object_t(&mp));
+  assert_cmpnum(roles.size(), 2);
+  assert(std::find(roles.begin(), roles.end(), std::string()) != roles.end());
+  assert(std::find(roles.begin(), roles.end(), "perimeter") != roles.end());
 }
 
 } // namespace
