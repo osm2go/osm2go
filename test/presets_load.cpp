@@ -256,6 +256,19 @@ test_roles(const presets_items *presets)
   assert_cmpnum(roles.size(), 2);
   assert(std::find(roles.begin(), roles.end(), std::string()) != roles.end());
   assert(std::find(roles.begin(), roles.end(), "perimeter") != roles.end());
+
+  // check that closedway is no way
+  relation_t ski;
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("type", "route"));
+  tags.insert(osm_t::TagMap::value_type("route", "ski"));
+  ski.tags.replace(tags);
+
+  roles = presets->roles(&ski, object_t(&cw));
+  assert_cmpnum(roles.size(), 0);
+
+  roles = presets->roles(&ski, object_t(&w));
+  assert_cmpnum(roles.size(), 6);
 }
 
 } // namespace

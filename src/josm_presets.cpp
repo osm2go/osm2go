@@ -22,7 +22,7 @@
 
 unsigned int presets_type_mask(const object_t &obj)
 {
-  unsigned int r = 0;
+  unsigned int r;
 
   switch(obj.type) {
   case object_t::NODE:
@@ -30,10 +30,10 @@ unsigned int presets_type_mask(const object_t &obj)
     break;
 
   case object_t::WAY:
-    r = presets_item_t::TY_WAY;
-
     if(static_cast<way_t *>(obj)->is_closed())
-      r |= presets_item_t::TY_CLOSED_WAY;
+      r = presets_item_t::TY_CLOSED_WAY;
+    else
+      r = presets_item_t::TY_WAY;
 
     break;
 
