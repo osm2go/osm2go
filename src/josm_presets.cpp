@@ -121,8 +121,17 @@ bool relation_preset_functor::operator()(const presets_item_t *item)
   if(!(item->type & typemask))
     return false;
 
+  // This coule either be an item, a group, or a separator. Groups were already handled,
+  // separators must not have a matching typemask.
+  assert(item->isItem());
+
+  // When searching for a relation this may end up matching als other items, usually because
+  // the relation type is multipolygon. The other matches usually would also affect ways, so
+  // they don't have roles inside the item, so just skip over them.
+  if (static_cast<const presets_item *>(item)->roles.empty())
+    return false;
+
   if(item->matches(tags, false)) {
-    assert(item->isItem());
     *result = static_cast<const presets_item *>(item);
     return true;
   } else {

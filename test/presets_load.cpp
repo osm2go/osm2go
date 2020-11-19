@@ -156,6 +156,27 @@ checkItem(const presets_item_t *item)
 }
 
 void
+test_mp_member_roles(const relation_t &mp, way_t &w, way_t &cw, const presets_items *presets)
+{
+  assert(mp.is_multipolygon());
+  assert(!w.is_closed());
+  assert(cw.is_closed());
+
+  std::array<way_t *, 2> wp = {{ &w, &cw }};
+
+  for (unsigned int i = 0; i < wp.size(); i++) {
+    const std::set<std::string> roles = presets->roles(&mp, object_t(wp.at(i)));
+    assert_cmpnum(roles.size(), 2);
+    assert(roles.find("inner") != roles.end());
+    assert(roles.find("outer") != roles.end());
+  }
+
+  // there should be no roles for a node
+  const std::set<std::string> roles = presets->roles(&mp, object_t(cw.node_chain.front()));
+  assert_cmpnum(roles.size(), 0);
+}
+
+void
 test_roles(const presets_items *presets)
 {
   relation_t mp;
@@ -165,11 +186,24 @@ test_roles(const presets_items *presets)
 
   // object type does not match
   node_t n(base_attributes(), lpos_t(0, 0), pos_t(0, 0));
-  std::set<std::string> roles = presets->roles(&mp, object_t(&n));
-  assert(roles.empty());
+  node_t n2(base_attributes(), lpos_t(1, 0), pos_t(1, 0));
 
   way_t w;
-  roles = presets->roles(&mp, object_t(&w));
+  // closed way
+  way_t cw;
+  cw.node_chain.push_back(&n);
+  cw.node_chain.push_back(&n2);
+  cw.node_chain.push_back(&n);
+
+  test_mp_member_roles(mp, w, cw, presets);
+
+  // make sure that even with more tags the relation is still handled as multipolygon
+  tags.insert(osm_t::TagMap::value_type("landuse", "commercial"));
+  mp.tags.replace(tags);
+
+  test_mp_member_roles(mp, w, cw, presets);
+
+  std::set<std::string> roles = presets->roles(&mp, object_t(&cw));
   assert_cmpnum(roles.size(), 2);
   assert(roles.find("inner") != roles.end());
   assert(roles.find("outer") != roles.end());
@@ -187,7 +221,6 @@ test_roles(const presets_items *presets)
 
   r.members.push_back(member_t(object_t(&n), "admin_centre"));
 
-  node_t n2(base_attributes(), lpos_t(0, 0), pos_t(0, 0));
   roles = presets->roles(&r, object_t(&n2));
   assert_cmpnum(roles.size(), 1);
   assert(roles.find("label") != roles.end());
@@ -237,12 +270,6 @@ test_roles(const presets_items *presets)
   roles = presets->roles(&site, object_t(&w));
   assert_cmpnum(roles.size(), 1);
   assert_cmpstr(*roles.begin(), std::string());
-
-  // closed way
-  way_t cw;
-  cw.node_chain.push_back(&n);
-  cw.node_chain.push_back(&n2);
-  cw.node_chain.push_back(&n);
 
   roles = presets->roles(&site, object_t(&cw));
   assert_cmpnum(roles.size(), 2);
