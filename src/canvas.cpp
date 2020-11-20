@@ -98,16 +98,18 @@ std::optional<unsigned int> canvas_item_info_poly::get_segment(int x, int y, flo
     const lpos_t pos = points[i];
     const lpos_t posnext = points[i + 1];
 
-    const int dx = posnext.x - pos.x;
-    const int dy = posnext.y - pos.y;
-    float len = pow(dy, 2) + pow(dx, 2);
-    float m = (static_cast<float>(x - pos.x) * dx + static_cast<float>(y - pos.y) * dy) / len;
+    const int dxi = posnext.x - pos.x;
+    const int dyi = posnext.y - pos.y;
+    const float dx = dxi;
+    const float dy = dyi;
+    float len = dy * dy + dx * dx;
+    float m = ((x - pos.x) * dx + (y - pos.y) * dy) / len;
 
     /* this is a possible candidate */
     if((m >= 0.0f) && (m <= 1.0f)) {
 
       float n;
-      if(abs(dx) > abs(dy))
+      if(abs(dxi) > abs(dyi))
         n = fabsf(sqrtf(len) * (pos.y - y + m * dy) / dx);
       else
         n = fabsf(sqrtf(len) * -(pos.x - x + m * dx) / dy);
