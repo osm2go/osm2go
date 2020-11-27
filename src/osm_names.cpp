@@ -322,13 +322,21 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
   return ret;
 }
 
+enum RelationNameFlags {
+  Uninitialized = -1,             ///< no relation has been found until now
+  Member = 0,                     ///< there is a relation that has the given object as member
+  HasName = 1,                    ///< ... Member and the relation has a descriptive name
+  IsMp = 2,                       ///< ... Member and that relation is a multipolygon
+  IsMpWithName = HasName | Member ///< ... Member and that relation is a multipolygon with a descriptive name
+};
+
 } // namespace
 
 trstring osm_t::unspecified_name(const object_t &obj) const
 {
   const std::map<item_id_t, relation_t *>::const_iterator itEnd = relations.end();
   const char *bmrole = nullptr; // the role "obj" has in the "best" relation
-  int rtype = -1; // type of the relation: 3 mp with name, 2 mp, 1 name, 0 anything else
+  int rtype = Uninitialized; // type of the best matching relation this object is member of
   std::map<item_id_t, relation_t *>::const_iterator best = itEnd;
   std::string bname;
 
@@ -338,13 +346,13 @@ trstring osm_t::unspecified_name(const object_t &obj) const
     if (mit == it->second->members.end())
       continue;
 
-    int nrtype = 0;
+    int nrtype = Member;
     if(it->second->is_multipolygon())
-      nrtype += 2;
+      nrtype |= IsMp;
     std::string nname = it->second->descriptive_name();
     assert(!nname.empty());
     if(nname[0] != '<')
-      nrtype += 1;
+      nrtype |= HasName;
 
     if(nrtype > rtype) {
       rtype = nrtype;
