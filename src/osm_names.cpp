@@ -359,9 +359,9 @@ trstring osm_t::unspecified_name(const object_t &obj) const
   if(best == itEnd)
     return trstring("unspecified %1").arg(obj.type_string());
 
-  std::string bname;
+  trstring bname;
   if (bnameTag != nullptr)
-    bname = clean_underscores(bnameTag);
+    bname.assign(clean_underscores(bnameTag));
   else
     bname = best->second->idName();
 
@@ -441,19 +441,21 @@ relation_t::descriptiveName() const
   return nullptr;
 }
 
-std::string
+trstring
 relation_t::descriptiveNameOrId() const
 {
   const char *name = descriptiveName();
 
-  if (name != nullptr)
-    return name;
+  if (name == nullptr)
+    return idName();
 
-  return idName();
+  trstring ret;
+  ret.assign(name);
+  return ret;
 }
 
-std::string
+trstring
 relation_t::idName() const
 {
-  return trstring("<ID #%1>").arg(id).toStdString();
+  return trstring("<ID #%1>").arg(id);
 }

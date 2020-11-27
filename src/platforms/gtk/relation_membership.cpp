@@ -300,8 +300,8 @@ on_view_clicked(GtkWidget *widget, GdkEventButton *event, gpointer)
 struct relation_list_insert_functor {
   relitem_context_t &context;
   GtkTreeIter &sel_iter;
-  std::string &selname; /* name of sel_iter */
-  inline relation_list_insert_functor(relitem_context_t &c, std::string &sn, GtkTreeIter &it)
+  trstring &selname; /* name of sel_iter */
+  inline relation_list_insert_functor(relitem_context_t &c, trstring &sn, GtkTreeIter &it)
     : context(c), sel_iter(it), selname(sn) {}
   void operator()(std::pair<item_id_t, relation_t *> pair);
 };
@@ -315,7 +315,7 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
 
   GtkTreeIter iter;
   /* try to find something descriptive */
-  std::string name = relation->descriptiveNameOrId();
+  trstring name = relation->descriptiveNameOrId();
 
   const std::vector<member_t>::const_iterator it = relation->find_member_object(context.item);
   const bool isMember = it != relation->members.end();
@@ -326,7 +326,7 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
   gtk_list_store_insert_with_values(context.store.get(), &iter, -1,
                                     RELITEM_COL_TYPE, relation->tags.get_value("type"),
                                     RELITEM_COL_ROLE, isMember ? it->role : nullptr,
-                                    RELITEM_COL_NAME, name.c_str(),
+                                    RELITEM_COL_NAME, static_cast<const gchar *>(name),
                                     RELITEM_COL_ROLE_MODIFIED, (mflags & relation_t::RoleChanged) ? TRUE : FALSE,
                                     RELITEM_COL_MEMBER_MODIFIED, (mflags & relation_t::MembershipChanged) ? TRUE : FALSE,
                                     RELITEM_COL_DATA, relation,
@@ -337,7 +337,7 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
   if(isMember) {
     gtk_tree_selection_select_iter(context.selection, &iter);
     /* check if this element is earlier by name in the list */
-    if(selname.empty() || name.compare(selname) < 0) {
+    if(selname.isEmpty() || name.toStdString().compare(selname.toStdString()) < 0) {
       selname.swap(name);
       sel_iter = iter;
     }
@@ -405,14 +405,14 @@ relation_item_list_widget(relitem_context_t &context)
                                        RELITEM_COL_NAME, GTK_SORT_ASCENDING);
 
   /* build a list of iters of all items that should be selected */
-  std::string selname;
+  trstring selname;
   GtkTreeIter sel_iter;
   relation_list_insert_functor inserter(context, selname, sel_iter);
 
   std::for_each(context.osm->relations.begin(),
                 context.osm->relations.end(), inserter);
 
-  if(!selname.empty())
+  if(!selname.isEmpty())
     list_view_scroll(view, context.selection, &sel_iter);
 
   g_signal_connect_swapped(context.selection, "changed", G_CALLBACK(changed), &context);

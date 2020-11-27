@@ -166,7 +166,7 @@ on_relation_add(relation_context_t *context)
     GtkTreeIter iter;
     gtk_list_store_insert_with_values(context->store.get(), &iter, -1,
                                       RELATION_COL_TYPE,    r->tags.get_value("type"),
-                                      RELATION_COL_NAME,    r->descriptiveNameOrId().c_str(),
+                                      RELATION_COL_NAME,    static_cast<const gchar *>(r->descriptiveNameOrId()),
                                       RELATION_COL_MEMBERS, r->members.size(),
                                       RELATION_COL_DATA,    r,
                                       -1);
@@ -194,7 +194,7 @@ relation_edit_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpo
   // Found it. Update all visible fields.
   gtk_list_store_set(GTK_LIST_STORE(model), iter,
                       RELATION_COL_TYPE,    context->sel->tags.get_value("type"),
-                      RELATION_COL_NAME,    context->sel->descriptiveNameOrId().c_str(),
+                      RELATION_COL_NAME,    static_cast<const gchar *>(context->sel->descriptiveNameOrId()),
                       RELATION_COL_MEMBERS, context->sel->members.size(),
                       -1);
 
@@ -270,7 +270,7 @@ void relation_list_widget_functor::operator()(const relation_t *rel)
   /* Append a row and fill in some data */
   gtk_list_store_insert_with_values(store, nullptr, -1,
                                     RELATION_COL_TYPE, rel->tags.get_value("type"),
-                                    RELATION_COL_NAME, rel->descriptiveNameOrId().c_str(),
+                                    RELATION_COL_NAME, static_cast<const gchar *>(rel->descriptiveNameOrId()),
                                     RELATION_COL_TAGS_MODIFIED, rel->isNew() || (orig && orig->tags != rel->tags) ? TRUE : FALSE,
                                     RELATION_COL_MEMBERS, rel->members.size(),
                                     RELATION_COL_MEMBERS_MODIFIED, rel->isNew() || (orig && orig->members != rel->members) ? TRUE : FALSE,

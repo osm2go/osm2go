@@ -475,12 +475,12 @@ public:
    *
    * In case descriptiveName() would return an empty string this returns idName() instead.
    */
-  std::string descriptiveNameOrId() const;
+  trstring descriptiveNameOrId() const;
 
   /**
    * @brief describe this relation by its id
    */
-  std::string idName() const;
+  trstring idName() const;
 
   void generate_member_xml(xmlNodePtr xml_node) const;
 
