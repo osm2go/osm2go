@@ -37,7 +37,7 @@ struct member_context_t {
 
   inline member_context_t(relation_t *r, osm_t::ref o, GtkWidget *parent, const presets_items *p)
     : relation(r)
-    , dialog(gtk_dialog_new_with_buttons(static_cast<const gchar *>(trstring("Members of relation \"%1\"").arg(relation->descriptive_name())),
+    , dialog(gtk_dialog_new_with_buttons(static_cast<const gchar *>(trstring("Members of relation \"%1\"").arg(relation->descriptiveNameOrId())),
                                          GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,

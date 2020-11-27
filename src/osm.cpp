@@ -675,18 +675,6 @@ void osm_t::wipe(relation_t *relation)
   wipeImpl(relation);
 }
 
-/* try to find something descriptive */
-std::string relation_t::descriptive_name() const {
-  const std::array<const char *, 5> keys = { { "name", "ref", "description", "note", "fix" "me" } };
-  for (unsigned int i = 0; i < keys.size(); i++) {
-    const char *name = tags.get_value(keys[i]);
-    if(name != nullptr)
-      return name;
-  }
-
-  return trstring("<ID #%1>").arg(id).toStdString();
-}
-
 trstring::native_type osm_t::sanity_check() const
 {
   if(unlikely(!bounds.ll.valid()))

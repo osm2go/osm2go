@@ -166,7 +166,7 @@ on_relation_add(relation_context_t *context)
     GtkTreeIter iter;
     gtk_list_store_insert_with_values(context->store.get(), &iter, -1,
                                       RELATION_COL_TYPE,    r->tags.get_value("type"),
-                                      RELATION_COL_NAME,    r->descriptive_name().c_str(),
+                                      RELATION_COL_NAME,    r->descriptiveNameOrId().c_str(),
                                       RELATION_COL_MEMBERS, r->members.size(),
                                       RELATION_COL_DATA,    r,
                                       -1);
@@ -191,11 +191,10 @@ relation_edit_foreach(GtkTreeModel *model, GtkTreePath *, GtkTreeIter *iter, gpo
   if (row_rel != context->sel)
     return FALSE;
 
-  const std::string &name = context->sel->descriptive_name();
   // Found it. Update all visible fields.
   gtk_list_store_set(GTK_LIST_STORE(model), iter,
                       RELATION_COL_TYPE,    context->sel->tags.get_value("type"),
-                      RELATION_COL_NAME,    name.c_str(),
+                      RELATION_COL_NAME,    context->sel->descriptiveNameOrId().c_str(),
                       RELATION_COL_MEMBERS, context->sel->members.size(),
                       -1);
 
@@ -266,13 +265,12 @@ void relation_list_widget_functor::operator()(const relation_t *rel)
   if(rel->isDeleted())
     return;
 
-  const std::string &name = rel->descriptive_name();
   const relation_t * const orig = osm->originalObject(rel);
 
   /* Append a row and fill in some data */
   gtk_list_store_insert_with_values(store, nullptr, -1,
                                     RELATION_COL_TYPE, rel->tags.get_value("type"),
-                                    RELATION_COL_NAME, name.c_str(),
+                                    RELATION_COL_NAME, rel->descriptiveNameOrId().c_str(),
                                     RELATION_COL_TAGS_MODIFIED, rel->isNew() || (orig && orig->tags != rel->tags) ? TRUE : FALSE,
                                     RELATION_COL_MEMBERS, rel->members.size(),
                                     RELATION_COL_MEMBERS_MODIFIED, rel->isNew() || (orig && orig->members != rel->members) ? TRUE : FALSE,

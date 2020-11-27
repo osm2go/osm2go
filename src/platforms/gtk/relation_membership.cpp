@@ -315,7 +315,7 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
 
   GtkTreeIter iter;
   /* try to find something descriptive */
-  std::string name = relation->descriptive_name();
+  std::string name = relation->descriptiveNameOrId();
 
   const std::vector<member_t>::const_iterator it = relation->find_member_object(context.item);
   const bool isMember = it != relation->members.end();

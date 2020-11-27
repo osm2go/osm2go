@@ -151,12 +151,14 @@ void test_trivial()
   object_t inv;
   assert_cmpnum(inv.get_id(), ID_ILLEGAL);
 
-  assert_cmpstr(r->descriptive_name(), "<ID #-1>");
+  assert_null(r->descriptiveName());
+  assert_cmpstr(r->descriptiveNameOrId(), "<ID #-1>");
 
   osm_t::TagMap tmap;
   tmap.insert(osm_t::TagMap::value_type("ref", "KHM 55"));
   r->tags.replace(tmap);
-  assert_cmpstr(r->descriptive_name(), "KHM 55");
+  assert_cmpstr(r->descriptiveName(), "KHM 55");
+  assert_cmpstr(r->descriptiveNameOrId(), "KHM 55");
   // one non-trivial tag
   const tag_t *st = r->tags.singleTag();
   assert(st != nullptr);
@@ -165,17 +167,18 @@ void test_trivial()
   // name is preferred over ref
   tmap.insert(osm_t::TagMap::value_type("name", "Rumpelstilzchen"));
   r->tags.replace(tmap);
-  assert_cmpstr(r->descriptive_name(), "Rumpelstilzchen");
+  assert_cmpstr(r->descriptiveNameOrId(), "Rumpelstilzchen");
   // multiple non-trivial tags
   assert_null(r->tags.singleTag());
   // another way to clear
   std::vector<tag_t> notags;
   r->tags.replace(std::move(notags));
-  assert_cmpstr(r->descriptive_name(), "<ID #-1>");
+  assert_null(r->descriptiveName());
+  assert_cmpstr(r->idName(), "<ID #-1>");
   r->id = std::numeric_limits<typeof(r->id)>::max();
-  assert_cmpstr(r->descriptive_name(), "<ID #9223372036854775807>");
+  assert_cmpstr(r->idName(), "<ID #9223372036854775807>");
   r->id = std::numeric_limits<typeof(r->id)>::min();
-  assert_cmpstr(r->descriptive_name(), "<ID #-9223372036854775808>");
+  assert_cmpstr(r->idName(), "<ID #-9223372036854775808>");
 
   member_t mb(object_t::RELATION);
   assert_null(mb.role);

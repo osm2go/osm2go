@@ -61,15 +61,10 @@ public:
  * Tags usually have underscores in them, but to display this to the user a version
  * with spaces looks nicer.
  */
-inline void clean_underscores_inplace(std::string &s)
-{
-  std::replace(s.begin(), s.end(), '_', ' ');
-}
-
 inline std::string __attribute__((nonnull(1))) __attribute__ ((warn_unused_result)) clean_underscores(const char *s)
 {
   std::string ret = s;
-  clean_underscores_inplace(ret);
+  std::replace(ret.begin(), ret.end(), '_', ' ');
   return ret;
 }
 
@@ -338,7 +333,7 @@ trstring osm_t::unspecified_name(const object_t &obj) const
   const char *bmrole = nullptr; // the role "obj" has in the "best" relation
   int rtype = Uninitialized; // type of the best matching relation this object is member of
   std::map<item_id_t, relation_t *>::const_iterator best = itEnd;
-  std::string bname;
+  const char *bnameTag = nullptr;
 
   for (std::map<item_id_t, relation_t *>::const_iterator it = relations.begin(); it != itEnd && rtype < 3; it++) {
     // ignore all relations where obj is no member
@@ -349,16 +344,14 @@ trstring osm_t::unspecified_name(const object_t &obj) const
     int nrtype = Member;
     if(it->second->is_multipolygon())
       nrtype |= IsMp;
-    std::string nname = it->second->descriptive_name();
-    assert(!nname.empty());
-    if(nname[0] != '<')
+    const char *nameTag = it->second->descriptiveName();
+    if (nameTag != nullptr)
       nrtype |= HasName;
 
     if(nrtype > rtype) {
       rtype = nrtype;
       best = it;
-      bname.swap(nname);
-      clean_underscores_inplace(bname);
+      bnameTag = nameTag;
       bmrole = mit->role;
     }
   }
@@ -366,11 +359,17 @@ trstring osm_t::unspecified_name(const object_t &obj) const
   if(best == itEnd)
     return trstring("unspecified %1").arg(obj.type_string());
 
+  std::string bname;
+  if (bnameTag != nullptr)
+    bname = clean_underscores(bnameTag);
+  else
+    bname = best->second->idName();
+
   std::string brole;
   if (bmrole != nullptr)
     brole = clean_underscores(bmrole);
 
-  if(best->second->is_multipolygon() && !brole.empty())
+  if(rtype & IsMp && !brole.empty())
     return trstring("%1: '%2' of multipolygon '%3'").arg(obj.type_string()).arg(brole).arg(bname);
 
   const char *type = best->second->tags.get_value("type");
@@ -427,4 +426,34 @@ object_t::get_name(const osm_t &osm) const
     ret.assign(clean_underscores(np.type.key));
     return ret;
   }
+}
+
+const char *
+relation_t::descriptiveName() const
+{
+  const std::array<const char *, 5> keys = { { "name", "ref", "description", "note", "fix" "me" } };
+  for (unsigned int i = 0; i < keys.size(); i++) {
+    const char *name = tags.get_value(keys[i]);
+    if(name != nullptr)
+      return name;
+  }
+
+  return nullptr;
+}
+
+std::string
+relation_t::descriptiveNameOrId() const
+{
+  const char *name = descriptiveName();
+
+  if (name != nullptr)
+    return name;
+
+  return idName();
+}
+
+std::string
+relation_t::idName() const
+{
+  return trstring("<ID #%1>").arg(id).toStdString();
 }

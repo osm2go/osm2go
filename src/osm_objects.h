@@ -463,7 +463,25 @@ public:
   void updateMembers(std::vector<member_t> &newMembers, osm_t::ref osm);
 
   void members_by_type(unsigned int &nodes, unsigned int &ways, unsigned int &relations) const;
-  std::string descriptive_name() const;
+
+  /**
+   * @brief return a descriptive name
+   * @retval nullptr no nice tag to describe this relation was found
+   */
+  const char *descriptiveName() const;
+
+  /**
+   * @brief get a descriptive name or an id description
+   *
+   * In case descriptiveName() would return an empty string this returns idName() instead.
+   */
+  std::string descriptiveNameOrId() const;
+
+  /**
+   * @brief describe this relation by its id
+   */
+  std::string idName() const;
+
   void generate_member_xml(xmlNodePtr xml_node) const;
 
   bool is_multipolygon() const;
