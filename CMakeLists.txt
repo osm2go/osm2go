@@ -244,11 +244,11 @@ target_include_directories(osm2go_lib
 		src
 )
 
-add_subdirectory(data)
-
 if (BUILD_TESTING)
 	add_subdirectory(test)
 endif ()
+
+add_subdirectory(data)
 
 install(FILES LICENSES/GPL-3.0-or-later
 	DESTINATION ${DATA_DIR})

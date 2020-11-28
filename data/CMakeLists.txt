@@ -11,6 +11,7 @@ add_custom_target(elemstyles
 		DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/elemstyles-mapnik.xml)
 
 add_dependencies(osm2go elemstyles)
+add_dependencies(style_load elemstyles)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/elemstyles-mapnik.xml
 	DESTINATION ${DATA_DIR})
