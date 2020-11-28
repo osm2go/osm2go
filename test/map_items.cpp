@@ -196,6 +196,44 @@ void test_map_deselect(const std::string &tmpdir)
   assert(!a.iconbar->isTrashEnabled());
 }
 
+void test_way_add_cancel_map(const std::string &tmpdir)
+{
+  appdata_t a;
+  a.project.reset(new project_t("foo", tmpdir));
+  std::unique_ptr<map_t> m(std::make_unique<test_map>(a));
+  m->style.reset(new style_t());
+  a.project->osm.reset(new osm_t());
+  osm_t::ref o = a.project->osm;
+  set_bounds(o);
+  iconbar_t::create(a);
+
+  MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
+  ui->clearFlags.push_back(MainUi::ClearNormal);
+  ui->m_actions[MainUi::MENU_ITEM_MAP_HIDE_SEL] = false;
+  ui->m_actions[MainUi::MENU_ITEM_WMS_ADJUST] = false;
+  ui->m_statusText = trstring("Place first node of new way");
+
+  m->set_action(MAP_ACTION_WAY_ADD);
+  assert(a.iconbar->isCancelEnabled());
+  assert(!a.iconbar->isOkEnabled());
+  assert(!a.iconbar->isInfoEnabled());
+  assert(!a.iconbar->isTrashEnabled());
+  assert_cmpnum(ui->m_actions.size(), 0);
+  assert(ui->m_statusText.isEmpty());
+
+  // way add has started, prepare for cancel
+
+  ui->clearFlags.push_back(MainUi::ClearNormal);
+  ui->m_actions[MainUi::MENU_ITEM_WMS_ADJUST] = true;
+  map_t::map_action_cancel(m.get());
+  assert(!a.iconbar->isCancelEnabled());
+  assert(!a.iconbar->isOkEnabled());
+  assert(!a.iconbar->isInfoEnabled());
+  assert(!a.iconbar->isTrashEnabled());
+  assert_cmpnum(ui->m_actions.size(), 0);
+  assert(ui->m_statusText.isEmpty());
+}
+
 } // namespace
 
 int main()
@@ -217,6 +255,7 @@ int main()
   test_way_add_cancel(osm_path);
   test_map_item_deleter(osm_path);
   test_map_deselect(osm_path);
+  test_way_add_cancel_map(osm_path);
 
   assert_cmpnum(rmdir(tmpdir), 0);
 

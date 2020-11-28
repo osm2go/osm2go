@@ -25,13 +25,17 @@ public:
     else
       abort();
   }
-  void showNotification(trstring::arg_type, unsigned int) override
-  { abort(); }
+  void showNotification(trstring::arg_type text, unsigned int) override
+  {
+    assert_cmpstr(m_statusText, static_cast<trstring::native_type>(text));
+    m_statusText = trstring();
+  }
   const char *msg;
 
   void clearNotification(NotificationFlags flags) override;
 
   std::vector<NotificationFlags> clearFlags;
+  trstring m_statusText;
 };
 
 void MainUiDummy::clearNotification(NotificationFlags flags)
