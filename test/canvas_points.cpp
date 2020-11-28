@@ -131,7 +131,7 @@ void testToBottom()
   assert(bgpoly == search3);
 
   // outside of everything
-  search3 = canvas->get_item_at(lpos_t(EXTRA_FUZZINESS_PIXEL * 4, 3));
+  search3 = canvas->get_item_at(lpos_t(EXTRA_FUZZINESS_PIXEL * 4 + 1, 3));
   assert_null(search3);
 }
 
