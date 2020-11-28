@@ -63,7 +63,7 @@ public:
   /**
    * @brief clear the given type of messages
    */
-  void clearNotification(NotificationFlags flags);
+  virtual void clearNotification(NotificationFlags flags) = 0;
 
   /**
    * @brief show a modal about box

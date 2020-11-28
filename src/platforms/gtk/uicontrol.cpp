@@ -145,13 +145,13 @@ void MainUi::showNotification(trstring::arg_type message, unsigned int flags)
     statusbar->set(static_cast<const char *>(nativeMsg), flags & Highlight);
 }
 
-void MainUi::clearNotification(NotificationFlags flags)
+void MainUiGtk::clearNotification(NotificationFlags flags)
 {
-  statusbar_t *statusbar = static_cast<MainUiGtk *>(this)->statusBar();
+  statusbar_t *sbar = statusBar();
   if (flags & Busy)
-    statusbar->banner_busy_stop();
+    sbar->banner_busy_stop();
   if (flags & ClearNormal)
-    statusbar->set(nullptr, false);
+    sbar->set(nullptr, false);
 }
 
 GtkWidget *MainUiGtk::addMenu(GtkWidget *item)

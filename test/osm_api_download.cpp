@@ -32,6 +32,8 @@ public:
   void setActionEnable(menu_items, bool) override
   { abort(); }
   void showNotification(trstring::arg_type, unsigned int flags) override;
+  void clearNotification(MainUi::NotificationFlags) override
+  { abort(); }
   bool hasMessage;
 };
 

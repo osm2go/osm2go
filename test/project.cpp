@@ -38,6 +38,8 @@ public:
   void setActionEnable(menu_items, bool) override
   { abort(); }
   void showNotification(trstring::arg_type message, unsigned int flags) override;
+  void clearNotification(MainUi::NotificationFlags) override
+  { abort(); }
   std::vector<std::string> messages;
 };
 

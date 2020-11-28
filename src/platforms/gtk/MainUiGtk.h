@@ -43,6 +43,8 @@ public:
 
   void setActionEnable(menu_items item, bool en) override;
 
+  void clearNotification(NotificationFlags flags) override;
+
   /**
    * @brief create a new submenu entry in the global menu bar
    */

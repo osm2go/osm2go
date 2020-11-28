@@ -28,7 +28,18 @@ public:
   void showNotification(trstring::arg_type, unsigned int) override
   { abort(); }
   const char *msg;
+
+  void clearNotification(NotificationFlags flags) override;
+
+  std::vector<NotificationFlags> clearFlags;
 };
+
+void MainUiDummy::clearNotification(NotificationFlags flags)
+{
+  assert_cmpnum_op(clearFlags.size(), >, 0);
+  assert_cmpnum(static_cast<int>(flags), static_cast<int>(clearFlags.front()));
+  clearFlags.erase(clearFlags.begin());
+}
 
 appdata_t::appdata_t()
   : uicontrol(new MainUiDummy())
