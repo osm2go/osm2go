@@ -234,6 +234,44 @@ void test_way_add_cancel_map(const std::string &tmpdir)
   assert(ui->m_statusText.isEmpty());
 }
 
+void test_node_add_cancel_map(const std::string &tmpdir)
+{
+  appdata_t a;
+  a.project.reset(new project_t("foo", tmpdir));
+  std::unique_ptr<map_t> m(std::make_unique<test_map>(a));
+  m->style.reset(new style_t());
+  a.project->osm.reset(new osm_t());
+  osm_t::ref o = a.project->osm;
+  set_bounds(o);
+  iconbar_t::create(a);
+
+  MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
+  ui->clearFlags.push_back(MainUi::ClearNormal);
+  ui->m_actions[MainUi::MENU_ITEM_MAP_HIDE_SEL] = false;
+  ui->m_actions[MainUi::MENU_ITEM_WMS_ADJUST] = false;
+  ui->m_statusText = trstring("Place a node");
+
+  m->set_action(MAP_ACTION_NODE_ADD);
+  assert(a.iconbar->isCancelEnabled());
+  assert(a.iconbar->isOkEnabled());
+  assert(!a.iconbar->isInfoEnabled());
+  assert(!a.iconbar->isTrashEnabled());
+  assert_cmpnum(ui->m_actions.size(), 0);
+  assert(ui->m_statusText.isEmpty());
+
+  // node add has started, prepare for cancel
+
+  ui->clearFlags.push_back(MainUi::ClearNormal);
+  ui->m_actions[MainUi::MENU_ITEM_WMS_ADJUST] = true;
+  map_t::map_action_cancel(m.get());
+  assert(!a.iconbar->isCancelEnabled());
+  assert(!a.iconbar->isOkEnabled());
+  assert(!a.iconbar->isInfoEnabled());
+  assert(!a.iconbar->isTrashEnabled());
+  assert_cmpnum(ui->m_actions.size(), 0);
+  assert(ui->m_statusText.isEmpty());
+}
+
 } // namespace
 
 int main()
@@ -256,6 +294,7 @@ int main()
   test_map_item_deleter(osm_path);
   test_map_deselect(osm_path);
   test_way_add_cancel_map(osm_path);
+  test_node_add_cancel_map(osm_path);
 
   assert_cmpnum(rmdir(tmpdir), 0);
 
