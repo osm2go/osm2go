@@ -1,6 +1,7 @@
 #pragma once
 
 #include <appdata.h>
+#include <gps_state.h>
 #include <icon.h>
 #include <map.h>
 #include <uicontrol.h>
@@ -45,10 +46,22 @@ void MainUiDummy::clearNotification(NotificationFlags flags)
   clearFlags.erase(clearFlags.begin());
 }
 
+class gps_state_dummy : public gps_state_t {
+public:
+  gps_state_dummy() : gps_state_t(nullptr, nullptr) {}
+
+  pos_t get_pos(float *) override
+  { return pos_t(NAN, NAN); }
+
+  void setEnable(bool) override
+  { abort(); }
+};
+
 appdata_t::appdata_t()
   : uicontrol(new MainUiDummy())
   , map(nullptr)
   , icons(icon_t::instance())
+  , gps_state(new gps_state_dummy())
 {
 }
 
