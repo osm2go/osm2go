@@ -7,10 +7,11 @@
 #include <uicontrol.h>
 
 #include <cstdlib>
+#include <map>
 
 class MainUiDummy : public MainUi {
 public:
-  std::map<menu_items, bool> m_actions;
+  std::multimap<menu_items, bool> m_actions;
 
   MainUiDummy() : MainUi(), msg(nullptr) {}
   ~MainUiDummy() override

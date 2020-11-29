@@ -10,6 +10,7 @@
 #include <osm2go_annotations.h>
 #include <style.h>
 #include <uicontrol.h>
+#include <osm2go_test.h>
 
 #include <iostream>
 #include <memory>
@@ -128,7 +129,7 @@ void test_draw_hidden(const std::string &tmpdir)
   // trick the way to become unhidden bit still not drawn: also set deleted marker
   w->flags |= OSM_FLAG_DELETED;
 
-  ui->m_actions[MainUi::MENU_ITEM_MAP_SHOW_ALL] = false;
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_SHOW_ALL, false));
   m->show_all();
 
   assert_cmpnum(o->hiddenWays.size(), 0);
@@ -186,7 +187,7 @@ void test_map_deselect(const std::string &tmpdir)
 
   MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
   ui->clearFlags.push_back(MainUi::ClearNormal);
-  ui->m_actions[MainUi::MENU_ITEM_MAP_HIDE_SEL] = false;
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, false));
 
   m->item_deselect();
   assert_cmpnum(ui->m_actions.size(), 0);
@@ -209,8 +210,8 @@ void test_way_add_cancel_map(const std::string &tmpdir)
 
   MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
   ui->clearFlags.push_back(MainUi::ClearNormal);
-  ui->m_actions[MainUi::MENU_ITEM_MAP_HIDE_SEL] = false;
-  ui->m_actions[MainUi::MENU_ITEM_WMS_ADJUST] = false;
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, false));
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, false));
   ui->m_statusText = trstring("Place first node of new way");
 
   m->set_action(MAP_ACTION_WAY_ADD);
@@ -224,7 +225,7 @@ void test_way_add_cancel_map(const std::string &tmpdir)
   // way add has started, prepare for cancel
 
   ui->clearFlags.push_back(MainUi::ClearNormal);
-  ui->m_actions[MainUi::MENU_ITEM_WMS_ADJUST] = true;
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, true));
   map_t::map_action_cancel(m.get());
   assert(!a.iconbar->isCancelEnabled());
   assert(!a.iconbar->isOkEnabled());
@@ -247,8 +248,8 @@ void test_node_add_cancel_map(const std::string &tmpdir)
 
   MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
   ui->clearFlags.push_back(MainUi::ClearNormal);
-  ui->m_actions[MainUi::MENU_ITEM_MAP_HIDE_SEL] = false;
-  ui->m_actions[MainUi::MENU_ITEM_WMS_ADJUST] = false;
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, false));
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, false));
   ui->m_statusText = trstring("Place a node");
 
   m->set_action(MAP_ACTION_NODE_ADD);
@@ -262,7 +263,7 @@ void test_node_add_cancel_map(const std::string &tmpdir)
   // node add has started, prepare for cancel
 
   ui->clearFlags.push_back(MainUi::ClearNormal);
-  ui->m_actions[MainUi::MENU_ITEM_WMS_ADJUST] = true;
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, true));
   map_t::map_action_cancel(m.get());
   assert(!a.iconbar->isCancelEnabled());
   assert(!a.iconbar->isOkEnabled());
@@ -285,8 +286,8 @@ void test_node_add_ok_map(const std::string &tmpdir)
 
   MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
   ui->clearFlags.push_back(MainUi::ClearNormal);
-  ui->m_actions[MainUi::MENU_ITEM_MAP_HIDE_SEL] = false;
-  ui->m_actions[MainUi::MENU_ITEM_WMS_ADJUST] = false;
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, false));
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, false));
   ui->m_statusText = trstring("Place a node");
 
   m->set_action(MAP_ACTION_NODE_ADD);
@@ -300,8 +301,53 @@ void test_node_add_ok_map(const std::string &tmpdir)
   // node add has started, trigger "ok". This would add the node if there is a valid GPS position
 
   ui->clearFlags.push_back(MainUi::ClearNormal);
-  ui->m_actions[MainUi::MENU_ITEM_WMS_ADJUST] = true;
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, true));
   m->action_ok();
+  assert(!a.iconbar->isCancelEnabled());
+  assert(!a.iconbar->isOkEnabled());
+  assert(!a.iconbar->isInfoEnabled());
+  assert(!a.iconbar->isTrashEnabled());
+  assert_cmpnum(ui->m_actions.size(), 0);
+  assert(ui->m_statusText.isEmpty());
+}
+
+void test_map_detail(const std::string &tmpdir)
+{
+  appdata_t a;
+  a.project.reset(new project_t("foo", tmpdir));
+  canvas_holder canvas;
+  std::unique_ptr<map_t> m(std::make_unique<test_map>(a, *canvas));
+  m->style.reset(new style_t());
+  a.project->osm.reset(new osm_t());
+  osm_t::ref o = a.project->osm;
+  set_bounds(o);
+  iconbar_t::create(a);
+
+  MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
+  ui->clearFlags.push_back(MainUi::ClearNormal); // called twice from different places
+  ui->clearFlags.push_back(MainUi::ClearNormal);
+  ui->clearFlags.push_back(MainUi::Busy);
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, false));
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, false));
+  ui->m_statusText = trstring("Increasing detail level");
+
+  m->detail_increase();
+
+  assert(!a.iconbar->isCancelEnabled());
+  assert(!a.iconbar->isOkEnabled());
+  assert(!a.iconbar->isInfoEnabled());
+  assert(!a.iconbar->isTrashEnabled());
+  assert_cmpnum(ui->m_actions.size(), 0);
+  assert(ui->m_statusText.isEmpty());
+
+  ui->clearFlags.push_back(MainUi::ClearNormal);
+  ui->clearFlags.push_back(MainUi::ClearNormal);
+  ui->clearFlags.push_back(MainUi::Busy);
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, false));
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, false));
+  ui->m_statusText = trstring("Decreasing detail level");
+  m->detail_decrease();
+
   assert(!a.iconbar->isCancelEnabled());
   assert(!a.iconbar->isOkEnabled());
   assert(!a.iconbar->isInfoEnabled());
@@ -334,6 +380,7 @@ int main()
   test_way_add_cancel_map(osm_path);
   test_node_add_cancel_map(osm_path);
   test_node_add_ok_map(osm_path);
+  test_map_detail(osm_path);
 
   assert_cmpnum(rmdir(tmpdir), 0);
 

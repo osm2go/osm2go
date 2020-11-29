@@ -44,18 +44,18 @@ void testBackground()
   a.track.track.reset(new track_t());
   MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
 
-  ui->m_actions[MainUi::MENU_ITEM_WMS_CLEAR] = false;
-  ui->m_actions[MainUi::MENU_ITEM_WMS_ADJUST] = false;
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_CLEAR, false));
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, false));
   assert(!m->set_bg_image(std::string(), osm2go_platform::screenpos(0, 0)));
   assert(ui->m_actions.empty());
 
-  ui->m_actions[MainUi::MENU_ITEM_WMS_CLEAR] = false;
-  ui->m_actions[MainUi::MENU_ITEM_WMS_ADJUST] = false;
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_CLEAR, false));
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, false));
   assert(!m->set_bg_image(nonfile, osm2go_platform::screenpos(0, 0)));
   assert(ui->m_actions.empty());
 
-  ui->m_actions[MainUi::MENU_ITEM_WMS_CLEAR] = false;
-  ui->m_actions[MainUi::MENU_ITEM_WMS_ADJUST] = false;
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_CLEAR, false));
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, false));
   m->remove_bg_image();
   assert(ui->m_actions.empty());
 }
