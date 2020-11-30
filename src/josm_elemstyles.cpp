@@ -415,9 +415,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
 
     for(unsigned int i = 0; attrs[i] != nullptr; i += 2) {
       if(strcmp(attrs[i], "colour") == 0) {
-        color_t col;
-        if(parse_color(attrs[i + 1], col, colors))
-          line_mod.color = col;
+        parse_color(attrs[i + 1], line_mod.color, colors);
       } else if(strcmp(attrs[i], "width") == 0)
         parse_width_mod(attrs[i + 1], line_mod.line);
       else if(strcmp(attrs[i], "width_bg") == 0)
