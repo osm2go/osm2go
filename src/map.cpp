@@ -872,13 +872,13 @@ void map_t::button_press(const osm2go_platform::screenpos &p)
   pen_down.drag = false;     // don't assume drag yet
 
   /* determine wether this press was on an item */
-  pen_down_item(canvas->get_item_at(canvas->window2world(pen_down.at)));
+  lpos_t pos = canvas->window2world(p);
+  pen_down_item(canvas->get_item_at(pos));
 
   /* check if the clicked item is a highlighted node as the user */
   /* might want to drag that */
   pen_down.on_selected_node = item_is_selected_node(pen_down.on_item);
 
-  lpos_t pos = canvas->window2world(p);
   /* button press */
   switch(action.type) {
 
