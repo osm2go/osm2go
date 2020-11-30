@@ -121,24 +121,25 @@ void osm2go_platform::MappedFile::reset()
   }
 }
 
-bool osm2go_platform::parse_color_string(const char *str, color_t &color)
+std::optional<color_t> osm2go_platform::parse_color_string(const char *str)
 {
   /* we parse this directly since gdk_color_parse doesn't cope */
   /* with the alpha channel that may be present */
   if (strlen(str + 1) == 8) {
     char *err;
 
-    color = strtoul(str + 1, &err, 16);
+    color_t color = strtoul(str + 1, &err, 16);
 
-    return (*err == '\0');
+    if (*err == '\0')
+      return color;
   } else {
     GdkColor gdk_color;
     if(gdk_color_parse(str, &gdk_color) == TRUE) {
-      color = color_t(gdk_color.red, gdk_color.green, gdk_color.blue);
-      return true;
+      return color_t(gdk_color.red, gdk_color.green, gdk_color.blue);
     }
-    return false;
   }
+
+  return std::optional<color_t>();
 }
 
 static GdkColor parseRed()

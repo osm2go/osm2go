@@ -32,6 +32,7 @@ enum {
 
 #include <fdguard.h>
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -56,7 +57,7 @@ namespace osm2go_platform {
    *
    * The string is expected to begin with a '#'.
    */
-  bool parse_color_string(const char *str, color_t &color) __attribute__((nonnull(1)));
+  std::optional<color_t> parse_color_string(const char *str) __attribute__((nonnull(1)));
 
   /**
    * @brief converts a character string to a double in local-unaware fashion

@@ -141,9 +141,13 @@ parse_color(const char *col, color_t &color, ColorMap &colors)
   const char * const hash = strchr(col, '#');
   std::string colname;
   if(hash != nullptr) {
-    ret = osm2go_platform::parse_color_string(hash, color);
-    if(ret && hash != col)
-      colname.assign(col, hash - col);
+    std::optional<color_t> parsed = osm2go_platform::parse_color_string(hash);
+    if (parsed) {
+      ret = true;
+      color = *parsed;
+      if(hash != col)
+        colname.assign(col, hash - col);
+    }
   } else {
     colname = col;
   }
