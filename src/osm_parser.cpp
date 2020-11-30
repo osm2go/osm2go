@@ -226,14 +226,20 @@ void osm_t::parse_relation_member(xmlNode *a_node, std::vector<member_t> &member
 
 /* -------------------------- stream parser ------------------- */
 
-static inline int __attribute__((nonnull(2))) my_strcmp(const xmlChar *a, const xmlChar *b) {
+namespace {
+
+inline int __attribute__((nonnull(2)))
+my_strcmp(const xmlChar *a, const xmlChar *b)
+{
   if(a == nullptr)
     return -1;
   return strcmp(reinterpret_cast<const char *>(a), reinterpret_cast<const char *>(b));
 }
 
 /* skip current element incl. everything below (mainly for testing) */
-static void skip_element(xmlTextReaderPtr reader) {
+void
+skip_element(xmlTextReaderPtr reader)
+{
   assert_cmpnum(xmlTextReaderNodeType(reader), XML_READER_TYPE_ELEMENT);
   if(xmlTextReaderIsEmptyElement(reader))
     return;
@@ -252,14 +258,17 @@ static void skip_element(xmlTextReaderPtr reader) {
 }
 
 /* parse bounds */
-static bool process_bounds(xmlTextReaderPtr reader, bounds_t &bounds) {
+std::optional<bounds_t>
+process_bounds(xmlTextReaderPtr reader)
+{
+  bounds_t bounds;
   if(unlikely(!bounds.init(pos_area(pos_t::fromXmlProperties(reader, "minlat", "minlon"),
                                     pos_t::fromXmlProperties(reader, "maxlat", "maxlon"))))) {
     fprintf(stderr, "Invalid coordinate in bounds (%f/%f/%f/%f)\n",
             bounds.ll.min.lat, bounds.ll.min.lon,
             bounds.ll.max.lat, bounds.ll.max.lon);
 
-    return false;
+    return std::optional<bounds_t>();
   }
 
   /* skip everything below */
@@ -277,10 +286,12 @@ static bool process_bounds(xmlTextReaderPtr reader, bounds_t &bounds) {
   bounds.max.x *= bounds.scale;
   bounds.max.y *= bounds.scale;
 
-  return true;
+  return bounds;
 }
 
-static void process_tag(xmlTextReaderPtr reader, std::vector<tag_t> &tags) {
+void
+process_tag(xmlTextReaderPtr reader, std::vector<tag_t> &tags)
+{
   xmlString k(xmlTextReaderGetAttribute(reader, BAD_CAST "k"));
   xmlString v(xmlTextReaderGetAttribute(reader, BAD_CAST "v"));
 
@@ -290,7 +301,8 @@ static void process_tag(xmlTextReaderPtr reader, std::vector<tag_t> &tags) {
     printf("incomplete tag key/value %s/%s\n", k.get(), v.get());
 }
 
-static base_attributes process_base_attributes(xmlTextReaderPtr reader, osm_t::ref osm)
+base_attributes
+process_base_attributes(xmlTextReaderPtr reader, osm_t::ref osm)
 {
   base_attributes ret;
   xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST "id"));
@@ -324,7 +336,9 @@ static base_attributes process_base_attributes(xmlTextReaderPtr reader, osm_t::r
   return ret;
 }
 
-static void process_node(xmlTextReaderPtr reader, osm_t::ref osm) {
+void
+process_node(xmlTextReaderPtr reader, osm_t::ref osm)
+{
   const pos_t pos = pos_t::fromXmlProperties(reader);
 
   base_attributes ba = process_base_attributes(reader, osm);
@@ -361,12 +375,15 @@ static void process_node(xmlTextReaderPtr reader, osm_t::ref osm) {
   node->tags.replace(std::move(tags));
 }
 
-static node_t *process_nd(xmlTextReaderPtr reader, osm_t::ref osm) {
+node_t *
+process_nd(xmlTextReaderPtr reader, osm_t::ref osm)
+{
   xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST "ref"));
   return parse_node_ref(prop, osm.get());
 }
 
-static void process_way(xmlTextReaderPtr reader, osm_t::ref osm)
+void
+process_way(xmlTextReaderPtr reader, osm_t::ref osm)
 {
   base_attributes ba = process_base_attributes(reader, osm);
 
@@ -406,7 +423,8 @@ static void process_way(xmlTextReaderPtr reader, osm_t::ref osm)
   way->tags.replace(std::move(tags));
 }
 
-static void process_member(xmlTextReaderPtr reader, osm_t::ref osm, std::vector<member_t> &members)
+void
+process_member(xmlTextReaderPtr reader, osm_t::ref osm, std::vector<member_t> &members)
 {
   xmlString tp(xmlTextReaderGetAttribute(reader, BAD_CAST "type"));
   xmlString ref(xmlTextReaderGetAttribute(reader, BAD_CAST "ref"));
@@ -415,7 +433,8 @@ static void process_member(xmlTextReaderPtr reader, osm_t::ref osm, std::vector<
   osm->parse_relation_member(tp, ref, role, members);
 }
 
-static void process_relation(xmlTextReaderPtr reader, osm_t::ref osm)
+void
+process_relation(xmlTextReaderPtr reader, osm_t::ref osm)
 {
   base_attributes ba = process_base_attributes(reader, osm);
 
@@ -454,7 +473,9 @@ static void process_relation(xmlTextReaderPtr reader, osm_t::ref osm)
   relation->tags.replace(std::move(tags));
 }
 
-static osm_t::UploadPolicy parseUploadPolicy(const char *str) {
+osm_t::UploadPolicy
+parseUploadPolicy(const char *str)
+{
   if(likely(strcmp(str, "true") == 0))
     return osm_t::Upload_Normal;
   else if(strcmp(str, "false") == 0)
@@ -468,7 +489,9 @@ static osm_t::UploadPolicy parseUploadPolicy(const char *str) {
   return osm_t::Upload_Discouraged;
 }
 
-static osm_t *process_osm(xmlTextReaderPtr reader) {
+osm_t *
+process_osm(xmlTextReaderPtr reader)
+{
   /* alloc osm structure */
   std::unique_ptr<osm_t> osm(std::make_unique<osm_t>());
 
@@ -501,8 +524,10 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
       assert_cmpnum(xmlTextReaderDepth(reader), 1);
       const char *name = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
       if(block == BLOCK_OSM && strcmp(name, "bounds") == 0) {
-        if(unlikely(!process_bounds(reader, osm->bounds)))
+        std::optional<bounds_t> b = process_bounds(reader);
+        if(unlikely(!b))
           return nullptr;
+        osm->bounds = *b;
         block = BLOCK_NODES; // next must be nodes, there must not be more than one bounds
       } else if(block == BLOCK_NODES && strcmp(name, node_t::api_string()) == 0) {
         process_node(reader, osm);
@@ -555,7 +580,9 @@ struct relation_ref_functor {
   }
 };
 
-static osm_t *process_file(const std::string &filename) {
+osm_t *
+process_file(const std::string &filename)
+{
   std::unique_ptr<osm_t> osm;
   xmlTextReaderPtr reader;
 
@@ -579,6 +606,8 @@ static osm_t *process_file(const std::string &filename) {
   }
   return osm.release();
 }
+
+} // namespace
 
 /* ----------------------- end of stream parser ------------------- */
 
