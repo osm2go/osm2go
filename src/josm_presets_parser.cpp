@@ -1172,7 +1172,7 @@ presets_items *presets_items::load()
 
   std::unique_ptr<presets_items_internal> presets(std::make_unique<presets_items_internal>());
 
-  const std::string &filename = osm2go_platform::find_file("defaultpresets.xml");
+  const std::string &filename = find_file("defaultpresets.xml");
   if(likely(!filename.empty()))
     presets->addFile(filename, std::string(), -1);
 

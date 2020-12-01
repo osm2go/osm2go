@@ -18,7 +18,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <fcntl.h>
-#include <filesystem>
 #include <gdk/gdk.h>
 #include <glib.h>
 #include <gtk/gtk.h>
@@ -378,32 +377,6 @@ const std::vector<dirguard> &osm2go_platform::base_paths()
 {
 /* all entries must contain a trailing '/' ! */
   static std::vector<dirguard> ret = base_paths_init();
-
-  return ret;
-}
-
-std::string osm2go_platform::find_file(const std::string &n)
-{
-  assert(!n.empty());
-
-  std::string ret;
-
-  if(unlikely(n[0] == '/')) {
-    if(std::filesystem::is_regular_file(n))
-      ret = n;
-    return ret;
-  }
-
-  const std::vector<dirguard> &paths = osm2go_platform::base_paths();
-  const std::vector<dirguard>::const_iterator itEnd = paths.end();
-
-  for(std::vector<dirguard>::const_iterator it = paths.begin(); it != itEnd; it++) {
-    struct stat st;
-    if(fstatat(it->dirfd(), n.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode)) {
-      ret = it->path() + n;
-      break;
-    }
-  }
 
   return ret;
 }

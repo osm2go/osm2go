@@ -105,3 +105,5 @@ public:
   inline const std::string &path() const noexcept
   { return p; }
 };
+
+std::string find_file(const std::string &n) __attribute__((warn_unused_result));

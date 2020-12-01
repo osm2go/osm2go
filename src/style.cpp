@@ -211,11 +211,11 @@ style_t *style_t::load(const std::string &name)
 {
   printf("Trying to load style %s\n", name.c_str());
 
-  std::string fullname = osm2go_platform::find_file(name + ".style");
+  std::string fullname = find_file(name + ".style");
 
   if (unlikely(fullname.empty())) {
     printf("style %s not found, trying %s instead\n", name.c_str(), DEFAULT_STYLE);
-    fullname = osm2go_platform::find_file(DEFAULT_STYLE ".style");
+    fullname = find_file(DEFAULT_STYLE ".style");
     if (unlikely(fullname.empty())) {
       printf("  style not found, failed to find fallback style too\n");
       return nullptr;

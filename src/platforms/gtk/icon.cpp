@@ -88,7 +88,7 @@ icon_file_exists(const std::string &file)
     std::string::size_type nlen = strlen(icon_exts.at(i));
     iname.replace(wpos, olen, icon_exts[i], nlen);
     olen = nlen;
-    std::string fullname = osm2go_platform::find_file(iname);
+    std::string fullname = find_file(iname);
 
     if(!fullname.empty()) {
       fullname.swap(ret);

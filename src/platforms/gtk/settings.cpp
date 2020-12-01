@@ -171,7 +171,7 @@ settings_t::ref settings_t::instance() {
       g_debug("base_path not set, assuming first time run");
 
       /* check for presence of demo project */
-      std::string fullname = osm2go_platform::find_file("demo/demo.proj");
+      std::string fullname = find_file("demo/demo.proj");
       if(!fullname.empty()) {
         g_debug("demo project exists, use it as default");
         settings->project = fullname;
