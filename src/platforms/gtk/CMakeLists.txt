@@ -157,7 +157,7 @@ if (MAEMO_FOUND)
 
 	# the data root dir is /opt on fremantle
 	set(DATA_DIR "/opt/${PROJECT_NAME}" PARENT_SCOPE)
-	set(PICKER_MENU On PARENT_SCOPE)
+	set(PICKER_MENU On CACHE BOOL "use a picker table for tagging preset selection" FORCE)
 
 	# SVG icons do not work on my N900
 	set(USE_SVG_ICONS_DEFAULT Off PARENT_SCOPE)
