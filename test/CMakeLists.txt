@@ -1,4 +1,5 @@
 option(NETWORK_TESTS "Enable tests that require network access" Off)
+add_feature_info(NetworkTests NETWORK_TESTS "additional testcases are run that access public internet servers")
 
 function(osm_test BASENAME)
 	add_executable(${BASENAME} ${BASENAME}.cpp)

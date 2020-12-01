@@ -7,6 +7,7 @@ include(CheckCXXSourceCompiles)
 include(CheckFunctionExists)
 include(CMakePushCheckState)
 include(CTest)
+include(FeatureSummary)
 include(GNUInstallDirs)
 include(WriteCompilerDetectionHeader)
 
@@ -187,6 +188,7 @@ add_library(osm2go_lib STATIC
 set(DATA_DIR "${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}")
 
 option(PICKER_MENU "use a picker table for tagging preset selection" OFF)
+add_feature_info(PickerMenu PICKER_MENU "a picker menu like the one used on the N900")
 
 add_subdirectory(src/platforms/gtk)
 
@@ -205,6 +207,7 @@ set_property(SOURCE src/platforms/gtk/platform.cpp APPEND PROPERTY COMPILE_DEFIN
 
 # there shouldn't be a reason to change the server url
 option(SERVER_EDITABLE "add widget to make API URL editable" OFF)
+add_feature_info(ServerEditable SERVER_EDITABLE "an extra widget is shown where the URL of the OSM data server can be changed")
 if (SERVER_EDITABLE)
 	set_property(SOURCE src/platforms/gtk/project_widgets.cpp APPEND PROPERTY COMPILE_DEFINITIONS "SERVER_EDITABLE")
 endif ()
@@ -216,6 +219,7 @@ else ()
 endif ()
 
 option(USE_SVG_ICONS "Use SVG icons without converting them to PNG at build time" ${USE_SVG_ICONS_DEFAULT})
+add_feature_info(Svg USE_SVG_ICONS "Scalable Vector Graphics are used to render icons, resulting in possibly better image quality")
 if (USE_SVG_ICONS)
 	set_property(SOURCE src/platforms/gtk/icon.cpp APPEND PROPERTY COMPILE_DEFINITIONS USE_SVG_ICONS)
 endif ()
@@ -252,3 +256,5 @@ add_subdirectory(data)
 
 install(FILES LICENSES/GPL-3.0-or-later
 	DESTINATION ${DATA_DIR})
+
+feature_summary(WHAT ENABLED_FEATURES DISABLED_FEATURES)
