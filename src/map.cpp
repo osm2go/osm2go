@@ -739,13 +739,13 @@ bool map_t::item_is_selected_node(const map_item_t *map_item) const
   if(map_item->object.type != object_t::NODE)
     return false;
 
-  if(selected.object.type == object_t::NODE) {
+  switch (selected.object.type) {
+  case object_t::NODE:
     return selected.object == map_item->object;
-  } else if(selected.object.type == object_t::WAY) {
+  case object_t::WAY:
     return static_cast<way_t *>(selected.object)->contains_node(static_cast<node_t *>(map_item->object));
-  } else {
-    printf("%s: selected item is unknown (%u [%i])\n", __PRETTY_FUNCTION__,
-           selected.object.type, selected.object.type);
+  default:
+    // happens if nothing or a relation is selected
     return false;
   }
 }
