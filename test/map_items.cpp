@@ -356,6 +356,23 @@ void test_map_detail(const std::string &tmpdir)
   assert(ui->m_statusText.isEmpty());
 }
 
+void test_map_item_at_empty(const std::string &tmpdir)
+{
+  appdata_t a;
+  a.project.reset(new project_t("foo", tmpdir));
+  canvas_holder canvas;
+  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas));
+  m->style.reset(new style_t());
+  a.project->osm.reset(new osm_t());
+  osm_t::ref o = a.project->osm;
+  set_bounds(o);
+
+  // there is nothing on the map
+  assert_null(m->item_at(lpos_t(42, 42)));
+
+  m->pen_down_item_public(nullptr);
+}
+
 } // namespace
 
 int main(int argc, char **argv)
@@ -383,6 +400,7 @@ int main(int argc, char **argv)
   test_node_add_cancel_map(osm_path);
   test_node_add_ok_map(osm_path);
   test_map_detail(osm_path);
+  test_map_item_at_empty(osm_path);
 
   assert_cmpnum(rmdir(tmpdir), 0);
 

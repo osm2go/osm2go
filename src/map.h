@@ -167,7 +167,7 @@ public:
 
   void set_zoom(double zoom, bool update_scroll_offsets);
 
-private:
+protected:
   void detail_change(float detail, trstring::native_type_arg banner_msg);
 
   /**

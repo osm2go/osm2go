@@ -76,4 +76,9 @@ public:
    * @brief a function the testcase may implement to read protected members
    */
   void test_function();
+
+  void pen_down_item_public(canvas_item_t *item)
+  {
+    pen_down_item(item);
+  }
 };
