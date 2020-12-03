@@ -358,7 +358,7 @@ void test_map_detail(const std::string &tmpdir)
 
 } // namespace
 
-int main()
+int main(int argc, char **argv)
 {
   char tmpdir[] = "/tmp/osm2go-project-XXXXXX";
 
@@ -366,6 +366,8 @@ int main()
     std::cerr << "cannot create temporary directory" << std::endl;
     return 1;
   }
+
+  OSM2GO_TEST_INIT(argc, argv);
 
   std::string osm_path = tmpdir;
   osm_path += '/';

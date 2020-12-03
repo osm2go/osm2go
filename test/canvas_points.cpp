@@ -234,8 +234,10 @@ void testTrackSegments()
 
 } // namespace
 
-int main()
+int main(int argc, char **argv)
 {
+  OSM2GO_TEST_INIT(argc, argv);
+
   testSegment();
   testInObject();
   testToBottom();

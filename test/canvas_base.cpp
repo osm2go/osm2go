@@ -62,8 +62,10 @@ void testBackground()
 
 } // namespace
 
-int main()
+int main(int argc, char **argv)
 {
+  OSM2GO_TEST_INIT(argc, argv);
+
   testBackground();
 
   return 0;

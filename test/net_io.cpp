@@ -10,6 +10,7 @@
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
 #include <osm2go_platform.h>
+#include <osm2go_test.h>
 
 static void do_mem(osm2go_platform::MappedFile &lic)
 {
@@ -66,6 +67,8 @@ static void do_file_fail()
 
 int main(int argc, char **argv)
 {
+  OSM2GO_TEST_INIT(argc, argv);
+
   if(argc != 2)
     return EINVAL;
 
