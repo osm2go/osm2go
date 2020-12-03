@@ -157,8 +157,6 @@ public:
 #endif
   assert_cmpstr_struct(const std::string &a, const char *astr, const std::string &b, const char *file, const char *func, int line);
   assert_cmpstr_struct(const std::string &a, const char *astr, const std::string &b, const char *bstr, const char *file, const char *func, int line);
-  assert_cmpstr_struct(const std::string &a, const char *astr, const trstring &b, const char *file, const char *func, int line);
-  assert_cmpstr_struct(const std::string &a, const char *astr, const trstring &b, const char *bstr, const char *file, const char *func, int line);
 
 #if __cplusplus >= 201103L
   // catch if one passes a constant nullptr as second argument
