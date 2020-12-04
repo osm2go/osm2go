@@ -34,6 +34,10 @@ void expectMapItemDeselect(MainUiDummy *ui)
 void set_bounds(osm_t::ref o)
 {
   bool b = o->bounds.init(pos_area(pos_t(52.2692786, 9.5750497), pos_t(52.2695463, 9.5755)));
+  o->bounds.min.x = 0;
+  o->bounds.min.y = 0;
+  o->bounds.max.x = 64;
+  o->bounds.max.y = 40;
   assert(b);
 }
 
@@ -203,6 +207,7 @@ void test_map_deselect(const std::string &tmpdir)
   assert(!a.iconbar->isTrashEnabled());
 }
 
+// start adding a way and cancel immediately through the action interface
 void test_way_add_cancel_map(const std::string &tmpdir)
 {
   appdata_t a;
@@ -364,6 +369,108 @@ void test_map_item_at_empty(const std::string &tmpdir)
   m->pen_down_item_public(nullptr);
 }
 
+// click while idle
+void test_map_press_idle(const std::string &tmpdir)
+{
+  appdata_t a;
+  a.project.reset(new project_t("foo", tmpdir));
+  canvas_holder canvas;
+  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas));
+  m->style.reset(new style_t());
+  a.project->osm.reset(new osm_t());
+  osm_t::ref o = a.project->osm;
+  set_bounds(o);
+  iconbar_t::create(a);
+
+  MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
+
+  osm2go_platform::screenpos pos(1, 1);
+
+  m->button_press_public(pos);
+  assert_cmpnum(ui->m_actions.size(), 0);
+  assert(!a.iconbar->isCancelEnabled());
+  assert(!a.iconbar->isOkEnabled());
+  assert(!a.iconbar->isInfoEnabled());
+  assert(!a.iconbar->isTrashEnabled());
+
+  expectMapItemDeselect(ui);
+  m->button_release_public(pos);
+}
+
+// like test_way_add_cancel_map, but add 2 nodes before cancel
+void test_map_press_way_add_cancel(const std::string &tmpdir)
+{
+  appdata_t a;
+  a.project.reset(new project_t("foo", tmpdir));
+  canvas_holder canvas;
+  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas));
+  m->style.reset(new style_t());
+  a.project->osm.reset(new osm_t());
+  osm_t::ref o = a.project->osm;
+  set_bounds(o);
+  iconbar_t::create(a);
+
+  MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
+  expectMapItemDeselect(ui);
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, false));
+  ui->m_statusText = trstring("Place first node of new way");
+
+  assert_null(m->action_way());
+  assert_null(m->action_way_extending());
+  assert_null(m->action_way_ends_on());
+  m->set_action(MAP_ACTION_WAY_ADD);
+  assert(a.iconbar->isCancelEnabled());
+  assert(!a.iconbar->isOkEnabled());
+  assert(!a.iconbar->isInfoEnabled());
+  assert(!a.iconbar->isTrashEnabled());
+  assert_cmpnum(ui->m_actions.size(), 0);
+  assert(ui->m_statusText.isEmpty());
+
+  assert(m->action_way() != nullptr);
+  assert_cmpnum(m->action_way()->node_chain.size(), 0);
+  assert_null(m->action_way_extending());
+  assert_null(m->action_way_ends_on());
+
+  // click somewhere outside of the project, this must not add something to the temporary way
+  osm2go_platform::screenpos posOutside(100, 1);
+  m->button_press_public(posOutside);
+  m->button_release_public(posOutside);
+  assert_cmpnum(m->action_way()->node_chain.size(), 0);
+
+  // "click" at a good position to add a node
+  ui->m_statusText = trstring("Place next node of way");
+  osm2go_platform::screenpos posFirst(1, 1);
+  m->button_press_public(posFirst);
+  m->button_release_public(posFirst);
+  assert_cmpnum(m->action_way()->node_chain.size(), 1);
+
+  // with the given zoom this is "too close" so it should be ignored as double click
+  assert_cmpnum(a.project->map_state.zoom, 0.25);
+  osm2go_platform::screenpos posSecond(8, 8);
+  m->button_press_public(posSecond);
+  m->button_release_public(posSecond);
+  assert_cmpnum(m->action_way()->node_chain.size(), 1);
+
+  // now click another good position far enough away
+  osm2go_platform::screenpos posThird(42, 27);
+  m->button_press_public(posThird);
+  m->button_release_public(posThird);
+  assert_cmpnum(m->action_way()->node_chain.size(), 2);
+
+  // way add has started, prepare for cancel
+
+  ui->clearFlags.push_back(MainUi::ClearNormal);
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, true));
+  map_t::map_action_cancel(m.get());
+  assert(!a.iconbar->isCancelEnabled());
+  assert(!a.iconbar->isOkEnabled());
+  assert(!a.iconbar->isInfoEnabled());
+  assert(!a.iconbar->isTrashEnabled());
+  assert_null(m->action_way());
+  assert_null(m->action_way_extending());
+  assert_null(m->action_way_ends_on());
+}
+
 } // namespace
 
 int main(int argc, char **argv)
@@ -392,6 +499,8 @@ int main(int argc, char **argv)
   test_node_add_ok_map(osm_path);
   test_map_detail(osm_path);
   test_map_item_at_empty(osm_path);
+  test_map_press_idle(osm_path);
+  test_map_press_way_add_cancel(osm_path);
 
   assert_cmpnum(rmdir(tmpdir), 0);
 

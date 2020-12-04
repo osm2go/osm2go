@@ -85,4 +85,34 @@ public:
   {
     pen_down_item(item);
   }
+
+  void button_press_public(const osm2go_platform::screenpos &p)
+  {
+    button_press(p);
+  }
+
+  void button_release_public(const osm2go_platform::screenpos &p)
+  {
+    button_release(p);
+  }
+
+  map_action_t action_type() const
+  {
+    return action.type;
+  }
+
+  const way_t * action_way() const
+  {
+    return action.way;
+  }
+
+  const way_t * action_way_extending() const
+  {
+    return action.extending;
+  }
+
+  const way_t * action_way_ends_on() const
+  {
+    return action.ends_on;
+  }
 };
