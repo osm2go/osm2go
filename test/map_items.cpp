@@ -24,6 +24,13 @@ void test_map::test_function()
 
 namespace {
 
+// set up flags for a call to expect a call to map_t::item_deselect()
+void expectMapItemDeselect(MainUiDummy *ui)
+{
+  ui->clearFlags.push_back(MainUi::ClearNormal);
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, false));
+}
+
 void set_bounds(osm_t::ref o)
 {
   bool b = o->bounds.init(pos_area(pos_t(52.2692786, 9.5750497), pos_t(52.2695463, 9.5755)));
@@ -186,8 +193,7 @@ void test_map_deselect(const std::string &tmpdir)
   iconbar_t::create(a);
 
   MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
-  ui->clearFlags.push_back(MainUi::ClearNormal);
-  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, false));
+  expectMapItemDeselect(ui);
 
   m->item_deselect();
   assert_cmpnum(ui->m_actions.size(), 0);
@@ -209,8 +215,7 @@ void test_way_add_cancel_map(const std::string &tmpdir)
   iconbar_t::create(a);
 
   MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
-  ui->clearFlags.push_back(MainUi::ClearNormal);
-  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, false));
+  expectMapItemDeselect(ui);
   ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, false));
   ui->m_statusText = trstring("Place first node of new way");
 
@@ -245,8 +250,7 @@ void test_node_add_cancel_map(const std::string &tmpdir)
   iconbar_t::create(a);
 
   MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
-  ui->clearFlags.push_back(MainUi::ClearNormal);
-  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, false));
+  expectMapItemDeselect(ui);
   ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, false));
   ui->m_statusText = trstring("Place a node");
 
@@ -281,8 +285,7 @@ void test_node_add_ok_map(const std::string &tmpdir)
   iconbar_t::create(a);
 
   MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
-  ui->clearFlags.push_back(MainUi::ClearNormal);
-  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, false));
+  expectMapItemDeselect(ui);
   ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, false));
   ui->m_statusText = trstring("Place a node");
 
@@ -318,11 +321,9 @@ void test_map_detail(const std::string &tmpdir)
   iconbar_t::create(a);
 
   MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
-  ui->clearFlags.push_back(MainUi::ClearNormal); // called twice from different places
-  ui->clearFlags.push_back(MainUi::ClearNormal);
+  expectMapItemDeselect(ui);
+  expectMapItemDeselect(ui); // called twice from different places
   ui->clearFlags.push_back(MainUi::Busy);
-  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, false));
-  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, false));
   ui->m_statusText = trstring("Increasing detail level");
 
   m->detail_increase();
@@ -334,11 +335,9 @@ void test_map_detail(const std::string &tmpdir)
   assert_cmpnum(ui->m_actions.size(), 0);
   assert(ui->m_statusText.isEmpty());
 
-  ui->clearFlags.push_back(MainUi::ClearNormal);
-  ui->clearFlags.push_back(MainUi::ClearNormal);
+  expectMapItemDeselect(ui);
+  expectMapItemDeselect(ui); // called twice from different places
   ui->clearFlags.push_back(MainUi::Busy);
-  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, false));
-  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, false));
   ui->m_statusText = trstring("Decreasing detail level");
   m->detail_decrease();
 
