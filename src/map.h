@@ -109,7 +109,7 @@ private:
   struct {
     map_action_t type;            // current action type in progress
 
-    way_t *way;
+    std::unique_ptr<way_t> way;   ///< the temporary way that is currently added
     way_t *extending, *ends_on;   // ways touched by first and last node
   } action;
 

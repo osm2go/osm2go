@@ -27,9 +27,10 @@
 
 /* -------------------------- way_add ----------------------- */
 
-void map_t::way_add_begin() {
-  assert_null(action.way);
-  action.way = new way_t();
+void map_t::way_add_begin()
+{
+  assert(!action.way);
+  action.way.reset(new way_t());
   action.extending = nullptr;
 }
 
@@ -73,7 +74,7 @@ void map_t::way_add_segment(lpos_t pos) {
   if(node != nullptr) {
     printf("  re-using node #" ITEM_ID_FORMAT "\n", node->id);
 
-    assert(action.way != nullptr);
+    assert(action.way);
 
     /* check whether this node is first or last one of a different way,
      * but since the user can't choose allow this only if there is exactly one */
@@ -105,7 +106,7 @@ void map_t::way_add_segment(lpos_t pos) {
   }
 
   assert(node != nullptr);
-  assert(action.way != nullptr);
+  assert(action.way);
   action.way->append_node(node);
 
   switch(action.way->node_chain.size()) {
@@ -120,8 +121,8 @@ void map_t::way_add_segment(lpos_t pos) {
   }
 
   /* draw current way */
-  style->colorize(action.way);
-  draw(action.way);
+  style->colorize(action.way.get());
+  draw(action.way.get());
 }
 
 static void map_unref_ways(node_t *node)
@@ -139,10 +140,9 @@ static void map_unref_ways(node_t *node)
 
 void map_t::way_add_cancel() {
   printf("  removing temporary way\n");
-  assert(action.way != nullptr);
+  assert(action.way);
 
-  appdata.project->osm->way_delete(action.way, nullptr, map_unref_ways);
-  action.way = nullptr;
+  appdata.project->osm->way_delete(action.way.release(), nullptr, map_unref_ways);
 }
 
 class map_draw_nodes {
@@ -171,7 +171,7 @@ void map_t::way_add_ok() {
   osm_t::ref osm = appdata.project->osm;
 
   assert(osm);
-  assert(action.way != nullptr);
+  assert(action.way);
 
   /* transfer all nodes that have been created for this way */
   /* into the node chain */
@@ -181,22 +181,23 @@ void map_t::way_add_ok() {
   std::for_each(chain.begin(), chain.end(), map_draw_nodes(this));
 
   /* attach to existing way if the user requested so */
+  way_t *work;  // the way that will actually end up in the data
   if(action.extending != nullptr) {
     // this is triggered when the user started with extending an existing way
     // since the merged way is a temporary one there are no relation memberships
     // and no background item
-    assert(background_items.find(action.way) == background_items.end());
-    action.extending->merge(action.way, osm, this);
+    assert(background_items.find(action.way.get()) == background_items.end());
+    action.extending->merge(action.way.release(), osm, this);
 
-    action.way = action.extending;
+    work = action.extending;
   } else {
     /* now move the way itself into the main data structure */
-    osm->attach(action.way);
+    work = osm->attach(action.way.release());
   }
 
   /* we might already be working on the "ends_on" way as we may */
   /* be extending it. Joining the same way doesn't make sense. */
-  if(action.ends_on == action.way) {
+  if(action.ends_on == work) {
     printf("  the new way ends on itself -> don't join itself\n");
     action.ends_on = nullptr;
   } else if(action.ends_on != nullptr && osm2go_platform::yes_no(_("Join way?"),
@@ -211,8 +212,8 @@ void map_t::way_add_ok() {
     /* way being connected to another way. This happens if you connect */
     /* two existing ways using a new way between them */
 
-    osm_t::mergeResult<way_t> mr = osm->mergeWays(action.way, action.ends_on, this);
-    action.way = mr.obj;
+    osm_t::mergeResult<way_t> mr = osm->mergeWays(work, action.ends_on, this);
+    work = mr.obj;
     action.ends_on = nullptr;
 
     if(mr.conflict)
@@ -221,11 +222,9 @@ void map_t::way_add_ok() {
   }
 
   /* draw the updated way */
-  draw(action.way);
+  draw(work);
 
-  select_way(action.way);
-
-  action.way = nullptr;
+  select_way(work);
 
   /* let the user specify some tags for the new way */
   info_selected();

@@ -103,7 +103,7 @@ public:
 
   const way_t * action_way() const
   {
-    return action.way;
+    return action.way.get();
   }
 
   const way_t * action_way_extending() const

@@ -856,7 +856,7 @@ void map_t::touchnode_update(lpos_t pos) {
 
   /* during way creation also nodes of the new way */
   /* need to be searched */
-  else if(!touchnode && action.way != nullptr && action.way->node_chain.size() > 1) {
+  else if(!touchnode && action.way && action.way->node_chain.size() > 1) {
     const node_chain_t &chain = action.way->node_chain;
     std::for_each(chain.begin(), std::prev(chain.end()), fc);
   }
@@ -1085,8 +1085,9 @@ map_t::map_t(appdata_t &a, canvas_t *c)
   , style(appdata.style)
   , elements_drawn(0)
 {
-  memset(&action, 0, sizeof(action));
   action.type = MAP_ACTION_IDLE;
+  action.extending = nullptr;
+  action.ends_on = nullptr;
 }
 
 map_t::~map_t()
