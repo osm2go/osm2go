@@ -231,8 +231,6 @@ void test_way_add_cancel_map(const std::string &tmpdir)
   assert(!a.iconbar->isOkEnabled());
   assert(!a.iconbar->isInfoEnabled());
   assert(!a.iconbar->isTrashEnabled());
-  assert_cmpnum(ui->m_actions.size(), 0);
-  assert(ui->m_statusText.isEmpty());
 }
 
 void test_node_add_cancel_map(const std::string &tmpdir)
@@ -269,8 +267,6 @@ void test_node_add_cancel_map(const std::string &tmpdir)
   assert(!a.iconbar->isOkEnabled());
   assert(!a.iconbar->isInfoEnabled());
   assert(!a.iconbar->isTrashEnabled());
-  assert_cmpnum(ui->m_actions.size(), 0);
-  assert(ui->m_statusText.isEmpty());
 }
 
 void test_node_add_ok_map(const std::string &tmpdir)
@@ -307,8 +303,6 @@ void test_node_add_ok_map(const std::string &tmpdir)
   assert(!a.iconbar->isOkEnabled());
   assert(!a.iconbar->isInfoEnabled());
   assert(!a.iconbar->isTrashEnabled());
-  assert_cmpnum(ui->m_actions.size(), 0);
-  assert(ui->m_statusText.isEmpty());
 }
 
 void test_map_detail(const std::string &tmpdir)
@@ -352,8 +346,6 @@ void test_map_detail(const std::string &tmpdir)
   assert(!a.iconbar->isOkEnabled());
   assert(!a.iconbar->isInfoEnabled());
   assert(!a.iconbar->isTrashEnabled());
-  assert_cmpnum(ui->m_actions.size(), 0);
-  assert(ui->m_statusText.isEmpty());
 }
 
 void test_map_item_at_empty(const std::string &tmpdir)

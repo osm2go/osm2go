@@ -9,6 +9,8 @@
 #include <cstdlib>
 #include <map>
 
+#include <osm2go_annotations.h>
+
 class MainUiDummy : public MainUi {
 public:
   std::multimap<menu_items, bool> m_actions;
@@ -16,7 +18,9 @@ public:
   MainUiDummy() : MainUi(), msg(nullptr) {}
   ~MainUiDummy() override
   {
-    assert(m_actions.empty());
+    assert_cmpnum(m_actions.size(), 0);
+    assert_cmpnum(clearFlags.size(), 0);
+    assert_cmpstr(m_statusText, trstring());
   }
 
   void setActionEnable(menu_items item, bool en) override
