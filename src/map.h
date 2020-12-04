@@ -70,6 +70,7 @@ struct map_item_t {
 
 class map_t {
   friend struct map_bg_modifier;
+  friend class test_map; // for testing
   std::unordered_map<visible_item_t *, map_item_t *> background_items;
 protected:
   explicit map_t(appdata_t &a, canvas_t *c);
@@ -167,7 +168,7 @@ public:
 
   void set_zoom(double zoom, bool update_scroll_offsets);
 
-protected:
+private:
   void detail_change(float detail, trstring::native_type_arg banner_msg);
 
   /**
