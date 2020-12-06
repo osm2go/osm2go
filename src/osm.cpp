@@ -1699,3 +1699,8 @@ void osm_t::cleanupOriginalObject(way_t *o)
 {
   o->map_item = nullptr;
 }
+
+// explicit instantiation is needed at least for release builds with gcc 4.2
+template const node_t *osm_t::findOriginalById<node_t>(item_id_t id) const;
+template const way_t *osm_t::findOriginalById<way_t>(item_id_t id) const;
+template const relation_t *osm_t::findOriginalById<relation_t>(item_id_t id) const;
