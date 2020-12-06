@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
-project(osm2go VERSION 0.9.16 LANGUAGES C CXX)
+project(osm2go VERSION 0.9.17 LANGUAGES C CXX)
 
 include(CMakePushCheckState)
 include(CheckCXXSourceCompiles)

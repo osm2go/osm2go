@@ -1,3 +1,31 @@
+osm2go (1:0.9.17-maemo1) karmic; urgency=low
+
+  * fix disappearing track segments when segment started offscreen and is appended
+  * add more tags that are automatically discarded on changes
+  * show in title of info dialog if an object is modified or new
+  * prevent crashes when using JOSM presets with broken display_values lists
+  * several improvements to the description shown for OSM objects
+  * remember the setting if imperial units should be used in the area edit
+  * show changed objects table without calling the upload dialog
+  * add "source" tag again on changesets
+  * support chunks in JOSM presets that contain only <role> entries
+  * add button icons for "Add" and "Remove" buttons in list widgets on desktop platforms
+  * make source compatible with gpsd 3.21
+  * save original objects when doing the first modification, which allows to reset
+    the modified flag when editing any object back to it's original state without reload,
+    this helps avoid needless database changes that don't actually do anything
+  * fix merging a way with another way that has only one node (shouldn't really happen)
+  * actually delete the victim way when merging 2 existing ways
+  * fix node reference count when loading a local diff that deletes ways
+  * speed up counting of modified objects
+  * highlight modified tags in the UI
+  * allow to reorder relation members
+  * roles of all relation members can now be changed, not only their first occurrences
+  * show multipolygon role presets even if the relation also matches another preset
+  * improve relation naming
+
+ -- Rolf Eike Beer <eike@sf-mail.de>  Sun, 6 Dec 2020 19:41:32 +0100
+
 osm2go (1:0.9.16-maemo1) karmic; urgency=low
 
   * fix "clear current track segment"
