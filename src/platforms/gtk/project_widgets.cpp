@@ -555,7 +555,7 @@ on_filter_changed(select_context_t *context)
   if(gtk_tree_model_iter_n_children(fmodel, nullptr) == 1) {
     GtkTreeIter iter;
     gboolean b = gtk_tree_model_get_iter_first(fmodel, &iter);
-    assert(b == TRUE);
+    assert(b == TRUE); (void)b;
     gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
   }
 }
