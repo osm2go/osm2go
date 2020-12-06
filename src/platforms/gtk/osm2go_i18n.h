@@ -110,9 +110,9 @@ public:
   inline trstring arg(double a, int fieldWidth = 0, char format = 'g', int precision = -1) const
   {
     // I only need this at a single place, so simplify the implementation...
-    assert(fieldWidth == 0);
-    assert(format == 'f');
-    assert(precision == 2);
+    assert(fieldWidth == 0); (void)fieldWidth;
+    assert(format == 'f'); (void)format;
+    assert(precision == 2); (void)precision;
     return argFloatHelper(a);
   }
 
