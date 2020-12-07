@@ -64,6 +64,20 @@ void table_attach(GtkTable *table, GtkWidget *widget, int x, int y)
   gtk_table_attach_defaults(table, widget, x, x + 1, y, y + 1);
 }
 
+void pos_lat_entry_set(GtkWidget *entry, pos_float_t lat)
+{
+  char str[32];
+  pos_lat_str(str, sizeof(str), lat);
+  gtk_entry_set_text(GTK_ENTRY(entry), str);
+}
+
+void pos_lon_entry_set(GtkWidget *entry, pos_float_t lon)
+{
+  char str[32];
+  pos_lon_str(str, sizeof(str), lon);
+  gtk_entry_set_text(GTK_ENTRY(entry), str);
+}
+
 /**
  * @brief parse a longitude value from an input widget
  * @param widget the input widget
@@ -99,9 +113,7 @@ GtkWidget *pos_lat_entry_new(pos_float_t lat)
   GtkWidget *widget = osm2go_platform::entry_new();
   gtk_widget_modify_text(widget, GTK_STATE_PRELIGHT, osm2go_platform::invalid_text_color());
 
-  char str[32];
-  pos_lat_str(str, sizeof(str), lat);
-  gtk_entry_set_text(GTK_ENTRY(widget), str);
+  pos_lat_entry_set(widget, lat);
 
   g_signal_connect(widget, "changed", G_CALLBACK(callback_modified_lat), nullptr);
 
@@ -120,27 +132,11 @@ GtkWidget *pos_lon_entry_new(pos_float_t lon)
   GtkWidget *widget = osm2go_platform::entry_new();
   gtk_widget_modify_text(widget, GTK_STATE_PRELIGHT, osm2go_platform::invalid_text_color());
 
-  char str[32];
-  pos_lon_str(str, sizeof(str), lon);
-  gtk_entry_set_text(GTK_ENTRY(widget), str);
+  pos_lon_entry_set(widget, lon);
 
   g_signal_connect(widget, "changed", G_CALLBACK(callback_modified_lon), nullptr);
 
   return widget;
-}
-
-void pos_lat_entry_set(GtkWidget *entry, pos_float_t lat)
-{
-  char str[32];
-  pos_lat_str(str, sizeof(str), lat);
-  gtk_entry_set_text(GTK_ENTRY(entry), str);
-}
-
-void pos_lon_entry_set(GtkWidget *entry, pos_float_t lon)
-{
-  char str[32];
-  pos_lon_str(str, sizeof(str), lon);
-  gtk_entry_set_text(GTK_ENTRY(entry), str);
 }
 
 void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, bool is_mil)
