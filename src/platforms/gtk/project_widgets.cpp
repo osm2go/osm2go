@@ -64,14 +64,14 @@ struct project_context_t {
 void pos_lat_label_set(GtkWidget *label, pos_float_t lat)
 {
   char str[32];
-  pos_lat_str(str, sizeof(str), lat);
+  pos_lat_str_deg(str, sizeof(str), lat);
   gtk_label_set_text(GTK_LABEL(label), str);
 }
 
 void pos_lon_label_set(GtkWidget *label, pos_float_t lon)
 {
   char str[32];
-  pos_lon_str(str, sizeof(str), lon);
+  pos_lon_str_deg(str, sizeof(str), lon);
   gtk_label_set_text(GTK_LABEL(label), str);
 }
 

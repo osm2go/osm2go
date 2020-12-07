@@ -145,6 +145,12 @@ static inline void pos_lon_str(char *str, size_t len, pos_float_t longitude)
   pos_lat_str(str, len, longitude);
 }
 
+void pos_lat_str_deg(char *str, size_t len, pos_float_t latitude);
+static inline void pos_lon_str_deg(char *str, size_t len, pos_float_t longitude)
+{
+  pos_lat_str_deg(str, len, longitude);
+}
+
 bool pos_lat_valid(pos_float_t lat) noexcept;
 bool pos_lon_valid(pos_float_t lon) noexcept;
 

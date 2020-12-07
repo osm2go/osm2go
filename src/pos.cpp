@@ -23,15 +23,18 @@ bool pos_t::valid() const noexcept
 }
 
 void pos_lat_str(char *str, size_t len, pos_float_t latitude) {
-  size_t offs;
   if(std::isnan(latitude)) {
     strncpy(str, "---", len);
-    offs = 3;
   } else {
-    snprintf(str, len-1, "%.5f", latitude);
+    snprintf(str, len, "%.5f", latitude);
     remove_trailing_zeroes(str);
-    offs = strlen(str);
   }
+}
+
+void pos_lat_str_deg(char *str, size_t len, pos_float_t latitude)
+{
+  pos_lat_str(str, len, latitude);
+  size_t offs = strlen(str);
   strncat(str + offs, "°", len - offs);
 }
 

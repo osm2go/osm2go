@@ -573,11 +573,11 @@ details_widget(const info_tag_context_t &context, bool big)
   case object_t::NODE: {
     char pos_str[32];
     const pos_t &pos = static_cast<node_t *>(context.object)->pos;
-    pos_lat_str(pos_str, sizeof(pos_str), pos.lat);
+    pos_lat_str_deg(pos_str, sizeof(pos_str), pos.lat);
     label = gtk_label_new(pos_str);
     if(big) table_attach(table, gtk_label_new(_("Latitude:")), 0, 2);
     table_attach(table, label, big?1:0, big?2:1);
-    pos_lon_str(pos_str, sizeof(pos_str), pos.lon);
+    pos_lon_str_deg(pos_str, sizeof(pos_str), pos.lon);
     label = gtk_label_new(pos_str);
     if(big) table_attach(table, gtk_label_new(_("Longitude:")), 0, 3);
     table_attach(table, label, 1, big?3:1);

@@ -51,8 +51,11 @@ namespace {
  */
 bool pos_lat_get(GtkWidget *widget, pos_float_t &lat)
 {
+  gchar *endch;
   const char *p = gtk_entry_get_text(GTK_ENTRY(widget));
-  pos_float_t t = g_strtod(p, nullptr);
+  pos_float_t t = g_strtod(p, &endch);
+  if (*endch != '\0')
+    return false;
   bool ret = pos_lat_valid(t);
   if(ret)
     lat = t;
@@ -88,8 +91,11 @@ void pos_lon_entry_set(GtkWidget *entry, pos_float_t lon)
  */
 bool pos_lon_get(GtkWidget *widget, pos_float_t &lon)
 {
+  gchar *endch;
   const char *p = gtk_entry_get_text(GTK_ENTRY(widget));
-  pos_float_t t = g_strtod(p, nullptr);
+  pos_float_t t = g_strtod(p, &endch);
+  if (*endch != '\0')
+    return false;
   bool ret = pos_lon_valid(t);
   if(ret)
     lon = t;
@@ -727,23 +733,28 @@ bool area_edit_t::run() {
 
   vbox = gtk_vbox_new(FALSE, 10);
 
-  GtkTable *table = GTK_TABLE(gtk_table_new(3, 4, FALSE));  // x, y
+  guint tableColumns = 5;
+  GtkTable *table = GTK_TABLE(gtk_table_new(3, tableColumns, FALSE));
   gtk_table_set_col_spacings(table, 10);
   gtk_table_set_row_spacings(table, 5);
 
   context.direct.minlat = pos_lat_entry_new(bounds.min.lat);
   table_attach(table, context.direct.minlat, 0, 0);
-  GtkWidget *label = gtk_label_new(_("to"));
+  GtkWidget *label = gtk_label_new(_("° to"));
   table_attach(table,  label, 1, 0);
   context.direct.maxlat = pos_lat_entry_new(bounds.max.lat);
   table_attach(table, context.direct.maxlat, 2, 0);
+  label = gtk_label_new(_("°"));
+  table_attach(table,  label, tableColumns - 1, 0);
 
   context.direct.minlon = pos_lon_entry_new(bounds.min.lon);
   table_attach(table, context.direct.minlon, 0, 1);
-  label = gtk_label_new(_("to"));
+  label = gtk_label_new(_("° to"));
   table_attach(table,  label, 1, 1);
   context.direct.maxlon = pos_lon_entry_new(bounds.max.lon);
   table_attach(table, context.direct.maxlon, 2, 1);
+  label = gtk_label_new(_("°"));
+  table_attach(table,  label, tableColumns - 1, 1);
 
   /* setup this page */
   g_signal_connect_swapped(context.direct.minlat, "changed",
@@ -757,13 +768,13 @@ bool area_edit_t::run() {
 
   /* --- hint --- */
   label = gtk_label_new(_("(recommended min/max diff <0.03 degrees)"));
-  gtk_table_attach_defaults(table, label, 0, 3, 2, 3);
+  gtk_table_attach_defaults(table, label, 0, tableColumns - 1, 2, 3);
 
   const GdkColor *color = osm2go_platform::invalid_text_color();
   /* error label */
   context.direct.error = gtk_label_new(nullptr);
   gtk_widget_modify_fg(context.direct.error, GTK_STATE_NORMAL, color);
-  gtk_table_attach_defaults(table, context.direct.error, 0, 3, 3, 4);
+  gtk_table_attach_defaults(table, context.direct.error, 0, tableColumns - 1, 3, 4);
 
   gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), FALSE, FALSE, 0);
   osm2go_platform::notebook_append_page(context.notebook, vbox, _(TAB_LABEL_DIRECT));
