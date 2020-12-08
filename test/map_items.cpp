@@ -397,6 +397,40 @@ void test_map_press_idle(const std::string &tmpdir)
   m->button_release_public(pos);
 }
 
+// drag while idle
+void test_map_drag_idle(const std::string &tmpdir)
+{
+  appdata_t a;
+  a.project.reset(new project_t("foo", tmpdir));
+  canvas_holder canvas;
+  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas));
+  m->style.reset(new style_t());
+  a.project->osm.reset(new osm_t());
+  osm_t::ref o = a.project->osm;
+  set_bounds(o);
+  iconbar_t::create(a);
+
+  MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
+
+  m->button_press_public(osm2go_platform::screenpos(1, 1));
+  assert_cmpnum(ui->m_actions.size(), 0);
+  assert(!a.iconbar->isCancelEnabled());
+  assert(!a.iconbar->isOkEnabled());
+  assert(!a.iconbar->isInfoEnabled());
+  assert(!a.iconbar->isTrashEnabled());
+
+  m->handle_motion_public(osm2go_platform::screenpos(2, 2));
+  assert(!m->pen_down.drag);
+
+  m->handle_motion_public(osm2go_platform::screenpos(2, 3));
+  assert(!m->pen_down.drag);
+
+  m->handle_motion_public(osm2go_platform::screenpos(4, 4));
+  assert(m->pen_down.drag);
+
+  m->button_release_public(osm2go_platform::screenpos(4, 4));
+}
+
 // like test_way_add_cancel_map, but add 2 nodes before cancel
 void test_map_press_way_add_cancel(const std::string &tmpdir)
 {
@@ -471,6 +505,60 @@ void test_map_press_way_add_cancel(const std::string &tmpdir)
   assert_null(m->action_way_ends_on());
 }
 
+void test_map_node_create_outside(const std::string &tmpdir)
+{
+  appdata_t a;
+  a.project.reset(new project_t("foo", tmpdir));
+  canvas_holder canvas;
+  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas));
+  m->style.reset(new style_t());
+  a.project->osm.reset(new osm_t());
+  osm_t::ref o = a.project->osm;
+  set_bounds(o);
+  iconbar_t::create(a);
+
+  MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
+  expectMapItemDeselect(ui);
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, false));
+  ui->m_statusText = trstring("Place a node");
+
+  m->set_action(MAP_ACTION_NODE_ADD);
+  assert(a.iconbar->isCancelEnabled());
+  assert(a.iconbar->isOkEnabled());
+  assert(!a.iconbar->isInfoEnabled());
+  assert(!a.iconbar->isTrashEnabled());
+  assert_cmpnum(ui->m_actions.size(), 0);
+  assert(ui->m_statusText.isEmpty());
+
+  // "click" at a good position to add a node
+  m->button_press_public(osm2go_platform::screenpos(5, 5));
+
+  // then drag it around
+  m->handle_motion_public(osm2go_platform::screenpos(3, 3));
+  assert(!m->pen_down.drag);
+
+  m->handle_motion_public(osm2go_platform::screenpos(1, 1));
+  // has reached the drag limit now
+  assert(m->pen_down.drag);
+
+  m->handle_motion_public(osm2go_platform::screenpos(-1, -1));
+  // has reached the drag limit now
+  assert(m->pen_down.drag);
+
+  expectMapItemDeselect(ui);
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, true));
+  ui->clearFlags.push_back(MainUi::ClearNormal);
+  m->button_release_public(osm2go_platform::screenpos(-1, -2));
+
+  assert_null(m->action_way());
+  assert_cmpnum(o->nodes.size(), 0);
+
+  assert(!a.iconbar->isCancelEnabled());
+  assert(!a.iconbar->isOkEnabled());
+  assert(!a.iconbar->isInfoEnabled());
+  assert(!a.iconbar->isTrashEnabled());
+}
+
 } // namespace
 
 int main(int argc, char **argv)
@@ -500,7 +588,9 @@ int main(int argc, char **argv)
   test_map_detail(osm_path);
   test_map_item_at_empty(osm_path);
   test_map_press_idle(osm_path);
+  test_map_drag_idle(osm_path);
   test_map_press_way_add_cancel(osm_path);
+  test_map_node_create_outside(osm_path);
 
   assert_cmpnum(rmdir(tmpdir), 0);
 

@@ -96,6 +96,11 @@ public:
     button_release(p);
   }
 
+  void handle_motion_public(const osm2go_platform::screenpos &p)
+  {
+    handle_motion(p);
+  }
+
   map_action_t action_type() const
   {
     return action.type;
