@@ -293,13 +293,13 @@ void test_way_building_relation()
 
   // if there are not tags there is a description by relation
   w->tags.clear();
-  assert_cmpstr(object_t(w).get_name(*osm), "way/area: member of associatedStreet '21 Jump Street'");
+  assert_cmpstr(object_t(w).get_name(*osm), "way/area: member of associatedStreet \"21 Jump Street\"");
 
   // when this is no building, it is no building
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("building", "no"));
   w->tags.replace(tags);
-  assert_cmpstr(object_t(w).get_name(*osm), "way/area: member of associatedStreet '21 Jump Street'");
+  assert_cmpstr(object_t(w).get_name(*osm), "way/area: member of associatedStreet \"21 Jump Street\"");
 
   // but when it is, it is
   tags.clear();
@@ -325,22 +325,29 @@ void test_multipolygon()
   rtags.insert(osm_t::TagMap::value_type("type", "multipolygon"));
   simple_r->tags.replace(rtags);
   assert(simple_r->is_multipolygon());
-  assert_cmpstr(object_t(w).get_name(*osm), "way/area: 'outer' of multipolygon '<ID #-1>'");
+  assert_cmpstr(object_t(w).get_name(*osm), "way/area: 'outer' of multipolygon <ID #-1>");
   simple_r->members.clear();
   simple_r->members.push_back(member_t(object_t(w)));
-  assert_cmpstr(object_t(w).get_name(*osm), "way/area: member of multipolygon '<ID #-1>'");
+  assert_cmpstr(object_t(w).get_name(*osm), "way/area: member of multipolygon <ID #-1>");
 
   // another relation, found first in the map because of lower id
   relation_t *other_r  = new relation_t();
   osm->attach(other_r);
   other_r->members.push_back(member_t(object_t(w)));
   other_r->tags.replace(rtags);
-  assert_cmpstr(object_t(w).get_name(*osm), "way/area: member of multipolygon '<ID #-2>'");
+  assert_cmpstr(object_t(w).get_name(*osm), "way/area: member of multipolygon <ID #-2>");
 
   // but if the first one has a name (or any non-default description) it is picked
   rtags.insert(osm_t::TagMap::value_type("name", "Deister"));
   simple_r->tags.replace(rtags);
-  assert_cmpstr(object_t(w).get_name(*osm), "way/area: member of multipolygon 'Deister'");
+  assert_cmpstr(object_t(w).get_name(*osm), "way/area: member of multipolygon \"Deister\"");
+
+  // and if the name is our magic ID string then it is of course also enclosed in quotes
+  rtags.clear();
+  rtags.insert(osm_t::TagMap::value_type("type", "multipolygon"));
+  rtags.insert(osm_t::TagMap::value_type("name", "<ID #-2>"));
+  simple_r->tags.replace(rtags);
+  assert_cmpstr(object_t(w).get_name(*osm), "way/area: member of multipolygon \"<ID #-2>\"");
 }
 
 void test_relation_precedence()
@@ -364,7 +371,7 @@ void test_relation_precedence()
   r->members.push_back(member_t(object_t(w), "house"));
 
   // if there are not tags there is a description by relation
-  assert_cmpstr(o.get_name(*osm), "way/area: member of associatedStreet '21 Jump Street'");
+  assert_cmpstr(o.get_name(*osm), "way/area: member of associatedStreet \"21 Jump Street\"");
 
   // check PTv2 relation naming
   relation_t *pt_r = new relation_t();
@@ -401,33 +408,33 @@ void test_relation_precedence()
   simple_r->members.push_back(member_t(object_t(w)));
 
   // a relation with name takes precedence
-  assert_cmpstr(o.get_name(*osm), "way/area: member of associatedStreet '21 Jump Street'");
+  assert_cmpstr(o.get_name(*osm), "way/area: member of associatedStreet \"21 Jump Street\"");
   // drop the member with empty role
   r->eraseMember(r->find_member_object(object_t(w)));
-  assert_cmpstr(o.get_name(*osm), "way/area: 'house' in associatedStreet '21 Jump Street'");
+  assert_cmpstr(o.get_name(*osm), "way/area: 'house' in associatedStreet \"21 Jump Street\"");
   r->eraseMember(r->find_member_object(object_t(w)));
 
-  assert_cmpstr(o.get_name(*osm), "way/area: member of relation '<ID #-3>'");
+  assert_cmpstr(o.get_name(*osm), "way/area: member of relation <ID #-3>");
   simple_r->members.clear();
   simple_r->members.push_back(member_t(object_t(w), "outer"));
-  assert_cmpstr(o.get_name(*osm), "way/area: 'outer' in relation '<ID #-3>'");
+  assert_cmpstr(o.get_name(*osm), "way/area: 'outer' in relation <ID #-3>");
 
   pt_r->members.push_back(member_t(object_t(w)));
-  assert_cmpstr(o.get_name(*osm), "way/area: member of public transport 'Kröpcke'");
+  assert_cmpstr(o.get_name(*osm), "way/area: member of public transport \"Kröpcke\"");
   pt_r->members.clear();
   pt_r->members.push_back(member_t(object_t(w), "foo"));
-  assert_cmpstr(o.get_name(*osm), "way/area: 'foo' in public transport 'Kröpcke'");
+  assert_cmpstr(o.get_name(*osm), "way/area: 'foo' in public transport \"Kröpcke\"");
 
   // test that underscores in the relation name get also replaced
   rtags.erase(rtags.findTag("name", "Kröpcke"));
   rtags.insert(osm_t::TagMap::value_type("name", "Kröp_cke"));
   pt_r->tags.replace(rtags);
-  assert_cmpstr(o.get_name(*osm), "way/area: 'foo' in public transport 'Kröp cke'");
+  assert_cmpstr(o.get_name(*osm), "way/area: 'foo' in public transport \"Kröp cke\"");
 
   // as well as role entries
   pt_r->members.clear();
   pt_r->members.push_back(member_t(object_t(w), "foo_bar"));
-  assert_cmpstr(o.get_name(*osm), "way/area: 'foo bar' in public transport 'Kröp cke'");
+  assert_cmpstr(o.get_name(*osm), "way/area: 'foo bar' in public transport \"Kröp cke\"");
 }
 
 void test_sport()

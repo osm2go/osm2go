@@ -361,7 +361,7 @@ trstring osm_t::unspecified_name(const object_t &obj) const
 
   trstring bname;
   if (bnameTag != nullptr)
-    bname.assign(clean_underscores(bnameTag));
+    bname = trstring("\"%1\"").arg(clean_underscores(bnameTag));
   else
     bname = best->second->idName();
 
@@ -370,7 +370,7 @@ trstring osm_t::unspecified_name(const object_t &obj) const
     brole = clean_underscores(bmrole);
 
   if(rtype & IsMp && !brole.empty())
-    return trstring("%1: '%2' of multipolygon '%3'").arg(obj.type_string()).arg(brole).arg(bname);
+    return trstring("%1: '%2' of multipolygon %3").arg(obj.type_string()).arg(brole).arg(bname);
 
   const char *type = best->second->tags.get_value("type");
   std::string reltype;
@@ -379,9 +379,9 @@ trstring osm_t::unspecified_name(const object_t &obj) const
   else
     reltype = trstring("relation").toStdString();
   if(!brole.empty())
-    return trstring("%1: '%2' in %3 '%4'").arg(obj.type_string()).arg(brole).arg(reltype).arg(bname);
+    return trstring("%1: '%2' in %3 %4").arg(obj.type_string()).arg(brole).arg(reltype).arg(bname);
   else
-    return trstring("%1: member of %2 '%3'").arg(obj.type_string()).arg(reltype).arg(bname);
+    return trstring("%1: member of %2 %3").arg(obj.type_string()).arg(reltype).arg(bname);
 }
 
 /* try to get an as "speaking" description of the object as possible */
