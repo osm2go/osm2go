@@ -122,131 +122,25 @@ write_compiler_detection_header(
 #endif
 ")
 
-add_library(osm2go_lib STATIC
-	src/appdata.h
-	src/area_edit.h
-	src/canvas.cpp
-	src/canvas.h
-	src/color.h
-	src/diff.cpp
-	src/diff.h
-	src/fdguard.cpp
-	src/fdguard.h
-	src/gps_state.h
-	src/icon.h
-	src/iconbar.h
-	src/josm_elemstyles.cpp
-	src/josm_elemstyles.h
-	src/josm_elemstyles_p.h
-	src/josm_presets.cpp
-	src/josm_presets.h
-	src/josm_presets_p.h
-	src/josm_presets_parser.cpp
-	src/map.cpp
-	src/map.h
-	src/map_edit.cpp
-	src/map_hl.cpp
-	src/map_hl.h
-	src/map_state.h
-	src/misc.cpp
-	src/misc.h
-	src/notifications.h
-	src/net_io.cpp
-	src/net_io.h
-	src/object_dialogs.h
-	src/osm.cpp
-	src/osm_names.cpp
-	src/osm.h
-	src/osm_p.h
-	src/osm_api.cpp
-	src/osm_api.h
-	src/osm_api_p.h
-	src/osm_objects.cpp
-	src/osm_objects.h
-	src/osm_parser.cpp
-	src/osm2go_annotations.cpp
-	src/osm2go_annotations.h
-	src/osm2go_stl.h
-	src/pos.cpp
-	src/pos.h
-	src/project.cpp
-	src/project.h
-	src/project_p.h
-	src/settings.h
-	src/style.cpp
-	src/style.h
-	src/style_p.h
-	src/track.cpp
-	src/track.h
-	src/uicontrol.h
-	src/wms.cpp
-	src/wms.h
-	src/wms_p.h
-	${CMAKE_CURRENT_BINARY_DIR}/osm2go_cpp.h
-)
-
 set(DATA_DIR "${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}")
 
 option(PICKER_MENU "use a picker table for tagging preset selection" OFF)
 add_feature_info(PickerMenu PICKER_MENU "a picker menu like the one used on the N900")
 
-add_subdirectory(src/platforms/gtk)
-
 find_library(MATH_LIBRARY m)
-
-target_compile_definitions(osm2go_lib
-		PUBLIC PACKAGE="${PROJECT_NAME}"
-		PUBLIC VERSION="${PROJECT_VERSION}"
-)
-
-set_property(SOURCE src/platforms/gtk/net_io_curl.cpp
-		src/platforms/gtk/osm_upload_dialog.cpp
-		src/osm_api.cpp
-		APPEND PROPERTY COMPILE_DEFINITIONS "CURL_NO_OLDIES")
-set_property(SOURCE src/platforms/gtk/platform.cpp APPEND PROPERTY COMPILE_DEFINITIONS "DATADIR=\"${DATA_DIR}\"")
 
 # there shouldn't be a reason to change the server url
 option(SERVER_EDITABLE "add widget to make API URL editable" OFF)
 add_feature_info(ServerEditable SERVER_EDITABLE "an extra widget is shown where the URL of the OSM data server can be changed")
-if (SERVER_EDITABLE)
-	set_property(SOURCE src/platforms/gtk/project_widgets.cpp APPEND PROPERTY COMPILE_DEFINITIONS "SERVER_EDITABLE")
-endif ()
 
-if (PICKER_MENU)
-	set_property(SOURCE src/platforms/gtk/josm_presets_button.cpp APPEND PROPERTY COMPILE_DEFINITIONS "PICKER_MENU")
-else ()
+if (NOT PICKER_MENU)
 	set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 endif ()
 
+add_subdirectory(src)
+
 option(USE_SVG_ICONS "Use SVG icons without converting them to PNG at build time" ${USE_SVG_ICONS_DEFAULT})
 add_feature_info(Svg USE_SVG_ICONS "Scalable Vector Graphics are used to render icons, resulting in possibly better image quality")
-if (USE_SVG_ICONS)
-	set_property(SOURCE src/platforms/gtk/icon.cpp APPEND PROPERTY COMPILE_DEFINITIONS USE_SVG_ICONS)
-endif ()
-
-target_link_libraries(osm2go_lib
-	PRIVATE
-		${MATH_LIBRARY}
-		${CXX_FILESYSTEM_LIBS}
-	PUBLIC
-		${CURL_LIBRARIES}
-		OpenSSL::SSL
-		${LIBXML2_LIBRARIES}
-)
-
-# curl can't be added here as that would end up in the search list
-# _after_ the default curl in scratchbox
-target_include_directories(osm2go_lib
-	SYSTEM PUBLIC
-		${LIBXML2_INCLUDE_DIR}
-)
-
-target_include_directories(osm2go_lib
-	PUBLIC
-		${CURL_INCLUDE_DIRS}
-		${CMAKE_CURRENT_BINARY_DIR}
-		src
-)
 
 if (BUILD_TESTING)
 	add_subdirectory(test)
