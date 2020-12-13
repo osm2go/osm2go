@@ -79,10 +79,12 @@ int main(int argc, char **argv)
 
   assert(lic);
 
-  do_mem(lic);
-  do_mem_fail();
-  do_file(lic);
-  do_file_fail();
+  OSM2GO_TEST_CODE(
+    do_mem(lic);
+    do_mem_fail();
+    do_file(lic);
+    do_file_fail();
+  );
 
   curl_global_cleanup();
 

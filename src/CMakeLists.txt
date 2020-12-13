@@ -61,7 +61,11 @@ add_library(osm2go_lib STATIC
 	${CMAKE_CURRENT_BINARY_DIR}/../osm2go_cpp.h
 )
 
-add_subdirectory(platforms/gtk)
+if (NOT BUILD_WITH_QT)
+	add_subdirectory(platforms/gtk)
+else ()
+	add_subdirectory(platforms/qt)
+endif ()
 
 target_compile_definitions(osm2go_lib
 		PUBLIC PACKAGE="${PROJECT_NAME}"
@@ -74,6 +78,7 @@ set_property(SOURCE platforms/gtk/net_io_curl.cpp
 		APPEND PROPERTY COMPILE_DEFINITIONS "CURL_NO_OLDIES")
 set_property(SOURCE
 		platforms/gtk/platform.cpp
+		platforms/qt/platform.cpp
 		APPEND PROPERTY COMPILE_DEFINITIONS "DATADIR=\"${DATA_DIR}\"")
 
 if (SERVER_EDITABLE)

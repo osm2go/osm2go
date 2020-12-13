@@ -77,5 +77,7 @@ if (NETWORK_TESTS)
 	osm_test(osm_api_download)
 endif ()
 
-add_test(NAME application_help COMMAND osm2go --help)
-set_property(TEST application_help PROPERTY PASS_REGULAR_EXPRESSION "--projects[ \t]")
+if (TARGET osm2go) # TODO: remove once Qt has a main executable
+	add_test(NAME application_help COMMAND osm2go --help)
+	set_property(TEST application_help PROPERTY PASS_REGULAR_EXPRESSION "--projects[ \t]")
+endif ()

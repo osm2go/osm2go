@@ -24,6 +24,8 @@ extern bool use_test_paths_only;
 #define OSM2GO_TEST_INIT(argc, argv) (void)argc;(void)argv;use_test_paths_only = true
 #endif
 
+#define OSM2GO_TEST_CODE(x) { x }
+
 class canvas_holder {
   canvas_t * const c;
   std::unique_ptr<GtkWidget, g_object_deleter> w;

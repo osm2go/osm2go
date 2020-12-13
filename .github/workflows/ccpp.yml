@@ -14,16 +14,11 @@ on:
 jobs:
   build:
     name: build-${{ matrix.config.name }}-${{ matrix.setup.name }}
-    runs-on: ubuntu-16.04
+    runs-on: ${{ matrix.setup.distro }}
     strategy:
       fail-fast: false
       matrix:
         config:
-         - {
-             name: "GCC 5",
-             cc: "gcc-5",
-             cxx: "g++-5"
-           }
          - {
              name: "GCC 7",
              cc: "gcc-7",
@@ -49,12 +44,22 @@ jobs:
 #           }
         setup:
           - {
+              distro: "ubuntu-16.04",
               name: "default",
+              qt: false,
               options: "-DUSE_SVG_ICONS=On;-DNETWORK_TESTS=On"
             }
           - {
+              distro: "ubuntu-16.04",
               name: "picker",
+              qt: false,
               options: "-DSERVER_EDITABLE=Off;-DPICKER_MENU=On;-DUSE_SVG_ICONS=Off;-DNETWORK_TESTS=On"
+            }
+          - {
+              distro: "ubuntu-18.04",
+              name: "Qt",
+              qt: true,
+              options: "-DSERVER_EDITABLE=Off;-DPICKER_MENU=On;-DUSE_SVG_ICONS=On;-DNETWORK_TESTS=On;-DBUILD_WITH_QT=On"
             }
 
     steps:
@@ -68,8 +73,13 @@ jobs:
         path: /tmp/valgrind-suppressions
         key: ${{ runner.os }}-valgrind
 
-    - name: test_deps
-      run: sudo apt-get install libgoocanvas-dev libcurl4-openssl-dev libsoup2.4-dev libgps-dev libgtk2.0-dev libgnomevfs2-dev valgrind
+    - name: gtk_deps
+      if: matrix.setup.qt != true
+      run: sudo apt-get update && sudo apt-get install libgoocanvas-dev libcurl4-openssl-dev libsoup2.4-dev libgps-dev libgtk2.0-dev libgnomevfs2-dev valgrind
+
+    - name: qt_deps
+      if: matrix.setup.qt
+      run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev qtbase5-dev qtpositioning5-dev libqt5svg5-dev valgrind
 
     - name: generate valgrind suppression
       if: steps.cache-valgrind.outputs.cache-hit != 'true'
@@ -87,3 +97,4 @@ jobs:
         CC: ${{ matrix.config.cc }}
         CXX: ${{ matrix.config.cxx }}
         CONF_OPTIONS: ${{ matrix.setup.options }}
+        QT_QPA_PLATFORM: "minimal"

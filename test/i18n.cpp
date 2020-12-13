@@ -1,5 +1,6 @@
 #include <osm2go_i18n.h>
 
+#include <appdata.h>
 #include <osm.h>
 
 #include <osm2go_annotations.h>
@@ -10,6 +11,20 @@
 #ifndef PACKAGE
 #define PACKAGE "osm2go"
 #endif
+
+void appdata_t::set_title()
+{
+  abort();
+}
+
+void appdata_t::main_ui_enable()
+{
+  abort();
+}
+
+void appdata_t::track_clear()
+{
+}
 
 int main()
 {

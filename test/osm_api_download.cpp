@@ -197,19 +197,25 @@ int main(int argc, char **argv)
   tmpdir[tlen++] = '/';
   tmpdir[tlen] = '\0';
 
+#ifdef GLIB_CHECK_VERSION
   if (unlikely(curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK))
     return 1;
+#endif
   xmlInitParser();
 
-  download_fine();
-  download_fine_was_gz();
-  download_fine_absolute();
-  download_bad_server();
-  download_bad_coords();
-  upload_none();
+  OSM2GO_TEST_CODE(
+    download_fine();
+    download_fine_was_gz();
+    download_fine_absolute();
+    download_bad_server();
+    download_bad_coords();
+    upload_none();
+  );
 
   xmlCleanupParser();
+#ifdef GLIB_CHECK_VERSION
   curl_global_cleanup();
+#endif
 
   assert_cmpnum(rmdir(tmpdir), 0);
 

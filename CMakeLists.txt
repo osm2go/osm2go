@@ -126,6 +126,13 @@ set(DATA_DIR "${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}")
 
 option(PICKER_MENU "use a picker table for tagging preset selection" OFF)
 add_feature_info(PickerMenu PICKER_MENU "a picker menu like the one used on the N900")
+option(BUILD_WITH_QT "build the experimental Qt version" OFF)
+add_feature_info(Qt BUILD_WITH_QT "Qt instead of Gtk+ libraries are used for GUI")
+
+if (BUILD_WITH_QT)
+	# must be here so that AUTOMOC and AUTOUIC properties can be already set for osm2go_lib
+	find_package(Qt5 REQUIRED Core Widgets)
+endif ()
 
 find_library(MATH_LIBRARY m)
 

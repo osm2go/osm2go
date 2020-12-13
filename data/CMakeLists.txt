@@ -10,7 +10,9 @@ add_custom_command(OUTPUT elemstyles-mapnik.xml
 add_custom_target(elemstyles
 		DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/elemstyles-mapnik.xml)
 
-add_dependencies(osm2go elemstyles)
+if (TARGET osm2go) # TODO: remove once Qt has a main executable
+	add_dependencies(osm2go elemstyles)
+endif ()
 if (BUILD_TESTING)
 	add_dependencies(style_load elemstyles)
 endif ()

@@ -37,6 +37,7 @@ public:
   inline operator unsigned int() const noexcept { return value; }
 
   inline uint32_t rgba() const noexcept { return value; }
+  inline uint32_t argb() const noexcept { return ((value & 0xff) << 24) | ((value & 0xffffff00) >> 8); }
   inline unsigned int rgb() const noexcept { return value >> 8; }
 
   inline bool is_transparent() const noexcept { return (value & 0xff) == 0; }
