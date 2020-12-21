@@ -11,22 +11,16 @@
 #include <color.h>
 
 #include <QDialog>
-#include <QFile>
 #include <QPixmap>
 #include <QPointer>
-#include <QPointF>
-#include <QTimer>
 #include <QWidget>
 
 class icon_item;
 struct pos_area;
 class presets_items;
-class QGeoRectangle;
-class QMenu;
 class QString;
 class QSvgRenderer;
 class QVariant;
-class tag_context_t;
 
 namespace osm2go_platform {
   template<typename T>
@@ -65,4 +59,6 @@ namespace osm2go_platform {
   void dialog_size_hint(QWidget *window, DialogSizeHint hint);
 
   QString find_file(const QString &n);
+
+  QVariant modelHightlightModified();
 };

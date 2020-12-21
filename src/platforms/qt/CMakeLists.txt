@@ -38,6 +38,8 @@ target_sources(osm2go_lib PRIVATE
 	project_widgets.cpp
 	relation_edit.cpp
 	settings.cpp
+	TagModel.cpp
+	TagModel.h
 	uicontrol.cpp
 	wms_dialog.cpp
 )
@@ -55,3 +57,8 @@ target_link_libraries(osm2go_platform_lib INTERFACE
 target_link_libraries(osm2go_lib PUBLIC osm2go_platform_lib)
 
 set(USE_SVG_ICONS_DEFAULT On PARENT_SCOPE)
+
+if (BUILD_TESTING)
+	find_package(Qt5 ${Qt5_VERSION} COMPONENTS Test REQUIRED)
+	add_subdirectory(test)
+endif ()

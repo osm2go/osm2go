@@ -23,7 +23,6 @@
 #include <QDesktopServices>
 #include <QDir>
 #include <QFont>
-#include <QGeoRectangle>
 #include <QMessageBox>
 #include <QStandardPaths>
 #include <QUrl>
@@ -252,4 +251,12 @@ osm2go_platform::dialog_size_hint(QWidget *window, osm2go_platform::DialogSizeHi
   } };
 
   window->setMinimumSize(dialog_sizes.at(hint));
+}
+
+QVariant
+osm2go_platform::modelHightlightModified()
+{
+  QFont ft;
+  ft.setUnderline(true);
+  return ft;
 }
