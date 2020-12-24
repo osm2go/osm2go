@@ -1,8 +1,6 @@
 dist: xenial
 language: cpp
-compiler:
-  - gcc
-  - clang
+compiler: clang
 env:
   global:
     - OSM2GO_BUILD_DIR=/tmp/osm2go-cdash
