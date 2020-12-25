@@ -37,6 +37,8 @@ target_sources(osm2go_lib PRIVATE
 	platform.cpp
 	project_widgets.cpp
 	relation_edit.cpp
+	RelationMemberModel.cpp
+	RelationMemberModel.h
 	RelationMembershipModel.cpp
 	RelationMembershipModel.h
 	settings.cpp
