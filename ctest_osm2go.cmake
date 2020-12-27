@@ -58,6 +58,8 @@ endforeach ()
 
 cmake_minimum_required(VERSION 3.13)
 
+option(BUILD_WITH_QT "build the experimental Qt version" OFF)
+
 if (NOT GIT_EXECUTABLE)
 	find_package(Git REQUIRED)
 endif()
@@ -121,6 +123,12 @@ endif ()
 
 ctest_read_custom_files(${CMAKE_CURRENT_LIST_DIR})
 
+if (BUILD_WITH_QT)
+	list(APPEND CTEST_CUSTOM_COVERAGE_EXCLUDE "/src/platforms/gtk/")
+else ()
+	list(APPEND CTEST_CUSTOM_COVERAGE_EXCLUDE "/src/platforms/qt/")
+endif ()
+
 if (NOT IS_DIRECTORY ${CTEST_BINARY_DIRECTORY})
 	make_directory(${CTEST_BINARY_DIRECTORY})
 endif ()
@@ -133,6 +141,8 @@ ctest_update()
 
 # get coverage: debug build
 list(APPEND CONF_OPTIONS "-DCMAKE_BUILD_TYPE=Debug")
+#forward this option
+list(APPEND CONF_OPTIONS "-DBUILD_WITH_QT=${BUILD_WITH_QT}")
 
 ctest_configure(
 		OPTIONS "${CONF_OPTIONS}"

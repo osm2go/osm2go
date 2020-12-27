@@ -47,19 +47,19 @@ jobs:
               distro: "ubuntu-16.04",
               name: "default",
               qt: false,
-              options: "-DUSE_SVG_ICONS=On;-DNETWORK_TESTS=On"
+              options: "-DUSE_SVG_ICONS=On"
             }
           - {
               distro: "ubuntu-16.04",
               name: "picker",
               qt: false,
-              options: "-DSERVER_EDITABLE=Off;-DPICKER_MENU=On;-DUSE_SVG_ICONS=Off;-DNETWORK_TESTS=On"
+              options: "-DSERVER_EDITABLE=Off;-DPICKER_MENU=On;-DUSE_SVG_ICONS=Off"
             }
           - {
               distro: "ubuntu-18.04",
               name: "Qt",
               qt: true,
-              options: "-DSERVER_EDITABLE=Off;-DPICKER_MENU=On;-DUSE_SVG_ICONS=On;-DNETWORK_TESTS=On;-DBUILD_WITH_QT=On"
+              options: "-DSERVER_EDITABLE=Off;-DPICKER_MENU=On;-DUSE_SVG_ICONS=On;-DBUILD_WITH_QT=On"
             }
 
     steps:
@@ -92,9 +92,10 @@ jobs:
         TYPE_NAME: ${{ matrix.setup.name }}
 
     - name: build
-      run: CFLAGS="-O0 -fprofile-arcs -ftest-coverage" CXXFLAGS="-O0 -fprofile-arcs -ftest-coverage" ctest -V -S my_osm2go.cmake -D "CONF_OPTIONS=${CONF_OPTIONS}" || true
+      run: CFLAGS="-O0 -fprofile-arcs -ftest-coverage" CXXFLAGS="-O0 -fprofile-arcs -ftest-coverage" ctest -V -S my_osm2go.cmake -D BUILD_WITH_QT=${BUILD_WITH_QT} -D "CONF_OPTIONS=-DNETWORK_TESTS=On;${CONF_OPTIONS}" || true
       env:
         CC: ${{ matrix.config.cc }}
         CXX: ${{ matrix.config.cxx }}
         CONF_OPTIONS: ${{ matrix.setup.options }}
+        BUILD_WITH_QT: ${{ matrix.setup.qt }}
         QT_QPA_PLATFORM: "minimal"

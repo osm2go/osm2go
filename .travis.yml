@@ -6,8 +6,8 @@ env:
     - OSM2GO_BUILD_DIR=/tmp/osm2go-cdash
     - VALGRIND_SUPP_DIR=/tmp/valgrind-suppressions
   matrix:
-    - BUILD_NAME="default" CONF_OPTIONS="-DUSE_SVG_ICONS=On;-DNETWORK_TESTS=On"
-    - BUILD_NAME="picker" CONF_OPTIONS="-DSERVER_EDITABLE=Off;-DPICKER_MENU=On;-DUSE_SVG_ICONS=Off;-DNETWORK_TESTS=On" CURL_VERSION="7.71.1"
+    - BUILD_NAME="default" CONF_OPTIONS="-DUSE_SVG_ICONS=On"
+    - BUILD_NAME="picker" CONF_OPTIONS="-DSERVER_EDITABLE=Off;-DPICKER_MENU=On;-DUSE_SVG_ICONS=Off" CURL_VERSION="7.71.1"
 cache:
   directories:
   - $VALGRIND_SUPP_DIR
@@ -39,7 +39,7 @@ script:
   - if [ -n "${CURL_VERSION}" ]; then wget -O - https://curl.haxx.se/download/curl-${CURL_VERSION}.tar.xz | tar xJ; mv curl-${CURL_VERSION} curl; sed '/^message(WARNING "the curl cmake build system is poorly maintained. Be aware")$/d' -i curl/CMakeLists.txt; fi
 
   - echo -e "set(OSM2GO_BUILD_DIR \"${OSM2GO_BUILD_DIR}\")\nset(dashboard_model \"Continuous\")\nset(CTEST_SITE travis-ci.org)\nset(CTEST_BUILD_NAME \"CI ${TRAVIS_DIST} ${CC} ${BUILD_NAME}\")\nset(CTEST_MEMORYCHECK_COMMAND_OPTIONS \"--suppressions=${VALGRIND_SUPP_DIR}/valgrind-auto.supp\")\ninclude(${TRAVIS_BUILD_DIR}/ctest_osm2go.cmake)" > my_osm2go.cmake
-  - CFLAGS="-O0 -fprofile-arcs -ftest-coverage" CXXFLAGS="-O0 -fprofile-arcs -ftest-coverage" ctest -V -S my_osm2go.cmake -D "CONF_OPTIONS=${CONF_OPTIONS}"|| true
+  - CFLAGS="-O0 -fprofile-arcs -ftest-coverage" CXXFLAGS="-O0 -fprofile-arcs -ftest-coverage" ctest -V -S my_osm2go.cmake -D BUILD_WITH_QT=Off -D "CONF_OPTIONS=-DNETWORK_TESTS=On;${CONF_OPTIONS}"|| true
 after_success:
   - lcov --directory ${OSM2GO_BUILD_DIR} --capture --output-file coverage.info # capture coverage info
   - lcov --remove coverage.info '/usr/*' "${TRAVIS_BUILD_DIR}/curl/*" --output-file coverage.info # filter out system
