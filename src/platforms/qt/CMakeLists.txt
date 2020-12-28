@@ -41,6 +41,8 @@ target_sources(osm2go_lib PRIVATE
 	RelationMemberModel.h
 	RelationMembershipModel.cpp
 	RelationMembershipModel.h
+	RelationModel.cpp
+	RelationModel.h
 	settings.cpp
 	TagModel.cpp
 	TagModel.h
