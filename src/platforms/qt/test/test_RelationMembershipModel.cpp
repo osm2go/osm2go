@@ -2,7 +2,6 @@
 
 #include "../../../test/dummy_appdata.h"
 
-#include <josm_presets.h>
 #include <osm.h>
 #include <osm_objects.h>
 
@@ -14,7 +13,6 @@ public:
   inline QAbstractItemModelTester(QAbstractItemModel *) {}
 };
 #endif
-#include <QComboBox>
 #include <QTest>
 
 class TestRelationMembershipModel : public QObject {

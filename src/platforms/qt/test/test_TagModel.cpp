@@ -2,7 +2,6 @@
 
 #include "../../../test/dummy_appdata.h"
 
-#include <josm_presets.h>
 #include <osm.h>
 #include <osm_objects.h>
 #include <osm2go_platform_qt.h>
@@ -16,7 +15,6 @@ public:
   inline QAbstractItemModelTester(QAbstractItemModel *) {}
 };
 #endif
-#include <QComboBox>
 #include <QTest>
 
 class TestTagModel : public QObject {
