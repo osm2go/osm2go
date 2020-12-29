@@ -1,6 +1,7 @@
 #include "../RelationMemberModel.h"
 
 #include "../../../test/dummy_appdata.h"
+#include "helper.h"
 
 #include <osm.h>
 #include <osm_objects.h>
@@ -28,6 +29,11 @@ private slots:
 };
 
 namespace {
+
+std::vector<QString> expectedHeaderData()
+{
+  return { QStringLiteral("Type"), QStringLiteral("Id"), QStringLiteral("Name"), QStringLiteral("Role") };
+}
 
 // ensure the data returned for DisplayRole and EditRole are the same
 void rowDataSame(const RelationMemberModel &model, int row)
@@ -124,6 +130,9 @@ void TestRelationMemberModel::noMembers()
   QAbstractItemModelTester mt(&model);
 
   QCOMPARE(model.rowCount(QModelIndex()), 0);
+
+  checkHeaderData(&model, expectedHeaderData(), Qt::Horizontal);
+  checkHeaderDataEmpty(&model, Qt::Vertical);
 }
 
 void TestRelationMemberModel::simpleMembers()
@@ -155,6 +164,9 @@ void TestRelationMemberModel::simpleMembers()
   QCOMPARE(model.index(0, MEMBER_COL_ROLE).data(Qt::DisplayRole).toString(), QStringLiteral("from"));
   QCOMPARE(model.index(1, MEMBER_COL_ROLE).data(Qt::DisplayRole).toString(), QStringLiteral("via"));
   QCOMPARE(model.index(2, MEMBER_COL_ROLE).data(Qt::DisplayRole).toString(), QStringLiteral("to"));
+
+  checkHeaderData(&model, expectedHeaderData(), Qt::Horizontal);
+  checkHeaderDataEmpty(&model, Qt::Vertical);
 }
 
 void TestRelationMemberModel::refMembers()

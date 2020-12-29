@@ -1,6 +1,7 @@
 #include "../TagModel.h"
 
 #include "../../../test/dummy_appdata.h"
+#include "helper.h"
 
 #include <osm.h>
 #include <osm_objects.h>
@@ -50,6 +51,11 @@ private slots:
 };
 
 namespace {
+
+std::vector<QString> expectedHeaderData()
+{
+  return { QStringLiteral("Key"), QStringLiteral("Value") };
+}
 
 // ensure the data returned for DisplayRole and EditRole are the same
 void rowDataSame(const TagModel &model, int row)
@@ -125,6 +131,9 @@ void checkContentsSimpleTags(TagModel &model)
       for (int role : { Qt::ToolTipRole, Qt::DecorationRole } )
         QCOMPARE(model.index(row, column).data(role), QVariant());
   }
+
+  checkHeaderData(&model, expectedHeaderData(), Qt::Horizontal);
+  checkHeaderDataEmpty(&model, Qt::Vertical);
 }
 
 std::vector<tag_t> simpleTagsWithDiscardable(void)
@@ -225,6 +234,9 @@ void TestTagModel::noTags()
   QAbstractItemModelTester mt(&model);
 
   QCOMPARE(model.rowCount(QModelIndex()), 0);
+
+  checkHeaderData(&model, expectedHeaderData(), Qt::Horizontal);
+  checkHeaderDataEmpty(&model, Qt::Vertical);
 }
 
 // an empty object, with a previous object that has also no tags

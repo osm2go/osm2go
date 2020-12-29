@@ -1,6 +1,7 @@
 #include "../RelationMembershipModel.h"
 
 #include "../../../test/dummy_appdata.h"
+#include "helper.h"
 
 #include <osm.h>
 #include <osm_objects.h>
@@ -28,6 +29,11 @@ private slots:
 
 namespace {
 
+std::vector<QString> expectedHeaderData()
+{
+  return { QStringLiteral("Type"), QStringLiteral("Member"), QStringLiteral("Role"), QStringLiteral("Name") };
+}
+
 void set_bounds(osm_t::ref o)
 {
   bool b = o->bounds.init(pos_area(pos_t(52.2692786, 9.5750497), pos_t(52.2695463, 9.5755)));
@@ -53,6 +59,9 @@ void TestRelationMembershipModel::noRelations()
   QAbstractItemModelTester mt(&model);
 
   QCOMPARE(model.rowCount(QModelIndex()), 0);
+
+  checkHeaderData(&model, expectedHeaderData(), Qt::Horizontal);
+  checkHeaderDataEmpty(&model, Qt::Vertical);
 }
 
 void TestRelationMembershipModel::notInRelations()

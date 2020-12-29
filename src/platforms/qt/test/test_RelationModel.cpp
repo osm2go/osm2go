@@ -1,6 +1,7 @@
 #include "../RelationModel.h"
 
 #include "../../../test/dummy_appdata.h"
+#include "helper.h"
 
 #include <osm.h>
 #include <osm_objects.h>
@@ -30,6 +31,11 @@ private slots:
 };
 
 namespace {
+
+std::vector<QString> expectedHeaderData()
+{
+  return { QStringLiteral("Type"), QStringLiteral("Name"), QStringLiteral("Members") };
+}
 
 void set_bounds(osm_t::ref o)
 {
@@ -103,6 +109,9 @@ void checkOldRelations(const RelationModel &model, const std::vector<relation_t 
     QCOMPARE(model.index(row, RELATION_COL_NAME).data(Qt::ToolTipRole).toInt(), static_cast<int>(rel->id));
     QCOMPARE(model.index(row, RELATION_COL_MEMBERS).data(Qt::ToolTipRole), QVariant());
   }
+
+  checkHeaderData(&model, expectedHeaderData(), Qt::Horizontal);
+  checkHeaderDataEmpty(&model, Qt::Vertical);
 }
 
 } // namespace
