@@ -94,7 +94,9 @@ else ()
 		set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "${CMAKE_CURRENT_BINARY_DIR}/${png_icon}")
 	endforeach ()
 	add_custom_target(png_icons DEPENDS ${all_pngs})
-	add_dependencies(osm2go png_icons)
+	if (TARGET osm2go) # TODO: remove once Qt has a main executable
+		add_dependencies(osm2go png_icons)
+	endif ()
 
 	# replace the icon references in the presets file
 	file(READ defaultpresets.xml PRESETS_XML)
