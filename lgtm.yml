@@ -1,0 +1,10 @@
+extraction:
+	cpp:
+		prepare:
+			packages:
+				- "libcurl4-openssl-dev"
+				- "qtbase5-dev"
+				- "qtpositioning5-dev"
+				- "libqt5svg5-dev"
+		configure:
+			command: "cmake -D BUILD_WITH_QT=On ."
