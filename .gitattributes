@@ -1,0 +1,4 @@
+.codecov.yaml export-ignore
+.git* export-ignore
+.travis.yml export-ignore
+lgtm.yml export-ignore
