@@ -122,3 +122,5 @@ target_include_directories(osm2go_lib
 		${CMAKE_CURRENT_SOURCE_DIR}
 		${CMAKE_CURRENT_BINARY_DIR}/..
 )
+
+set(USE_SVG_ICONS_DEFAULT "${USE_SVG_ICONS_DEFAULT}" PARENT_SCOPE)
