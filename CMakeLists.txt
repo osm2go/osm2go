@@ -86,6 +86,8 @@ endif ()
 find_package(LibXml2 REQUIRED)
 find_package(PkgConfig REQUIRED)
 
+set(CMAKE_OPTIMIZE_DEPENDENCIES On)
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wshadow -Wpointer-arith")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow -Wpointer-arith")
 
