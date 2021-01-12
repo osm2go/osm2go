@@ -158,15 +158,17 @@ void settings_t::save() const
   qsettings.setValue(QLatin1String("track_visibility"),
                      trackVisibilityKeys.find(trackVisibility)->second);
 
-  /* store list of wms servers */
-  qsettings.beginWriteArray(QLatin1String("wms"), wms_server.size());
-  for(unsigned int count = 0; count < wms_server.size(); count++) {
-    const wms_server_t * const cur = wms_server[count];
-    qsettings.setArrayIndex(count);
-    qsettings.setValue(QLatin1String("server"), QString::fromStdString(cur->server));
-    qsettings.setValue(QLatin1String("name"), QString::fromStdString(cur->name));
+  if (likely(!wms_server.empty())) {
+    /* store list of wms servers */
+    qsettings.beginWriteArray(QLatin1String("wms"), wms_server.size());
+    for(unsigned int count = 0; count < wms_server.size(); count++) {
+      const wms_server_t * const cur = wms_server[count];
+      qsettings.setArrayIndex(count);
+      qsettings.setValue(QLatin1String("server"), QString::fromStdString(cur->server));
+      qsettings.setValue(QLatin1String("name"), QString::fromStdString(cur->name));
+    }
+    qsettings.endArray();
   }
-  qsettings.endArray();
 }
 
 settings_t::settings_t()
