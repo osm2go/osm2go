@@ -97,6 +97,14 @@ settings_t::ref settings_t::instance() {
   settings.reset(new settings_t());
   inst = settings;
 
+  settings->load();
+  settings->setDefaults();
+
+  return settings;
+}
+
+void settings_t::load()
+{
   if(likely(trackVisibilityKeys.empty()))
     initTrackVisibility();
 
@@ -107,24 +115,24 @@ settings_t::ref settings_t::instance() {
     /* restore everything listed in the store tables */
     std::string key;
 
-    std::for_each(settings->store_str.begin(), settings->store_str.end(),
+    std::for_each(store_str.begin(), store_str.end(),
                   load_functor<std::string, const char *, gconf_value_get_string>(key, client, GCONF_VALUE_STRING));
-    std::for_each(settings->store_bool.begin(), settings->store_bool.end(),
+    std::for_each(store_bool.begin(), store_bool.end(),
                   load_functor<bool, bool, gconf_value_get_bool_wrapper>(key, client, GCONF_VALUE_BOOL));
 
     /* adjust default server stored in settings if required */
-    if(unlikely(api_adjust(settings->server)))
+    if(unlikely(api_adjust(server)))
       g_debug("adjusting server path in settings");
 
     key = keybase + "track_visibility";
     gconf_value_guard gvalue(gconf_client_get(client.get(), key.c_str(), nullptr));
-    settings->trackVisibility = DrawAll;
+    trackVisibility = DrawAll;
     if(likely(gvalue)) {
       const std::map<TrackVisibility, std::string>::const_iterator it =
           std::find_if(trackVisibilityKeys.begin(), trackVisibilityKeys.end(),
                        matchTrackVisibility(gconf_value_get_string(gvalue.get())));
       if(it != trackVisibilityKeys.end())
-        settings->trackVisibility = it->first;
+        trackVisibility = it->first;
 
       gvalue.reset();
     }
@@ -141,7 +149,7 @@ settings_t::ref settings_t::instance() {
         snprintf(nbuf, sizeof(nbuf), "%u", i);
 
         key = keybase + "wms/server" + nbuf;
-        gconf_value_guard server(gconf_client_get(client.get(), key.c_str(), nullptr));
+        gconf_value_guard srv(gconf_client_get(client.get(), key.c_str(), nullptr));
         const size_t offs = keybase.size() + 4;
         key.replace(offs, strlen("server"), "name");
         gconf_value_guard name(gconf_client_get(client.get(), key.c_str(), nullptr));
@@ -149,33 +157,29 @@ settings_t::ref settings_t::instance() {
         gconf_value_guard path(gconf_client_get(client.get(), key.c_str(), nullptr));
 
         /* apply valid entry to list */
-        if(likely(name && server)) {
+        if(likely(name && srv)) {
           wms_server_t *cur = new wms_server_t(gconf_value_get_string(name.get()),
-                                               gconf_value_get_string(server.get()));
+                                               gconf_value_get_string(srv.get()));
           // upgrade old entries
           if(unlikely(path)) {
             cur->server += gconf_value_get_string(path.get());
             gconf_client_unset(client.get(), key.c_str(), nullptr);
           }
-          settings->wms_server.push_back(cur);
+          wms_server.push_back(cur);
         }
       }
-    } else {
-      /* add default server(s) */
-      g_debug("No WMS servers configured, adding default");
-      settings->wms_server = wms_server_get_default();
     }
 
     /* use demo setup if present */
-    if(settings->project.empty() && settings->base_path.empty()) {
+    if(project.empty() && base_path.empty()) {
       g_debug("base_path not set, assuming first time run");
 
       /* check for presence of demo project */
       std::string fullname = find_file("demo/demo.proj");
       if(!fullname.empty()) {
         g_debug("demo project exists, use it as default");
-        settings->project = fullname;
-        settings->first_run_demo = true;
+        project = fullname;
+        first_run_demo = true;
       }
     }
 
@@ -185,7 +189,7 @@ settings_t::ref settings_t::instance() {
   /* ------ set useful defaults ------- */
 
   const char *p;
-  if(unlikely(settings->base_path.empty())) {
+  if(unlikely(base_path.empty())) {
 #ifdef FREMANTLE
     /* try to use internal memory card on hildon/maemo */
     p = getenv("INTERNAL_MMC_MOUNTPOINT");
@@ -197,39 +201,45 @@ settings_t::ref settings_t::instance() {
     if(p == nullptr)
       p = "/tmp";
 
-    settings->base_path = p;
+    base_path = p;
 
     /* build image path in home directory */
     if(strncmp(p, "/home", 5) == 0)
-      settings->base_path += "/.osm2go/";
+      base_path += "/.osm2go/";
     else
-      settings->base_path += "/osm2go/";
+      base_path += "/osm2go/";
 
-    g_debug("base_path = %s", settings->base_path.c_str());
+    g_debug("base_path = %s", base_path.c_str());
   }
 
-  fdguard fg(settings->base_path.c_str(), O_DIRECTORY | O_RDONLY);
-  settings->base_path_fd.swap(fg);
+  fdguard fg(base_path.c_str(), O_DIRECTORY | O_RDONLY);
+  base_path_fd.swap(fg);
+}
 
-  if(unlikely(settings->server.empty())) {
+void settings_t::setDefaults()
+{
+  if(unlikely(server.empty())) {
     /* ------------- setup download defaults -------------------- */
-    settings->server = api06https;
+    server = api06https;
   }
 
-  if(settings->username.empty()) {
-    if((p = getenv("OSM_USER")) != nullptr)
-      settings->username = p;
+  if (unlikely(username.empty())) {
+    const char *p = getenv("OSM_USER");
+    if(p != nullptr)
+      username = p;
   }
 
-  if(settings->password.empty()) {
-    if((p = getenv("OSM_PASS")) != nullptr)
-      settings->password = p;
+  if (unlikely(password.empty())) {
+    const char *p = getenv("OSM_PASS");
+    if(p != nullptr)
+      password = p;
   }
 
-  if(unlikely(settings->style.empty()))
-    settings->style = DEFAULT_STYLE;
+  if(unlikely(style.empty()))
+    style = DEFAULT_STYLE;
 
-  return settings;
+  if (unlikely(wms_server.empty()))
+    wms_server = wms_server_get_default();
 }
 
 void settings_t::save() const {

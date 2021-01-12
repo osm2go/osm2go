@@ -46,92 +46,97 @@ settings_t::ref settings_t::instance()
   settings.reset(new settings_t());
   inst = settings;
 
-  /* ------ overwrite with settings from gconf if present ------- */
+  settings->load();
+  settings->setDefaults();
+
+  return settings;
+}
+
+void settings_t::load()
+{
   QSettings qsettings;
 
   /* restore everything listed in the store tables */
-  for (auto [k, v]: settings->store_str) {
+  for (auto [k, v]: store_str) {
     const QString key = QLatin1String(k);
     if (qsettings.contains(key))
       *v = qsettings.value(key).toString().toStdString();
   }
-  for (auto [k, v]: settings->store_bool) {
+  for (auto [k, v]: store_bool) {
     const QString key = QLatin1String(k);
     if (qsettings.contains(key))
       *v = qsettings.value(key).toBool();
   }
 
   const QVariant tv = qsettings.value(QLatin1String("track_visibility"));
-  settings->trackVisibility = DrawAll;
+  trackVisibility = DrawAll;
   if (!tv.isNull()) {
     const auto it = std::find_if(trackVisibilityKeys.begin(), trackVisibilityKeys.end(),
                                  [key = tv.toString()](auto && p) { return p.second == key; });
     if(it != trackVisibilityKeys.cend())
-      settings->trackVisibility = it->first;
+      trackVisibility = it->first;
   }
 
   /* restore wms server list */
   int count = qsettings.beginReadArray(QLatin1String("wms"));
-  if (count > 0) {
-    for(int i = 0; i < count; i++) {
-      qsettings.setArrayIndex(i);
-      const QString server = qsettings.value(QStringLiteral("server")).toString();
-      const QString name = qsettings.value(QStringLiteral("name")).toString();
+  for(int i = 0; i < count; i++) {
+    qsettings.setArrayIndex(i);
+    const QString srv = qsettings.value(QStringLiteral("server")).toString();
+    const QString name = qsettings.value(QStringLiteral("name")).toString();
 
-      /* apply valid entry to list */
-      if(likely(!name.isEmpty() && !server.isEmpty())) {
-        wms_server_t *cur = new wms_server_t();
-        cur->server = server.toStdString();
-        cur->name = name.toStdString();
-        settings->wms_server.push_back(cur);
-      }
+    /* apply valid entry to list */
+    if(likely(!name.isEmpty() && !srv.isEmpty())) {
+      wms_server_t *cur = new wms_server_t();
+      cur->server = srv.toStdString();
+      cur->name = name.toStdString();
+      wms_server.push_back(cur);
     }
-  } else {
-    /* add default server(s) */
-    qDebug("No WMS servers configured, adding default");
-    settings->wms_server = wms_server_get_default();
   }
 
   /* use demo setup if present */
-  if(settings->project.empty() && settings->base_path.empty()) {
+  if(project.empty() && base_path.empty()) {
     qDebug("base_path not set, assuming first time run");
 
     /* check for presence of demo project */
     std::string fullname = find_file("demo/demo.proj");
     if(!fullname.empty()) {
       qDebug("demo project exists, use it as default");
-      settings->project = fullname;
-      settings->first_run_demo = true;
+      project = fullname;
+      first_run_demo = true;
     }
   }
 
-  /* ------ set useful defaults ------- */
-
-  if(unlikely(settings->base_path.empty())) {
+  if(unlikely(base_path.empty())) {
     const QString bpath = QStandardPaths::standardLocations(QStandardPaths::HomeLocation).first() + QStringLiteral("/.osm2go/");
-    settings->base_path = bpath.toStdString();
+    base_path = bpath.toStdString();
 
     qDebug() << "base_path = " << bpath;
   }
+}
 
-  fdguard fg(settings->base_path.c_str(), O_DIRECTORY | O_RDONLY);
-  settings->base_path_fd.swap(fg);
+void settings_t::setDefaults()
+{
+  /* ------ set useful defaults ------- */
 
-  if(unlikely(settings->server.empty())) {
+  fdguard fg(base_path.c_str(), O_DIRECTORY | O_RDONLY);
+  base_path_fd.swap(fg);
+
+  if(unlikely(server.empty())) {
     /* ------------- setup download defaults -------------------- */
-    settings->server = api06https;
+    server = api06https;
   }
 
-  if(settings->username.empty())
-    settings->username = qgetenv("OSM_USER").toStdString();
+  if(unlikely(username.empty()))
+    username = qgetenv("OSM_USER").toStdString();
 
-  if(settings->password.empty())
-    settings->password = qgetenv("OSM_PASS").toStdString();
+  if(unlikely(password.empty()))
+    password = qgetenv("OSM_PASS").toStdString();
 
-  if(unlikely(settings->style.empty()))
-    settings->style = DEFAULT_STYLE;
+  if(unlikely(style.empty()))
+    style = DEFAULT_STYLE;
 
-  return settings;
+  if (unlikely(wms_server.empty()))
+    wms_server = wms_server_get_default();
 }
 
 void settings_t::save() const

@@ -19,7 +19,12 @@
 #define DEFAULT_STYLE "mapnik"
 
 class settings_t {
+protected:
   settings_t();
+
+  void load();
+  void setDefaults();
+
 public:
   ~settings_t();
 
