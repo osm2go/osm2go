@@ -83,7 +83,9 @@ jobs:
 
     - name: generate valgrind suppression
       if: steps.cache-valgrind.outputs.cache-hit != 'true'
-      run: mkdir -p ${OSM2GO_BUILD_DIR} ${VALGRIND_SUPP_DIR} && pushd ${OSM2GO_BUILD_DIR} && cmake -D CMAKE_BUILD_TYPE=Debug ${GITHUB_WORKSPACE} && make suppression-dummy && valgrind --leak-check=full --gen-suppressions=all --show-leak-kinds=all ./test/suppression-dummy 2>&1 | grep -v '^=' > ${VALGRIND_SUPP_DIR}/valgrind-auto.supp
+      run: mkdir -p ${OSM2GO_BUILD_DIR} ${VALGRIND_SUPP_DIR} && pushd ${OSM2GO_BUILD_DIR} && cmake -D CMAKE_BUILD_TYPE=Debug ${GITHUB_WORKSPACE} -D "CONF_OPTIONS=${CONF_OPTIONS}" && make suppression-dummy && valgrind --leak-check=full --gen-suppressions=all --show-leak-kinds=all ./test/suppression-dummy 2>&1 | grep -v '^=' > ${VALGRIND_SUPP_DIR}/valgrind-auto.supp
+      env:
+        CONF_OPTIONS: ${{ matrix.setup.options }}
 
     - name: configure
       run: mkdir -p ${OSM2GO_BUILD_DIR}; echo -e "set(OSM2GO_BUILD_DIR \"${OSM2GO_BUILD_DIR}\")\nset(dashboard_model \"Continuous\")\nset(CTEST_SITE github.com)\nset(CTEST_BUILD_NAME \"CI ${CC_NAME} ${TYPE_NAME}\")\nset(CTEST_MEMORYCHECK_COMMAND_OPTIONS \"--suppressions=${VALGRIND_SUPP_DIR}/valgrind-auto.supp\")\ninclude(${GITHUB_WORKSPACE}/ctest_osm2go.cmake)" > my_osm2go.cmake
