@@ -27,6 +27,7 @@ set_property(TEST presets_load APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAK
 osm_test(presets_items)
 set_property(TEST presets_items APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAKE_CURRENT_SOURCE_DIR}/presets")
 set_property(TEST presets_items APPEND PROPERTY ENVIRONMENT "LC_MESSAGES=xy_ZZ")
+osm_test(settings)
 osm_test(track_load_multi "${CMAKE_CURRENT_SOURCE_DIR}/multi.gpx")
 osm_test(diff_restore "${CMAKE_CURRENT_SOURCE_DIR}/" "diff_restore_data" "${CMAKE_CURRENT_BINARY_DIR}/diff_restore_data.osmchange")
 
