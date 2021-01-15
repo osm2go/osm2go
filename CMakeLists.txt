@@ -1,4 +1,8 @@
-cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.13...3.19 FATAL_ERROR)
+
+if (POLICY CMP0120)
+	cmake_policy(SET CMP0120 OLD)
+endif ()
 
 project(osm2go VERSION 0.9.17 LANGUAGES C CXX)
 
