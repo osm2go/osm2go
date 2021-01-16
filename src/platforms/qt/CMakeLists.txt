@@ -48,6 +48,8 @@ target_sources(osm2go_lib PRIVATE
 	TagModel.h
 	uicontrol.cpp
 	wms_dialog.cpp
+	WmsModel.cpp
+	WmsModel.h
 )
 
 target_link_libraries(osm2go_platform_lib INTERFACE
