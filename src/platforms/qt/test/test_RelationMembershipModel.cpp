@@ -55,7 +55,7 @@ void TestRelationMembershipModel::noRelations()
   node_t *n = osm->node_new(lpos_t(1, 1));
   osm->insert(n);
 
-  RelationMembershipModel model(nullptr, osm, object_t(n));
+  RelationMembershipModel model(osm, object_t(n));
   QAbstractItemModelTester mt(&model);
 
   QCOMPARE(model.rowCount(QModelIndex()), 0);
@@ -80,7 +80,7 @@ void TestRelationMembershipModel::notInRelations()
 
   rels.at(1)->tags.replace({ tag_t("type", "route") });
 
-  RelationMembershipModel model(nullptr, osm, object_t(n));
+  RelationMembershipModel model(osm, object_t(n));
   QAbstractItemModelTester mt(&model);
 
   QCOMPARE(model.rowCount(QModelIndex()), relCount);
@@ -133,7 +133,7 @@ void TestRelationMembershipModel::addToRelations()
     osm->attach(rels.back());
   }
 
-  RelationMembershipModel model(nullptr, osm, object_t(n));
+  RelationMembershipModel model(osm, object_t(n));
   QAbstractItemModelTester mt(&model);
 
   QCOMPARE(model.rowCount(QModelIndex()), relCount);
@@ -172,7 +172,7 @@ void TestRelationMembershipModel::changeRole()
   osm->attach(rel);
   rel->members.push_back(member_t(object_t(n)));
 
-  RelationMembershipModel model(nullptr, osm, object_t(n));
+  RelationMembershipModel model(osm, object_t(n));
   QAbstractItemModelTester mt(&model);
 
   QCOMPARE(model.rowCount(QModelIndex()), 1);

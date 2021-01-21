@@ -90,7 +90,7 @@ RelationMemberModel::RelationMemberModelPrivate::RelationMemberModelPrivate(rela
     m_members.push_back(m);
 }
 
-RelationMemberModel::RelationMemberModel(QObject *parent, relation_t *rel, osm_t::ref o)
+RelationMemberModel::RelationMemberModel(relation_t *rel, osm_t::ref o, QObject *parent)
   : QAbstractTableModel(parent)
   , d_ptr(new RelationMemberModelPrivate(rel, o))
 {

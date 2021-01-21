@@ -28,7 +28,7 @@ class RelationMemberModel : public QAbstractTableModel {
   Q_DECLARE_PRIVATE(RelationMemberModel)
 
 public:
-  RelationMemberModel(QObject *parent, relation_t *rel, osm_t::ref o) __attribute__((nonnull(3)));
+  RelationMemberModel(relation_t *rel, osm_t::ref o, QObject *parent = nullptr) __attribute__((nonnull(2)));
   ~RelationMemberModel() override;
 
   int rowCount(const QModelIndex &parent) const override;

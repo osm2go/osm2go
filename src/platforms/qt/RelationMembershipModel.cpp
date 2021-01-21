@@ -13,7 +13,7 @@
 
 #include <cassert>
 
-RelationMembershipModel::RelationMembershipModel(QObject *parent, osm_t::ref o, object_t obj)
+RelationMembershipModel::RelationMembershipModel(osm_t::ref o, object_t obj, QObject *parent)
   : QAbstractTableModel(parent)
   , m_osm(o)
   , m_obj(obj)

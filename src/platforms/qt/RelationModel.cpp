@@ -31,7 +31,7 @@ std::vector<std::pair<relation_t *, const relation_t *>> getRelations(osm_t::ref
 
 } // namespace
 
-RelationModel::RelationModel(QObject *parent, osm_t::ref osm)
+RelationModel::RelationModel(osm_t::ref osm, QObject *parent)
   : QAbstractTableModel(parent)
   , m_relations(getRelations(osm))
   , m_osm(osm)

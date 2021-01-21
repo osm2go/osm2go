@@ -29,7 +29,8 @@ class RelationMembershipModel : public QAbstractTableModel {
   osm_t::ref m_osm;
 
 public:
-  RelationMembershipModel(QObject *parent, osm_t::ref o, object_t obj);
+  RelationMembershipModel(osm_t::ref o, object_t obj, QObject *parent = nullptr);
+  ~RelationMembershipModel() override = default;
 
   int rowCount(const QModelIndex &parent) const override;
   int columnCount(const QModelIndex &parent) const override;

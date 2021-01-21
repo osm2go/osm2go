@@ -25,7 +25,8 @@ class RelationModel : public QAbstractTableModel {
   osm_t::ref m_osm;
 
 public:
-  RelationModel(QObject *parent, osm_t::ref osm);
+  RelationModel(osm_t::ref osm, QObject *parent = nullptr);
+  ~RelationModel() override = default;
 
   int rowCount(const QModelIndex &parent) const override;
   int columnCount(const QModelIndex &parent) const override;

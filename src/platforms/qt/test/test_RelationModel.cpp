@@ -120,7 +120,7 @@ void TestRelationModel::noRelations()
 {
   auto osm = boundedOsm();
 
-  RelationModel model(nullptr, osm);
+  RelationModel model(osm);
   QAbstractItemModelTester mt(&model);
 
   QCOMPARE(model.rowCount(QModelIndex()), 0);
@@ -135,7 +135,7 @@ void TestRelationModel::deletedRelations()
   for (auto *r : rels)
     osm->relation_delete(r);
 
-  RelationModel model(nullptr, osm);
+  RelationModel model(osm);
   QAbstractItemModelTester mt(&model);
 
   QCOMPARE(model.rowCount(QModelIndex()), 0);
@@ -148,7 +148,7 @@ void TestRelationModel::onlyOldRelations()
   const int relCount = 3;
   const std::vector<relation_t *> rels = createRelations(osm, false);
 
-  RelationModel model(nullptr, osm);
+  RelationModel model(osm);
   QAbstractItemModelTester mt(&model);
 
   QCOMPARE(model.rowCount(QModelIndex()), relCount);
@@ -163,7 +163,7 @@ void TestRelationModel::onlyNewRelations()
   const int relCount = 3;
   const std::vector<relation_t *> rels = createRelations(osm, true);
 
-  RelationModel model(nullptr, osm);
+  RelationModel model(osm);
   QAbstractItemModelTester mt(&model);
 
   QCOMPARE(model.rowCount(QModelIndex()), relCount);
@@ -217,7 +217,7 @@ void TestRelationModel::modifiedRelations()
   rels.front()->members.emplace_back(member_t(object_t(osm->nodes.begin()->second)));
   rels.at(1)->tags.replace({ tag_t("type", "route"), tag_t("name", "foobar") });
 
-  RelationModel model(nullptr, osm);
+  RelationModel model(osm);
   QAbstractItemModelTester mt(&model);
 
   osm->mark_dirty(rels.back());
@@ -280,7 +280,7 @@ void TestRelationModel::addRelation()
   const int relCount = 3;
   const std::vector<relation_t *> rels = createRelations(osm, false);
 
-  RelationModel model(nullptr, osm);
+  RelationModel model(osm);
   QAbstractItemModelTester mt(&model);
 
   QCOMPARE(model.rowCount(QModelIndex()), relCount);
@@ -311,7 +311,7 @@ void TestRelationModel::removeRelations()
   const int relCount = 3;
   const std::vector<relation_t *> rels = createRelations(osm, false);
 
-  RelationModel model(nullptr, osm);
+  RelationModel model(osm);
   QAbstractItemModelTester mt(&model);
 
   QCOMPARE(model.rowCount(QModelIndex()), relCount);

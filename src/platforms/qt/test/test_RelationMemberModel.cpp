@@ -126,7 +126,7 @@ void TestRelationMemberModel::noMembers()
   relation_t * const r = new relation_t();
   osm->attach(r);
 
-  RelationMemberModel model(nullptr, r, osm);
+  RelationMemberModel model(r, osm);
   QAbstractItemModelTester mt(&model);
 
   QCOMPARE(model.rowCount(QModelIndex()), 0);
@@ -140,7 +140,7 @@ void TestRelationMemberModel::simpleMembers()
   auto osm = boundedOsm();
   relation_t * const r = restrictionOsm(osm);
 
-  RelationMemberModel model(nullptr, r, osm);
+  RelationMemberModel model(r, osm);
   QAbstractItemModelTester mt(&model);
 
   QCOMPARE(model.rowCount(QModelIndex()), 3);
@@ -183,7 +183,7 @@ void TestRelationMemberModel::refMembers()
   r->members.emplace_back(member_t(object_t(object_t::NODE_ID, 2), "via"));
   r->members.emplace_back(member_t(object_t(object_t::WAY_ID, 3), "to"));
 
-  RelationMemberModel model(nullptr, r, osm);
+  RelationMemberModel model(r, osm);
   QAbstractItemModelTester mt(&model);
 
   QCOMPARE(model.rowCount(QModelIndex()), 3);
@@ -211,7 +211,7 @@ void TestRelationMemberModel::moveRows()
   auto osm = boundedOsm();
   relation_t * const r = restrictionOsm(osm);
 
-  RelationMemberModel model(nullptr, r, osm);
+  RelationMemberModel model(r, osm);
   QAbstractItemModelTester mt(&model);
 
   QCOMPARE(model.rowCount(QModelIndex()), 3);
@@ -269,7 +269,7 @@ void TestRelationMemberModel::changeRole()
   auto osm = boundedOsm();
   relation_t * const r = restrictionOsm(osm);
 
-  RelationMemberModel model(nullptr, r, osm);
+  RelationMemberModel model(r, osm);
   QAbstractItemModelTester mt(&model);
 
   QCOMPARE(model.rowCount(QModelIndex()), 3);
