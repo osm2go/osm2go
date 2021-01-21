@@ -94,7 +94,7 @@ jobs:
         TYPE_NAME: ${{ matrix.setup.name }}
 
     - name: build
-      run: CFLAGS="-O0 -fprofile-arcs -ftest-coverage" CXXFLAGS="-O0 -fprofile-arcs -ftest-coverage" ctest -V -S my_osm2go.cmake -D BUILD_WITH_QT=${BUILD_WITH_QT} -D "CONF_OPTIONS=-DNETWORK_TESTS=On;${CONF_OPTIONS}" || true
+      run: CFLAGS="-O0 -fprofile-arcs -ftest-coverage" CXXFLAGS="-O0 -fprofile-arcs -ftest-coverage" ctest -j 2 -V -S my_osm2go.cmake -D BUILD_WITH_QT=${BUILD_WITH_QT} -D "CONF_OPTIONS=-DNETWORK_TESTS=On;${CONF_OPTIONS}" || true
       env:
         CC: ${{ matrix.config.cc }}
         CXX: ${{ matrix.config.cxx }}
