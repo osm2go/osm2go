@@ -316,16 +316,22 @@ namespace {
 /* check whether a given point is inside a polygon */
 /* inpoly() taken from https://www.visibone.com/inpoly/ */
 bool
-inpoly(const canvas_item_info_poly *poly, int x, int y)
+inpoly(const canvas_item_info_poly *poly, int x, int y, int fuzziness)
 {
   if(poly->num_points < 3)
     return false;
 
   lpos_t oldPos = poly->points[poly->num_points - 1];
   bool inside = false;
+
   for (unsigned i = 0 ; i < poly->num_points ; i++) {
     float x1, y1, x2, y2;
     lpos_t newPos = poly->points[i];
+
+    // in contrast to the original algorithm we want to consider the corners as always inside the polygon
+    float dist_sq = (x - newPos.x) * (x - newPos.x) + (y - newPos.y) * (y - newPos.y);
+    if (dist_sq < fuzziness * fuzziness)
+      return true;
 
     if (newPos.x > oldPos.x) {
       x1 = oldPos.x;
@@ -373,7 +379,7 @@ bool item_at_functor::operator()(const canvas_item_info_t *item) const
 
   case CANVAS_ITEM_POLY: {
     const canvas_item_info_poly *poly = static_cast<const canvas_item_info_poly *>(item);
-    return poly->get_segment(x, y, ffuzziness) || (poly->is_polygon && inpoly(poly, x, y));
+    return poly->get_segment(x, y, ffuzziness) || (poly->is_polygon && inpoly(poly, x, y, fuzziness));
   }
   }
   assert_unreachable();

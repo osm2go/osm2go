@@ -130,7 +130,11 @@ void testToBottom()
   search3 = canvas->get_next_item_at(lpos_t(15, 1), search3);
   assert(bgpoly == search3);
 
-  // outside of everything
+  // outside of everything, but close enough that there should be an intersection
+  search3 = canvas->get_item_at(lpos_t(EXTRA_FUZZINESS_PIXEL * 4 - 1, 3));
+  assert(bgpoly == search3);
+
+  // outside of everything, and outside of the fuzziness range
   search3 = canvas->get_item_at(lpos_t(EXTRA_FUZZINESS_PIXEL * 4 + 1, 3));
   assert_null(search3);
 }
