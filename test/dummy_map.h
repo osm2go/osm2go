@@ -16,11 +16,17 @@ public:
   std::multimap<menu_items, bool> m_actions;
 
   MainUiDummy() : MainUi(), msg(nullptr) {}
-  ~MainUiDummy() override
+
+  void check()
   {
     assert_cmpnum(m_actions.size(), 0);
     assert_cmpnum(clearFlags.size(), 0);
-    assert_cmpstr(m_statusText, trstring());
+    assert_cmpnum(m_statusTexts.size(), 0);
+  }
+
+  ~MainUiDummy() override
+  {
+    check();
   }
 
   void setActionEnable(menu_items item, bool en) override
@@ -33,15 +39,16 @@ public:
   }
   void showNotification(trstring::arg_type text, unsigned int) override
   {
-    assert_cmpstr(m_statusText, static_cast<trstring::native_type>(text));
-    m_statusText = trstring();
+    assert_cmpnum_op(m_statusTexts.size(), >, 0);
+    assert_cmpstr(m_statusTexts.front(), static_cast<trstring::native_type>(text));
+    m_statusTexts.erase(m_statusTexts.begin());
   }
   const char *msg;
 
   void clearNotification(NotificationFlags flags) override;
 
   std::vector<NotificationFlags> clearFlags;
-  trstring m_statusText;
+  std::vector<trstring> m_statusTexts;
 };
 
 void MainUiDummy::clearNotification(NotificationFlags flags)
@@ -119,5 +126,10 @@ public:
   const way_t * action_way_ends_on() const
   {
     return action.ends_on;
+  }
+
+  void way_reverse_public()
+  {
+    way_reverse();
   }
 };

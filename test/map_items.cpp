@@ -222,7 +222,7 @@ void test_way_add_cancel_map(const std::string &tmpdir)
   MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
   expectMapItemDeselect(ui);
   ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, false));
-  ui->m_statusText = trstring("Place first node of new way");
+  ui->m_statusTexts.push_back(trstring("Place first node of new way"));
 
   m->set_action(MAP_ACTION_WAY_ADD);
   assert(a.iconbar->isCancelEnabled());
@@ -230,7 +230,7 @@ void test_way_add_cancel_map(const std::string &tmpdir)
   assert(!a.iconbar->isInfoEnabled());
   assert(!a.iconbar->isTrashEnabled());
   assert_cmpnum(ui->m_actions.size(), 0);
-  assert(ui->m_statusText.isEmpty());
+  assert_cmpnum(ui->m_statusTexts.size(), 0);
 
   // way add has started, prepare for cancel
 
@@ -257,7 +257,7 @@ void test_node_add_cancel_map(const std::string &tmpdir)
   MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
   expectMapItemDeselect(ui);
   ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, false));
-  ui->m_statusText = trstring("Place a node");
+  ui->m_statusTexts.push_back(trstring("Place a node"));
 
   m->set_action(MAP_ACTION_NODE_ADD);
   assert(a.iconbar->isCancelEnabled());
@@ -265,7 +265,7 @@ void test_node_add_cancel_map(const std::string &tmpdir)
   assert(!a.iconbar->isInfoEnabled());
   assert(!a.iconbar->isTrashEnabled());
   assert_cmpnum(ui->m_actions.size(), 0);
-  assert(ui->m_statusText.isEmpty());
+  assert_cmpnum(ui->m_statusTexts.size(), 0);
 
   // node add has started, prepare for cancel
 
@@ -292,7 +292,7 @@ void test_node_add_ok_map(const std::string &tmpdir)
   MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
   expectMapItemDeselect(ui);
   ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, false));
-  ui->m_statusText = trstring("Place a node");
+  ui->m_statusTexts.push_back(trstring("Place a node"));
 
   m->set_action(MAP_ACTION_NODE_ADD);
   assert(a.iconbar->isCancelEnabled());
@@ -300,7 +300,7 @@ void test_node_add_ok_map(const std::string &tmpdir)
   assert(!a.iconbar->isInfoEnabled());
   assert(!a.iconbar->isTrashEnabled());
   assert_cmpnum(ui->m_actions.size(), 0);
-  assert(ui->m_statusText.isEmpty());
+  assert_cmpnum(ui->m_statusTexts.size(), 0);
 
   // node add has started, trigger "ok". This would add the node if there is a valid GPS position
 
@@ -329,7 +329,7 @@ void test_map_detail(const std::string &tmpdir)
   expectMapItemDeselect(ui);
   expectMapItemDeselect(ui); // called twice from different places
   ui->clearFlags.push_back(MainUi::Busy);
-  ui->m_statusText = trstring("Increasing detail level");
+  ui->m_statusTexts.push_back(trstring("Increasing detail level"));
 
   m->detail_increase();
 
@@ -338,12 +338,12 @@ void test_map_detail(const std::string &tmpdir)
   assert(!a.iconbar->isInfoEnabled());
   assert(!a.iconbar->isTrashEnabled());
   assert_cmpnum(ui->m_actions.size(), 0);
-  assert(ui->m_statusText.isEmpty());
+  assert_cmpnum(ui->m_statusTexts.size(), 0);
 
   expectMapItemDeselect(ui);
   expectMapItemDeselect(ui); // called twice from different places
   ui->clearFlags.push_back(MainUi::Busy);
-  ui->m_statusText = trstring("Decreasing detail level");
+  ui->m_statusTexts.push_back(trstring("Decreasing detail level"));
   m->detail_decrease();
 
   assert(!a.iconbar->isCancelEnabled());
@@ -447,7 +447,7 @@ void test_map_press_way_add_cancel(const std::string &tmpdir)
   MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
   expectMapItemDeselect(ui);
   ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, false));
-  ui->m_statusText = trstring("Place first node of new way");
+  ui->m_statusTexts.push_back(trstring("Place first node of new way"));
 
   assert_null(m->action_way());
   assert_null(m->action_way_extending());
@@ -458,7 +458,7 @@ void test_map_press_way_add_cancel(const std::string &tmpdir)
   assert(!a.iconbar->isInfoEnabled());
   assert(!a.iconbar->isTrashEnabled());
   assert_cmpnum(ui->m_actions.size(), 0);
-  assert(ui->m_statusText.isEmpty());
+  assert_cmpnum(ui->m_statusTexts.size(), 0);
 
   assert(m->action_way() != nullptr);
   assert_cmpnum(m->action_way()->node_chain.size(), 0);
@@ -472,7 +472,7 @@ void test_map_press_way_add_cancel(const std::string &tmpdir)
   assert_cmpnum(m->action_way()->node_chain.size(), 0);
 
   // "click" at a good position to add a node
-  ui->m_statusText = trstring("Place next node of way");
+  ui->m_statusTexts.push_back(trstring("Place next node of way"));
   osm2go_platform::screenpos posFirst(1, 1);
   m->button_press_public(posFirst);
   m->button_release_public(posFirst);
@@ -520,7 +520,7 @@ void test_map_node_create_outside(const std::string &tmpdir)
   MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
   expectMapItemDeselect(ui);
   ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, false));
-  ui->m_statusText = trstring("Place a node");
+  ui->m_statusTexts.push_back(trstring("Place a node"));
 
   m->set_action(MAP_ACTION_NODE_ADD);
   assert(a.iconbar->isCancelEnabled());
@@ -528,7 +528,7 @@ void test_map_node_create_outside(const std::string &tmpdir)
   assert(!a.iconbar->isInfoEnabled());
   assert(!a.iconbar->isTrashEnabled());
   assert_cmpnum(ui->m_actions.size(), 0);
-  assert(ui->m_statusText.isEmpty());
+  assert_cmpnum(ui->m_statusTexts.size(), 0);
 
   // "click" at a good position to add a node
   m->button_press_public(osm2go_platform::screenpos(5, 5));
@@ -557,6 +557,87 @@ void test_map_node_create_outside(const std::string &tmpdir)
   assert(!a.iconbar->isOkEnabled());
   assert(!a.iconbar->isInfoEnabled());
   assert(!a.iconbar->isTrashEnabled());
+}
+
+void test_map_reverse(const std::string &tmpdir)
+{
+  appdata_t a;
+  a.project.reset(new project_t("foo", tmpdir));
+  canvas_holder canvas;
+  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas));
+  m->style.reset(new style_t());
+  a.project->osm.reset(new osm_t());
+  osm_t::ref o = a.project->osm;
+  set_bounds(o);
+  iconbar_t::create(a);
+
+  MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
+  expectMapItemDeselect(ui);
+
+  way_t *w = new way_t();
+  lpos_t p(10, 10);
+  node_t *n = o->node_new(p);
+  o->attach(n);
+  p = lpos_t(20, 20);
+  w->node_chain.push_back(n);
+  n = o->node_new(p);
+  o->attach(n);
+  w->node_chain.push_back(n);
+  o->attach(w);
+
+  m->selected = object_t(w);
+  ui->m_statusTexts.push_back(trstring("unspecified way"));
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, true));
+
+  m->way_reverse_public();
+
+  assert(m->selected.object == object_t(w));
+  ui->check();
+
+  std::vector<tag_t> ntags(1, tag_t("oneway", "yes"));
+
+  w->tags.replace(std::move(ntags));
+
+  ui->m_statusTexts.push_back(trstring("oneway"));
+  ui->m_statusTexts.push_back(trstring("1 tag updated"));
+  expectMapItemDeselect(ui);
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, true));
+
+  m->way_reverse_public();
+
+  assert(m->selected.object == object_t(w));
+  assert_cmpstr(w->tags.get_value("oneway"), "-1");
+  ui->check();
+
+  ntags.push_back(tag_t("type", "route"));
+  relation_t *r = new relation_t();
+  o->attach(r);
+  r->members.push_back(member_t(object_t(w), "backward"));
+  r->tags.replace(std::move(ntags));
+
+  ui->m_statusTexts.push_back(trstring("oneway"));
+  ui->m_statusTexts.push_back(trstring("1 tag & 1 relation updated"));
+  expectMapItemDeselect(ui);
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, true));
+
+  m->way_reverse_public();
+
+  assert(m->selected.object == object_t(w));
+  assert_cmpstr(w->tags.get_value("oneway"), "yes");
+  assert_cmpstr(r->members.front().role, "forward");
+  ui->check();
+
+  w->tags.clear();
+
+  ui->m_statusTexts.push_back(trstring("way: 'backward' in route <ID #-1>"));
+  ui->m_statusTexts.push_back(trstring("1 relation updated"));
+  expectMapItemDeselect(ui);
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, true));
+
+  m->way_reverse_public();
+
+  assert(m->selected.object == object_t(w));
+  assert_cmpstr(r->members.front().role, "backward");
 }
 
 } // namespace
@@ -591,6 +672,7 @@ int main(int argc, char **argv)
   test_map_drag_idle(osm_path);
   test_map_press_way_add_cancel(osm_path);
   test_map_node_create_outside(osm_path);
+  test_map_reverse(osm_path);
 
   assert_cmpnum(rmdir(tmpdir), 0);
 
