@@ -344,7 +344,16 @@ public:
   bool is_closed() const noexcept;
   bool is_area() const;
 
-  void reverse(osm_t::ref osm, unsigned int &tags_flipped, unsigned int &roles_flipped);
+  /**
+   * @brief reverse a way
+   * @returns a pair with the number of tags and roles flipped
+   *
+   * This reverses the nodes in the given way. All direction-sensitive tags
+   * of the way, e.g. all those ending in ":left" or ":right", are changed, too.
+   * Also direction-sensitive roles of this way in relations, e.g. "forward",
+   * are changed. These changes are counted and their numbers are returned.
+   */
+  std::pair<unsigned int, unsigned int> reverse(osm_t::ref osm);
 
   /**
    * @brief split the way into 2

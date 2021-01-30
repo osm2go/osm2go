@@ -499,9 +499,9 @@ void map_t::way_reverse() {
 
   assert(sel.type == object_t::WAY);
 
-  unsigned int n_tags_flipped;
-  unsigned int n_roles_flipped;
-  static_cast<way_t *>(sel)->reverse(appdata.project->osm, n_tags_flipped, n_roles_flipped);
+  std::pair<unsigned int, unsigned int> flipped = static_cast<way_t *>(sel)->reverse(appdata.project->osm);
+  const unsigned int n_tags_flipped = flipped.first;
+  const unsigned int n_roles_flipped = flipped.second;
 
   select_way(static_cast<way_t *>(sel));
 

@@ -821,11 +821,10 @@ void test_reverse()
   }
 
   w->tags.replace(tags);
-  unsigned int r, rroles;
-  w->reverse(o, r, rroles);
+  std::pair<unsigned int, unsigned int> flipped = w->reverse(o);
   verify_osm_db::run(o);
 
-  assert_cmpnum(r, 6);
+  assert_cmpnum(flipped.first, 6);
   assert_cmpnum(w->flags, OSM_FLAG_DIRTY);
   assert(w->node_chain.front() == n2);
   assert(w->node_chain.back() == n1);
@@ -842,7 +841,7 @@ void test_reverse()
   assert(w->tags == rtags);
 
   // check relations and their roles
-  assert_cmpnum(rroles, 2);
+  assert_cmpnum(flipped.second, 2);
   // rels[0] has wrong type, roles should not be modified
   assert_cmpnum(rels[0]->members.size(), 2);
   assert_cmpstr(rels[0]->members.front().role, "forward");
@@ -864,11 +863,11 @@ void test_reverse()
   assert_null(rels[3]->members.back().role);
 
   // go back
-  w->reverse(o, r, rroles);
+  flipped = w->reverse(o);
   verify_osm_db::run(o);
 
-  assert_cmpnum(r, 6);
-  assert_cmpnum(rroles, 2);
+  assert_cmpnum(flipped.first, 6);
+  assert_cmpnum(flipped.second, 2);
   // the original value was uppercase
   tags.find("oneway")->second = "yes";
   assert(w->tags == tags);
@@ -879,9 +878,11 @@ void test_reverse()
   w->tags.replace(tags);
 
   // the oneway key is unknown, so it is not touched.
-  w->reverse(o, r, rroles);
+  flipped = w->reverse(o);
   verify_osm_db::run(o);
   assert(w->tags == tags);
+  assert_cmpnum(flipped.first, 0);
+  assert_cmpnum(flipped.second, 2);
 }
 
 unsigned int nn_cnt;
@@ -1370,10 +1371,9 @@ void test_merge_nodes()
   // one way with only n1
   w = ways.back();
   w->append_node(n1);
-  unsigned int rc, rrc;
-  w->reverse(o, rc, rrc);
-  assert_cmpnum(rc, 0);
-  assert_cmpnum(rrc, 0);
+  std::pair<unsigned int, unsigned int> flipped = w->reverse(o);
+  assert_cmpnum(flipped.first, 0);
+  assert_cmpnum(flipped.second, 0);
 
   // one way with only n2
   w = ways.front();
@@ -2020,10 +2020,9 @@ void test_compare()
   helper_test_compare_tags(*w1, *w2);
 
   // same nodes, but different order
-  unsigned int a, b;
-  w2->reverse(osm, a, b);
-  assert_cmpnum(a, 0);
-  assert_cmpnum(b, 0);
+  std::pair<unsigned int, unsigned int> flipped = w2->reverse(osm);
+  assert_cmpnum(flipped.first, 0);
+  assert_cmpnum(flipped.second, 0);
 
   assert(*w1 != *w2);
 

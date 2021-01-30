@@ -1287,17 +1287,20 @@ void reverse_roles::operator()(const std::pair<item_id_t, relation_t *> &pair)
   // of it.
 }
 
-void way_t::reverse(osm_t::ref osm, unsigned int &tags_flipped, unsigned int &roles_flipped) {
-  tags_flipped = 0;
+std::pair<unsigned int, unsigned int>
+way_t::reverse(osm_t::ref osm)
+{
+  std::pair<unsigned int, unsigned int> ret = std::make_pair<unsigned int, unsigned int>(0, 0);
 
   osm->mark_dirty(this);
-  tags.for_each(reverse_direction_sensitive_tags_functor(tags_flipped));
+  tags.for_each(reverse_direction_sensitive_tags_functor(ret.first));
 
   std::reverse(node_chain.begin(), node_chain.end());
 
-  roles_flipped = 0;
-  reverse_roles context(osm, this, roles_flipped);
+  reverse_roles context(osm, this, ret.second);
   std::for_each(osm->relations.begin(), osm->relations.end(), context);
+
+  return ret;
 }
 
 const node_t *way_t::first_node() const noexcept {
