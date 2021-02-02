@@ -33,9 +33,11 @@
 #include <osm2go_platform.h>
 #include "osm2go_stl.h"
 
-#define DATA_KEY_DELETE_ITEM 42
-#define DATA_KEY_MAP_ITEM 47
-#define DATA_KEY_ZOOM 51
+enum DataKeyMagic {
+  DATA_KEY_DELETE_ITEM = 42,
+  DATA_KEY_MAP_ITEM = 47,
+  DATA_KEY_ZOOM = 51
+};
 
 canvas_t *
 canvas_t_create()
