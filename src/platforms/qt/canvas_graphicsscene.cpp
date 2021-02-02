@@ -84,14 +84,14 @@ namespace {
 void
 destroyItem(QGraphicsItem *item)
 {
-  auto citem = reinterpret_cast<canvas_item_t *>(item);
-  auto deleter = static_cast<canvas_item_destroyer *>(item->data(DATA_KEY_DELETE_ITEM).value<void *>());
+  auto *citem = reinterpret_cast<canvas_item_t *>(item);
+  auto *deleter = static_cast<canvas_item_destroyer *>(item->data(DATA_KEY_DELETE_ITEM).value<void *>());
   if (deleter != nullptr) {
     deleter->run(citem);
     delete deleter;
   }
 
-  auto mapitem = static_cast<map_item_t *>(item->data(DATA_KEY_MAP_ITEM).value<void *>());
+  auto *mapitem = static_cast<map_item_t *>(item->data(DATA_KEY_MAP_ITEM).value<void *>());
   if (mapitem != nullptr) {
     map_item_destroyer mi(mapitem);
     mi.run(citem);
@@ -136,14 +136,14 @@ canvas_t::set_background(color_t bg_color)
 bool
 canvas_t::set_background(const std::string &filename)
 {
-  auto gcanvas = static_cast<canvas_graphicsscene *>(this);
-  auto gr = gcanvas->group[CANVAS_GROUP_BG];
+  auto *gcanvas = static_cast<canvas_graphicsscene *>(this);
+  auto *gr = gcanvas->group[CANVAS_GROUP_BG];
 
   // remove old background image, if any
   auto childs = gr->childItems();
   if(!childs.isEmpty()) {
     assert(childs.count() == 1);
-    auto old = childs.takeFirst();
+    auto *old = childs.takeFirst();
     gr->removeFromGroup(old);
     gcanvas->scene->removeItem(old);
     delete old;
@@ -205,7 +205,7 @@ canvas_t::get_zoom() const
 osm2go_platform::screenpos
 canvas_t::scroll_get() const
 {
-  auto view = static_cast<const QGraphicsView *>(widget);
+  auto *view = static_cast<const QGraphicsView *>(widget);
 
   return osm2go_platform::screenpos(view->horizontalScrollBar()->value(),
                                     view->verticalScrollBar()->value());
@@ -222,8 +222,8 @@ canvas_t::scroll_to(const osm2go_platform::screenpos &s)
 osm2go_platform::screenpos
 canvas_t::scroll_step(const osm2go_platform::screenpos &d)
 {
-  auto gv = static_cast<QGraphicsView *>(widget);
-  auto sb = gv->horizontalScrollBar();
+  auto *gv = static_cast<QGraphicsView *>(widget);
+  auto *sb = gv->horizontalScrollBar();
   if (d.x() != 0)
     sb->setValue(sb->value() + d.x());
   int nx = sb->value();
@@ -248,11 +248,11 @@ canvas_t::set_bounds(lpos_t min, lpos_t max)
 void
 canvas_t::erase(unsigned int group_mask)
 {
-  auto gcanvas = static_cast<canvas_graphicsscene *>(this);
+  auto *gcanvas = static_cast<canvas_graphicsscene *>(this);
 
   for (unsigned group = 0; group < gcanvas->group.size(); group++) {
     if (group_mask & (1 << group)) {
-      const auto gr = gcanvas->group[group];
+      const auto *gr = gcanvas->group[group];
       const auto childs = gr->childItems();
       if(childs.isEmpty())
         continue;
@@ -295,14 +295,14 @@ public:
 canvas_item_circle *
 canvas_t::circle_new(canvas_group_t group, lpos_t c, float radius, int border, color_t fill_col, color_t border_col)
 {
-  auto item = new ZoomedItem<QGraphicsEllipseItem>(this, group);
+  auto *item = new ZoomedItem<QGraphicsEllipseItem>(this, group);
   item->setRect(c.x - radius, c.y - radius, radius * 2, radius * 2);
 
   if (border > 0)
     item->setPen(QPen(QColor::fromRgba(border_col.argb()), border));
   item->setBrush(QColor::fromRgba(fill_col.argb()));
 
-  auto ret = reinterpret_cast<canvas_item_circle *>(item);
+  auto *ret = reinterpret_cast<canvas_item_circle *>(item);
 
   if (CANVAS_SELECTABLE & (1 << group))
     (void) new canvas_item_info_circle(this, ret, c, radius + border);
@@ -325,12 +325,12 @@ canvas_points_create(const std::vector<lpos_t> &points)
 canvas_item_polyline *
 canvas_t::polyline_new(canvas_group_t group, const std::vector<lpos_t> &points, unsigned int width, color_t color)
 {
-  auto item = new ZoomedItem<QGraphicsPathItem>(this, group);
+  auto *item = new ZoomedItem<QGraphicsPathItem>(this, group);
   item->setPath(canvas_points_create(points));
 
   item->setPen(QPen(QColor::fromRgba(color.argb()), width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 
-  auto ret = reinterpret_cast<canvas_item_polyline *>(item);
+  auto *ret = reinterpret_cast<canvas_item_polyline *>(item);
 
   if(CANVAS_SELECTABLE & (1 << group))
     (void) new canvas_item_info_poly(this, ret, false, width, points);
@@ -347,13 +347,13 @@ canvas_t::polygon_new(canvas_group_t group, const std::vector<lpos_t> &points, u
   for (const auto p: points)
     cpoints << QPointF(p.x, p.y);
 
-  auto item = new ZoomedItem<QGraphicsPolygonItem>(this, group);
+  auto *item = new ZoomedItem<QGraphicsPolygonItem>(this, group);
   item->setPolygon(cpoints);
 
   item->setPen(QPen(QColor::fromRgba(color.argb()), width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
   item->setBrush(QColor::fromRgba(fill.argb()));
 
-  auto ret = reinterpret_cast<canvas_item_t *>(item);
+  auto *ret = reinterpret_cast<canvas_item_t *>(item);
 
   if(CANVAS_SELECTABLE & (1 << group))
     (void) new canvas_item_info_poly(this, ret, true, width, points);
@@ -369,13 +369,13 @@ canvas_t::image_new(canvas_group_t group, icon_item *icon, lpos_t pos, float sca
   QSvgRenderer *r = osm2go_platform::icon_renderer(icon);
   QPixmap pix = osm2go_platform::icon_pixmap(icon);
   if(r == nullptr) {
-    auto zitem = new ZoomedItem<QGraphicsPixmapItem>(this, group);
+    auto *zitem = new ZoomedItem<QGraphicsPixmapItem>(this, group);
     item = zitem;
     zitem->setPixmap(pix);
     zitem->setOffset(- pix.width() / 2.0f, - pix.height() / 2.0f);
     item->setPos(pos.x, pos.y);
   } else {
-    auto sitem = new ZoomedItem<QGraphicsSvgItem>(this, group);
+    auto *sitem = new ZoomedItem<QGraphicsSvgItem>(this, group);
     item = sitem;
     sitem->setSharedRenderer(r);
     auto vr = r->viewBoxF();
@@ -384,7 +384,7 @@ canvas_t::image_new(canvas_group_t group, icon_item *icon, lpos_t pos, float sca
   }
   item->setScale(scale);
 
-  auto ret = reinterpret_cast<canvas_item_pixmap *>(item);
+  auto *ret = reinterpret_cast<canvas_item_pixmap *>(item);
 
   if (CANVAS_SELECTABLE & (1 << group)) {
     int radius = 0.75 * scale * std::max(pix.width(), pix.height());
@@ -411,7 +411,7 @@ canvas_item_polyline::set_points(const std::vector<lpos_t> &points)
 void
 canvas_item_circle::set_radius(float radius)
 {
-  auto item = reinterpret_cast<QGraphicsEllipseItem *>(this);
+  auto *item = reinterpret_cast<QGraphicsEllipseItem *>(this);
   QRectF r = item->rect();
   const QPointF c = r.center();
   r.setWidth(radius);
@@ -437,11 +437,11 @@ canvas_item_t::set_zoom_max(float zoom_max)
 void
 canvas_item_t::set_dashed(unsigned int line_width, unsigned int dash_length_on, unsigned int dash_length_off)
 {
-  auto item = reinterpret_cast<QGraphicsItem *>(this);
+  auto *item = reinterpret_cast<QGraphicsItem *>(this);
 
   assert(item->type() == QGraphicsPathItem::Type || item->type() == QGraphicsPolygonItem::Type);
 
-  auto sitem = static_cast<QAbstractGraphicsShapeItem *>(item);
+  auto *sitem = static_cast<QAbstractGraphicsShapeItem *>(item);
   auto pen = sitem->pen();
   pen.setDashPattern( { static_cast<qreal>(dash_length_on), static_cast<qreal>(dash_length_off) } );
   pen.setWidth(line_width);
@@ -504,7 +504,7 @@ canvas_t::get_item_at(lpos_t pos) const
 canvas_item_t *
 canvas_t::get_next_item_at(lpos_t pos, canvas_item_t *oldtop) const
 {
-  auto qitem = reinterpret_cast<QGraphicsItem *>(oldtop);
+  auto *qitem = reinterpret_cast<QGraphicsItem *>(oldtop);
   const auto childs = qitem->parentItem()->childItems();
 
   qitem->setZValue(-1);
