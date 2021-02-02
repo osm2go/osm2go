@@ -155,8 +155,8 @@ canvas_t::set_background(const std::string &filename)
 
   /* calculate required scale factor */
   auto bounds = gcanvas->scene->sceneRect();
-  gcanvas->bg.scale.x = static_cast<float>(bounds.width()) / pm.width();
-  gcanvas->bg.scale.y = static_cast<float>(bounds.height()) / pm.height();
+  gcanvas->bg.scale.x = bounds.width() / pm.width();
+  gcanvas->bg.scale.y = bounds.height() / pm.height();
 
   pm.scaled(gcanvas->bg.scale.x, gcanvas->bg.scale.y);
 
