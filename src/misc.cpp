@@ -26,7 +26,7 @@ bool xml_get_prop_bool(xmlNode *node, const char *prop) {
 
 void format_float_int(int val, unsigned int decimals, char *str)
 {
-  unsigned int off = 0;
+  int off = 0;
   // handle the sign explicitely so it does not count in the minimum
   // output length, could result in "-.42" otherwise
   if(val < 0) {
