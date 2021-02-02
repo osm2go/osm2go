@@ -283,7 +283,7 @@ public:
   {
     // TODO: match the zoom specifiers between the Gtk and Qt version, they seem different
     const QVariant zm = T::data(DATA_KEY_ZOOM);
-    if (!zm.isNull() && zm.value<float>() > option->levelOfDetailFromTransform(painter->worldTransform()))
+    if (!zm.isNull() && zm.value<float>() > QStyleOptionGraphicsItem::levelOfDetailFromTransform(painter->worldTransform()))
       return;
 
     T::paint(painter, option, widget);
