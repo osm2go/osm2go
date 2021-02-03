@@ -393,7 +393,8 @@ class tag_match_functor {
   const bool same_values;
 public:
   inline tag_match_functor(const tag_t &o, bool s) : other(o), same_values(s) {}
-  bool operator()(const tag_t &tag) {
+  bool operator()(const tag_t &tag) const
+  {
     return (strcasecmp(other.key, tag.key) == 0) &&
            ((strcasecmp(other.value, tag.value) == 0) == same_values);
   }

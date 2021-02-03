@@ -29,12 +29,12 @@ namespace {
 struct check_icon {
   const presets_item_named * const vis;
   explicit __attribute__((nonnull(2))) check_icon(const presets_item_named *v) : vis(v) {}
-  bool operator()(const std::string &dir);
+  bool operator()(const std::string &dir) const;
 };
 
 std::set<std::string> missingIcons;
 
-bool check_icon::operator()(const std::string &dir)
+bool check_icon::operator()(const std::string &dir) const
 {
   if(vis->icon[0] == '/')
     return std::filesystem::is_regular_file(vis->icon);

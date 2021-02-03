@@ -147,17 +147,18 @@ struct track_save_segs {
   struct save_point {
     xmlNode * const node;
     explicit save_point(xmlNodePtr n) : node(n) {}
-    void operator()(const track_point_t &point);
+    void operator()(const track_point_t &point) const;
   };
 
-  inline void operator()(const track_seg_t &seg) {
+  inline void operator()(const track_seg_t &seg) const
+  {
     xmlNodePtr node_seg = xmlNewChild(node, nullptr, BAD_CAST "trkseg", nullptr);
     std::for_each(seg.track_points.begin(), seg.track_points.end(),
                   save_point(node_seg));
   }
 };
 
-void track_save_segs::save_point::operator()(const track_point_t &point)
+void track_save_segs::save_point::operator()(const track_point_t &point) const
 {
   xmlNodePtr node_point = xmlNewChild(node, nullptr, BAD_CAST "trkpt", nullptr);
 

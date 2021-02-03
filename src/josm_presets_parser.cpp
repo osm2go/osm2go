@@ -474,8 +474,9 @@ void PresetSax::characters(const char *ch, int len)
 // check if the given string starts with the iterator value
 struct matchHead {
   const char * const a;
-  matchHead(const char *attr) : a(attr) {}
-  inline bool operator()(const std::string &l) {
+  explicit inline matchHead(const char *attr) : a(attr) {}
+  inline bool operator()(const std::string &l) const
+  {
     return strncmp(a, l.c_str(), l.size()) == 0;
   }
 };

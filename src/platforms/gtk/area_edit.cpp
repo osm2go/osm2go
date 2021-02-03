@@ -361,7 +361,7 @@ pos_box(const pos_area &b)
 struct add_bounds {
   OsmGpsMap * const map;
   explicit add_bounds(OsmGpsMap *m) : map(m) {}
-  inline void operator()(const pos_area &b)
+  inline void operator()(const pos_area &b) const
   {
     osm_gps_map_add_bounds(map, pos_box(b));
   }

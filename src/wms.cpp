@@ -406,7 +406,8 @@ layer_is_usable(const wms_layer_t &layer)
 struct find_format_reverse_functor {
   const unsigned int mask;
   explicit inline find_format_reverse_functor(unsigned int m) : mask(m) {}
-  inline bool operator()(const std::pair<const char *, WmsImageFormat> &p) {
+  inline bool operator()(const std::pair<const char *, WmsImageFormat> &p) const
+  {
     return p.second & mask;
   }
 };

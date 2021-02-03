@@ -42,7 +42,8 @@ namespace {
 struct find_wms_functor {
   const char *name;
   explicit inline find_wms_functor(const char *n) : name(n) {}
-  bool operator()(const wms_server_t *srv) {
+  inline bool operator()(const wms_server_t *srv) const
+  {
     return srv->name == name;
   }
 };
@@ -279,10 +280,10 @@ on_server_edit(wms_server_context_t *context)
 struct store_fill_functor {
   GtkListStore * const store;
   explicit inline store_fill_functor(GtkListStore *s) : store(s) {}
-  GtkTreeIter operator()(const wms_server_t *srv);
+  inline GtkTreeIter operator()(const wms_server_t *srv) const;
 };
 
-GtkTreeIter store_fill_functor::operator()(const wms_server_t *srv)
+GtkTreeIter store_fill_functor::operator()(const wms_server_t *srv) const
 {
   GtkTreeIter iter;
 

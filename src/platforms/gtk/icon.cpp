@@ -163,7 +163,8 @@ icon_destroy_pair(std::pair<const std::string, icon_buffer_item *> &pair)
 struct find_icon_buf {
   const icon_item * const buf;
   explicit find_icon_buf(const icon_item *b) : buf(b) {}
-  bool operator()(const std::pair<std::string, icon_item *> &pair) {
+  inline bool operator()(const std::pair<std::string, icon_item *> &pair) const
+  {
     return pair.second == buf;
   }
 };

@@ -101,7 +101,8 @@ class StyleSax {
   struct tag_find {
     const char * const name;
     explicit tag_find(const xmlChar *n) : name(reinterpret_cast<const char *>(n)) {}
-    bool operator()(const StateMap::value_type &p) {
+    inline bool operator()(const StateMap::value_type &p) const
+    {
       return (strcmp(p.name, name) == 0);
     }
   };
@@ -623,7 +624,8 @@ namespace {
 struct josm_elemstyles_colorize_node_functor {
   const style_t * const style;
   explicit inline josm_elemstyles_colorize_node_functor(const style_t *s) : style(s) {}
-  inline void operator()(std::pair<item_id_t, node_t *> pair) {
+  inline void operator()(std::pair<item_id_t, node_t *> pair) const
+  {
     josm_elemstyles_colorize_node(style, pair.second);
   }
 };
@@ -650,8 +652,9 @@ line_mod_apply_width(int width, const elemstyle_width_mod_t *mod)
 struct josm_elemstyles_colorize_way_functor {
   const style_t * const style;
   explicit inline josm_elemstyles_colorize_way_functor(const style_t *s) : style(s) {}
-  void operator()(way_t *way);
-  inline void operator()(std::pair<item_id_t, way_t *> pair) {
+  void operator()(way_t *way) const;
+  inline void operator()(std::pair<item_id_t, way_t *> pair) const
+  {
     operator()(pair.second);
   }
 
@@ -727,7 +730,8 @@ void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const ele
   }
 }
 
-void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
+void josm_elemstyles_colorize_way_functor::operator()(way_t *way) const
+{
   /* use dark grey/no stroke/not filled for everything unknown */
   way->draw.color = style->way.color;
   way->draw.width = style->way.width;
