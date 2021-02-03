@@ -68,7 +68,7 @@ testNoFiles(const std::string &tmpdir)
   assert(!project_read(pfile, appdata.project, std::string(), -1));
 
   {
-    fdguard fd(open(pfile.c_str(), O_WRONLY | O_CREAT, 0644));
+    fdguard fd(open(pfile.c_str(), O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR));
     assert_cmpnum_op(static_cast<int>(fd), >=, 0);
     const char *xml_minimal = "<a><b/></a>";
     write(fd, xml_minimal, strlen(xml_minimal));
@@ -135,7 +135,7 @@ testNoData(const std::string &tmpdir)
   const std::string &ofile = project->osmFile;
 
   {
-    fdguard osmfd(openat(project->dirfd, ofile.c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0644));
+    fdguard osmfd(openat(project->dirfd, ofile.c_str(), O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR));
     assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
 
     bool b = project->parse_osm();
@@ -194,7 +194,7 @@ helper_createOsm(project_t::ref project, const std::string &tmpdir, const char *
   // save for the base directory
   assert(project->save());
   // copy the OSM data
-  fdguard osmfd(open((tmpdir + proj_name + '/' + proj_name + ".osm").c_str(), O_CREAT | O_WRONLY, 0644));
+  fdguard osmfd(open((tmpdir + proj_name + '/' + proj_name + ".osm").c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR));
   assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
   assert_cmpnum(write(osmfd, data, datalen), datalen);
 }
@@ -294,13 +294,13 @@ testRename(const std::string &tmpdir, const char *diff_file)
     const std::string oldpath = project->path;
 
     {
-      fdguard osmfd(openat(project->dirfd, project->osmFile.c_str(), O_CREAT | O_WRONLY, 0644));
+      fdguard osmfd(openat(project->dirfd, project->osmFile.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR));
       assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
       write(osmfd, not_gzip, strlen(not_gzip));
     }
 
     {
-    fdguard osmfd(openat(project->dirfd, (project->name + ".trk").c_str(), O_CREAT | O_WRONLY, 0644));
+    fdguard osmfd(openat(project->dirfd, (project->name + ".trk").c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR));
       assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
     }
 
@@ -308,7 +308,7 @@ testRename(const std::string &tmpdir, const char *diff_file)
     osm2go_platform::MappedFile mf(diff_file);
     assert(static_cast<bool>(mf));
     {
-      fdguard osmfd(openat(project->dirfd, (project->name + ".diff").c_str(), O_CREAT | O_WRONLY, 0644));
+      fdguard osmfd(openat(project->dirfd, (project->name + ".diff").c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR));
       assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
       assert_cmpnum(write(osmfd, mf.data(), mf.length()), mf.length());
     }
@@ -401,7 +401,7 @@ testRename(const std::string &tmpdir, const char *diff_file)
 
     // recreate it with the unmodified diff
     {
-      fdguard osmfd(open(ndiffname.c_str(), O_CREAT | O_WRONLY, 0644));
+      fdguard osmfd(open(ndiffname.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR));
       assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
       assert_cmpnum(write(osmfd, mf.data(), mf.length()), mf.length());
     }
@@ -619,7 +619,7 @@ int main(int argc, char **argv)
   osm_path += '/';
 
   std::string readonly = osm_path + "readonly/";
-  int r = mkdir(readonly.c_str(), 0555);
+  int r = mkdir(readonly.c_str(), S_IRUSR | S_IXUSR);
   if (r != 0) {
     std::cerr << "cannot create non-writable directory";
     return 1;

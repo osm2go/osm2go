@@ -253,7 +253,7 @@ int main(int argc, char **argv)
     // create an empty directoy
     std::string bpath = tmpdir + std::string("/") + argv[2];
     const std::string osmpath = bpath + '/' + argv[2] + ".osm";
-    mkdir(bpath.c_str(), 0755);
+    mkdir(bpath.c_str(), S_IRWXU);
     bpath.erase(bpath.rfind('/') + 1);
     // and create a new project from that
     std::unique_ptr<project_t> sproject(std::make_unique<project_t>(argv[2], bpath));
@@ -299,7 +299,7 @@ int main(int argc, char **argv)
     assert(sproject->osm);
 
     // now create a diff file dummy
-    fdguard fd(open(bpath.c_str(), O_CREAT | O_WRONLY, 0600));
+    fdguard fd(open(bpath.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR));
     assert(fd.valid());
     {
       fdguard none(-1);
