@@ -97,8 +97,8 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  unsigned int t[] = { 0, 0, 0 };
-  unsigned int to[] = { 0, 0, 0 };
+  std::array<unsigned int, 3> t = { { 0, 0, 0 } };
+  std::array<unsigned int, 3> to = { { 0, 0, 0 } };
 
   std::for_each(osm->nodes.begin(), osm->nodes.end(), tag_counter<node_t>(t[0], to[0]));
   std::for_each(osm->ways.begin(), osm->ways.end(), tag_counter<way_t>(t[1], to[1]));
