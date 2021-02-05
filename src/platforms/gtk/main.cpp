@@ -1434,13 +1434,13 @@ int main(int argc, char *argv[]) {
 #endif
 
   gboolean project_dialog = FALSE;
-  GOptionEntry entries[2] = {
+  std::array<GOptionEntry, 2> entries = { {
     { "projects", 'p', 0, G_OPTION_ARG_NONE, &project_dialog, static_cast<const gchar *>(_("open the project selection dialog")), nullptr },
     { nullptr, 0, 0, G_OPTION_ARG_NONE, nullptr, nullptr, nullptr }
-  };
+  } };
 
   // the const_cast is for the old Gtk version on the N900
-  if (gtk_init_with_args(&argc, &argv, INIT_NAME_CAST(static_cast<const gchar *>(_("[project]"))), entries, nullptr, nullptr) == FALSE)
+  if (gtk_init_with_args(&argc, &argv, INIT_NAME_CAST(static_cast<const gchar *>(_("[project]"))), entries.data(), nullptr, nullptr) == FALSE)
     return 2;
   bool startGps;
   int ret = osm2go_platform::init(startGps) ? 0 : 1;
