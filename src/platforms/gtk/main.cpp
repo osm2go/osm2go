@@ -1427,6 +1427,11 @@ int main(int argc, char *argv[]) {
 #if !GLIB_CHECK_VERSION(2,32,0)
   g_thread_init(nullptr);
 #endif
+#if !GLIB_CHECK_VERSION(2,19,0)
+#define INIT_NAME_CAST(x) (x)
+#else
+#define INIT_NAME_CAST(x) const_cast<gchar *>(x)
+#endif
 
   gboolean project_dialog = FALSE;
   GOptionEntry entries[2] = {
@@ -1435,7 +1440,7 @@ int main(int argc, char *argv[]) {
   };
 
   // the const_cast is for the old Gtk version on the N900
-  if (gtk_init_with_args(&argc, &argv, const_cast<gchar *>(static_cast<const gchar *>(_("[project]"))), entries, nullptr, nullptr) == FALSE)
+  if (gtk_init_with_args(&argc, &argv, INIT_NAME_CAST(static_cast<const gchar *>(_("[project]"))), entries, nullptr, nullptr) == FALSE)
     return 2;
   bool startGps;
   int ret = osm2go_platform::init(startGps) ? 0 : 1;
