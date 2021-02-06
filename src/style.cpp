@@ -72,7 +72,7 @@ static void parse_style_node(xmlNode *a_node, xmlString *fname, style_t &style) 
   style.highlight.arrow_color  = 0x0000ff80;  // arrows are blue
   style.highlight.arrow_limit  = 4.0;
 
-  style.frisket.color          = 0xffffffff;
+  style.frisket.color          = color_t::white();
   style.frisket.border.present = true;
   style.frisket.border.width   = 6.0;
   style.frisket.border.color   = 0x00000099;
@@ -295,7 +295,7 @@ style_t::style_t()
   memset(&node, 0, sizeof(node));
   memset(&highlight, 0, sizeof(highlight));
 
-  background.color = 0xffffffff; // white
+  background.color = color_t::white();
 }
 
 static void unref_icon(const style_t::IconCache::value_type &pair)

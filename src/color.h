@@ -52,6 +52,11 @@ public:
     return color_t(0x000000ff);
   }
 
+  static inline color_t white() noexcept
+  {
+    return color_t(0xffffffff);
+  }
+
   inline color_t combine_alpha(color_t other) const noexcept
   {
     return color_t((value & ~0xff) | (other.value & 0xff));
