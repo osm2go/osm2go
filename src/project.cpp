@@ -180,7 +180,7 @@ bool project_t::save(osm2go_platform::Widget *parent) {
   }
 
   xmlDocGuard doc(xmlNewDoc(BAD_CAST "1.0"));
-  xmlNodePtr node, root_node = xmlNewNode(nullptr, BAD_CAST "proj");
+  xmlNodePtr root_node = xmlNewNode(nullptr, BAD_CAST "proj");
   xmlNewProp(root_node, BAD_CAST "name", BAD_CAST name.c_str());
   if(data_dirty)
     xmlNewProp(root_node, BAD_CAST "dirty", BAD_CAST "true");
@@ -199,7 +199,7 @@ bool project_t::save(osm2go_platform::Widget *parent) {
   if(unlikely(!osmFile.empty() && osmFile != defaultOsm + ".gz" && osmFile != defaultOsm))
     xmlNewChild(root_node, nullptr, BAD_CAST "osm", BAD_CAST osmFile.c_str());
 
-  node = xmlNewChild(root_node, nullptr, BAD_CAST "min", nullptr);
+  xmlNodePtr node = xmlNewChild(root_node, nullptr, BAD_CAST "min", nullptr);
   bounds.min.toXmlProperties(node);
 
   node = xmlNewChild(root_node, nullptr, BAD_CAST "max", nullptr);

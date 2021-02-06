@@ -192,10 +192,10 @@ author_add(GtkWidget *box, trstring::native_type_arg str)
 GtkWidget *
 authors_page_new()
 {
-  GtkWidget *ivbox, *vbox = gtk_vbox_new(FALSE, 16);
+  GtkWidget *vbox = gtk_vbox_new(FALSE, 16);
 
   /* -------------------------------------------- */
-  ivbox = gtk_vbox_new(FALSE, 0);
+  GtkWidget *ivbox = gtk_vbox_new(FALSE, 0);
   author_add(ivbox, _("Main developers:"));
   author_add(ivbox, "Till Harbaum <till@harbaum.org>");
   author_add(ivbox, "Andrew Chadwick <andrewc-osm2go@piffle.org>");

@@ -644,15 +644,13 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
 void
 menu_create(appdata_internal &appdata, GtkBox *mainvbox)
 {
-  GtkWidget *item, *submenu;
-
   MainUiGtk * const mainui = static_cast<MainUiGtk *>(appdata.uicontrol.get());
 
   /* -------------------- Project submenu -------------------- */
 
   GtkAccelGroup *accel_grp = gtk_accel_group_new();
 
-  submenu = mainui->addMenu(_("_Project"));
+  GtkWidget *submenu = mainui->addMenu(_("_Project"));
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
 
   menu_append_new_item(
@@ -675,7 +673,7 @@ menu_create(appdata_internal &appdata, GtkBox *mainvbox)
   submenu = mainui->addMenu(MainUi::SUBMENU_VIEW);
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
 
-  item = gtk_check_menu_item_new_with_mnemonic(static_cast<const gchar *>(_("_Fullscreen")));
+  GtkWidget *item = gtk_check_menu_item_new_with_mnemonic(static_cast<const gchar *>(_("_Fullscreen")));
   gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), FALSE);
   menu_append_new_item(
     &appdata, submenu, G_CALLBACK(cb_menu_fullscreen),
