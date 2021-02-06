@@ -610,10 +610,9 @@ details_widget(const info_tag_context_t &context, bool big)
 
   case object_t::RELATION: {
     /* relations tell something about their members */
-    guint nodes = 0, ways = 0, relations = 0;
-    static_cast<relation_t *>(context.object)->members_by_type(nodes, ways, relations);
+    relation_t::memberCounts counts = static_cast<relation_t *>(context.object)->members_by_type();
 
-    const trstring str = trstring("Members: %1 nodes, %2 ways, %3 relations").arg(nodes).arg(ways).arg(relations);
+    const trstring str = trstring("Members: %1 nodes, %2 ways, %3 relations").arg(counts.nodes).arg(counts.ways).arg(counts.relations);
 
     GtkWidget *member_btn = osm2go_platform::button_new_with_label(str);
     g_signal_connect(member_btn, "clicked", G_CALLBACK(on_relation_members),

@@ -1082,11 +1082,10 @@ void test_member_delete()
   assert_cmpnum(dirty0.relations.added.size(), 1);
   assert_cmpnum(dirty0.relations.deleted.size(), 0);
 
-  unsigned int nodes = 0, ways = 0, relations = 0;
-  r->members_by_type(nodes, ways, relations);
-  assert_cmpnum(nodes, 1);
-  assert_cmpnum(ways, 1);
-  assert_cmpnum(relations, 0);
+  relation_t::memberCounts counts = r->members_by_type();
+  assert_cmpnum(counts.nodes, 1);
+  assert_cmpnum(counts.ways, 1);
+  assert_cmpnum(counts.relations, 0);
 
   // keep it here, it ill only be reset, but not freed as that is done through the map
   std::unique_ptr<map_item_t> mi(new map_item_t(object_t(w), nullptr));
@@ -1122,13 +1121,10 @@ void test_member_delete()
   assert_cmpnum(dirty1.relations.deleted.size(), 0);
   verify_osm_db::run(o);
 
-  nodes = 0;
-  ways = 0;
-  relations = 0;
-  r->members_by_type(nodes, ways, relations);
-  assert_cmpnum(nodes, 0);
-  assert_cmpnum(ways, 1);
-  assert_cmpnum(relations, 1);
+  counts = r->members_by_type();
+  assert_cmpnum(counts.nodes, 0);
+  assert_cmpnum(counts.ways, 1);
+  assert_cmpnum(counts.relations, 1);
 }
 
 struct node_collector {

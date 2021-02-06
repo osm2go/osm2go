@@ -433,9 +433,9 @@ void relation_t::updateMembers(std::vector<member_t> &newMembers, osm_t::ref osm
 namespace {
 
 class member_counter {
-  unsigned int &nodes, &ways, &relations;
+  relation_t::memberCounts &counts;
 public:
-  inline member_counter(unsigned int &n, unsigned int &w, unsigned int &r) : nodes(n), ways(w), relations(r) {}
+  inline member_counter(relation_t::memberCounts &c) : counts(c) {}
   void operator()(const member_t &member) noexcept;
 };
 
@@ -444,15 +444,15 @@ void member_counter::operator()(const member_t &member) noexcept
   switch(member.object.type) {
   case object_t::NODE:
   case object_t::NODE_ID:
-    nodes++;
+    counts.nodes++;
     break;
   case object_t::WAY:
   case object_t::WAY_ID:
-    ways++;
+    counts.ways++;
     break;
   case object_t::RELATION:
   case object_t::RELATION_ID:
-    relations++;
+    counts.relations++;
     break;
   default:
     assert_unreachable();
@@ -461,7 +461,10 @@ void member_counter::operator()(const member_t &member) noexcept
 
 } // namespace
 
-void relation_t::members_by_type(unsigned int &nodes, unsigned int &ways, unsigned int &relations) const {
+relation_t::memberCounts relation_t::members_by_type() const
+{
+  memberCounts ret;
   std::for_each(members.begin(), members.end(),
-                member_counter(nodes, ways, relations));
+                member_counter(ret));
+  return ret;
 }

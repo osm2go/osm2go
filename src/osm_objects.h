@@ -471,7 +471,13 @@ public:
    */
   void updateMembers(std::vector<member_t> &newMembers, osm_t::ref osm);
 
-  void members_by_type(unsigned int &nodes, unsigned int &ways, unsigned int &relations) const;
+  struct memberCounts {
+    explicit inline memberCounts() : nodes(0), ways(0), relations(0) {}
+    unsigned int nodes;
+    unsigned int ways;
+    unsigned int relations;
+  };
+  memberCounts members_by_type() const;
 
   /**
    * @brief return a descriptive name
