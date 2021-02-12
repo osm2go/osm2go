@@ -552,12 +552,18 @@ on_filter_changed(select_context_t *context)
   gtk_tree_model_filter_refilter(context->filter);
 
   GtkTreeModel *fmodel = reinterpret_cast<GtkTreeModel *>(context->filter);
+  gboolean allowOpen;
   if(gtk_tree_model_iter_n_children(fmodel, nullptr) == 1) {
     GtkTreeIter iter;
     gboolean b = gtk_tree_model_get_iter_first(fmodel, &iter);
     assert(b == TRUE); (void)b;
     gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
+    allowOpen = TRUE;
+  } else {
+    GtkTreeIter iter;
+    allowOpen = list_get_selected(context->list, &fmodel, &iter);
   }
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, allowOpen);
 }
 
 gint
