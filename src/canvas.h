@@ -64,7 +64,7 @@ struct canvas_item_t {
 
   /****** manipulating items ******/
   void set_zoom_max(float zoom_max);
-  void set_dashed(unsigned int line_width, unsigned int dash_length_on,
+  void set_dashed(float line_width, unsigned int dash_length_on,
                   unsigned int dash_length_off);
 
   /**
@@ -198,9 +198,9 @@ public:
   canvas_item_circle *circle_new(canvas_group_t group, lpos_t c, float radius, int border,
                             color_t fill_col, color_t border_col = color_t::transparent());
   canvas_item_polyline *polyline_new(canvas_group_t group, const std::vector<lpos_t> &points,
-                              unsigned int width, color_t color);
+                              float width, color_t color);
   canvas_item_t *polygon_new(canvas_group_t group, const std::vector<lpos_t> &points,
-                             unsigned int width, color_t color,
+                             float width, color_t color,
                              color_t fill);
   canvas_item_pixmap *image_new(canvas_group_t group, icon_item *icon, lpos_t pos, float scale);
 

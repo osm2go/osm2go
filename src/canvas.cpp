@@ -78,7 +78,7 @@ canvas_item_info_circle::canvas_item_info_circle(canvas_t *cv, canvas_item_t *it
 }
 
 canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_item_t* it,
-                                             bool poly, unsigned int wd, const std::vector<lpos_t> &p)
+                                             bool poly, float wd, const std::vector<lpos_t> &p)
   : canvas_item_info_t(CANVAS_ITEM_POLY, cv, it, new item_info_destroyer<canvas_item_info_poly>(this, cv))
   , is_polygon(poly)
   , width(wd)
@@ -93,7 +93,7 @@ std::optional<unsigned int> canvas_item_info_poly::get_segment(int x, int y, flo
 {
   unsigned int retval;
   bool found = false;
-  float mindist = static_cast<float>(width) / 2 + fuzziness;
+  float mindist = width / 2 + fuzziness;
   for(unsigned int i = 0; i < num_points - 1; i++) {
     const lpos_t pos = points[i];
     const lpos_t posnext = points[i + 1];

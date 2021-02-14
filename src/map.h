@@ -246,7 +246,7 @@ protected:
   /**
   * @brief draw highlight cursor on map coordinates
   */
-  void hl_cursor_draw(lpos_t pos, unsigned int radius);
+  void hl_cursor_draw(lpos_t pos, float radius);
   void hl_cursor_clear();
 
 private:

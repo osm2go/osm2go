@@ -372,7 +372,7 @@ map_node_new(map_t *map, node_t *node, float radius, int width, color_t fill, co
 }
 
 static map_item_t *map_way_new(map_t *map, canvas_group_t group,
-                               way_t *way, const std::vector<lpos_t> &points, unsigned int width,
+                               way_t *way, const std::vector<lpos_t> &points, float width,
                                color_t color, color_t fill_color)
 {
   map_item_t *map_item = new map_item_t(object_t(way));

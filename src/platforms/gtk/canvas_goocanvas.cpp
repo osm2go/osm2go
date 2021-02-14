@@ -485,7 +485,8 @@ canvas_points_create(const std::vector<lpos_t> &points)
 } // namespace
 
 canvas_item_polyline *canvas_t::polyline_new(canvas_group_t group, const std::vector<lpos_t> &points,
-                                      unsigned int width, color_t color) {
+                                      float width, color_t color)
+{
   pointGuard cpoints(canvas_points_create(points));
 
   canvas_item_t *item =
@@ -504,7 +505,7 @@ canvas_item_polyline *canvas_t::polyline_new(canvas_group_t group, const std::ve
 }
 
 canvas_item_t *canvas_t::polygon_new(canvas_group_t group, const std::vector<lpos_t> &points,
-                                     unsigned int width, color_t color, color_t fill) {
+                                     float width, color_t color, color_t fill) {
   pointGuard cpoints(canvas_points_create(points));
 
   canvas_item_t *item =
@@ -579,7 +580,7 @@ void canvas_item_t::set_zoom_max(float zoom_max) {
                nullptr);
 }
 
-void canvas_item_t::set_dashed(unsigned int line_width, unsigned int dash_length_on,
+void canvas_item_t::set_dashed(float line_width, unsigned int dash_length_on,
                                unsigned int dash_length_off) {
   GooCanvasLineDash *dash;
   guint cap = CAIRO_LINE_CAP_BUTT;

@@ -44,10 +44,10 @@ public:
 class canvas_item_info_poly : public canvas_item_info_t {
 public:
   canvas_item_info_poly(canvas_t *cv, canvas_item_t *it, bool poly,
-                        unsigned int wd, const std::vector<lpos_t> &p);
+                        float wd, const std::vector<lpos_t> &p);
 
   bool is_polygon;
-  unsigned int width;
+  const float width;
   // stored as single items to save one size_t of memory per object
   const unsigned int num_points;
   const std::unique_ptr<lpos_t[]> points;

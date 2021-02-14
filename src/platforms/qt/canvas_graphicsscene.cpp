@@ -323,7 +323,7 @@ canvas_points_create(const std::vector<lpos_t> &points)
 }
 
 canvas_item_polyline *
-canvas_t::polyline_new(canvas_group_t group, const std::vector<lpos_t> &points, unsigned int width, color_t color)
+canvas_t::polyline_new(canvas_group_t group, const std::vector<lpos_t> &points, float width, color_t color)
 {
   auto *item = new ZoomedItem<QGraphicsPathItem>(this, group);
   item->setPath(canvas_points_create(points));
@@ -339,7 +339,7 @@ canvas_t::polyline_new(canvas_group_t group, const std::vector<lpos_t> &points, 
 }
 
 canvas_item_t *
-canvas_t::polygon_new(canvas_group_t group, const std::vector<lpos_t> &points, unsigned int width,
+canvas_t::polygon_new(canvas_group_t group, const std::vector<lpos_t> &points, float width,
                       color_t color, color_t fill)
 {
   QPolygonF cpoints(points.size());
@@ -435,7 +435,7 @@ canvas_item_t::set_zoom_max(float zoom_max)
 }
 
 void
-canvas_item_t::set_dashed(unsigned int line_width, unsigned int dash_length_on, unsigned int dash_length_off)
+canvas_item_t::set_dashed(float line_width, unsigned int dash_length_on, unsigned int dash_length_off)
 {
   auto *item = reinterpret_cast<QGraphicsItem *>(this);
 
@@ -444,7 +444,7 @@ canvas_item_t::set_dashed(unsigned int line_width, unsigned int dash_length_on, 
   auto *sitem = static_cast<QAbstractGraphicsShapeItem *>(item);
   auto pen = sitem->pen();
   pen.setDashPattern( { static_cast<qreal>(dash_length_on), static_cast<qreal>(dash_length_off) } );
-  pen.setWidth(line_width);
+  pen.setWidthF(line_width);
   sitem->setPen(pen);
 }
 

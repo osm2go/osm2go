@@ -276,9 +276,9 @@ void map_t::way_cut_highlight(map_item_t *item, lpos_t pos) {
     std::optional<unsigned int> seg = canvas->get_item_segment(item->item, pos);
     if(seg) {
       const way_t *way = static_cast<way_t *>(item->object);
-      unsigned int width = (way->draw.flags & OSM_DRAW_FLAG_BG) ?
-                           2 * way->draw.bg.width :
-                           3 * way->draw.width;
+      float width = (way->draw.flags & OSM_DRAW_FLAG_BG) ?
+                           2.0f * way->draw.bg.width :
+                           3.0f * way->draw.width;
       std::vector<lpos_t> coords(2);
       coords[0] = way->node_chain[*seg]->lpos;
       coords[1] = way->node_chain[*seg + 1]->lpos;
