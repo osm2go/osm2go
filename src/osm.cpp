@@ -796,9 +796,13 @@ xmlChar *osm_generate_xml_changeset(const std::string &comment,
 template<typename T> void osm_t::attachObject(T *obj)
 {
   std::map<item_id_t, T *> &map = objects<T>();
-  // the cast are needed to avoid the need for "typename" because these are templates in templates
-  assert_cmpnum(static_cast<item_id_t>(obj->id), ID_ILLEGAL);
-  assert_cmpnum(static_cast<unsigned int>(obj->version), 0);
+#ifndef NDEBUG
+  // the variables are needed to avoid the need for "typename" because these are templates in templates
+  item_id_t id = obj->id;
+  assert_cmpnum(id, ID_ILLEGAL);
+  unsigned int version = obj->version;
+  assert_cmpnum(version, 0);
+#endif
   if(map.empty()) {
     obj->id = -1;
   } else {
