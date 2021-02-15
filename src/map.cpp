@@ -220,7 +220,7 @@ void map_t::select_way(way_t *way) {
   appdata.iconbar->map_item_selected(selected.object);
   appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_MAP_HIDE_SEL, true);
 
-  const float arrow_width = (style->highlight.width + way->draw.drawWidth() / 2) *
+  const float arrow_width = (style->highlight.width + way->draw.drawWidth() / 2.0f) *
                             appdata.project->map_state.detail;
 
   const node_chain_t &node_chain = way->node_chain;
