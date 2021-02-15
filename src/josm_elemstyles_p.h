@@ -49,19 +49,19 @@ struct elemstyle_line_t {
     memset(this, 0, sizeof(*this));
   }
 
-  int width;
+  unsigned int width;
   color_t color;
   unsigned short dash_length_on;
   unsigned short dash_length_off;
 
   struct {
     bool valid : 8;
-    int width : 24;
+    unsigned int width : 24;
   } real;
 
   struct {
     bool valid: 8;
-    int width : 24;
+    unsigned int width : 24;
     color_t color;
   } bg;
 };
@@ -83,7 +83,7 @@ struct elemstyle_width_mod_t {
   }
 
   elemstyle_mod_mode_t mod:8;
-  int8_t width;
+  uint8_t width;
 } __attribute__ ((packed));
 
 struct elemstyle_line_mod_t {

@@ -315,14 +315,14 @@ public:
   struct {
     color_t color;
     unsigned int flags : 8;
-    int width : 8;
+    unsigned int width : 8;
     unsigned int dash_length_on: 8;
     unsigned int dash_length_off: 8;
 
     union {
       struct {
         unsigned int color;
-        int width;
+        unsigned int width;
       } bg;
 
       struct {

@@ -630,8 +630,8 @@ struct josm_elemstyles_colorize_node_functor {
   }
 };
 
-int
-line_mod_apply_width(int width, const elemstyle_width_mod_t *mod)
+unsigned int
+line_mod_apply_width(unsigned int width, const elemstyle_width_mod_t *mod)
 {
   switch(mod->mod) {
   case ES_MOD_NONE:
@@ -642,7 +642,10 @@ line_mod_apply_width(int width, const elemstyle_width_mod_t *mod)
     return width + mod->width;
 
   case ES_MOD_SUB:
-    return std::max(width - mod->width, 1);
+    if (unlikely(mod->width >= width))
+      return 1;
+    else
+      return width - mod->width;
 
   case ES_MOD_PERCENT:
     return 100 * width / mod->width;
