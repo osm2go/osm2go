@@ -621,15 +621,6 @@ josm_elemstyles_colorize_node(const style_t *style, node_t *node)
 
 namespace {
 
-struct josm_elemstyles_colorize_node_functor {
-  const style_t * const style;
-  explicit inline josm_elemstyles_colorize_node_functor(const style_t *s) : style(s) {}
-  inline void operator()(std::pair<item_id_t, node_t *> pair) const
-  {
-    josm_elemstyles_colorize_node(style, pair.second);
-  }
-};
-
 unsigned int
 line_mod_apply_width(unsigned int width, const elemstyle_width_mod_t *mod)
 {
@@ -652,30 +643,20 @@ line_mod_apply_width(unsigned int width, const elemstyle_width_mod_t *mod)
   }
 }
 
-struct josm_elemstyles_colorize_way_functor {
+struct apply_condition {
   const style_t * const style;
-  explicit inline josm_elemstyles_colorize_way_functor(const style_t *s) : style(s) {}
-  void operator()(way_t *way) const;
-  inline void operator()(std::pair<item_id_t, way_t *> pair) const
-  {
-    operator()(pair.second);
-  }
-
-  struct apply_condition {
-    const style_t * const style;
-    way_t * const way;
-    /* during the elemstyle search a line_mod may be found. save it here */
-    const elemstyle_line_mod_t **line_mod;
-    bool way_processed;
-    bool way_is_closed;
-    apply_condition(const style_t *s, way_t *w, const elemstyle_line_mod_t **l)
-      : style(s), way(w), line_mod(l), way_processed(false)
-      , way_is_closed(way->is_closed()) {}
-    void operator()(const elemstyle_t *elemstyle);
-  };
+  way_t * const way;
+  /* during the elemstyle search a line_mod may be found. save it here */
+  const elemstyle_line_mod_t **line_mod;
+  bool way_processed;
+  bool way_is_closed;
+  apply_condition(const style_t *s, way_t *w, const elemstyle_line_mod_t **l)
+    : style(s), way(w), line_mod(l), way_processed(false)
+    , way_is_closed(way->is_closed()) {}
+  void operator()(const elemstyle_t *elemstyle);
 };
 
-void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const elemstyle_t* elemstyle)
+void apply_condition::operator()(const elemstyle_t* elemstyle)
 {
   /* this entry does not contain line or area descriptions and is */
   /* likely just an icon. ignore this as it doesn't make much sense */
@@ -733,7 +714,9 @@ void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const ele
   }
 }
 
-void josm_elemstyles_colorize_way_functor::operator()(way_t *way) const
+} // namespace
+
+void josm_elemstyles_colorize_way(const style_t *style, way_t *way)
 {
   /* use dark grey/no stroke/not filled for everything unknown */
   way->draw.color = style->way.color;
@@ -772,25 +755,4 @@ void josm_elemstyles_colorize_way_functor::operator()(way_t *way) const
     if(!line_mod->color.is_transparent())
       way->draw.color = line_mod->color;
   }
-}
-
-} // namespace
-
-void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
-  josm_elemstyles_colorize_way_functor f(style);
-  f(way);
-}
-
-void
-josm_elemstyles_colorize_world(const style_t *styles, osm_t::ref osm)
-{
-  printf("preparing colors\n");
-
-  /* colorize ways */
-  std::for_each(osm->ways.begin(), osm->ways.end(),
-      josm_elemstyles_colorize_way_functor(styles));
-
-  /* icons */
-  std::for_each(osm->nodes.begin(), osm->nodes.end(),
-      josm_elemstyles_colorize_node_functor(styles));
 }

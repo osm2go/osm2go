@@ -323,11 +323,6 @@ void style_t::colorize(way_t *w) const
   josm_elemstyles_colorize_way(this, w);
 }
 
-void style_t::colorize_world(osm_t::ref osm)
-{
-  josm_elemstyles_colorize_world(this, osm);
-}
-
 void style_change(appdata_t &appdata, const std::string &style_path)
 {
   const std::string &new_style = style_basename(style_path);

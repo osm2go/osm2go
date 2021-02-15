@@ -399,10 +399,12 @@ static map_item_t *map_way_new(map_t *map, canvas_group_t group,
 
 class map_way_draw_functor {
   map_t * const map;
+  const style_t * const style;
 public:
-  explicit inline map_way_draw_functor(map_t *m) : map(m) {}
+  explicit inline map_way_draw_functor(map_t *m, const style_t *s = nullptr) : map(m), style(s) {}
   void operator()(way_t *way);
   inline void operator()(std::pair<item_id_t, way_t *> pair) {
+    style->colorize(pair.second);
     operator()(pair.second);
   }
 };
@@ -479,16 +481,19 @@ class map_node_draw_functor {
   map_t * const map;
   const float border_width;
   const float radius;
+  const style_t * const style;
 public:
-  explicit inline map_node_draw_functor(map_t *m)
+  explicit inline map_node_draw_functor(map_t *m, const style_t *s = nullptr)
   : map(m)
   , border_width(map->style->node.border_radius * map->appdata.project->map_state.detail)
   , radius(map->style->node.radius * map->appdata.project->map_state.detail)
+  , style(s)
   {
   }
 
   void operator()(node_t *node);
   inline void operator()(std::pair<item_id_t, node_t *> pair) {
+    style->colorize(pair.second);
     operator()(pair.second);
   }
 };
@@ -1166,15 +1171,13 @@ void map_t::clear(clearLayers layers) {
 void map_t::paint() {
   osm_t::ref osm = appdata.project->osm;
 
-  style->colorize_world(osm);
-
   assert(canvas != nullptr);
 
   printf("drawing ways ...\n");
-  std::for_each(osm->ways.begin(), osm->ways.end(), map_way_draw_functor(this));
+  std::for_each(osm->ways.begin(), osm->ways.end(), map_way_draw_functor(this, style.get()));
 
   printf("drawing single nodes ...\n");
-  std::for_each(osm->nodes.begin(), osm->nodes.end(), map_node_draw_functor(this));
+  std::for_each(osm->nodes.begin(), osm->nodes.end(), map_node_draw_functor(this, style.get()));
 
   printf("drawing frisket...\n");
   map_frisket_draw(this, osm->bounds);

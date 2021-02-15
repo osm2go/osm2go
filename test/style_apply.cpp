@@ -27,6 +27,30 @@ appdata_t::appdata_t()
 {
 }
 
+namespace {
+
+struct colorizer {
+  const style_t * const style;
+  explicit inline colorizer(const style_t *s) : style(s) {}
+  inline void operator()(const std::pair<const item_id_t, node_t *> &pair) const
+  {
+    style->colorize(pair.second);
+  }
+  inline void operator()(const std::pair<const item_id_t, way_t *> &pair) const
+  {
+    style->colorize(pair.second);
+  }
+};
+
+void
+colorize_world(const style_t *style, osm_t::ref osm)
+{
+  std::for_each(osm->ways.begin(), osm->ways.end(), colorizer(style));
+  std::for_each(osm->nodes.begin(), osm->nodes.end(), colorizer(style));
+}
+
+} // namespace
+
 int main(int argc, char **argv)
 {
   OSM2GO_TEST_INIT(argc, argv);
@@ -100,7 +124,7 @@ int main(int argc, char **argv)
   tags.insert(osm_t::TagMap::value_type("addr:housenumber", "42"));
   node->tags.replace(tags);
 
-  style->colorize_world(osm);
+  colorize_world(style, osm);
 
   assert(!style->node_icons.empty());
   assert(style->node_icons[node->id] != nullptr);
@@ -109,7 +133,7 @@ int main(int argc, char **argv)
 
   way_t * const way = osm->attach(new way_t());
 
-  style->colorize_world(osm);
+  colorize_world(style, osm);
   // default values for all ways set in test1.style
   way_t w0;
   w0.draw.width = 3;
@@ -175,7 +199,7 @@ int main(int argc, char **argv)
   oldicon = style->node_icons[node->id];
   oldzoom = node->zoom_max;
 
-  style->colorize_world(osm);
+  colorize_world(style, osm);
   assert_cmpnum(way->draw.color, 0xccccccff);
   assert_cmpnum(way->draw.area.color, 0);
   assert_cmpnum(way->draw.width, 1);
@@ -199,7 +223,7 @@ int main(int argc, char **argv)
   oldicon = style->node_icons[node->id];
   // zoom should stay the same, but still be different than before
 
-  style->colorize_world(osm);
+  colorize_world(style, osm);
   assert_cmpnum(way->draw.color, 0xaaaaaaff);
   assert_cmpnum(way->draw.area.color, 0);
   assert_cmpnum(way->draw.width, 2);

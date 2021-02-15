@@ -82,7 +82,6 @@ struct style_t {
 
   void colorize(node_t *n) const;
   void colorize(way_t *w) const;
-  void colorize_world(osm_t::ref osm);
 
   static style_t *load(const std::string &name);
 };
