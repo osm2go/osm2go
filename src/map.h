@@ -142,6 +142,7 @@ public:
   void select_relation(relation_t *relation);
   template<typename T> void redraw_item(T *obj);
   void draw(way_t *way);
+  void drawColorized(way_t *way);
   void select_way(way_t *way);
   void set_action(map_action_t act);
   bool item_is_selected_way(const map_item_t *map_item) const;

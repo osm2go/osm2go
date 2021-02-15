@@ -466,6 +466,15 @@ void map_t::draw(way_t *way) {
   m(way);
 }
 
+/**
+ * @brief recalculate the style and draw the way
+ */
+void map_t::drawColorized(way_t* way)
+{
+  style->colorize(way);
+  draw(way);
+}
+
 class map_node_draw_functor {
   map_t * const map;
   const float border_width;

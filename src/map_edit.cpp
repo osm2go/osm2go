@@ -121,8 +121,7 @@ void map_t::way_add_segment(lpos_t pos) {
   }
 
   /* draw current way */
-  style->colorize(action.way.get());
-  draw(action.way.get());
+  drawColorized(action.way.get());
 }
 
 static void map_unref_ways(node_t *node)
@@ -347,13 +346,11 @@ void map_t::way_cut(lpos_t pos) {
   printf("original way still has %zu nodes\n", way->node_chain.size());
 
   /* draw the updated old way */
-  style->colorize(way);
-  draw(way);
+  drawColorized(way);
 
   if(neww != nullptr) {
     /* colorize the new way before drawing */
-    style->colorize(neww);
-    draw(neww);
+    drawColorized(neww);
   }
 
   /* put gui into idle state */
@@ -386,8 +383,7 @@ void redraw_way::operator()(const std::pair<item_id_t, way_t *> &p)
   printf("  node is part of way #" ITEM_ID_FORMAT ", redraw!\n", way->id);
 
   /* draw current way */
-  map->style->colorize(way);
-  map->draw(way);
+  map->drawColorized(way);
 }
 
 void map_t::node_move(map_item_t *map_item, const osm2go_platform::screenpos &p)
