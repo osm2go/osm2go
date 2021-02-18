@@ -74,8 +74,7 @@ void test_draw_deleted(const std::string &tmpdir)
 {
   appdata_t a;
   a.project.reset(new project_t("foo", tmpdir));
-  std::unique_ptr<map_t> m(std::make_unique<test_map>(a));
-  m->style.reset(new style_t());
+  std::unique_ptr<map_t> m(std::make_unique<test_map>(a, nullptr, test_map::InvalidStyle));
   a.project->osm.reset(new osm_t());
   osm_t::ref o = a.project->osm;
   set_bounds(o);
@@ -108,8 +107,7 @@ void test_draw_hidden(const std::string &tmpdir)
 {
   appdata_t a;
   a.project.reset(new project_t("foo", tmpdir));
-  std::unique_ptr<map_t> m(std::make_unique<test_map>(a));
-  m->style.reset(new style_t());
+  std::unique_ptr<map_t> m(std::make_unique<test_map>(a, nullptr, test_map::EmptyStyle));
   a.project->osm.reset(new osm_t());
   osm_t::ref o = a.project->osm;
   set_bounds(o);
@@ -167,8 +165,7 @@ void test_map_item_deleter(const std::string &tmpdir)
 {
   appdata_t a;
   a.project.reset(new project_t("foo", tmpdir));
-  std::unique_ptr<map_t> m(std::make_unique<test_map>(a));
-  m->style.reset(new style_t());
+  std::unique_ptr<map_t> m(std::make_unique<test_map>(a, nullptr, test_map::InvalidStyle));
   a.project->osm.reset(new osm_t());
   osm_t::ref o = a.project->osm;
   set_bounds(o);
@@ -189,8 +186,7 @@ void test_map_deselect(const std::string &tmpdir)
 {
   appdata_t a;
   a.project.reset(new project_t("foo", tmpdir));
-  std::unique_ptr<map_t> m(std::make_unique<test_map>(a));
-  m->style.reset(new style_t());
+  std::unique_ptr<map_t> m(std::make_unique<test_map>(a, nullptr, test_map::InvalidStyle));
   a.project->osm.reset(new osm_t());
   osm_t::ref o = a.project->osm;
   set_bounds(o);
@@ -212,8 +208,7 @@ void test_way_add_cancel_map(const std::string &tmpdir)
 {
   appdata_t a;
   a.project.reset(new project_t("foo", tmpdir));
-  std::unique_ptr<map_t> m(std::make_unique<test_map>(a));
-  m->style.reset(new style_t());
+  std::unique_ptr<map_t> m(std::make_unique<test_map>(a, nullptr, test_map::InvalidStyle));
   a.project->osm.reset(new osm_t());
   osm_t::ref o = a.project->osm;
   set_bounds(o);
@@ -247,8 +242,7 @@ void test_node_add_cancel_map(const std::string &tmpdir)
 {
   appdata_t a;
   a.project.reset(new project_t("foo", tmpdir));
-  std::unique_ptr<map_t> m(std::make_unique<test_map>(a));
-  m->style.reset(new style_t());
+  std::unique_ptr<map_t> m(std::make_unique<test_map>(a, nullptr, test_map::InvalidStyle));
   a.project->osm.reset(new osm_t());
   osm_t::ref o = a.project->osm;
   set_bounds(o);
@@ -282,8 +276,7 @@ void test_node_add_ok_map(const std::string &tmpdir)
 {
   appdata_t a;
   a.project.reset(new project_t("foo", tmpdir));
-  std::unique_ptr<map_t> m(std::make_unique<test_map>(a));
-  m->style.reset(new style_t());
+  std::unique_ptr<map_t> m(std::make_unique<test_map>(a, nullptr, test_map::InvalidStyle));
   a.project->osm.reset(new osm_t());
   osm_t::ref o = a.project->osm;
   set_bounds(o);
@@ -318,8 +311,7 @@ void test_map_detail(const std::string &tmpdir)
   appdata_t a;
   a.project.reset(new project_t("foo", tmpdir));
   canvas_holder canvas;
-  std::unique_ptr<map_t> m(std::make_unique<test_map>(a, *canvas));
-  m->style.reset(new style_t());
+  std::unique_ptr<map_t> m(std::make_unique<test_map>(a, *canvas, test_map::InvalidStyle));
   a.project->osm.reset(new osm_t());
   osm_t::ref o = a.project->osm;
   set_bounds(o);
@@ -357,8 +349,7 @@ void test_map_item_at_empty(const std::string &tmpdir)
   appdata_t a;
   a.project.reset(new project_t("foo", tmpdir));
   canvas_holder canvas;
-  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas));
-  m->style.reset(new style_t());
+  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas, test_map::InvalidStyle));
   a.project->osm.reset(new osm_t());
   osm_t::ref o = a.project->osm;
   set_bounds(o);
@@ -375,8 +366,7 @@ void test_map_press_idle(const std::string &tmpdir)
   appdata_t a;
   a.project.reset(new project_t("foo", tmpdir));
   canvas_holder canvas;
-  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas));
-  m->style.reset(new style_t());
+  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas, test_map::InvalidStyle));
   a.project->osm.reset(new osm_t());
   osm_t::ref o = a.project->osm;
   set_bounds(o);
@@ -403,8 +393,7 @@ void test_map_drag_idle(const std::string &tmpdir)
   appdata_t a;
   a.project.reset(new project_t("foo", tmpdir));
   canvas_holder canvas;
-  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas));
-  m->style.reset(new style_t());
+  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas, test_map::InvalidStyle));
   a.project->osm.reset(new osm_t());
   osm_t::ref o = a.project->osm;
   set_bounds(o);
@@ -437,8 +426,7 @@ void test_map_press_way_add_cancel(const std::string &tmpdir)
   appdata_t a;
   a.project.reset(new project_t("foo", tmpdir));
   canvas_holder canvas;
-  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas));
-  m->style.reset(new style_t());
+  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas, test_map::EmptyStyle));
   a.project->osm.reset(new osm_t());
   osm_t::ref o = a.project->osm;
   set_bounds(o);
@@ -510,8 +498,7 @@ void test_map_node_create_outside(const std::string &tmpdir)
   appdata_t a;
   a.project.reset(new project_t("foo", tmpdir));
   canvas_holder canvas;
-  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas));
-  m->style.reset(new style_t());
+  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas, test_map::InvalidStyle));
   a.project->osm.reset(new osm_t());
   osm_t::ref o = a.project->osm;
   set_bounds(o);
@@ -564,8 +551,7 @@ void test_map_reverse(const std::string &tmpdir)
   appdata_t a;
   a.project.reset(new project_t("foo", tmpdir));
   canvas_holder canvas;
-  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas));
-  m->style.reset(new style_t());
+  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas, test_map::InvalidStyle));
   a.project->osm.reset(new osm_t());
   osm_t::ref o = a.project->osm;
   set_bounds(o);

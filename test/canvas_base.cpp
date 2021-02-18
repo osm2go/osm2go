@@ -36,11 +36,10 @@ void testBackground()
 
   appdata_t a;
   canvas_holder canvas;
-  std::unique_ptr<map_t> m(std::make_unique<test_map>(a, *canvas));
+  std::unique_ptr<map_t> m(std::make_unique<test_map>(a, *canvas, test_map::InvalidStyle));
   a.project.reset(new project_t("test_proj", tmpdir));
   a.project->osm.reset(new osm_t());
   set_bounds(a.project->osm);
-  m->style.reset(new style_t());
   a.track.track.reset(new track_t());
   MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
 

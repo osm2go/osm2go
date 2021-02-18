@@ -4,6 +4,7 @@
 #include <gps_state.h>
 #include <icon.h>
 #include <map.h>
+#include <style.h>
 #include <uicontrol.h>
 
 #include <cstdlib>
@@ -79,7 +80,21 @@ appdata_t::appdata_t()
 
 class test_map: public map_t {
 public:
-  explicit test_map(appdata_t &a, canvas_t *cv = nullptr) : map_t(a, cv) {}
+  enum Flags {
+    MapDefaults = 0,
+    InvalidStyle = 0x1,   ///< the style is empty and must not be used for colorization
+    EmptyStyle = 0x2      ///< the style is empty and will do nothing
+  };
+
+  explicit test_map(appdata_t &a, canvas_t *cv = nullptr, unsigned int flags = MapDefaults)
+    : map_t(a, cv)
+  {
+    assert((flags & (InvalidStyle | EmptyStyle)) != (InvalidStyle | EmptyStyle));
+    if (flags & InvalidStyle)
+      style.reset(new style_t());
+    else if (flags & EmptyStyle)
+      style.reset(new style_t());
+  }
 
   void set_autosave(bool) override { abort(); }
 
@@ -133,3 +148,10 @@ public:
     way_reverse();
   }
 };
+
+#if __cplusplus < 201402L
+namespace std {
+  template<typename _Tp>
+  inline _Tp *make_unique(appdata_t &a, canvas_t *v, test_map::Flags w) { return new _Tp(a, v, w); }
+}
+#endif
