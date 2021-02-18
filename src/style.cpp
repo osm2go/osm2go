@@ -35,7 +35,10 @@
 #error "libxml doesn't support required tree or output"
 #endif
 
-static float parse_scale_max(xmlNodePtr cur_node) {
+namespace {
+
+float parse_scale_max(xmlNodePtr cur_node)
+{
   float scale_max = xml_get_prop_float(cur_node, "scale-max");
   if (!std::isnan(scale_max))
     return scaledn_to_zoom(scale_max);
@@ -43,7 +46,8 @@ static float parse_scale_max(xmlNodePtr cur_node) {
     return 0.0f;
 }
 
-static void parse_style_node(xmlNode *a_node, xmlString *fname, style_t &style) {
+void parse_style_node(xmlNode *a_node, xmlString *fname, style_t &style)
+{
   /* -------------- setup defaults -------------------- */
   /* (the defaults are pretty much the potlatch style) */
   style.area.border_width      = 2.0;
@@ -163,7 +167,7 @@ static void parse_style_node(xmlNode *a_node, xmlString *fname, style_t &style) 
  *
  * fname may be nullptr when name_only is true
  */
-static bool style_parse(const std::string &fullname, xmlString *fname, style_t &style)
+bool style_parse(const std::string &fullname, xmlString *fname, style_t &style)
 {
   xmlDocGuard doc(xmlReadFile(fullname.c_str(), nullptr, XML_PARSE_NONET));
   bool ret = false;
@@ -194,14 +198,16 @@ static bool style_parse(const std::string &fullname, xmlString *fname, style_t &
   return ret;
 }
 
+} // namespace
+
 style_t *style_load_fname(const std::string &filename) {
   xmlString fname;
-  std::unique_ptr<style_t> style(std::make_unique<style_t>());
+  std::unique_ptr<josm_elemstyle> style(std::make_unique<josm_elemstyle>());
 
   if(likely(style_parse(filename, &fname, *style))) {
     printf("  elemstyle filename: %s\n", static_cast<const char *>(fname));
-    style->elemstyles = josm_elemstyles_load(fname);
-    return style.release();
+    if (style->load_elemstyles(fname))
+      return style.release();
   }
 
   return nullptr;
@@ -275,7 +281,7 @@ std::map<std::string, std::string> style_scan() {
 
       fullname = it->path() + d->d_name;
 
-      style_t style;
+      josm_elemstyle style;
       if(likely(style_parse(fullname, nullptr, style)))
         ret[style.name].swap(fullname);
     }
@@ -307,20 +313,7 @@ style_t::~style_t()
 {
   printf("freeing style\n");
 
-  josm_elemstyles_free(elemstyles);
-
   std::for_each(node_icons.begin(), node_icons.end(), unref_icon);
-}
-
-void
-style_t::colorize(node_t *n) const
-{
-  josm_elemstyles_colorize_node(this, n);
-}
-
-void style_t::colorize(way_t *w) const
-{
-  josm_elemstyles_colorize_way(this, w);
 }
 
 void style_change(appdata_t &appdata, const std::string &style_path)

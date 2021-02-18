@@ -55,7 +55,7 @@ struct appdata_t;
 class canvas_t;
 struct canvas_item_circle;
 struct canvas_item_t;
-struct style_t;
+class style_t;
 struct track_seg_t;
 struct track_t;
 

@@ -474,30 +474,31 @@ void StyleSax::endElement(const xmlChar *name)
 
 } // namespace
 
-std::vector<elemstyle_t *> josm_elemstyles_load(const char *name) {
-  printf("Loading JOSM elemstyles %s ...\n", name);
+bool josm_elemstyle::load_elemstyles(const char *fname)
+{
+  printf("Loading JOSM elemstyles %s ...\n", fname);
 
-  std::vector<elemstyle_t *> ret;
-  const std::string &filename = find_file(name);
+  const std::string &filename = find_file(fname);
   if(unlikely(filename.empty())) {
     printf("elemstyle file not found\n");
-    return ret;
+    return false;
   }
 
   StyleSax sx;
-  if(unlikely(!sx.parse(filename)))
+  if(unlikely(!sx.parse(filename))) {
     fprintf(stderr, "error parsing elemstyles\n");
-  else
-    ret.swap(sx.styles);
-
-  return ret;
+    return false;
+  } else {
+    elemstyles.swap(sx.styles);
+    return true;
+  }
 }
 
 /* ----------------------- cleaning up --------------------- */
 
-void josm_elemstyles_free(std::vector<elemstyle_t *> &elemstyles) {
+josm_elemstyle::~josm_elemstyle()
+{
   std::for_each(elemstyles.begin(), elemstyles.end(), std::default_delete<elemstyle_t>());
-  elemstyles.clear();
 }
 
 #define WIDTH_SCALE (1)
@@ -603,20 +604,20 @@ void colorize_node::operator()(const elemstyle_t *elemstyle)
 } // namespace
 
 void
-josm_elemstyles_colorize_node(const style_t *style, node_t *node)
+josm_elemstyle::colorize(node_t *n) const
 {
-  node->zoom_max = style->node.zoom_max;
+  n->zoom_max = node.zoom_max;
 
   bool somematch = false;
   icon_t &icons = icon_t::instance();
-  if(style->icon.enable) {
-    colorize_node fc(style, node, somematch, icons);
-    std::for_each(style->elemstyles.begin(), style->elemstyles.end(), fc);
+  if(icon.enable) {
+    colorize_node fc(this, n, somematch, icons);
+    std::for_each(elemstyles.begin(), elemstyles.end(), fc);
   }
 
   /* clear icon for node if not matched at least one rule and has an icon attached */
   if(!somematch)
-    node_icon_unref(style, node, icons);
+    node_icon_unref(this, n, icons);
 }
 
 namespace {
@@ -716,43 +717,43 @@ void apply_condition::operator()(const elemstyle_t* elemstyle)
 
 } // namespace
 
-void josm_elemstyles_colorize_way(const style_t *style, way_t *way)
+void josm_elemstyle::colorize(way_t *w) const
 {
   /* use dark grey/no stroke/not filled for everything unknown */
-  way->draw.color = style->way.color;
-  way->draw.width = style->way.width;
-  way->draw.flags = 0;
-  way->zoom_max = 0;   // draw at all zoom levels
+  w->draw.color = way.color;
+  w->draw.width = way.width;
+  w->draw.flags = 0;
+  w->zoom_max = 0;   // draw at all zoom levels
 
   /* during the elemstyle search a line_mod may be found. save it here */
   const elemstyle_line_mod_t *line_mod = nullptr;
-  apply_condition fc(style, way, &line_mod);
+  apply_condition fc(this, w, &line_mod);
 
-  std::for_each(style->elemstyles.begin(), style->elemstyles.end(), fc);
+  std::for_each(elemstyles.begin(), elemstyles.end(), fc);
 
   // If this is an area the previous run has done the area style. Run again
   // for the line style of the outer way.
   if(fc.way_is_closed) {
     fc.way_processed = false;
     fc.way_is_closed = false;
-    std::for_each(style->elemstyles.begin(), style->elemstyles.end(), fc);
+    std::for_each(elemstyles.begin(), elemstyles.end(), fc);
   }
 
   /* apply the last line mod entry that has been found during search */
   if(line_mod != nullptr) {
-    way->draw.width = line_mod_apply_width(way->draw.width, &line_mod->line);
+    w->draw.width = line_mod_apply_width(w->draw.width, &line_mod->line);
 
     /* special case: the way does not have a background, but it is to */
     /* be modified */
-    if(line_mod->bg.mod != ES_MOD_NONE && !(way->draw.flags & OSM_DRAW_FLAG_BG)) {
+    if(line_mod->bg.mod != ES_MOD_NONE && !(w->draw.flags & OSM_DRAW_FLAG_BG)) {
       /* add a background in black color */
-      way->draw.flags |= OSM_DRAW_FLAG_BG;
-      way->draw.bg.color = color_t::black();
-      way->draw.bg.width =  way->draw.width;
+      w->draw.flags |= OSM_DRAW_FLAG_BG;
+      w->draw.bg.color = color_t::black();
+      w->draw.bg.width =  w->draw.width;
     }
 
-    way->draw.bg.width = line_mod_apply_width(way->draw.bg.width, &line_mod->bg);
+    w->draw.bg.width = line_mod_apply_width(w->draw.bg.width, &line_mod->bg);
     if(!line_mod->color.is_transparent())
-      way->draw.color = line_mod->color;
+      w->draw.color = line_mod->color;
   }
 }

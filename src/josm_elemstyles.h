@@ -7,6 +7,7 @@
 #pragma once
 
 #include "osm.h"
+#include "style.h"
 
 #include <libxml/tree.h>
 
@@ -14,7 +15,7 @@
 
 class color_t;
 struct elemstyle_t;
-struct style_t;
+class style_t;
 
 // Ratio conversions
 
@@ -29,9 +30,17 @@ typedef enum {
 
 #define DEFAULT_DASH_LENGTH 0
 
-std::vector<elemstyle_t *> josm_elemstyles_load(const char *name);
-void josm_elemstyles_free(std::vector<elemstyle_t *> &elemstyles);
 bool parse_color(xmlNode *a_node, const char *name, color_t &color);
 
-void josm_elemstyles_colorize_node(const style_t *style, node_t *node);
-void josm_elemstyles_colorize_way(const style_t *style, way_t *way);
+class josm_elemstyle : public style_t {
+public:
+  josm_elemstyle() {}
+  ~josm_elemstyle() override;
+
+  bool load_elemstyles(const char *fname);
+
+  void colorize(node_t *n) const override;
+  void colorize(way_t *w) const override;
+
+  std::vector<elemstyle_t *> elemstyles;
+};

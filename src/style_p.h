@@ -7,7 +7,7 @@
 #pragma once
 
 struct appdata_t;
-struct style_t;
+class style_t;
 
 #include <map>
 #include <string>

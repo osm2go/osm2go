@@ -11,15 +11,14 @@
 #include "osm.h"
 
 #include <string>
-#include <vector>
 #include <unordered_map>
 
 struct appdata_t;
-struct elemstyle_t;
 
-struct style_t {
+class style_t {
+public:
   explicit style_t();
-  ~style_t();
+  virtual ~style_t();
 
   std::string name;
 
@@ -75,13 +74,11 @@ struct style_t {
     color_t color;
   } background;
 
-  std::vector<elemstyle_t *> elemstyles;
-
   typedef std::unordered_map<item_id_t, icon_item *> IconCache;
   mutable IconCache node_icons;
 
-  void colorize(node_t *n) const;
-  void colorize(way_t *w) const;
+  virtual void colorize(node_t *n) const = 0;
+  virtual void colorize(way_t *w) const = 0;
 
   static style_t *load(const std::string &name);
 };

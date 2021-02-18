@@ -19,6 +19,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <iostream>
+#include <memory>
 
 appdata_t::appdata_t()
   : uicontrol(nullptr)
@@ -64,9 +65,9 @@ int main(int argc, char **argv)
 
   appdata_t appdata;
 
-  style_t *style = style_t::load(argv[1]);
+  std::unique_ptr<josm_elemstyle> style(static_cast<josm_elemstyle *>(style_t::load(argv[1])));
 
-  if(style == nullptr) {
+  if(!style) {
     std::cerr << "failed to load styles" << std::endl;
     return 1;
   }
@@ -124,7 +125,7 @@ int main(int argc, char **argv)
   tags.insert(osm_t::TagMap::value_type("addr:housenumber", "42"));
   node->tags.replace(tags);
 
-  colorize_world(style, osm);
+  colorize_world(style.get(), osm);
 
   assert(!style->node_icons.empty());
   assert(style->node_icons[node->id] != nullptr);
@@ -133,7 +134,7 @@ int main(int argc, char **argv)
 
   way_t * const way = osm->attach(new way_t());
 
-  colorize_world(style, osm);
+  colorize_world(style.get(), osm);
   // default values for all ways set in test1.style
   way_t w0;
   w0.draw.width = 3;
@@ -199,7 +200,7 @@ int main(int argc, char **argv)
   oldicon = style->node_icons[node->id];
   oldzoom = node->zoom_max;
 
-  colorize_world(style, osm);
+  colorize_world(style.get(), osm);
   assert_cmpnum(way->draw.color, 0xccccccff);
   assert_cmpnum(way->draw.area.color, 0);
   assert_cmpnum(way->draw.width, 1);
@@ -223,7 +224,7 @@ int main(int argc, char **argv)
   oldicon = style->node_icons[node->id];
   // zoom should stay the same, but still be different than before
 
-  colorize_world(style, osm);
+  colorize_world(style.get(), osm);
   assert_cmpnum(way->draw.color, 0xaaaaaaff);
   assert_cmpnum(way->draw.area.color, 0);
   assert_cmpnum(way->draw.width, 2);
@@ -237,8 +238,6 @@ int main(int argc, char **argv)
   // test1.xml says color #bbb, test1.style says color 0x00000066
   assert_cmpnum(area->draw.area.color, 0xbbbbbb66);
   assert_cmpnum(area->draw.width, 2);
-
-  delete style;
 
   xmlCleanupParser();
 

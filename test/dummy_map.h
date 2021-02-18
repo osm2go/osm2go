@@ -3,6 +3,7 @@
 #include <appdata.h>
 #include <gps_state.h>
 #include <icon.h>
+#include <josm_elemstyles.h>
 #include <map.h>
 #include <style.h>
 #include <uicontrol.h>
@@ -70,6 +71,21 @@ public:
   { abort(); }
 };
 
+class invalid_style : public style_t {
+public:
+    invalid_style() {}
+    ~invalid_style() override {}
+
+  void colorize(node_t *) const override
+  {
+    abort();
+  }
+  void colorize(way_t *) const override
+  {
+    abort();
+  }
+};
+
 appdata_t::appdata_t()
   : uicontrol(new MainUiDummy())
   , map(nullptr)
@@ -91,9 +107,9 @@ public:
   {
     assert((flags & (InvalidStyle | EmptyStyle)) != (InvalidStyle | EmptyStyle));
     if (flags & InvalidStyle)
-      style.reset(new style_t());
+      style.reset(new invalid_style());
     else if (flags & EmptyStyle)
-      style.reset(new style_t());
+      style.reset(new josm_elemstyle());
   }
 
   void set_autosave(bool) override { abort(); }

@@ -19,7 +19,7 @@ class map_t;
 class osm_t;
 class presets_items;
 struct project_t;
-struct style_t;
+class style_t;
 struct track_t;
 
 struct appdata_t {

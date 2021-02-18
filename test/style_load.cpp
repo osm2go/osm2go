@@ -99,12 +99,14 @@ int main(int argc, char **argv)
 
   xmlInitParser();
 
-  std::vector<elemstyle_t *> styles = josm_elemstyles_load(argv[1]);
+  josm_elemstyle jstyle;
 
-  if(styles.empty()) {
+  if(!jstyle.load_elemstyles(argv[1])) {
     std::cerr << "failed to load styles" << std::endl;
     return 1;
   }
+
+  const std::vector<elemstyle_t *> &styles = jstyle.elemstyles;
 
   std::cout << styles.size() << " top level items found";
   if (styles.size() != rules) {
@@ -131,7 +133,6 @@ int main(int argc, char **argv)
   }
   std::cout << std::endl;
 
-  josm_elemstyles_free(styles);
   xmlCleanupParser();
 
   return error ? 1 : 0;
