@@ -391,7 +391,7 @@ testRename(const std::string &tmpdir, const char *diff_file)
     assert(b);
 
     unsigned int u = project->diff_restore();
-    assert_cmpnum(u, 0);
+    assert_cmpnum(u, DIFF_ELEMENTS_IGNORED);
 
     // remove diff and check it's really gone
     project->diff_remove_file();
@@ -413,7 +413,7 @@ testRename(const std::string &tmpdir, const char *diff_file)
 
     // this should warn
     u = project->diff_restore();
-    assert_cmpnum(u, DIFF_PROJECT_MISMATCH);
+    assert_cmpnum(u, DIFF_PROJECT_MISMATCH | DIFF_ELEMENTS_IGNORED);
 
     project_delete(project);
   }

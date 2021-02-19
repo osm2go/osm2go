@@ -25,7 +25,7 @@ static void verify_diff(osm_t::ref osm)
 {
   assert_cmpnum(12, osm->nodes.size());
   assert_cmpnum(3, osm->ways.size());
-  assert_cmpnum(4, osm->relations.size());
+  assert_cmpnum(5, osm->relations.size());
 
   // new tag added in diff
   const node_t * const n72 = osm->object_by_id<node_t>(638499572);
@@ -113,6 +113,20 @@ static void verify_diff(osm_t::ref osm)
   assert(r255 != nullptr);
   assert_cmpnum(r255->flags, OSM_FLAG_DIRTY);
   assert_cmpnum(r255->members.size(), 164);
+
+  // diff is the same as original
+  const relation_t * const r716 = osm->object_by_id<relation_t>(1939716);
+  assert(r716 != nullptr);
+  assert_cmpnum(r716->flags, 0);
+
+  const relation_t * const r091 = osm->object_by_id<relation_t>(1947091);
+  assert(r091 != nullptr);
+  const relation_t * const or091 = osm->originalObject(r091);
+  assert(or091 != nullptr);
+  assert_cmpnum(r091->flags, OSM_FLAG_DIRTY);
+  assert(r091->members == or091->members);
+  assert_cmpstr(r091->tags.get_value("note"), "tags changed");
+
   const object_t r255m572(const_cast<node_t *>(n72));
   std::vector<member_t>::const_iterator r255it = r255->find_member_object(r255m572);
   r255it = r255->find_member_object(r255m572);
@@ -215,14 +229,14 @@ int main(int argc, char **argv)
 
   assert_cmpnum(10, osm->nodes.size());
   assert_cmpnum(3, osm->ways.size());
-  assert_cmpnum(4, osm->relations.size());
+  assert_cmpnum(5, osm->relations.size());
 
   assert(osm->is_clean(true));
   verify_osm_db::run(osm);
 
   assert(project.diff_file_present());
   unsigned int flags = project.diff_restore();
-  assert_cmpnum(flags, DIFF_RESTORED | DIFF_HAS_HIDDEN);
+  assert_cmpnum(flags, DIFF_RESTORED | DIFF_HAS_HIDDEN | DIFF_ELEMENTS_IGNORED);
 
   verify_diff(osm);
   verify_osm_db::run(osm);
