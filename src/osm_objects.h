@@ -390,7 +390,7 @@ public:
    * @param coords the coordinates of the new node
    * @returns the new node, already attached to osm
    */
-  node_t *insert_node(osm_t::ref osm, int position, lpos_t coords);
+  node_t *insert_node(osm_t::ref osm, unsigned int position, lpos_t coords);
 
 private:
   bool merge(way_t *other, osm_t *osm, map_t *map, const std::vector<relation_t *> &rels = std::vector<relation_t *>());

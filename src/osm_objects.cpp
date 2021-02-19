@@ -282,7 +282,7 @@ bool way_t::ends_with_node(const node_t *node) const noexcept
          node_chain.back()  == node;
 }
 
-node_t *way_t::insert_node(osm_t::ref osm, int position, lpos_t coords)
+node_t *way_t::insert_node(osm_t::ref osm, unsigned int position, lpos_t coords)
 {
   node_t *node = osm->node_new(coords);
   osm->attach(node);
