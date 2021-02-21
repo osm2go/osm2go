@@ -2,6 +2,7 @@
 
 #include <appdata.h>
 #include <diff.h>
+#include "dummy_map.h"
 #include <icon.h>
 #include <map.h>
 #include <misc.h>
@@ -21,7 +22,9 @@
 #include <osm2go_cpp.h>
 #include <osm2go_platform.h>
 
-static void verify_diff(osm_t::ref osm)
+namespace {
+
+void verify_diff(osm_t::ref osm)
 {
   assert_cmpnum(12, osm->nodes.size());
   assert_cmpnum(3, osm->ways.size());
@@ -144,7 +147,7 @@ static void verify_diff(osm_t::ref osm)
   assert(!osm->is_clean(true));
 }
 
-static void compare_with_file(const void *buf, size_t len, const char *fn)
+void compare_with_file(const void *buf, size_t len, const char *fn)
 {
   osm2go_platform::MappedFile fdata(fn);
 
@@ -154,7 +157,7 @@ static void compare_with_file(const void *buf, size_t len, const char *fn)
   assert_cmpmem(fdata.data(), fdata.length(), buf, len);
 }
 
-static void test_osmChange(osm_t::ref osm, const char *fn)
+void test_osmChange(osm_t::ref osm, const char *fn)
 {
    xmlDocGuard doc(osmchange_init());
   const char *changeset = "42";
@@ -169,27 +172,15 @@ static void test_osmChange(osm_t::ref osm, const char *fn)
   xmlFree(result);
 }
 
-int main(int argc, char **argv)
+project_t *setup_for_restore(const char *argv2, const std::string &osm_path)
 {
-  int result = 0;
+  std::unique_ptr<project_t> project(std::make_unique<project_t>(argv2, osm_path));
+  project->osmFile = argv2 + std::string(".osm");
 
-  if(argc != 4)
-    return EINVAL;
+  if (!project->parse_osm())
+    return nullptr;
 
-  xmlInitParser();
-
-  const std::string osm_path = argv[1];
-  assert(ends_with(osm_path, '/'));
-
-  project_t project(argv[2], osm_path);
-  project.osmFile = argv[2] + std::string(".osm");
-
-  bool b = project.parse_osm();
-  if(!b) {
-    std::cerr << "cannot open " << argv[1] << argv[2] << ": " << strerror(errno) << std::endl;
-    return 1;
-  }
-  osm_t::ref osm = project.osm;
+  osm_t::ref osm = project->osm;
   assert(osm);
 
   assert_cmpnum(osm->uploadPolicy, osm_t::Upload_Blocked);
@@ -233,14 +224,55 @@ int main(int argc, char **argv)
 
   assert(osm->is_clean(true));
   verify_osm_db::run(osm);
+  return project.release();
+}
 
-  assert(project.diff_file_present());
-  unsigned int flags = project.diff_restore();
+} // namespace
+
+int main(int argc, char **argv)
+{
+  int result = 0;
+
+  if(argc != 4)
+    return EINVAL;
+
+  xmlInitParser();
+
+  const std::string osm_path = argv[1];
+  assert(ends_with(osm_path, '/'));
+
+  std::unique_ptr<project_t> project(setup_for_restore(argv[2], osm_path));
+
+  if(!project) {
+    std::cerr << "cannot open " << argv[1] << argv[2] << ": " << strerror(errno) << std::endl;
+    return 1;
+  }
+
+  assert(project->diff_file_present());
+  unsigned int flags = project->diff_restore();
   assert_cmpnum(flags, DIFF_RESTORED | DIFF_HAS_HIDDEN | DIFF_ELEMENTS_IGNORED);
+
+  project.reset(setup_for_restore(argv[2], osm_path));
+
+  if(!project) {
+    std::cerr << "cannot open " << argv[1] << argv[2] << ": " << strerror(errno) << std::endl;
+    return 1;
+  }
+
+  {
+    MainUiDummy dummy;
+    assert(project->diff_file_present());
+    dummy.m_statusTexts.push_back(trstring("Some objects are hidden"));
+    dummy.m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_SHOW_ALL, true));
+    diff_restore(project, &dummy);
+  }
+
+  osm_t::ref osm = project->osm;
 
   verify_diff(osm);
   verify_osm_db::run(osm);
 
+  const relation_t * const r255 = osm->object_by_id<relation_t>(296255);
   xmlString rel_str(r255->generate_xml("42"));
   printf("%s\n", rel_str.get());
   // make sure this test doesn't suddenly fail only because libxml2 decided to use the other type of quotes
@@ -253,6 +285,7 @@ int main(int argc, char **argv)
   assert((strstr(reinterpret_cast<const char *>(rel_str.get()), "<way id=\"351899455\" version=\"1\" changeset=\"47\"/>") != nullptr) !=
          (strstr(reinterpret_cast<const char *>(rel_str.get()), "<way id='351899455' version='1' changeset='47'/>") != nullptr));
 
+  const node_t * const n72 = osm->object_by_id<node_t>(638499572);
   rel_str.reset(n72->generate_xml("42"));
   printf("%s\n", rel_str.get());
   assert((strstr(reinterpret_cast<const char *>(rel_str.get()), "<node id=\"638499572\" version=\"12\" changeset=\"42\" lat=\"52.26") != nullptr) !=
@@ -305,9 +338,9 @@ int main(int argc, char **argv)
     assert(!sproject->diff_file_present());
 
     // put the OSM data into this directory
-    const std::string origosmpath = project.path + project.osmFile;
+    const std::string origosmpath = project->path + project->osmFile;
     symlink(origosmpath.c_str(), osmpath.c_str());
-    sproject->osmFile = project.osmFile;
+    sproject->osmFile = project->osmFile;
     bool pvalid = sproject->parse_osm();
     assert(pvalid);
     assert(sproject->osm);
