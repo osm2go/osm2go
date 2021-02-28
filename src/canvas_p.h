@@ -28,6 +28,7 @@ enum canvas_item_type_t { CANVAS_ITEM_CIRCLE, CANVAS_ITEM_POLY };
 class canvas_item_info_t {
 protected:
   canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_item_t *it, canvas_item_destroyer *d);
+  inline ~canvas_item_info_t() {}
 public:
 
   const canvas_item_type_t type;

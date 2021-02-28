@@ -17,6 +17,8 @@ class gps_state_t;
 
 struct area_edit_t {
   area_edit_t(gps_state_t *gps, pos_area &b, osm2go_platform::Widget *dlg);
+  inline ~area_edit_t() {}
+
   gps_state_t * const gps_state;
   osm2go_platform::Widget * const parent;   /* parent widget to be placed upon */
   pos_area &bounds;    /* positions to work on */

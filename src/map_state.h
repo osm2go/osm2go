@@ -10,6 +10,7 @@
 
 struct map_state_t {
   map_state_t() noexcept;
+  inline ~map_state_t() {}
 
   void reset() noexcept;
 

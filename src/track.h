@@ -36,6 +36,7 @@ struct track_seg_t {
 
 struct track_t {
   track_t();
+  inline ~track_t() {}
 
   std::vector<track_seg_t> segments;
   mutable bool dirty;

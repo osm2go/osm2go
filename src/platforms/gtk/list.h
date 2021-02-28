@@ -47,6 +47,8 @@ enum ListFlags {
 struct list_view_column {
   explicit list_view_column(trstring::native_type_arg n, unsigned int fl, int hm = -1, int hk = -1)
     : name(n), flags(fl), hlkey(hk), modifiedKey(hm) {}
+  inline ~list_view_column() {}
+
   trstring::native_type name;
   unsigned int flags;
   int hlkey; ///< highlight key in case LIST_FLAG_CAN_HIGHLIGHT is set

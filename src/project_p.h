@@ -25,5 +25,6 @@ class projects_to_bounds {
   std::vector<pos_area> &pbounds;
 public:
   explicit inline projects_to_bounds(std::vector<pos_area> &b) : pbounds(b) {}
+  inline ~projects_to_bounds() {}
   void operator()(const project_t *project);
 };

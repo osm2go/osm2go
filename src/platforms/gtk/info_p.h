@@ -26,6 +26,7 @@ public:
 #if __cplusplus >= 201103L
   tag_context_t(tag_context_t &&) = delete;
   tag_context_t &operator=(tag_context_t &&) = delete;
+  ~tag_context_t() = default;
 #endif
 
   osm2go_platform::DialogGuard dialog;
