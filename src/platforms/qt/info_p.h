@@ -25,6 +25,7 @@ public:
   tag_context_t &operator=(const tag_context_t &) = delete;
   tag_context_t(tag_context_t &&) = delete;
   tag_context_t &operator=(tag_context_t &&) = delete;
+  ~tag_context_t() = default;
 
   osm2go_platform::DialogGuard dialog;
   object_t object;
