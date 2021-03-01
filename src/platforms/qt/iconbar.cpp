@@ -194,7 +194,7 @@ IconbarQt::IconbarQt(appdata_t &appdata)
 osm2go_platform::Widget *
 iconbar_t::create(appdata_t &appdata)
 {
-  auto iconbar = new IconbarQt(appdata);
+  auto *iconbar = new IconbarQt(appdata);
   appdata.iconbar.reset(iconbar);
 
   map_t *map = appdata.map;

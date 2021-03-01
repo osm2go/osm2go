@@ -99,7 +99,7 @@ net_io_do(osm2go_platform::Widget *parent, net_io_request_t &request, const QStr
     dialog->setWindowModality(Qt::WindowModal);
   }
 
-  auto mgr = new QNetworkAccessManager(parent);
+  auto *mgr = new QNetworkAccessManager(parent);
 
   QNetworkRequest req(QUrl(request.url));
 #if QT_VERSION >= QT_VERSION_CHECK(5, 9, 0)

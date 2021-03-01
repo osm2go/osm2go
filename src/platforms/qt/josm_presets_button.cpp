@@ -44,7 +44,7 @@ struct preset_attach_context {
 presets_element_t::attach_key *
 presets_element_text::attach(preset_attach_context &attctx, const std::string &preset) const
 {
-  auto ret = new QLineEdit(attctx.ly->parentWidget());
+  auto *ret = new QLineEdit(attctx.ly->parentWidget());
   ret->setClearButtonEnabled(true);
   if(!preset.empty())
     ret->setText(QString::fromStdString(preset));
@@ -67,7 +67,7 @@ presets_element_text::getValue(presets_element_t::attach_key *akey) const
 presets_element_t::attach_key *
 presets_element_separator::attach(preset_attach_context &attctx, const std::string &) const
 {
-  auto ret = new QFrame(attctx.ly->parentWidget());
+  auto *ret = new QFrame(attctx.ly->parentWidget());
   ret->setFrameShape(QFrame::HLine);
   ret->setFrameShadow(QFrame::Sunken);
   attctx.ly->addRow(ret);
@@ -160,8 +160,8 @@ presets_element_multiselect::attach(preset_attach_context &attctx, const std::st
   for(const auto &s : d)
     entries << QString::fromStdString(s);
 
-  auto ret = new QListView(attctx.ly->parentWidget());
-  auto m = new QStringListModel(entries, ret);
+  auto *ret = new QListView(attctx.ly->parentWidget());
+  auto *m = new QStringListModel(entries, ret);
   ret->setSelectionMode(QAbstractItemView::MultiSelection);
   ret->setModel(m);
 
@@ -217,7 +217,7 @@ presets_element_checkbox::attach(preset_attach_context &attctx, const std::strin
   else
     deflt = def;
 
-  auto ret = new QCheckBox(attctx.ly->parentWidget());
+  auto *ret = new QCheckBox(attctx.ly->parentWidget());
   attctx.ly->addRow(QString::fromStdString(text), ret);
   ret->setChecked(deflt);
 
@@ -239,7 +239,7 @@ presets_element_link::attach(preset_attach_context &attctx, const std::string &)
     if(icon_item != nullptr)
       icon = osm2go_platform::icon_pixmap(icon_item);
   }
-  auto button = new QPushButton(icon, trstring("[Preset] %1").arg(item->name), attctx.ly->parentWidget());
+  auto *button = new QPushButton(icon, trstring("[Preset] %1").arg(item->name), attctx.ly->parentWidget());
 
   attctx.ly->addRow(button);
 
