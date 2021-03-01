@@ -87,7 +87,7 @@ RelationMemberModel::RelationMemberModelPrivate::RelationMemberModelPrivate(rela
   assert(roleCache.empty());
   m_members.reserve(m_relation->members.size());
   for (auto &&m : m_relation->members)
-    m_members.push_back(m);
+    m_members.emplace_back(m);
 }
 
 RelationMemberModel::RelationMemberModel(relation_t *rel, osm_t::ref o, QObject *parent)

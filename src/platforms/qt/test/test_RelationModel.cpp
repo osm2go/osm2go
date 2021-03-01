@@ -62,7 +62,7 @@ std::vector<relation_t *> createRelations(osm_t::ref osm, bool newRelations)
   for (int i = 0; i < relCount; i++) {
     if (!newRelations)
       ba.id = i + 42;
-    rels.push_back(new relation_t(ba));
+    rels.emplace_back(new relation_t(ba));
     if (newRelations)
       osm->attach(rels.back());
     else

@@ -23,7 +23,7 @@ std::vector<std::pair<relation_t *, const relation_t *>> getRelations(osm_t::ref
     if (p.second->isDeleted())
       continue;
 
-    ret.push_back(std::make_pair(p.second, osm->originalObject(p.second)));
+    ret.emplace_back(std::make_pair(p.second, osm->originalObject(p.second)));
   }
 
   return ret;
@@ -152,7 +152,7 @@ bool RelationModel::removeRows(int row, int count, const QModelIndex &parent)
 QModelIndex RelationModel::addRelation(relation_t *relation)
 {
   beginInsertRows(QModelIndex(), m_relations.size(), m_relations.size());
-  m_relations.push_back(std::make_pair(relation, nullptr));
+  m_relations.emplace_back(std::make_pair(relation, nullptr));
   endInsertRows();
 
   return createIndex(m_relations.size() - 1, 0);

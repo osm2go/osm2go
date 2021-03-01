@@ -23,7 +23,7 @@ RelationMembershipModel::RelationMembershipModel(osm_t::ref o, object_t obj, QOb
 
   for (auto &&m : std::as_const(m_osm->relations))
     if (!m.second->isDeleted())
-      m_relations.push_back(m.second);
+      m_relations.emplace_back(m.second);
 }
 
 int RelationMembershipModel::rowCount(const QModelIndex &parent) const
@@ -98,7 +98,7 @@ bool RelationMembershipModel::setData(const QModelIndex &idx, const QVariant &va
       assert(it != relation->members.end());
       relation->members.erase(it);
     } else {
-      relation->members.push_back(member_t(m_obj, nullptr));
+      relation->members.emplace_back(member_t(m_obj, nullptr));
     }
 
     break;
@@ -111,7 +111,7 @@ bool RelationMembershipModel::setData(const QModelIndex &idx, const QVariant &va
     const auto s = value.toString();
     member_t nm(m_obj, s.isEmpty() ? nullptr : s.toUtf8().constData());
     if (it == relation->members.end()) {
-      relation->members.push_back(nm);
+      relation->members.emplace_back(nm);
     } else {
       auto mit = std::next(relation->members.begin(), std::distance(relation->members.cbegin(), it));
       *mit = nm;

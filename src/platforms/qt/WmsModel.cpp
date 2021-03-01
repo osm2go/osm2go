@@ -77,7 +77,7 @@ wms_server_t *
 WmsModel::addServer(std::unique_ptr<wms_server_t> srv)
 {
   beginInsertRows(QModelIndex(), m_servers.size(), m_servers.size());
-  m_servers.push_back(srv.release());
+  m_servers.emplace_back(srv.release());
   endInsertRows();
   return m_servers.back();
 }

@@ -74,7 +74,7 @@ void TestRelationMembershipModel::notInRelations()
   std::vector<relation_t *> rels;
 
   for (int i = 0; i < relCount; i++) {
-    rels.push_back(new relation_t());
+    rels.emplace_back(new relation_t());
     osm->attach(rels.back());
   }
 
@@ -129,7 +129,7 @@ void TestRelationMembershipModel::addToRelations()
   std::vector<relation_t *> rels;
 
   for (int i = 0; i < relCount; i++) {
-    rels.push_back(new relation_t());
+    rels.emplace_back(new relation_t());
     osm->attach(rels.back());
   }
 
@@ -170,7 +170,7 @@ void TestRelationMembershipModel::changeRole()
 
   relation_t *rel = new relation_t();
   osm->attach(rel);
-  rel->members.push_back(member_t(object_t(n)));
+  rel->members.emplace_back(member_t(object_t(n)));
 
   RelationMembershipModel model(osm, object_t(n));
   QAbstractItemModelTester mt(&model);

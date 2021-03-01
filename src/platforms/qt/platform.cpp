@@ -137,7 +137,7 @@ base_paths_init()
     assert(path.endsWith(QLatin1Char('/')));
     dirguard dfd(path.toUtf8().constData());
     if(dfd.valid())
-      ret.emplace_back(std::move(dfd));
+      ret.push_back(std::move(dfd));
   }
 
   assert(!ret.empty());

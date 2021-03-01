@@ -89,7 +89,7 @@ void settings_t::load()
       wms_server_t *cur = new wms_server_t();
       cur->server = srv.toStdString();
       cur->name = name.toStdString();
-      wms_server.push_back(cur);
+      wms_server.emplace_back(cur);
     }
   }
 

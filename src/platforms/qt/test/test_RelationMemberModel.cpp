@@ -96,11 +96,11 @@ relation_t *restrictionOsm(const std::unique_ptr<osm_t> &osm)
   osm->insert(w);
   node_t *n = osm->node_new(lpos_t(1, 1));
   osm->attach(n);
-  w->node_chain.push_back(n);
+  w->node_chain.emplace_back(n);
   ba.id = 2;
   n = osm->node_new(osm->bounds.center.toPos(osm->bounds), ba);
   osm->insert(n);
-  w->node_chain.push_back(n);
+  w->node_chain.emplace_back(n);
 
   r->members.emplace_back(member_t(object_t(w), "from"));
   r->members.emplace_back(member_t(object_t(n), "via"));
@@ -108,10 +108,10 @@ relation_t *restrictionOsm(const std::unique_ptr<osm_t> &osm)
   ba.id = 3;
   w = new way_t(ba);
   osm->insert(w);
-  w->node_chain.push_back(n);
+  w->node_chain.emplace_back(n);
   n = osm->node_new(lpos_t(2, 2));
   osm->attach(n);
-  w->node_chain.push_back(n);
+  w->node_chain.emplace_back(n);
 
   r->members.emplace_back(member_t(object_t(w), "to"));
 

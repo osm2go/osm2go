@@ -198,7 +198,7 @@ presets_element_multiselect::getValue(presets_element_t::attach_key *akey) const
   rows.reserve(sel.size());
 
   for (auto &&s : sel)
-    rows.push_back(s.row());
+    rows.emplace_back(s.row());
 
   std::sort(rows.begin(), rows.end());
 

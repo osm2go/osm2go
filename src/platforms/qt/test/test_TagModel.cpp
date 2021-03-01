@@ -139,7 +139,7 @@ void checkContentsSimpleTags(TagModel &model)
 std::vector<tag_t> simpleTagsWithDiscardable(void)
 {
   auto ret = simpleTags();
-  ret.push_back(tag_t("created_by", "OSM2go 0.5"));
+  ret.emplace_back(tag_t("created_by", "OSM2go 0.5"));
   return ret;
 }
 
@@ -182,8 +182,8 @@ void checkContentsSimpleTagsWithDiscardable(const TagModel &model, unsigned int 
 std::vector<tag_t> collisionTags(void)
 {
   auto ret = simpleTags();
-  ret.push_back(tag_t("baz", "garbage"));
-  ret.push_back(tag_t("baz", "junk"));
+  ret.emplace_back(tag_t("baz", "garbage"));
+  ret.emplace_back(tag_t("baz", "junk"));
   return ret;
 }
 
