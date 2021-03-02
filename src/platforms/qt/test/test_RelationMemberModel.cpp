@@ -88,13 +88,13 @@ relation_t *restrictionOsm(const std::unique_ptr<osm_t> &osm)
 {
   base_attributes ba(1);
   ba.version = 1;
-  relation_t *r = new relation_t(ba);
+  auto *r = new relation_t(ba);
   osm->insert(r);
   r->tags.replace({ tag_t("type", "restriction") });
 
-  way_t *w = new way_t(ba);
+  auto *w = new way_t(ba);
   osm->insert(w);
-  node_t *n = osm->node_new(lpos_t(1, 1));
+  auto *n = osm->node_new(lpos_t(1, 1));
   osm->attach(n);
   w->node_chain.emplace_back(n);
   ba.id = 2;
@@ -123,7 +123,7 @@ relation_t *restrictionOsm(const std::unique_ptr<osm_t> &osm)
 void TestRelationMemberModel::noMembers()
 {
   auto osm = boundedOsm();
-  relation_t * const r = new relation_t();
+  auto * const r = new relation_t();
   osm->attach(r);
 
   RelationMemberModel model(r, osm);
@@ -175,7 +175,7 @@ void TestRelationMemberModel::refMembers()
 
   base_attributes ba(1);
   ba.version = 1;
-  relation_t *r = new relation_t(ba);
+  auto *r = new relation_t(ba);
   osm->insert(r);
   r->tags.replace({ tag_t("type", "restriction") });
 

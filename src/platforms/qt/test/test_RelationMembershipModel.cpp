@@ -168,7 +168,7 @@ void TestRelationMembershipModel::changeRole()
   node_t *n = osm->node_new(lpos_t(1, 1));
   osm->insert(n);
 
-  relation_t *rel = new relation_t();
+  auto *rel = new relation_t();
   osm->attach(rel);
   rel->members.emplace_back(member_t(object_t(n)));
 
