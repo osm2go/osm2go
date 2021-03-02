@@ -112,7 +112,7 @@ void checkRowUnmodified(const TagModel &model, int row, bool discardable = false
     checkCellUnmodified(model, row, column, discardable);
 }
 
-std::vector<tag_t> simpleTags(void)
+std::vector<tag_t> simpleTags()
 {
   return { tag_t("foo", "bar"), tag_t("baz", "boo") };
 }
@@ -136,7 +136,7 @@ void checkContentsSimpleTags(TagModel &model)
   checkHeaderDataEmpty(&model, Qt::Vertical);
 }
 
-std::vector<tag_t> simpleTagsWithDiscardable(void)
+std::vector<tag_t> simpleTagsWithDiscardable()
 {
   auto ret = simpleTags();
   ret.emplace_back(tag_t("created_by", "OSM2go 0.5"));
@@ -179,7 +179,7 @@ void checkContentsSimpleTagsWithDiscardable(const TagModel &model, unsigned int 
   }
 }
 
-std::vector<tag_t> collisionTags(void)
+std::vector<tag_t> collisionTags()
 {
   auto ret = simpleTags();
   ret.emplace_back(tag_t("baz", "garbage"));
