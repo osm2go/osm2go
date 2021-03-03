@@ -8,8 +8,8 @@
 
 #include <osm.h>
 
+#include <memory>
 #include <QAbstractTableModel>
-#include <QScopedPointer>
 
 enum {
   MEMBER_COL_TYPE = 0,
@@ -19,12 +19,16 @@ enum {
   MEMBER_NUM_COLS
 };
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 12, 0)
+template <typename T> static inline T *qGetPtrHelper(const std::unique_ptr<T> &p) { return p.get(); }
+#endif
+
 class RelationMemberModel : public QAbstractTableModel {
   Q_OBJECT
   Q_DISABLE_COPY(RelationMemberModel)
 
   class RelationMemberModelPrivate;
-  const QScopedPointer<RelationMemberModelPrivate> d_ptr;
+  const std::unique_ptr<RelationMemberModelPrivate> d_ptr;
   Q_DECLARE_PRIVATE(RelationMemberModel)
 
 public:
