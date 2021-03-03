@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-#include "project.h"
-#include "project_p.h"
+#include "project_widgets.h"
 
 #include "appdata.h"
 #include "area_edit.h"
@@ -15,6 +14,8 @@
 #include "map.h"
 #include "notifications.h"
 #include "osm_api.h"
+#include "project.h"
+#include "project_p.h"
 #include "settings.h"
 #include "uicontrol.h"
 #include "wms.h"
@@ -96,8 +97,6 @@ GtkWidget *label_left(trstring::native_type_arg str = trstring::native_type())
   return label;
 }
 
-} // namespace
-
 project_context_t::project_context_t(appdata_t &a, project_t *p, bool n,
                                      const std::vector<project_t *> &j, GtkWidget *dlg)
   : project(p)
@@ -120,8 +119,6 @@ project_context_t::project_context_t(appdata_t &a, project_t *p, bool n,
   , projects(j)
 {
 }
-
-namespace {
 
 struct select_context_t {
   select_context_t(appdata_t &a, GtkWidget *dial);
@@ -949,6 +946,23 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new)
   return ok;
 }
 
+select_context_t::select_context_t(appdata_t &a, GtkWidget *dial)
+  : appdata(a)
+  , projects(project_scan(settings_t::instance()->base_path,
+                          settings_t::instance()->base_path_fd, settings_t::instance()->server))
+  , dialog(dial)
+  , filter(nullptr)
+  , list(nullptr)
+{
+}
+
+select_context_t::~select_context_t()
+{
+  std::for_each(projects.begin(), projects.end(), std::default_delete<project_t>());
+
+  gtk_widget_destroy(dialog);
+}
+
 } // namespace
 
 project_t *project_select(appdata_t &appdata)
@@ -983,21 +997,4 @@ project_t *project_select(appdata_t &appdata)
   }
 
   return nullptr;
-}
-
-select_context_t::select_context_t(appdata_t &a, GtkWidget *dial)
-  : appdata(a)
-  , projects(project_scan(settings_t::instance()->base_path,
-                          settings_t::instance()->base_path_fd, settings_t::instance()->server))
-  , dialog(dial)
-  , filter(nullptr)
-  , list(nullptr)
-{
-}
-
-select_context_t::~select_context_t()
-{
-  std::for_each(projects.begin(), projects.end(), std::default_delete<project_t>());
-
-  gtk_widget_destroy(dialog);
 }

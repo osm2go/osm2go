@@ -31,6 +31,7 @@ target_sources(osm2go_lib PRIVATE
 	osm_upload_dialog.cpp
 	platform.cpp
 	project_widgets.cpp
+	project_widgets.h
 	relation_edit.cpp
 	relation_members.cpp
 	relation_membership.cpp

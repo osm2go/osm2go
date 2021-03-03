@@ -19,6 +19,7 @@
 #include <osm.h>
 #include <osm_api.h>
 #include <project.h>
+#include "project_widgets.h"
 #include <settings.h>
 #include <statusbar.h>
 #include <style.h>

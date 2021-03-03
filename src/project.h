@@ -137,5 +137,3 @@ struct project_t {
 
 bool project_load(appdata_t &appdata, const std::string &name);
 bool project_load(appdata_t &appdata, std::unique_ptr<project_t> &project);
-
-project_t *project_select(appdata_t &appdata);
