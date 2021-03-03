@@ -304,7 +304,7 @@ Qt::ItemFlags TagModel::flags(const QModelIndex &index) const
   else
     r |= Qt::ItemIsEditable;
 
-  return r | Qt::ItemNeverHasChildren;
+  return r;
 }
 
 void TagModel::replaceTags(const osm_t::TagMap &tags)

@@ -153,8 +153,6 @@ Qt::ItemFlags RelationMembershipModel::flags(const QModelIndex &index) const
   if (unlikely(!index.isValid()))
     return defaultflags;
 
-  defaultflags |= Qt::ItemNeverHasChildren;
-
   switch (index.column()) {
   case RELITEM_COL_MEMBER:
     return defaultflags | Qt::ItemIsUserCheckable | Qt::ItemIsEditable;

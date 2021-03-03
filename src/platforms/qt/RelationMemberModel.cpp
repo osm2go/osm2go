@@ -239,8 +239,6 @@ Qt::ItemFlags RelationMemberModel::flags(const QModelIndex &index) const
   if (!member.object.is_real())
     r &= ~Qt::ItemIsEnabled;
 
-  r |= Qt::ItemNeverHasChildren;
-
   if (index.column() == MEMBER_COL_ROLE)
     r |= Qt::ItemIsEditable;
 
