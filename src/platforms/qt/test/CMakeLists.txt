@@ -12,6 +12,7 @@ function(o2g_qt_test NAME)
 	add_test(NAME ${NAME} COMMAND test_${NAME})
 endfunction()
 
+o2g_qt_test(ProjectSelectModel)
 o2g_qt_test(RelationMemberModel)
 o2g_qt_test(RelationMembershipModel)
 o2g_qt_test(RelationModel)
