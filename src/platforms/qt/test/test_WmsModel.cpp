@@ -52,7 +52,6 @@ public:
   }
 };
 
-
 std::vector<QString> expectedHeaderData()
 {
   return { QStringLiteral("Name") };

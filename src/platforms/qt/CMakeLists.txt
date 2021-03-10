@@ -30,6 +30,7 @@ target_sources(osm2go_lib PRIVATE
 	map_graphicsview.h
 	net_io.cpp
 	notifications.cpp
+	OldOrNotEmptyValidator.h
 	osm2go_i18n.h
 	osm2go_platform.h
 	osm2go_platform_qt.h
@@ -48,9 +49,11 @@ target_sources(osm2go_lib PRIVATE
 	TagModel.cpp
 	TagModel.h
 	uicontrol.cpp
+	UrlValidator.h
 	wms_dialog.cpp
 	WmsModel.cpp
 	WmsModel.h
+	WmsNameValidator.h
 )
 
 target_link_libraries(osm2go_platform_lib INTERFACE
