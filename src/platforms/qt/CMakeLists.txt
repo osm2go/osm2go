@@ -36,6 +36,8 @@ target_sources(osm2go_lib PRIVATE
 	osm2go_platform_qt.h
 	osm_upload_dialog.cpp
 	platform.cpp
+	ProjectNameValidator.cpp
+	ProjectNameValidator.h
 	ProjectSelectModel.cpp
 	ProjectSelectModel.h
 	relation_edit.cpp

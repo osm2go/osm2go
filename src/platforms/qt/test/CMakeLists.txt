@@ -18,6 +18,8 @@ o2g_qt_test(RelationMembershipModel)
 o2g_qt_test(RelationModel)
 o2g_qt_test(TagModel)
 o2g_qt_test(WmsModel)
+
 o2g_qt_test(OldOrNotEmptyValidator)
+o2g_qt_test(ProjectNameValidator)
 o2g_qt_test(UrlValidator)
 o2g_qt_test(WmsNameValidator)
