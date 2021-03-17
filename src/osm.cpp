@@ -960,7 +960,9 @@ public:
 /* redraw all affected ways */
 void node_deleted_from_ways::operator()(way_t *way)
 {
-  if(way->node_chain.size() <= 1) {
+  if(way->node_chain.size() <= 1 ||
+    // closed way that consists only of the same node
+    (way->node_chain.size() == 2 && way->node_chain.front() == way->node_chain.back())) {
     /* this way now only contains one node and thus isn't a valid */
     /* way anymore. So it'll also get deleted (which in turn may */
     /* cause other nodes to be deleted as well) */

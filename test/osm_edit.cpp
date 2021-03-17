@@ -1205,6 +1205,7 @@ void test_node_member_delete(const std::string &tmpdir)
   o->attach(w);
   for (int i = 0; i < 4; i++)
     w->append_node(n1);
+  const item_id_t lastId = w->id;
 
   assert_cmpnum(o->ways.size(), TEST_WAY_COUNT + 1);
 
@@ -1269,6 +1270,7 @@ void test_node_member_delete(const std::string &tmpdir)
   // let's try crappy ways again, this time with deletion
   w = ways[TEST_WAY_CLOSED_FIRST];
   w->append_node(n3);
+  w->append_node(n3); // it must have 3 nodes at the end to avoid deletion as short way
   w->append_node(n2);
   o->waySetHidden(w);
 
@@ -1283,6 +1285,28 @@ void test_node_member_delete(const std::string &tmpdir)
 
   // TEST_WAY_CLOSED_FIRST and the one created last
   assert_cmpnum(o->ways.size(), 2);
+
+  n4 = o->node_new(l);
+  o->attach(n4);
+
+  w = ways[TEST_WAY_CLOSED_FIRST];
+  assert_cmpnum(w->node_chain.size(), 3);
+  n3->ways--;
+  w->node_chain.pop_back();
+  w->append_node(n4);
+  assert_cmpnum(w->node_chain.size(), 3);
+  std::rotate(w->node_chain.begin(), w->node_chain.begin() + 1, w->node_chain.end());
+
+  assert(w->node_chain.at(0) == n3);
+  assert(w->node_chain.at(1) == n4);
+  assert(w->node_chain.at(2) == n3);
+
+  // Now delete it. The way at the end still has 2 nodes (but the same one), so it should be deleted.
+  o->node_delete(n4, osm_t::NodeDeleteShortWays);
+
+  // the one created last
+  assert_cmpnum(o->ways.size(), 1);
+  assert(o->object_by_id<way_t>(lastId) != nullptr);
 }
 
 struct node_collector {
