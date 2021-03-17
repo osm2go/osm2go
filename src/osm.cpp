@@ -927,6 +927,9 @@ void node_chain_delete_functor::operator()(std::pair<item_id_t, way_t *> p)
   bool modified = false;
 
   node_chain_t::iterator it = chain.begin();
+  // special case closed ways where the closing node is deleted
+  bool needsClose = way->is_closed() && way->ends_with_node(node);
+
   while((it = std::find(it, chain.end(), node)) != chain.end()) {
     if (!modified) {
       modified = true;
@@ -939,6 +942,11 @@ void node_chain_delete_functor::operator()(std::pair<item_id_t, way_t *> p)
     // remove node from chain
     it = chain.erase(it);
   }
+
+  // the way was formerly closed and the end node was deleted: use the
+  // remaining front node to close the way again.
+  if (needsClose && chain.size() > 1 && chain.front() != chain.back())
+    way->append_node(chain.front());
 }
 
 class node_deleted_from_ways {
@@ -952,12 +960,13 @@ public:
 /* redraw all affected ways */
 void node_deleted_from_ways::operator()(way_t *way)
 {
-  if(way->node_chain.size() == 1) {
+  if(way->node_chain.size() <= 1) {
     /* this way now only contains one node and thus isn't a valid */
     /* way anymore. So it'll also get deleted (which in turn may */
     /* cause other nodes to be deleted as well) */
     osm->way_delete(way, map);
   } else {
+    // just redraw, this will filter out deleted and hidden objects itself
     map->redraw_item(way);
   }
 }

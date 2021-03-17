@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+#include "dummy_map.h"
 #include "test_osmdb.h"
 
 #include <icon.h>
@@ -14,6 +15,7 @@
 
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
+#include <osm2go_test.h>
 
 #include <algorithm>
 #include <cassert>
@@ -26,6 +28,7 @@
 #if __cplusplus >= 201103L
 #include <random>
 #endif
+#include <unistd.h>
 
 #include <osm2go_annotations.h>
 
@@ -1125,6 +1128,161 @@ void test_member_delete()
   assert_cmpnum(counts.nodes, 0);
   assert_cmpnum(counts.ways, 1);
   assert_cmpnum(counts.relations, 1);
+}
+
+// delete a node from ways and check the geometry
+void test_node_member_delete(const std::string &tmpdir)
+{
+  appdata_t a;
+  a.project.reset(new project_t("foo", tmpdir));
+  std::unique_ptr<map_t> m(std::make_unique<test_map>(a, nullptr, test_map::EmptyStyle));
+  a.project->osm.reset(new osm_t());
+  osm_t::ref o = a.project->osm;
+  set_bounds(o);
+
+  // a way with 3 points
+  lpos_t l(10, 20);
+  node_t *n1 = o->node_new(l);
+  o->attach(n1);
+
+  l.y = 40;
+  node_t *n2 = o->node_new(l);
+  o->attach(n2);
+
+  l.x = 20;
+  node_t *n3 = o->node_new(l);
+  o->attach(n3);
+
+  l.x = n1->lpos.x;
+  node_t *n4 = o->node_new(l);
+  o->attach(n4);
+
+  base_attributes ba(42);
+  ba.version = 1;
+
+  std::vector<way_t *> ways;
+  enum {
+    TEST_WAY_FIRST,         ///< n1 is at the first position
+    TEST_WAY_MIDDLE,        ///< n1 is in the middle
+    TEST_WAY_LAST,          ///< n1 is at the end
+    TEST_WAY_CLOSED_FIRST,  ///< n1 is first and last node
+    TEST_WAY_CLOSED_MIDDLE, ///< way is closed, n1 is in the middle
+
+    TEST_WAY_COUNT
+  };
+
+  for (int i = 0; i < TEST_WAY_COUNT; i++) {
+    way_t *w = new way_t();
+    ways.push_back(w);
+    o->attach(w);
+
+    w->append_node(n1);
+    w->append_node(n2);
+    w->append_node(n3);
+    w->append_node(n4);
+  }
+
+  way_t *w = ways[TEST_WAY_MIDDLE];
+  std::rotate(w->node_chain.rbegin(), w->node_chain.rbegin() + 1, w->node_chain.rend());
+  w = ways[TEST_WAY_LAST];
+  std::rotate(w->node_chain.begin(), w->node_chain.begin() + 1, w->node_chain.end());
+
+  ways[TEST_WAY_CLOSED_FIRST]->append_node(n1);
+
+  w = ways[TEST_WAY_CLOSED_FIRST];
+  w->append_node(w->node_chain.front());
+
+  w = ways[TEST_WAY_CLOSED_MIDDLE];
+  std::rotate(w->node_chain.begin(), w->node_chain.begin() + 1, w->node_chain.end());
+  w->append_node(w->node_chain.front());
+
+  assert(ways[TEST_WAY_CLOSED_FIRST]->is_closed());
+  assert(ways[TEST_WAY_CLOSED_MIDDLE]->is_closed());
+
+  // this way is actually crap, make sure not to crash
+  w = new way_t();
+  ways.push_back(w);
+  o->attach(w);
+  for (int i = 0; i < 4; i++)
+    w->append_node(n1);
+
+  assert_cmpnum(o->ways.size(), TEST_WAY_COUNT + 1);
+
+  o->node_delete(n1);
+
+  assert_cmpnum(o->ways.size(), TEST_WAY_COUNT + 1);
+
+  assert_cmpnum(w->node_chain.size(), 0);
+
+  w = ways[TEST_WAY_FIRST];
+  assert_cmpnum(w->node_chain.size(), 3);
+  assert(w->node_chain.at(0) == n2);
+  assert(w->node_chain.at(1) == n3);
+  assert(w->node_chain.at(2) == n4);
+  w = ways[TEST_WAY_MIDDLE];
+  assert_cmpnum(w->node_chain.size(), 3);
+  assert(w->node_chain.at(0) == n4);
+  assert(w->node_chain.at(1) == n2);
+  assert(w->node_chain.at(2) == n3);
+  w = ways[TEST_WAY_LAST];
+  assert_cmpnum(w->node_chain.size(), 3);
+  assert(w->node_chain.at(0) == n2);
+  assert(w->node_chain.at(1) == n3);
+  assert(w->node_chain.at(2) == n4);
+
+  w = ways[TEST_WAY_CLOSED_FIRST];
+  assert(ways[TEST_WAY_CLOSED_FIRST]->is_closed());
+  assert_cmpnum(w->node_chain.size(), 4);
+  assert(w->node_chain.at(0) == n2);
+  assert(w->node_chain.at(1) == n3);
+  assert(w->node_chain.at(2) == n4);
+  assert(w->node_chain.at(3) == n2);
+
+  w = ways[TEST_WAY_CLOSED_MIDDLE];
+  assert(ways[TEST_WAY_CLOSED_MIDDLE]->is_closed());
+  assert_cmpnum(w->node_chain.size(), 4);
+  assert(w->node_chain.at(0) == n2);
+  assert(w->node_chain.at(1) == n3);
+  assert(w->node_chain.at(2) == n4);
+  assert(w->node_chain.at(3) == n2);
+
+  // one less to worry about
+  o->node_delete(n4);
+
+  assert_cmpnum(o->ways.size(), TEST_WAY_COUNT + 1);
+
+  for (int i = 0; i <= TEST_WAY_LAST; i++) {
+    w = ways[i];
+    assert_cmpnum(w->node_chain.size(), 2);
+    assert(w->node_chain.at(0) == n2);
+    assert(w->node_chain.at(1) == n3);
+  }
+
+  for (int i = TEST_WAY_CLOSED_FIRST; i <= TEST_WAY_CLOSED_MIDDLE; i++) {
+    w = ways[i];
+    assert_cmpnum(w->node_chain.size(), 3);
+    assert(w->node_chain.at(0) == n2);
+    assert(w->node_chain.at(1) == n3);
+    assert(w->node_chain.at(0) == n2);
+  }
+
+  // let's try crappy ways again, this time with deletion
+  w = ways[TEST_WAY_CLOSED_FIRST];
+  w->append_node(n3);
+  w->append_node(n2);
+  o->waySetHidden(w);
+
+  w = ways[TEST_WAY_CLOSED_MIDDLE];
+  n3->ways--;
+  n2->ways++;
+  w->node_chain.at(1) = n2;
+  w->append_node(n2);
+  w->append_node(n2);
+
+  o->node_delete(n2, m.get());
+
+  // TEST_WAY_CLOSED_FIRST and the one created last
+  assert_cmpnum(o->ways.size(), 2);
 }
 
 struct node_collector {
@@ -2466,8 +2624,20 @@ void test_updateMembers()
 
 } // namespace
 
-int main()
+int main(int argc, char **argv)
 {
+  char tmpdir[] = "/tmp/osm2go-osmedit-XXXXXX";
+
+  if(mkdtemp(tmpdir) == nullptr) {
+    std::cerr << "cannot create temporary directory" << std::endl;
+    return 1;
+  }
+
+  OSM2GO_TEST_INIT(argc, argv);
+
+  std::string osm_path = tmpdir;
+  osm_path += '/';
+
   xmlInitParser();
 
   test_trivial();
@@ -2480,6 +2650,7 @@ int main()
   test_way_delete();
   test_way_merge_relation_neighbors();
   test_member_delete();
+  test_node_member_delete(osm_path);
   test_merge_nodes();
   test_merge_ways();
   test_merge_existing_ways();
@@ -2493,6 +2664,8 @@ int main()
   test_updateMembers();
 
   xmlCleanupParser();
+
+  assert_cmpnum(rmdir(tmpdir), 0);
 
   return 0;
 }
