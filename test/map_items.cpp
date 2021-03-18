@@ -120,6 +120,13 @@ void test_draw_hidden(const std::string &tmpdir)
   assert(!w->isDeleted());
   assert_cmpnum(w->flags, 0);
 
+  ba.id = 4321;
+  way_t *delW = new way_t(ba);
+  o->insert(delW);
+  assert(!delW->isDeleted());
+  assert_cmpnum(delW->flags, 0);
+  o->way_delete(delW, m.get());
+
   for (int i = 0; i < 4; i++) {
     lpos_t p(10, 10 + i);
     node_t *n = o->node_new(p);
@@ -127,6 +134,7 @@ void test_draw_hidden(const std::string &tmpdir)
     assert(!n->isDeleted());
     assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
     w->append_node(n);
+    delW->append_node(n);
   }
 
   o->waySetHidden(w);

@@ -341,7 +341,7 @@ public:
   void mark_dirty(T *obj)
   {
     // if already marked or never uploaded then don't store it in the original map
-    if ((obj->flags & OSM_FLAG_DIRTY) || obj->isNew())
+    if (obj->flags != 0 || obj->isNew())
       return;
 
     std::unordered_map<item_id_t, const T *> &orig = originalObjects<T>();
