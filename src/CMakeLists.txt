@@ -42,6 +42,7 @@ add_library(osm2go_lib STATIC
 	osm_parser.cpp
 	osm2go_annotations.cpp
 	osm2go_annotations.h
+	osm2go_cpp.h
 	osm2go_stl.h
 	pos.cpp
 	pos.h
@@ -58,7 +59,6 @@ add_library(osm2go_lib STATIC
 	wms.cpp
 	wms.h
 	wms_p.h
-	${CMAKE_CURRENT_BINARY_DIR}/../osm2go_cpp.h
 )
 
 if (NOT BUILD_WITH_QT)

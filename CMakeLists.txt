@@ -13,7 +13,6 @@ include(CMakePushCheckState)
 include(CTest)
 include(FeatureSummary)
 include(GNUInstallDirs)
-include(WriteCompilerDetectionHeader)
 
 set(CMAKE_C_STANDARD 99)
 
@@ -108,26 +107,6 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/find_filesystem.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/find_optional.cmake)
 
 set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
-
-write_compiler_detection_header(
-		FILE "${CMAKE_CURRENT_BINARY_DIR}/osm2go_cpp.h"
-		PREFIX "O2G"
-		COMPILERS GNU Clang
-		FEATURES cxx_nullptr cxx_override cxx_static_assert cxx_deleted_functions
-				cxx_noexcept
-		ALLOW_UNKNOWN_COMPILER_VERSIONS ALLOW_UNKNOWN_COMPILERS
-		${WCDH_COMPAT}
-		BARE_FEATURES cxx_nullptr cxx_override cxx_noexcept
-		EPILOG
-"#if !(defined(O2G_COMPILER_CXX_STATIC_ASSERT) && O2G_COMPILER_CXX_STATIC_ASSERT)
-#  define static_assert(X, MSG) O2G_STATIC_ASSERT_MSG(X, MSG)
-#endif
-#if __cplusplus >= 201103L
-#  define O2G_OPERATOR_EXPLICIT explicit
-#else
-#  define O2G_OPERATOR_EXPLICIT
-#endif
-")
 
 set(DATA_DIR "${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}")
 
