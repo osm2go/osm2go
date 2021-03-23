@@ -67,6 +67,26 @@ target_link_libraries(osm2go_platform_lib INTERFACE
 
 target_link_libraries(osm2go_lib PUBLIC osm2go_platform_lib)
 
+set(QML_SOURCES
+	DegreeInput.qml
+)
+
+set(QRC_CONTENTS "<!DOCTYPE RCC>
+<!-- <RCC version=\"1.0\"> -->
+<RCC>
+	<qresource prefix=\"/\">
+")
+
+foreach(FILE IN LISTS QML_SOURCES)
+	string(APPEND QRC_CONTENTS "\t\t<file alias=\"${FILE}\">${CMAKE_CURRENT_SOURCE_DIR}/qml/${FILE}</file>\n")
+endforeach()
+
+string(APPEND QRC_CONTENTS "	</qresource>
+</RCC>
+")
+
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/qml.qrc" "${QRC_CONTENTS}")
+
 set(USE_SVG_ICONS_DEFAULT On PARENT_SCOPE)
 
 if (BUILD_TESTING)
