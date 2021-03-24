@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2017 Rolf Eike Beer <eike@sf-mail.de>
+ * SPDX-FileCopyrightText: 2017-2021 Rolf Eike Beer <eike@sf-mail.de>
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -31,7 +31,9 @@ struct elemstyle_condition_t {
       return *this;
     }
 #else
-    elemstyle_condition_t &operator=(const elemstyle_condition_t &other) = default;
+    elemstyle_condition_t(const elemstyle_condition_t &other) = default;
+    ~elemstyle_condition_t() = default;
+    elemstyle_condition_t &operator=(const elemstyle_condition_t &other) = delete;
 #endif
 
     bool matches(const base_object_t &obj) const;
