@@ -186,7 +186,18 @@ enum
 #if !GLIB_CHECK_VERSION(2,38,0)
 G_DEFINE_TYPE (OsmGpsMap, osm_gps_map, GTK_TYPE_DRAWING_AREA);
 #else
+#if __GNUC__ > 5
+// ignore warnings caused by older glib versions
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#if __GNUC__ > 8
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+#endif
 G_DEFINE_TYPE_WITH_PRIVATE (OsmGpsMap, osm_gps_map, GTK_TYPE_DRAWING_AREA);
+#if __GNUC__ > 5
+#pragma GCC diagnostic pop
+#endif
 #endif
 
 namespace {
@@ -428,7 +439,15 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y)
 
         g_debug("Download tile: %d,%d z:%d\n\t%s", x, y, zoom, dl->uri.c_str());
 
+#if __GNUC__ > 5
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#endif
         SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, dl->uri.c_str());
+#if __GNUC__ > 5
+#pragma GCC diagnostic pop
+#endif
+
         if (G_LIKELY(msg != nullptr)) {
             (*priv->tile_queue)[dl->hashkey] = msg;
             soup_session_queue_message (priv->soup_session, msg, osm_gps_map_tile_download_complete, dl.release());
