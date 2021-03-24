@@ -132,12 +132,6 @@ template<> assert_num_tpl<const float_t>::assert_num_tpl(float_t a, float_t b,
   abort();
 }
 
-assert_cmpstr_struct::assert_cmpstr_struct(const std::string &a, const char *astr, const std::string &b, const char *file, const char *func, int line)
-{
-  if(unlikely(a != b))
-    fail(a.c_str(), astr, b.c_str(), file, func, line);
-}
-
 assert_cmpstr_struct::assert_cmpstr_struct(const std::string &a, const char *astr, const std::string &b, const char *bstr, const char *file, const char *func, int line)
 {
   if(unlikely(a != b))

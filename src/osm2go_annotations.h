@@ -46,6 +46,16 @@ assert_msg_unreachable(const char *file, const int line, const char *func);
 
 #define ASSERT_MSG_FMT(fmt, a, b) assert_msg_fmt(__FILE__, __LINE__, __PRETTY_FUNCTION__, fmt, a, b)
 
+#define assert_unreachable() \
+       assert_msg_unreachable(__FILE__, __LINE__, __PRETTY_FUNCTION__);
+
+#ifdef __GNUC_PREREQ
+#if __GNUC_PREREQ(4, 5)
+#undef assert_unreachable
+#define assert_unreachable() __builtin_unreachable()
+#endif
+#endif
+
 #define assert_null(x) \
        do { \
          const void *p = x; \
@@ -102,29 +112,37 @@ public:
     if(unlikely(strcmp(a, b) != 0))
       fail(a, astr, b, bstr, file, func, line);
   }
+  // trstring::arg_type can't be __builtin_constant_p
+  inline assert_cmpstr_struct(trstring::arg_type, const char *, trstring::arg_type, const char *, const char *, int)
+  {
+    assert_unreachable();
+  }
   // not inline, should happen only in test code
-  assert_cmpstr_struct(trstring::arg_type a, const char *astr, trstring::arg_type b, const char *file, const char *func, int line);
   assert_cmpstr_struct(trstring::arg_type a, const char *astr, trstring::arg_type b, const char *bstr, const char *file, const char *func, int line);
 
   assert_cmpstr_struct(trstring::arg_type a, const char *astr, const char *b, const char *file, const char *func, int line);
   assert_cmpstr_struct(trstring::arg_type a, const char *astr, const char *b, const char *bstr, const char *file, const char *func, int line);
 
-  assert_cmpstr_struct(trstring::arg_type a, const char *astr, const std::string &b, const char *file, const char *func, int line);
+  // std::string can't be __builtin_constant_p
+  inline assert_cmpstr_struct(trstring::arg_type, const char *, const std::string &, const char *, const char *, int)
+  {
+    assert_unreachable();
+  }
   assert_cmpstr_struct(trstring::arg_type a, const char *astr, const std::string &b, const char *bstr, const char *file, const char *func, int line);
 
 #ifndef TRSTRING_NATIVE_TYPE_IS_TRSTRING
   // assist in overload resolution
-  inline assert_cmpstr_struct(const trstring &a, const char *astr, trstring::native_type_arg b, const char *file, const char *func, int line)
+  inline assert_cmpstr_struct(const trstring &, const char *, trstring::native_type_arg, const char *, const char *, int)
   {
-    assert_cmpstr_struct relay(trstring::arg_type(a), astr, trstring::arg_type(b), file, func, line);
+    assert_unreachable();
   }
   inline assert_cmpstr_struct(const trstring &a, const char *astr, trstring::native_type_arg b, const char *bstr, const char *file, const char *func, int line)
   {
     assert_cmpstr_struct relay(trstring::arg_type(a), astr, trstring::arg_type(b), bstr, file, func, line);
   }
-  inline assert_cmpstr_struct(trstring::native_type_arg a, const char *astr, trstring::native_type_arg b, const char *file, const char *func, int line)
+  inline assert_cmpstr_struct(trstring::native_type_arg, const char *, trstring::native_type_arg, const char *, const char *, int)
   {
-    assert_cmpstr_struct relay(trstring::arg_type(a), astr, trstring::arg_type(b), file, func, line);
+    assert_unreachable();
   }
   inline assert_cmpstr_struct(trstring::native_type_arg a, const char *astr, trstring::native_type_arg b, const char *bstr, const char *file, const char *func, int line)
   {
@@ -138,24 +156,29 @@ public:
   {
     assert_cmpstr_struct relay(trstring::arg_type(a), astr, b, bstr, file, func, line);
   }
-  inline assert_cmpstr_struct(const trstring &a, const char *astr, const std::string &b, const char *file, const char *func, int line)
+  inline assert_cmpstr_struct(const trstring &, const char *, const std::string &, const char *, const char *, int)
   {
-    assert_cmpstr_struct relay(trstring::arg_type(a), astr, b.c_str(), file, func, line);
+    assert_unreachable();
   }
   inline assert_cmpstr_struct(const trstring &a, const char *astr, const std::string &b, const char *bstr, const char *file, const char *func, int line)
   {
     assert_cmpstr_struct relay(trstring::arg_type(a), astr, b.c_str(), bstr, file, func, line);
   }
-  inline assert_cmpstr_struct(const trstring &a, const char *astr, const trstring &b, const char *file, const char *func, int line)
+  inline assert_cmpstr_struct(const trstring &, const char *, const trstring &, const char *, const char *, int)
   {
-    assert_cmpstr_struct relay(trstring::arg_type(a), astr, trstring::arg_type(b), file, func, line);
+    assert_unreachable();
   }
   inline assert_cmpstr_struct(const trstring &a, const char *astr, const trstring &b, const char *bstr, const char *file, const char *func, int line)
   {
     assert_cmpstr_struct relay(trstring::arg_type(a), astr, trstring::arg_type(b), bstr, file, func, line);
   }
 #endif
-  assert_cmpstr_struct(const std::string &a, const char *astr, const std::string &b, const char *file, const char *func, int line);
+
+  // a std::string can't be __builtin_constant_p
+  inline assert_cmpstr_struct(const std::string &, const char *, const std::string &, const char *, const char *, int)
+  {
+    assert_unreachable();
+  }
   assert_cmpstr_struct(const std::string &a, const char *astr, const std::string &b, const char *bstr, const char *file, const char *func, int line);
 
 #if __cplusplus >= 201103L
@@ -189,14 +212,4 @@ private:
          else if (__l1 != 0 && memcmp (q1, q2, __l1) != 0) \
            assert(p1 == p2); \
        } while (0)
-#endif
-
-#define assert_unreachable() \
-       assert_msg_unreachable(__FILE__, __LINE__, __PRETTY_FUNCTION__);
-
-#ifdef __GNUC_PREREQ
-#if __GNUC_PREREQ(4, 5)
-#undef assert_unreachable
-#define assert_unreachable() __builtin_unreachable()
-#endif
 #endif

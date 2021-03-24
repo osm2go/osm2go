@@ -200,12 +200,6 @@ osm2go_platform::create_directories(const std::string &path)
   return QDir().mkpath(QString::fromStdString(path));
 }
 
-assert_cmpstr_struct::assert_cmpstr_struct(const trstring &a, const char *astr, const trstring &b, const char *file, const char *func, int line)
-{
-  if(unlikely(a != b))
-    fail(a.toStdString().c_str(), astr, b.toStdString().c_str(), file, func, line);
-}
-
 assert_cmpstr_struct::assert_cmpstr_struct(const trstring &a, const char *astr, const trstring &b, const char *bstr, const char *file, const char *func, int line)
 {
   if(unlikely(a != b))
