@@ -13,54 +13,44 @@ on:
 
 jobs:
   build:
-    name: build-${{ matrix.config.name }}-${{ matrix.setup.name }}
-    runs-on: ${{ matrix.setup.distro }}
+    name: build-${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.distro }}
     strategy:
       fail-fast: false
       matrix:
         config:
          - {
-             name: "GCC 7",
-             cc: "gcc-7",
-             cxx: "g++-7"
+             name: "GCC 9-default",
+             cc: "gcc-9",
+             cxx: "g++-9",
+             distro: "ubuntu-16.04",
+             qt: false,
+             options: "-DUSE_SVG_ICONS=On"
            }
-          # 2 glib warnings, fails to run 4 tests
-#         - {
-#             name: "GCC 8",
-#             cc: "gcc-8",
-#             cxx: "g++-8"
-#           }
-          # 4 glib warnings
-#         - {
-#             name: "GCC 9",
-#             cc: "gcc-9",
-#             cxx: "g++-9"
-#           }
-          # many warnings about libssl version mismatches
-#         - {
-#             name: "Clang",
-#             cc: "clang",
-#             cxx: "clang++"
-#           }
-        setup:
-          - {
-              distro: "ubuntu-16.04",
-              name: "default",
-              qt: false,
-              options: "-DUSE_SVG_ICONS=On"
-            }
-          - {
-              distro: "ubuntu-16.04",
-              name: "picker",
-              qt: false,
-              options: "-DSERVER_EDITABLE=Off;-DPICKER_MENU=On;-DUSE_SVG_ICONS=Off"
-            }
-          - {
-              distro: "ubuntu-18.04",
-              name: "Qt",
-              qt: true,
-              options: "-DSERVER_EDITABLE=Off;-DPICKER_MENU=On;-DUSE_SVG_ICONS=On;-DBUILD_WITH_QT=On"
-            }
+         - {
+             name: "GCC 9-picker",
+             cc: "gcc-9",
+             cxx: "g++-9",
+             distro: "ubuntu-16.04",
+             qt: false,
+             options: "-DSERVER_EDITABLE=Off;-DPICKER_MENU=On;-DUSE_SVG_ICONS=Off"
+           }
+         - {
+             distro: "ubuntu-20.04",
+             name: "GCC 9 Qt",
+             cc: "gcc-9",
+             cxx: "g++-9",
+             qt: true,
+             options: "-DSERVER_EDITABLE=Off;-DPICKER_MENU=On;-DUSE_SVG_ICONS=On;-DBUILD_WITH_QT=On"
+           }
+         - {
+             distro: "ubuntu-20.04",
+             name: "Clang 11 Qt",
+             cc: "clang-11",
+             cxx: "clang++-11",
+             qt: true,
+             options: "-DSERVER_EDITABLE=Off;-DPICKER_MENU=On;-DUSE_SVG_ICONS=On;-DBUILD_WITH_QT=On"
+           }
 
     steps:
     - name: checkout
@@ -74,30 +64,29 @@ jobs:
         key: ${{ runner.os }}-valgrind
 
     - name: gtk_deps
-      if: matrix.setup.qt != true
+      if: matrix.config.qt != true
       run: sudo apt-get update && sudo apt-get install libgoocanvas-dev libcurl4-openssl-dev libsoup2.4-dev libgps-dev libgtk2.0-dev libgnomevfs2-dev valgrind
 
     - name: qt_deps
-      if: matrix.setup.qt
-      run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev qtbase5-dev qtpositioning5-dev libqt5svg5-dev valgrind
+      if: matrix.config.qt
+      run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev qtbase5-dev qtpositioning5-dev libqt5svg5-dev qml-module-qttest qml-module-qtquick-controls2 valgrind
 
     - name: generate valgrind suppression
       if: steps.cache-valgrind.outputs.cache-hit != 'true'
       run: mkdir -p ${OSM2GO_BUILD_DIR} ${VALGRIND_SUPP_DIR} && pushd ${OSM2GO_BUILD_DIR} && cmake -D CMAKE_BUILD_TYPE=Debug ${GITHUB_WORKSPACE} -D "CONF_OPTIONS=${CONF_OPTIONS}" && make suppression-dummy && valgrind --leak-check=full --gen-suppressions=all --show-leak-kinds=all ./test/suppression-dummy 2>&1 | grep -v '^=' > ${VALGRIND_SUPP_DIR}/valgrind-auto.supp
       env:
-        CONF_OPTIONS: ${{ matrix.setup.options }}
+        CONF_OPTIONS: ${{ matrix.config.options }}
 
     - name: configure
-      run: mkdir -p ${OSM2GO_BUILD_DIR}; echo -e "set(OSM2GO_BUILD_DIR \"${OSM2GO_BUILD_DIR}\")\nset(dashboard_model \"Continuous\")\nset(CTEST_SITE github.com)\nset(CTEST_BUILD_NAME \"CI ${CC_NAME} ${TYPE_NAME}\")\nset(CTEST_MEMORYCHECK_COMMAND_OPTIONS \"--suppressions=${VALGRIND_SUPP_DIR}/valgrind-auto.supp\")\ninclude(${GITHUB_WORKSPACE}/ctest_osm2go.cmake)" > my_osm2go.cmake
+      run: mkdir -p ${OSM2GO_BUILD_DIR}; echo -e "set(OSM2GO_BUILD_DIR \"${OSM2GO_BUILD_DIR}\")\nset(dashboard_model \"Continuous\")\nset(CTEST_SITE github.com)\nset(CTEST_BUILD_NAME \"CI ${CC_NAME}\")\nset(CTEST_MEMORYCHECK_COMMAND_OPTIONS \"--suppressions=${VALGRIND_SUPP_DIR}/valgrind-auto.supp\")\ninclude(${GITHUB_WORKSPACE}/ctest_osm2go.cmake)" > my_osm2go.cmake
       env:
         CC_NAME: ${{ matrix.config.name }}
-        TYPE_NAME: ${{ matrix.setup.name }}
 
     - name: build
       run: CFLAGS="-O0 -fprofile-arcs -ftest-coverage" CXXFLAGS="-O0 -fprofile-arcs -ftest-coverage" ctest -j 2 -V -S my_osm2go.cmake -D BUILD_WITH_QT=${BUILD_WITH_QT} -D "CONF_OPTIONS=-DNETWORK_TESTS=On;${CONF_OPTIONS}" || true
       env:
         CC: ${{ matrix.config.cc }}
         CXX: ${{ matrix.config.cxx }}
-        CONF_OPTIONS: ${{ matrix.setup.options }}
-        BUILD_WITH_QT: ${{ matrix.setup.qt }}
+        CONF_OPTIONS: ${{ matrix.config.options }}
+        BUILD_WITH_QT: ${{ matrix.config.qt }}
         QT_QPA_PLATFORM: "minimal"
