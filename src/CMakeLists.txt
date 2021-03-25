@@ -105,7 +105,6 @@ target_link_libraries(osm2go_lib
 		${CXX_FILESYSTEM_LIBS}
 	PUBLIC
 		${CURL_LIBRARIES}
-		OpenSSL::SSL
 		${LIBXML2_LIBRARIES}
 )
 

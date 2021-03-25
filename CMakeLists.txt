@@ -16,7 +16,8 @@ include(GNUInstallDirs)
 
 set(CMAKE_C_STANDARD 99)
 
-find_package(OpenSSL 1 REQUIRED)
+find_package(PkgConfig REQUIRED)
+
 pkg_check_modules(MAEMO maemo-version)
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/curl/CMakeLists.txt")
 	# initialize the curl flags, taken from CMake itself
@@ -88,7 +89,6 @@ else ()
 	find_package(CURL 7.32 REQUIRED)
 endif ()
 find_package(LibXml2 REQUIRED)
-find_package(PkgConfig REQUIRED)
 
 set(CMAKE_OPTIMIZE_DEPENDENCIES On)
 
