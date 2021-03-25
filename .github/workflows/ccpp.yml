@@ -36,6 +36,22 @@ jobs:
              options: "-DSERVER_EDITABLE=Off;-DPICKER_MENU=On;-DUSE_SVG_ICONS=Off"
            }
          - {
+             name: "Clang 9-default",
+             cc: "clang-9",
+             cxx: "clang++-9",
+             distro: "ubuntu-16.04",
+             qt: false,
+             options: "-DUSE_SVG_ICONS=On"
+           }
+         - {
+             name: "Clang 9-picker",
+             cc: "clang-9",
+             cxx: "clang++-9",
+             distro: "ubuntu-16.04",
+             qt: false,
+             options: "-DSERVER_EDITABLE=Off;-DPICKER_MENU=On;-DUSE_SVG_ICONS=Off"
+           }
+         - {
              distro: "ubuntu-20.04",
              name: "GCC 9 Qt",
              cc: "gcc-9",
