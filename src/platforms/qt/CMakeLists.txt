@@ -13,9 +13,6 @@ target_include_directories(osm2go_lib
 		PUBLIC
 			${CMAKE_CURRENT_SOURCE_DIR})
 
-set_property(TARGET osm2go_lib PROPERTY AUTOMOC TRUE)
-set_property(TARGET osm2go_lib PROPERTY AUTOUIC TRUE)
-
 target_sources(osm2go_lib PRIVATE
 	canvas_graphicsscene.cpp
 	canvas_graphicsscene.h

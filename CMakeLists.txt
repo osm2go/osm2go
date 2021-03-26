@@ -116,8 +116,11 @@ option(BUILD_WITH_QT "build the experimental Qt version" OFF)
 add_feature_info(Qt BUILD_WITH_QT "Qt instead of Gtk+ libraries are used for GUI")
 
 if (BUILD_WITH_QT)
-	# must be here so that AUTOMOC and AUTOUIC properties can be already set for osm2go_lib
+	# must be here so that AUTO* is already seen by osm2go_lib
 	find_package(Qt5 REQUIRED Core Widgets)
+	set(CMAKE_AUTOMOC TRUE)
+	set(CMAKE_AUTOUIC TRUE)
+	set(CMAKE_AUTORCC TRUE)
 endif ()
 
 find_library(MATH_LIBRARY m)

@@ -1,6 +1,3 @@
-set(CMAKE_AUTOMOC TRUE)
-set(CMAKE_AUTOUIC TRUE)
-
 function(o2g_qt_test NAME)
 	add_executable(test_${NAME} test_${NAME}.cpp)
 	target_link_libraries(test_${NAME}
