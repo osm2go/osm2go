@@ -7,6 +7,7 @@
 #include <cassert>
 #include <iostream>
 #include <memory>
+#include <unistd.h>
 
 #include <osm2go_annotations.h>
 #include <osm2go_stl.h>
@@ -141,7 +142,7 @@ void testToBottom()
 
 void testTrackSegments()
 {
-  char tmpdir[] = "/tmp/osm2go-canvas-XXXXXX";
+  char tmpdir[] = "/tmp/osm2go-canvas-points-XXXXXX";
 
   if(mkdtemp(tmpdir) == nullptr) {
     std::cerr << "cannot create temporary directory" << std::endl;
@@ -233,6 +234,8 @@ void testTrackSegments()
     assert_cmpnum(tseg3.item_chain.size(), 1);
     assert_cmpnum(m->elements_drawn, 4);
   }
+
+  assert_cmpnum(rmdir(tmpdir), 0);
 }
 
 } // namespace

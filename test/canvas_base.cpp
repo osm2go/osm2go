@@ -7,6 +7,7 @@
 #include <cassert>
 #include <iostream>
 #include <memory>
+#include <unistd.h>
 
 #include <osm2go_annotations.h>
 #include <osm2go_stl.h>
@@ -22,7 +23,7 @@ void set_bounds(osm_t::ref o)
 
 void testBackground()
 {
-  char tmpdir[] = "/tmp/osm2go-canvas-XXXXXX";
+  char tmpdir[] = "/tmp/osm2go-canvas-base-XXXXXX";
 
   if(mkdtemp(tmpdir) == nullptr) {
     std::cerr << "cannot create temporary directory" << std::endl;
@@ -57,6 +58,8 @@ void testBackground()
   ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, false));
   m->remove_bg_image();
   assert(ui->m_actions.empty());
+
+  assert_cmpnum(rmdir(tmpdir), 0);
 }
 
 } // namespace
