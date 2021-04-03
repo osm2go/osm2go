@@ -89,7 +89,7 @@ jobs:
 
     - name: generate valgrind suppression
       if: steps.cache-valgrind.outputs.cache-hit != 'true'
-      run: mkdir -p ${OSM2GO_BUILD_DIR} ${VALGRIND_SUPP_DIR} && pushd ${OSM2GO_BUILD_DIR} && cmake -D CMAKE_BUILD_TYPE=Debug ${GITHUB_WORKSPACE} -D "CONF_OPTIONS=${CONF_OPTIONS}" && make suppression-dummy && valgrind --leak-check=full --gen-suppressions=all --show-leak-kinds=all ./test/suppression-dummy 2>&1 | grep -v '^=' > ${VALGRIND_SUPP_DIR}/valgrind-auto.supp
+      run: mkdir -p ${OSM2GO_BUILD_DIR} ${VALGRIND_SUPP_DIR} && pushd ${OSM2GO_BUILD_DIR} && cmake -D CMAKE_BUILD_TYPE=Debug ${GITHUB_WORKSPACE} $(echo ${CONF_OPTIONS} | tr ';' ' ') && make suppression-dummy && valgrind --leak-check=full --gen-suppressions=all --show-leak-kinds=all ./test/suppression-dummy 2>&1 | grep -v '^=' > ${VALGRIND_SUPP_DIR}/valgrind-auto.supp
       env:
         CONF_OPTIONS: ${{ matrix.config.options }}
 
