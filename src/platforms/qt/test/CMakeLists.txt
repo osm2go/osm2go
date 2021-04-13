@@ -14,8 +14,15 @@ endfunction()
 function(o2g_quick_test NAME)
 	add_executable(test_qml_${NAME}
 		${CMAKE_CURRENT_BINARY_DIR}/../qml.qrc
-		test_qml_${NAME}.cpp
 	)
+
+	if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_qml_${NAME}.cpp")
+		target_sources(test_qml_${NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/test_qml_${NAME}.cpp")
+	else ()
+		file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_qml_${NAME}.cpp" "#include <QtQuickTest>
+QUICK_TEST_MAIN(${NAME})")
+		target_sources(test_qml_${NAME} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/test_qml_${NAME}.cpp")
+	endif ()
 	target_link_libraries(test_qml_${NAME}
 		PRIVATE
 			osm2go_lib
