@@ -643,77 +643,19 @@ project_list_widget(select_context_t &context, bool &has_sel)
 void
 project_filesize(project_context_t *context)
 {
-  trstring gstr;
-  trstring::any_type str(gstr);
-  const project_t * const project = context->project;
+  const project_t::projectStatus stat = context->project->status(context->is_new);
 
-  g_debug("Checking size of %s", project->osmFile.c_str());
+  gtk_label_set_text(GTK_LABEL(context->fsize), static_cast<const gchar *>(stat.message));
+  gtk_label_set_text(GTK_LABEL(context->fsizehdr), stat.compressedMessage);
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, stat.valid ? TRUE : FALSE);
 
-  bool en = !context->is_new;
-  struct stat st;
-  errno = 0; // make sure that the next check works if S_ISREG() returns false
-  bool stret = fstatat(project->dirfd, project->osmFile.c_str(), &st, 0) == 0 &&
-               S_ISREG(st.st_mode);
-  const GdkColor *color;
-  if(!stret && errno == ENOENT) {
-    color = osm2go_platform::invalid_text_color();
-
-    str = _("Not downloaded!");
-  } else {
-    color = nullptr;
-
-    if(!project->data_dirty) {
-      if(stret) {
-        struct tm loctime;
-        localtime_r(&st.st_mtim.tv_sec, &loctime);
-        char time_str[32];
-        strftime(time_str, sizeof(time_str), "%x %X", &loctime);
-        gstr = trstring("%1 bytes present\nfrom %2").arg(st.st_size).arg(time_str);
-
-        if(ends_with(project->osmFile, ".gz"))
-          gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:\n(compressed)"));
-        else
-          gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:"));
-        en = true;
-      } else {
-        str = _("Error testing data file");
-      }
-    } else
-      str = _("Outdated, please download!");
-  }
-  gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, color);
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, en ? TRUE : FALSE);
-
-  if(!str.isEmpty())
-    gtk_label_set_text(GTK_LABEL(context->fsize), static_cast<trstring::native_type>(str));
-}
-
-/* a project may currently be open. "unsaved changes" then also */
-/* means that the user may have unsaved changes */
-bool
-active_n_dirty(appdata_t &appdata, const project_t *project)
-{
-  if(appdata.project && appdata.project->osm && appdata.project->name == project->name) {
-    g_debug("editing the currently open project");
-
-    return !appdata.project->osm->is_clean(true);
-  }
-
-  return false;
+  gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, stat.errorColor ? osm2go_platform::invalid_text_color() : nullptr);
 }
 
 void
 project_diffstat(project_context_t &context)
 {
-  trstring::native_type str;
-
-  if(context.project->diff_file_present() || active_n_dirty(context.appdata, context.project)) {
-    /* this should prevent the user from changing the area */
-    str = _("unsaved changes pending");
-  } else
-    str = _("no pending changes");
-
-  gtk_label_set_text(GTK_LABEL(context.diff_stat), str);
+  gtk_label_set_text(GTK_LABEL(context.diff_stat), context.project->pendingChangesMessage(context.appdata));
 }
 
 void
@@ -721,7 +663,7 @@ on_edit_clicked(project_context_t *context)
 {
   project_t * const project = context->project;
 
-  if(project->diff_file_present() || active_n_dirty(context->appdata, project))
+  if(project->activeOrDirty(context->appdata))
     message_dlg(_("Pending changes"),
                 _("You have pending changes in this project.\n\nChanging "
                   "the area may cause pending changes to be "
@@ -903,7 +845,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new)
   gtk_table_attach_defaults(GTK_TABLE(table), label_left(_("Changes:")), 0, 1, 5, 6);
   project_diffstat(context);
   gtk_table_attach_defaults(GTK_TABLE(table), context.diff_stat, 1, 4, 5, 6);
-  if(!project->diff_file_present() && !active_n_dirty(context.appdata, project))
+  if(!context.project->activeOrDirty(context.appdata))
     gtk_widget_set_sensitive(context.diff_remove,  FALSE);
   g_signal_connect_swapped(context.diff_remove, "clicked",
                            G_CALLBACK(on_diff_remove_clicked), &context);

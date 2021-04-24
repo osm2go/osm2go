@@ -78,6 +78,22 @@ testNoFiles(const std::string &tmpdir)
 
   assert(!project_read(pfile, appdata.project, std::string(), -1));
 
+  // no diff, name does not match
+  std::unique_ptr<project_t> other(new project_t("other", tmpdir));
+  assert(!other->activeOrDirty(appdata));
+  // no diff, name does match, but still no changes
+  std::unique_ptr<project_t> same(new project_t(proj_name, tmpdir));
+  assert(!appdata.project->osm);
+  assert(!same->activeOrDirty(appdata));
+  // now with osm object, but still nothing changed
+  appdata.project->osm.reset(new osm_t());
+  assert(!same->activeOrDirty(appdata));
+  assert_cmpstr(same->pendingChangesMessage(appdata), _("no pending changes"));
+  // add something new to make it dirty
+  appdata.project->osm->attach(new relation_t());
+  assert(same->activeOrDirty(appdata));
+  assert_cmpstr(same->pendingChangesMessage(appdata), _("unsaved changes pending"));
+
   appdata.project.reset();
 
   unlink(pfile.c_str());
@@ -134,6 +150,14 @@ testNoData(const std::string &tmpdir)
 
   const std::string &ofile = project->osmFile;
 
+  assert(!project->osm_file_exists());
+  project_t::projectStatus status = project->status(false);
+  assert(status.valid);
+  assert(status.errorColor);
+  assert_cmpstr(status.message, _("Not downloaded!"));
+  assert_cmpstr(status.compressedMessage, _("Map data:"));
+
+  const char *not_gzip = "<?xml version='1.0' encoding='UTF-8'?>\n<osm/>";
   {
     fdguard osmfd(openat(project->dirfd, ofile.c_str(), O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR));
     assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
@@ -141,7 +165,6 @@ testNoData(const std::string &tmpdir)
     bool b = project->parse_osm();
     assert(!b);
 
-    const char *not_gzip = "<?xml version='1.0' encoding='UTF-8'?>\n<osm/>";
     write(osmfd, not_gzip, strlen(not_gzip));
   }
 
@@ -149,6 +172,11 @@ testNoData(const std::string &tmpdir)
   assert(project->osm_file_exists());
   bool b = project->parse_osm();
   assert(!b);
+  status = project->status(false);
+  assert(status.valid);
+  assert(!status.errorColor);
+  assert(status.message.toStdString().find(std::to_string(strlen(not_gzip))) != std::string::npos);
+  assert_cmpstr(status.compressedMessage, _("Map data:"));
 
   // add an empty directories to see if project_delete() also cleans those
   assert_cmpnum(mkdir((project->path + ".foo").c_str(), 0755), 0);
@@ -297,6 +325,11 @@ testRename(const std::string &tmpdir, const char *diff_file)
       fdguard osmfd(openat(project->dirfd, project->osmFile.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR));
       assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
       write(osmfd, not_gzip, strlen(not_gzip));
+
+      project_t::projectStatus status = project->status(false);
+      assert(status.valid);
+      assert(!status.errorColor);
+      assert_cmpstr(status.compressedMessage, _("Map data:\n(compressed)"));
     }
 
     {
@@ -308,9 +341,16 @@ testRename(const std::string &tmpdir, const char *diff_file)
     osm2go_platform::MappedFile mf(diff_file);
     assert(static_cast<bool>(mf));
     {
+      appdata_t appdata;
+      assert(!project->activeOrDirty(appdata));
+
       fdguard osmfd(openat(project->dirfd, (project->name + ".diff").c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR));
       assert_cmpnum_op(static_cast<int>(osmfd), >=, 0);
       assert_cmpnum(write(osmfd, mf.data(), mf.length()), mf.length());
+
+      assert(project->diff_file_present());
+      // any project with a diff file is dirty
+      assert(project->activeOrDirty(appdata));
     }
 
     std::unique_ptr<project_t> global;
@@ -398,6 +438,10 @@ testRename(const std::string &tmpdir, const char *diff_file)
     assert_cmpnum(stat(ndiffname.c_str(), &st), -1);
     assert_cmpnum(errno, ENOENT);
     assert(!project->diff_file_present());
+
+    project_t::projectStatus status = project->status(false);
+    assert(status.valid);
+    assert(!status.errorColor);
 
     // recreate it with the unmodified diff
     {

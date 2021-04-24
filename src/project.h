@@ -133,6 +133,31 @@ struct project_t {
    * @retval nullptr saving the project failed
    */
   static project_t *create(const std::string &name, const std::string &base_path, osm2go_platform::Widget *parent) __attribute__((warn_unused_result));
+
+  struct projectStatus {
+    inline projectStatus(bool isNew) noexcept
+      : valid(!isNew)
+      , errorColor(false)
+    {
+    }
+
+    trstring message; ///< human readable status text
+    trstring::native_type compressedMessage;  ///< caption string for map data
+    bool valid; ///< if the data is valid and the dialog may be accepted
+    bool errorColor;  ///< if the status message should get highlighting
+  };
+
+  projectStatus status(bool isNew) const;
+
+  /**
+   * @brief check if a diff is present or the project is active and has unsaved changes
+   */
+  bool activeOrDirty(const appdata_t &appdata) const;
+
+  /**
+   * @brief human readable message if changes are pending
+   */
+  trstring::native_type pendingChangesMessage(const appdata_t& appdata) const;
 };
 
 bool project_load(appdata_t &appdata, const std::string &name);

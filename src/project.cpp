@@ -634,3 +634,58 @@ project_t *project_t::create(const std::string &name, const std::string &base_pa
 
   return project.release();
 }
+
+project_t::projectStatus project_t::status(bool isNew) const
+{
+  projectStatus ret(isNew);
+
+  ret.compressedMessage = _("Map data:");
+
+  struct stat st;
+  errno = 0; // make sure that the next check works if S_ISREG() returns false
+  bool stret = fstatat(dirfd, osmFile.c_str(), &st, 0) == 0 &&
+               S_ISREG(st.st_mode);
+  if(!stret && errno == ENOENT) {
+    ret.message = trstring("Not downloaded!");
+    ret.errorColor = true;
+  } else {
+    if(!data_dirty) {
+      if(stret) {
+        struct tm loctime;
+        localtime_r(&st.st_mtim.tv_sec, &loctime);
+        char time_str[32];
+        strftime(time_str, sizeof(time_str), "%x %X", &loctime);
+        ret.message = trstring("%1 bytes present\nfrom %2").arg(st.st_size).arg(time_str);
+
+        if(ends_with(osmFile, ".gz"))
+          ret.compressedMessage = _("Map data:\n(compressed)");
+        ret.valid = true;
+      } else {
+        ret.message = trstring("Error testing data file");
+      }
+    } else
+      ret.message = trstring("Outdated, please download!");
+  }
+
+  return ret;
+}
+
+bool project_t::activeOrDirty(const appdata_t& appdata) const
+{
+  if (diff_file_present())
+    return true;
+
+  if(appdata.project && appdata.project->osm && appdata.project->name == name)
+    return !appdata.project->osm->is_clean(true);
+
+  return false;
+}
+
+trstring::native_type project_t::pendingChangesMessage(const appdata_t& appdata) const
+{
+  if(activeOrDirty(appdata))
+    /* this should prevent the user from changing the area */
+    return _("unsaved changes pending");
+  else
+    return _("no pending changes");
+}
