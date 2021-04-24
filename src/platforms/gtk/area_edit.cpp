@@ -788,17 +788,20 @@ bool area_edit_t::run() {
 
   label = gtk_label_new(_("Center:"));
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-  gtk_table_attach_defaults(table,  label, 0, 1, 0, 1);
+  gtk_table_attach_defaults(table, label, 0, 1, 0, 1);
   context.extent.lat = pos_lat_entry_new(0.0);
   gtk_table_attach_defaults(table, context.extent.lat, 1, 2, 0, 1);
+  gtk_table_attach_defaults(table, gtk_label_new(_("°")), 2, 3, 0, 1);
+
   context.extent.lon = pos_lon_entry_new(0.0);
-  gtk_table_attach_defaults(table, context.extent.lon, 2, 3, 0, 1);
+  gtk_table_attach_defaults(table, context.extent.lon, 3, 4, 0, 1);
+  gtk_table_attach_defaults(table, gtk_label_new(_("°")), 4, 5, 0, 1);
 
   gtk_table_set_row_spacing(table, 0, 10);
 
   label = gtk_label_new(_("Width:"));
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-  gtk_table_attach_defaults(table,  label, 0, 1, 1, 2);
+  gtk_table_attach_defaults(table, label, 0, 1, 1, 2);
   context.extent.width = osm2go_platform::entry_new();
   gtk_table_attach_defaults(table, context.extent.width, 1, 2, 1, 2);
 
@@ -806,8 +809,7 @@ bool area_edit_t::run() {
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
   gtk_table_attach_defaults(table,  label, 0, 1, 2, 3);
   context.extent.height = osm2go_platform::entry_new();
-  gtk_table_attach_defaults(table,
-			    context.extent.height, 1, 2, 2, 3);
+  gtk_table_attach_defaults(table, context.extent.height, 1, 2, 2, 3);
 
   settings_t::ref settings = settings_t::instance();
   context.extent.is_mil = settings->imperial_units;
@@ -817,7 +819,7 @@ bool area_edit_t::run() {
   context.extent.mil_km = osm2go_platform::combo_box_new(_("Unit"), units,
                                                          context.extent.is_mil ? 0 : 1);
 
-  gtk_table_attach(table, context.extent.mil_km, 2, 3, 1, 3,
+  gtk_table_attach(table, context.extent.mil_km, 3, 4, 1, 3,
 		   static_cast<GtkAttachOptions>(0), static_cast<GtkAttachOptions>(0),
 		   0, 0);
 
