@@ -68,6 +68,8 @@ target_link_libraries(osm2go_platform_lib INTERFACE
 target_link_libraries(osm2go_lib PUBLIC osm2go_platform_lib)
 
 set(QML_SOURCES
+	AreaEdit.qml
+	ArrowShape.qml
 	DegreeInput.qml
 )
 

@@ -48,4 +48,5 @@ o2g_qt_test(WmsNameValidator)
 # QtQuick on sparc segfaults
 if (Qt5_VERSION VERSION_GREATER_EQUAL 5.11 AND NOT CMAKE_SYSTEM_PROCESSOR MATCHES "^sparc")
 	o2g_quick_test(DegreeInput)
+	o2g_quick_test(AreaEdit)
 endif ()
