@@ -171,13 +171,12 @@ osm2go_platform::find_file(const QString &n)
   }
 
   const std::vector<dirguard> &paths = osm2go_platform::base_paths();
-  const auto itEnd = paths.cend();
-
   const std::string &fn = n.toStdString();
-  struct stat st;
-  for(auto it = paths.cbegin(); it != itEnd; it++) {
-    if(fstatat(it->dirfd(), fn.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode)) {
-      ret = QString::fromStdString(it->path()) + n;
+
+  for (const auto &p : paths) {
+    struct stat st;
+    if(fstatat(p.dirfd(), fn.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode)) {
+      ret = QString::fromStdString(p.path()) + n;
       break;
     }
   }
