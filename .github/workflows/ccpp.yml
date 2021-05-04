@@ -85,7 +85,7 @@ jobs:
 
     - name: qt_deps
       if: matrix.config.qt
-      run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev qtbase5-dev qtpositioning5-dev libqt5svg5-dev qml-module-qttest qml-module-qtquick-controls2 valgrind
+      run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev qtbase5-dev qtpositioning5-dev libqt5svg5-dev qml-module-qttest qml-module-qtquick-controls2 qml-module-qtlocation qml-module-qtpositioning qml-module-qtquick-layouts qml-module-qtquick-shapes valgrind
 
     - name: generate valgrind suppression
       if: steps.cache-valgrind.outputs.cache-hit != 'true'
