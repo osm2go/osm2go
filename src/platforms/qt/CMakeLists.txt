@@ -1,5 +1,5 @@
 # must match the version of the libraries found in CMAKE_SOURCE_DIR
-find_package(Qt5 ${Qt5_VERSION} COMPONENTS Gui Network Positioning Svg Widgets REQUIRED)
+find_package(Qt5 ${Qt5_VERSION} COMPONENTS Gui Network Positioning Svg REQUIRED)
 
 set(THREADS_PREFER_PTHREAD_FLAG On)
 find_package(Threads REQUIRED)
@@ -20,24 +20,18 @@ target_sources(osm2go_lib PRIVATE
 	gps_p.h
 	icon.cpp
 	iconbar.cpp
-	info.cpp
-	info_p.h
-	josm_presets_button.cpp
 	map_graphicsview.cpp
 	map_graphicsview.h
 	net_io.cpp
-	notifications.cpp
 	OldOrNotEmptyValidator.h
 	osm2go_i18n.h
 	osm2go_platform.h
 	osm2go_platform_qt.h
-	osm_upload_dialog.cpp
 	platform.cpp
 	ProjectNameValidator.cpp
 	ProjectNameValidator.h
 	ProjectSelectModel.cpp
 	ProjectSelectModel.h
-	relation_edit.cpp
 	RelationMemberModel.cpp
 	RelationMemberModel.h
 	RelationMembershipModel.cpp
@@ -47,9 +41,7 @@ target_sources(osm2go_lib PRIVATE
 	settings.cpp
 	TagModel.cpp
 	TagModel.h
-	uicontrol.cpp
 	UrlValidator.h
-	wms_dialog.cpp
 	WmsModel.cpp
 	WmsModel.h
 	WmsNameValidator.h
@@ -61,7 +53,6 @@ target_link_libraries(osm2go_platform_lib INTERFACE
 	Qt5::Network
 	Qt5::Positioning
 	Qt5::Svg
-	Qt5::Widgets
 	Threads::Threads
 )
 
@@ -88,6 +79,11 @@ string(APPEND QRC_CONTENTS "	</qresource>
 ")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/qml.qrc" "${QRC_CONTENTS}")
+
+# when there are actually multiple platforms this will become the switch which one to include
+if (TRUE)
+	add_subdirectory(widgets)
+endif ()
 
 set(USE_SVG_ICONS_DEFAULT On PARENT_SCOPE)
 
