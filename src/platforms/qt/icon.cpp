@@ -108,8 +108,7 @@ icon_t::load(const std::string &sname, int limit)
     return it->second.get();
   }
 
-  const QString fullname = icon_file_exists(sname);
-  if(!fullname.isEmpty()) {
+  if(const QString fullname = icon_file_exists(sname); !fullname.isEmpty()) {
     QPixmap pix;
     if(pix.load(fullname)) {
       std::unique_ptr<QSvgRenderer> rnd;

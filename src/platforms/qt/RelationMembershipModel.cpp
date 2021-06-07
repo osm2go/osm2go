@@ -107,10 +107,10 @@ bool RelationMembershipModel::setData(const QModelIndex &idx, const QVariant &va
     if (role != Qt::EditRole)
       return false;
     relation = m_relations.at(idx.row());
-    auto it = relation->find_member_object(m_obj);
     const auto s = value.toString();
     member_t nm(m_obj, s.isEmpty() ? nullptr : s.toUtf8().constData());
-    if (it == relation->members.end()) {
+
+    if (auto it = relation->find_member_object(m_obj); it == relation->members.end()) {
       relation->members.emplace_back(nm);
     } else {
       auto mit = std::next(relation->members.begin(), std::distance(relation->members.cbegin(), it));

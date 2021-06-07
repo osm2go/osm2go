@@ -85,14 +85,12 @@ void
 destroyItem(QGraphicsItem *item)
 {
   auto *citem = reinterpret_cast<canvas_item_t *>(item);
-  auto *deleter = static_cast<canvas_item_destroyer *>(item->data(DATA_KEY_DELETE_ITEM).value<void *>());
-  if (deleter != nullptr) {
+  if (auto *deleter = static_cast<canvas_item_destroyer *>(item->data(DATA_KEY_DELETE_ITEM).value<void *>()); deleter != nullptr) {
     deleter->run(citem);
     delete deleter;
   }
 
-  auto *mapitem = static_cast<map_item_t *>(item->data(DATA_KEY_MAP_ITEM).value<void *>());
-  if (mapitem != nullptr) {
+  if (auto *mapitem = static_cast<map_item_t *>(item->data(DATA_KEY_MAP_ITEM).value<void *>()); mapitem != nullptr) {
     map_item_destroyer mi(mapitem);
     mi.run(citem);
   }
@@ -140,8 +138,7 @@ canvas_t::set_background(const std::string &filename)
   auto *gr = gcanvas->group[CANVAS_GROUP_BG];
 
   // remove old background image, if any
-  auto childs = gr->childItems();
-  if(!childs.isEmpty()) {
+  if(auto childs = gr->childItems(); !childs.isEmpty()) {
     assert(childs.count() == 1);
     auto *old = childs.takeFirst();
     gr->removeFromGroup(old);

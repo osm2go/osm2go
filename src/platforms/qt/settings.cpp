@@ -68,9 +68,8 @@ void settings_t::load()
       *v = qsettings.value(key).toBool();
   }
 
-  const QVariant tv = qsettings.value(QLatin1String("track_visibility"));
   trackVisibility = DrawAll;
-  if (!tv.isNull()) {
+  if (const QVariant tv = qsettings.value(QLatin1String("track_visibility")); !tv.isNull()) {
     const auto it = std::find_if(trackVisibilityKeys.begin(), trackVisibilityKeys.end(),
                                  [key = tv.toString()](auto && p) { return p.second == key; });
     if(it != trackVisibilityKeys.cend())
