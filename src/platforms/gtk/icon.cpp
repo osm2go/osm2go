@@ -88,12 +88,10 @@ icon_file_exists(const std::string &file)
     std::string::size_type nlen = strlen(icon_exts.at(i));
     iname.replace(wpos, olen, icon_exts[i], nlen);
     olen = nlen;
-    std::string fullname = find_file(iname);
+    ret = find_file(iname);
 
-    if(!fullname.empty()) {
-      fullname.swap(ret);
+    if(!ret.empty())
       break;
-    }
   }
 
   return ret;
