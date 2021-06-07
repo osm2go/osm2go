@@ -118,7 +118,7 @@ canvas_graphicsscene::canvas_graphicsscene()
 
 canvas_graphicsscene::~canvas_graphicsscene()
 {
-  auto l = scene->items();
+  const auto l = scene->items();
   for (auto &&i : l)
     destroyItem(i);
 }
