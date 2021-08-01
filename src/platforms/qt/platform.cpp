@@ -23,6 +23,7 @@
 #include <QDesktopServices>
 #include <QDir>
 #include <QFont>
+#include <QGeoRectangle>
 #include <QMessageBox>
 #include <QStandardPaths>
 #include <QUrl>
@@ -244,6 +245,20 @@ osm2go_platform::dialog_size_hint(QWidget *window, osm2go_platform::DialogSizeHi
   } };
 
   window->setMinimumSize(dialog_sizes.at(hint));
+}
+
+QGeoRectangle
+osm2go_platform::rectFromArea(const pos_area &area)
+{
+  return QGeoRectangle(QGeoCoordinate(area.max.lat, area.min.lon),
+                       QGeoCoordinate(area.min.lat, area.max.lon));
+}
+
+pos_area
+osm2go_platform::areaFromRect(const QGeoRectangle &rect)
+{
+  return pos_area(pos_t(rect.bottomLeft().latitude(), rect.bottomLeft().longitude()),
+                  pos_t(rect.topRight().latitude(), rect.topRight().longitude()));
 }
 
 QVariant

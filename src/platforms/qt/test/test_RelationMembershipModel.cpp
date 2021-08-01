@@ -1,4 +1,7 @@
 #include "../RelationMembershipModel.h"
+#ifdef QT_WIDGETS_LIB
+#include "../widgets/RelationMemberRoleDelegate.h"
+#endif
 
 #include "../../../test/dummy_appdata.h"
 #include "helper.h"
@@ -14,6 +17,9 @@ public:
   inline QAbstractItemModelTester(QAbstractItemModel *) {}
 };
 #endif
+#ifdef QT_WIDGETS_LIB
+#include <QComboBox>
+#endif
 #include <QTest>
 
 class TestRelationMembershipModel : public QObject {
@@ -25,6 +31,9 @@ private slots:
   void addToRelations();
 
   void changeRole();
+#ifdef QT_WIDGETS_LIB
+  void changeRoleByDelegate();
+#endif
 };
 
 namespace {
@@ -190,6 +199,58 @@ void TestRelationMembershipModel::changeRole()
 
   QCOMPARE(rel->members.front().role, nullptr);
 }
+
+#ifdef QT_WIDGETS_LIB
+void TestRelationMembershipModel::changeRoleByDelegate()
+{
+  auto osm = boundedOsm();
+  auto *w = new way_t();
+  osm->insert(w);
+
+  auto *rel = new relation_t();
+  osm->attach(rel);
+  rel->members.emplace_back(member_t(object_t(w)));
+  // make the relation match the test preset
+  rel->tags.replace({ tag_t("type", "multipolygon"), tag_t("OSM2go test", "passed") });
+
+  RelationMembershipModel model(osm, object_t(w));
+  QAbstractItemModelTester mt(&model);
+
+  QCOMPARE(model.rowCount(QModelIndex()), 1);
+
+  std::unique_ptr<presets_items> presets(presets_items::load());
+  QVERIFY(presets);
+
+  RelationMemberRoleDelegate delegate(presets.get());
+  auto idx = model.index(0, RELITEM_COL_ROLE);
+
+  auto *editor = delegate.createEditor(nullptr, {}, idx);
+  auto *combo = qobject_cast<QComboBox *>(editor);
+  QVERIFY(combo != nullptr);
+  QCOMPARE(combo->currentText(), QString());
+
+  const QAbstractItemModel *comboModel = combo->model();
+  QVERIFY(comboModel != nullptr);
+
+  QCOMPARE(comboModel->rowCount(combo->rootModelIndex()), 0);
+
+  delegate.setEditorData(editor, idx);
+
+  QCOMPARE(comboModel->rowCount(combo->rootModelIndex()), 2);
+
+  const QString customText = QStringLiteral("custom");
+  combo->setCurrentText(customText);
+
+  delegate.setModelData(combo, &model, idx);
+  QCOMPARE(QLatin1String(rel->members.front().role), customText);
+
+  combo->setCurrentIndex(1);
+  delegate.setModelData(combo, &model, idx);
+  QCOMPARE(QLatin1String(rel->members.front().role), QLatin1String("outer"));
+
+  delegate.destroyEditor(combo, idx);
+}
+#endif
 
 QTEST_MAIN(TestRelationMembershipModel)
 

@@ -36,6 +36,10 @@ endfunction()
 o2g_qt_test(ProjectSelectModel)
 o2g_qt_test(RelationMemberModel)
 o2g_qt_test(RelationMembershipModel)
+set_property(TEST RelationMembershipModel PROPERTY WORKING_DIRECTORY "${osm2go_SOURCE_DIR}/test")
+# a path that is known to contain no additional presets
+set_property(TEST RelationMembershipModel APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${osm2go_SOURCE_DIR}/src/platforms")
+
 o2g_qt_test(RelationModel)
 o2g_qt_test(TagModel)
 o2g_qt_test(WmsModel)

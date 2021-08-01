@@ -18,9 +18,12 @@
 class icon_item;
 struct pos_area;
 class presets_items;
+class QGeoRectangle;
+class QMenu;
 class QString;
 class QSvgRenderer;
 class QVariant;
+class tag_context_t;
 
 namespace osm2go_platform {
   template<typename T>
@@ -40,6 +43,7 @@ namespace osm2go_platform {
     { QPointer<T>::operator=(other); return *this; }
   };
 
+  typedef OwningPointer<QWidget> WidgetGuard;
   typedef OwningPointer<QDialog> DialogGuard;
 
   QPixmap icon_pixmap(icon_item *icon);
@@ -59,6 +63,11 @@ namespace osm2go_platform {
   void dialog_size_hint(QWidget *window, DialogSizeHint hint);
 
   QString find_file(const QString &n);
+
+  QGeoRectangle rectFromArea(const pos_area &area);
+  pos_area areaFromRect(const QGeoRectangle &rect);
+
+  QMenu *josm_build_presets_button(presets_items *presets, tag_context_t *tag_context) __attribute__((nonnull(1,2)));
 
   QVariant modelHightlightModified();
 };
