@@ -77,6 +77,8 @@ hasGpsFix(gps_data_t &gpsdata)
 {
 #if GPSD_API_MAJOR_VERSION < 10
   return (gpsdata.status != STATUS_NO_FIX);
+#elif defined STATUS_UNK
+  return (gpsdata.fix.status != STATUS_UNK);
 #else
   return (gpsdata.fix.status != STATUS_NO_FIX);
 #endif
