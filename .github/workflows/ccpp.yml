@@ -81,11 +81,11 @@ jobs:
 
     - name: gtk_deps
       if: matrix.config.qt != true
-      run: sudo apt-get update && sudo apt-get install libgoocanvas-dev libcurl4-openssl-dev libsoup2.4-dev libgps-dev libgtk2.0-dev libgnomevfs2-dev valgrind
+      run: sudo apt-get update && sudo apt-get install lcov libgoocanvas-dev libcurl4-openssl-dev libsoup2.4-dev libgps-dev libgtk2.0-dev libgnomevfs2-dev valgrind
 
     - name: qt_deps
       if: matrix.config.qt
-      run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev qtbase5-dev qtpositioning5-dev libqt5svg5-dev qml-module-qttest qml-module-qtquick-controls2 qml-module-qtlocation qml-module-qtpositioning qml-module-qtquick-layouts qml-module-qtquick-shapes valgrind
+      run: sudo apt-get update && sudo apt-get install lcov libcurl4-openssl-dev qtbase5-dev qtpositioning5-dev libqt5svg5-dev qml-module-qttest qml-module-qtquick-controls2 qml-module-qtlocation qml-module-qtpositioning qml-module-qtquick-layouts qml-module-qtquick-shapes valgrind
 
     - name: generate valgrind suppression
       if: steps.cache-valgrind.outputs.cache-hit != 'true'
@@ -106,3 +106,15 @@ jobs:
         CONF_OPTIONS: ${{ matrix.config.options }}
         BUILD_WITH_QT: ${{ matrix.config.qt }}
         QT_QPA_PLATFORM: "minimal"
+
+    - name: generate coverage
+      if: matrix.config.name == 'GCC 9 Qt'
+      run: |
+        lcov --directory ${OSM2GO_BUILD_DIR} --capture --output-file coverage.info
+        lcov --remove coverage.info '/usr/*' --output-file coverage.info
+
+    - name: upload covecov info
+      if: matrix.config.name == 'GCC 9 Qt'
+      uses: codecov/codecov-action@v2
+      with:
+        files: coverage.info

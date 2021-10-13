@@ -20,7 +20,6 @@ addons:
     - libgps-dev
     - libgtk2.0-dev
     - libgnomevfs2-dev
-    - lcov
     - valgrind
 script:
   # test with the minimum required version
@@ -40,8 +39,3 @@ script:
 
   - echo -e "set(OSM2GO_BUILD_DIR \"${OSM2GO_BUILD_DIR}\")\nset(dashboard_model \"Continuous\")\nset(CTEST_SITE travis-ci.com)\nset(CTEST_BUILD_NAME \"CI ${TRAVIS_DIST} ${CC} ${BUILD_NAME}\")\nset(CTEST_MEMORYCHECK_COMMAND_OPTIONS \"--suppressions=${VALGRIND_SUPP_DIR}/valgrind-auto.supp\")\ninclude(${TRAVIS_BUILD_DIR}/ctest_osm2go.cmake)" > my_osm2go.cmake
   - CFLAGS="-O0 -fprofile-arcs -ftest-coverage" CXXFLAGS="-O0 -fprofile-arcs -ftest-coverage" ctest -j 2 -V -S my_osm2go.cmake -D BUILD_WITH_QT=Off -D "CONF_OPTIONS=-DNETWORK_TESTS=On;${CONF_OPTIONS}"|| true
-after_success:
-  - lcov --directory ${OSM2GO_BUILD_DIR} --capture --output-file coverage.info # capture coverage info
-  - lcov --remove coverage.info '/usr/*' "${TRAVIS_BUILD_DIR}/curl/*" --output-file coverage.info # filter out system
-  - lcov --list coverage.info #debug info
-  - bash <(curl -s https://codecov.io/bash)
