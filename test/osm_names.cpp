@@ -212,12 +212,12 @@ void test_way_building_simple()
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("building:part", "yes"));
-  helper_way(tags, "building:part", -3);
+  helper_way(tags, "building part", -3);
 
   // there is still only a single tag because these 2 are ignored
   tags.insert(osm_t::TagMap::value_type("source", "foo"));
   tags.insert(osm_t::TagMap::value_type("created_by", "testcase"));
-  helper_way(tags, "building:part", -3);
+  helper_way(tags, "building part", -3);
 
   tags.insert(osm_t::TagMap::value_type("building:levels", "3"));
   helper_way(tags, "building part", -3);

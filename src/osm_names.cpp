@@ -297,22 +297,23 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
     return ret;
   }
 
-  // look if this has only one real tag and use that one
-  const tag_t *stag = tags.singleTag();
-  if (stag != nullptr && strcmp(stag->value, "no") != 0) {
-    // rule out a single name tag first
-    if (ret.name == nullptr)
-      ret.type.key = stag->key;
-    return ret;
-  }
-
   // ### last chance
   rawValue = tags.get_value("building:part");
-  trstring tret;
-  if(rawValue != nullptr && strcmp(rawValue, "yes") == 0)
+
+  if(rawValue != nullptr && strcmp(rawValue, "yes") == 0) {
     ret.type = trstring("building part");
-  else
+  } else {
+    // look if this has only one real tag and use that one
+    const tag_t *stag = tags.singleTag();
+    if (stag != nullptr && strcmp(stag->value, "no") != 0) {
+      // rule out a single name tag first
+      if (ret.name == nullptr)
+        ret.type.key = stag->key;
+      return ret;
+    }
+
     ret.type = osm.unspecified_name(obj);
+  }
 
   return ret;
 }
