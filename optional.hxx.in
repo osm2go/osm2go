@@ -23,6 +23,7 @@ namespace std {
 
 		inline operator bool() const noexcept { return match; }
 		inline T operator *() const { return result; }
+		inline const T *operator ->() const { return &result; }
 	};
 }
 

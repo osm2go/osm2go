@@ -20,6 +20,7 @@
 #include <cassert>
 #include <cstring>
 #include <map>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -138,6 +139,31 @@ struct nameParts {
   } type;
 };
 
+struct lifecycleEntry {
+  lifecycleEntry(const char *t, trstring tr) : tag(t), translation(tr) {}
+  const char *tag;
+  trstring translation;
+};
+
+std::optional<trstring> lifecycle(const char *rawValue)
+{
+  static const std::array<lifecycleEntry, 7> entries = {{
+    lifecycleEntry("proposed", trstring("proposed %1")),
+    lifecycleEntry("construction", trstring("%1 under construction")),
+    lifecycleEntry("disused", trstring("disused %1")),
+    lifecycleEntry("abandoned", trstring("abandoned %1")),
+    lifecycleEntry("demolished", trstring("demolished %1")),
+    lifecycleEntry("removed", trstring("demolished %1")),
+    lifecycleEntry("razed", trstring("demolished %1")),
+  }};
+
+  for (size_t i = 0; i < entries.size(); i++)
+    if (strcmp(rawValue, entries[i].tag) == 0)
+      return entries[i].translation;
+
+  return std::optional<trstring>();
+}
+
 nameParts nameElements(const osm_t &osm, const object_t &obj)
 {
   nameParts ret;
@@ -187,10 +213,18 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
   if (rawValue != nullptr && strcmp(rawValue, "no") != 0) {
     const char *street = tags.get_value("addr:street");
     const char *hn = tags.get_value("addr:housenumber");
+    trstring lifecycleDescr = trstring("%1");
 
     // simplify further checks
-    if (strcmp(rawValue, "yes") == 0)
+    if (strcmp(rawValue, "yes") == 0) {
       rawValue = nullptr;
+    } else if (rawValue != nullptr) {
+      std::optional<trstring> lcRet = lifecycle(rawValue);
+      if (lcRet) {
+        lifecycleDescr = *lcRet;
+        rawValue = nullptr;
+      }
+    }
 
     if(street == nullptr) {
       // check if there is an "associatedStreet" relation where this is a "house" member
@@ -203,20 +237,20 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
       trstring dsc = street != nullptr ?
                         rawValue != nullptr ?
                             trstring("%1 building %2 %3").arg(clean_underscores(rawValue)).arg(street) :
-                            trstring("building %1 %2").arg(street) :
+                            lifecycleDescr.arg(trstring("building %1 %2").arg(street)) :
                         rawValue != nullptr ?
                             trstring("%1 building housenumber %2").arg(clean_underscores(rawValue)) :
-                            trstring("building housenumber %1");
+                            lifecycleDescr.arg(trstring("building housenumber %1"));
       ret.type = dsc.arg(hn);
     } else if (street != nullptr) {
       ret.type = rawValue != nullptr ?
                           trstring("%1 building in %2").arg(clean_underscores(rawValue)).arg(street) :
-                          trstring("building in %1").arg(street);
+                          lifecycleDescr.arg(trstring("building in %1").arg(street));
     } else {
       if (rawValue == nullptr)
-        ret.type = _("building");
+        ret.type = lifecycleDescr.arg(_("building"));
       else
-        ret.type = trstring("%1 building").arg(clean_underscores(rawValue));
+        ret.type = lifecycleDescr.arg(trstring("%1 building").arg(clean_underscores(rawValue)));
       if(ret.name == nullptr)
         ret.name = tags.get_value("addr:housename");
     }
@@ -227,6 +261,8 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
   // ### HIGHWAYS
   rawValue = tags.get_value("highway");
   if(rawValue != nullptr) {
+    std::optional<trstring> lcRet = lifecycle(rawValue);
+
     /* highways are a little bit difficult */
     if(!strcmp(rawValue, "primary")     || !strcmp(rawValue, "secondary") ||
         !strcmp(rawValue, "tertiary")    || !strcmp(rawValue, "unclassified") ||
@@ -248,11 +284,14 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
       if(cstr == nullptr)
         cstr = tags.get_value("construction");
       if(cstr == nullptr) {
-        ret.type = _("road/street under construction");
+        ret.type = _("road under construction");
       } else {
         ret.type = trstring("%1 road under construction").arg(cstr);
       }
     }
+
+    else if (lcRet)
+      ret.type = lcRet->arg(_("road"));
 
     else
       ret.type.key = rawValue;

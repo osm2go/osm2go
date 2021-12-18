@@ -169,7 +169,7 @@ void test_way_highway()
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("highway", "construction"));
-  helper_way(tags, _("road/street under construction"), 0);
+  helper_way(tags, _("road under construction"), 0);
 
   tags.insert(osm_t::TagMap::value_type("construction", "foo"));
   helper_way(tags, trstring("%1 road under construction").arg("foo"), 0);
@@ -190,6 +190,13 @@ void test_way_highway()
   tags.insert(osm_t::TagMap::value_type("ref", "B217"));
   tags.insert(osm_t::TagMap::value_type("highway", "primary"));
   helper_way(tags, "primary road: \"B217\"", 0);
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("highway", "abandoned"));
+  helper_way(tags, trstring("abandoned %1").arg(_("road")), 0);
+
+  tags.insert(osm_t::TagMap::value_type("name", "foo"));
+  helper_way(tags, trstring("%1: \"%2\"").arg(trstring("abandoned %1").arg(_("road"))).arg("foo"), 0);
 }
 
 void test_way_building_simple()
@@ -197,7 +204,7 @@ void test_way_building_simple()
   osm_t::TagMap tags;
 
   tags.insert(osm_t::TagMap::value_type("building", "yes"));
-  helper_way(tags, "building", 0);
+  helper_way(tags, _("building"), 0);
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("building", "residential"));
@@ -221,6 +228,20 @@ void test_way_building_simple()
 
   tags.insert(osm_t::TagMap::value_type("building:levels", "3"));
   helper_way(tags, "building part", -3);
+
+  // lifecycle
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("building", "abandoned"));
+  helper_way(tags, trstring("abandoned %1").arg(_("building")), 0);
+
+  tags.insert(osm_t::TagMap::value_type("name", "Brook Hall"));
+  helper_way(tags, trstring("%1: \"%2\"").arg(trstring("abandoned %1").arg(_("building"))).arg("Brook Hall"), 0);
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("building", "abandoned"));
+  tags.insert(osm_t::TagMap::value_type("addr:street", "Heisterweg"));
+  tags.insert(osm_t::TagMap::value_type("addr:housenumber", "2"));
+  helper_way(tags, trstring("abandoned %1").arg(trstring("building %1 %2").arg("Heisterweg").arg("2")), 0);
 }
 
 void test_way_building_area()
