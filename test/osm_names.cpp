@@ -171,15 +171,15 @@ void test_way_highway()
   tags.insert(osm_t::TagMap::value_type("highway", "construction"));
   helper_way(tags, _("road under construction"), 0);
 
-  tags.insert(osm_t::TagMap::value_type("construction", "foo"));
-  helper_way(tags, trstring("%1 road under construction").arg("foo"), 0);
+  tags.insert(osm_t::TagMap::value_type("construction", "emergency_access_point"));
+  helper_way(tags, trstring("%1 under construction").arg("emergency access point"), 0);
 
   // construction:highway is the proper namespaced tag, so prefer that one
-  tags.insert(osm_t::TagMap::value_type("construction:highway", "bar"));
-  helper_way(tags, trstring("%1 road under construction").arg("bar"), 0);
+  tags.insert(osm_t::TagMap::value_type("construction:highway", "path"));
+  helper_way(tags, trstring("%1 under construction").arg("path"), 0);
 
   tags.insert(osm_t::TagMap::value_type("name", "baz"));
-  helper_way(tags, trstring("%1 road under construction").arg("bar").toStdString() + ": \"baz\"", 0);
+  helper_way(tags, trstring("%1 under construction").arg("path").toStdString() + ": \"baz\"", 0);
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("name", "foo"));
@@ -197,6 +197,11 @@ void test_way_highway()
 
   tags.insert(osm_t::TagMap::value_type("name", "foo"));
   helper_way(tags, trstring("%1: \"%2\"").arg(trstring("abandoned %1").arg(_("road"))).arg("foo"), 0);
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("highway", "proposed"));
+  tags.insert(osm_t::TagMap::value_type("proposed:highway", "primary"));
+  helper_way(tags, trstring("proposed %1").arg(trstring("%1 road").arg("primary")), 0);
 }
 
 void test_way_building_simple()
@@ -242,6 +247,14 @@ void test_way_building_simple()
   tags.insert(osm_t::TagMap::value_type("addr:street", "Heisterweg"));
   tags.insert(osm_t::TagMap::value_type("addr:housenumber", "2"));
   helper_way(tags, trstring("abandoned %1").arg(trstring("building %1 %2").arg("Heisterweg").arg("2")), 0);
+
+  // specify the former type
+  tags.insert(osm_t::TagMap::value_type("abandoned", "civic"));
+  helper_way(tags, trstring("abandoned %1").arg(trstring("%1 building %2 %3").arg("civic").arg("Heisterweg").arg("2")), 0);
+
+  // explicit type tag takes precedence
+  tags.insert(osm_t::TagMap::value_type("abandoned:building", "fire_station"));
+  helper_way(tags, trstring("abandoned %1").arg(trstring("%1 building %2 %3").arg("fire station").arg("Heisterweg").arg("2")), 0);
 }
 
 void test_way_building_area()

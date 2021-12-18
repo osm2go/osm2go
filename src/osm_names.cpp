@@ -145,7 +145,13 @@ struct lifecycleEntry {
   trstring translation;
 };
 
-std::optional<trstring> lifecycle(const char *rawValue)
+struct lifecycleResult {
+  lifecycleResult() : value(nullptr) {}
+  trstring pattern;
+  const char *value;
+};
+
+std::optional<lifecycleResult> lifecycle(const tag_list_t &tags, const char *key, const char *rawValue)
 {
   static const std::array<lifecycleEntry, 7> entries = {{
     lifecycleEntry("proposed", trstring("proposed %1")),
@@ -157,11 +163,22 @@ std::optional<trstring> lifecycle(const char *rawValue)
     lifecycleEntry("razed", trstring("demolished %1")),
   }};
 
-  for (size_t i = 0; i < entries.size(); i++)
-    if (strcmp(rawValue, entries[i].tag) == 0)
-      return entries[i].translation;
+  lifecycleResult res;
 
-  return std::optional<trstring>();
+  for (size_t i = 0; i < entries.size(); i++)
+    if (strcmp(rawValue, entries[i].tag) == 0) {
+      res.pattern = entries[i].translation;
+
+      std::string lc_key = rawValue + std::string(1, ':') + key;
+
+      res.value = tags.get_value(lc_key.c_str());
+      if (res.value == nullptr)
+        res.value = tags.get_value(rawValue);
+
+      return res;
+    }
+
+  return std::optional<lifecycleResult>();
 }
 
 nameParts nameElements(const osm_t &osm, const object_t &obj)
@@ -219,10 +236,10 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
     if (strcmp(rawValue, "yes") == 0) {
       rawValue = nullptr;
     } else if (rawValue != nullptr) {
-      std::optional<trstring> lcRet = lifecycle(rawValue);
+      std::optional<lifecycleResult> lcRet = lifecycle(tags, "building", rawValue);
       if (lcRet) {
-        lifecycleDescr = *lcRet;
-        rawValue = nullptr;
+        lifecycleDescr = lcRet->pattern;
+        rawValue = lcRet->value;
       }
     }
 
@@ -237,15 +254,15 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
       trstring dsc = street != nullptr ?
                         rawValue != nullptr ?
                             trstring("%1 building %2 %3").arg(clean_underscores(rawValue)).arg(street) :
-                            lifecycleDescr.arg(trstring("building %1 %2").arg(street)) :
+                            trstring("building %1 %2").arg(street) :
                         rawValue != nullptr ?
                             trstring("%1 building housenumber %2").arg(clean_underscores(rawValue)) :
-                            lifecycleDescr.arg(trstring("building housenumber %1"));
-      ret.type = dsc.arg(hn);
+                            trstring("building housenumber %1");
+      ret.type = lifecycleDescr.arg(dsc.arg(hn));
     } else if (street != nullptr) {
-      ret.type = rawValue != nullptr ?
-                          trstring("%1 building in %2").arg(clean_underscores(rawValue)).arg(street) :
-                          lifecycleDescr.arg(trstring("building in %1").arg(street));
+      ret.type = lifecycleDescr.arg(rawValue != nullptr ?
+                                    trstring("%1 building in %2").arg(clean_underscores(rawValue)).arg(street) :
+                                    trstring("building in %1").arg(street));
     } else {
       if (rawValue == nullptr)
         ret.type = lifecycleDescr.arg(_("building"));
@@ -261,7 +278,17 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
   // ### HIGHWAYS
   rawValue = tags.get_value("highway");
   if(rawValue != nullptr) {
-    std::optional<trstring> lcRet = lifecycle(rawValue);
+    std::optional<lifecycleResult> lcRet = lifecycle(tags, "highway", rawValue);
+    if (lcRet) {
+      // make sure there is no nullptr in rawValue below.
+      // This happens if there is only highway=<lifecycle> without further details
+      if (lcRet->value == nullptr) {
+        ret.type = lcRet->pattern.arg(_("road"));
+        return ret;
+      }
+      rawValue = lcRet->value;
+    }
+    trstring descr;
 
     /* highways are a little bit difficult */
     if(!strcmp(rawValue, "primary")     || !strcmp(rawValue, "secondary") ||
@@ -269,32 +296,28 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
         !strcmp(rawValue, "residential") || !strcmp(rawValue, "service")) {
       // no underscores replacement here because the whitelisted flags above don't have them
       assert(strchr(rawValue, '_') == nullptr);
-      ret.type = trstring("%1 road").arg(rawValue);
+      descr = trstring("%1 road").arg(rawValue);
     }
 
     else if(obj.type == object_t::WAY && strcmp(rawValue, "pedestrian") == 0) {
       if(static_cast<way_t *>(obj)->is_area())
-        ret.type = _("pedestrian area");
+        descr = trstring("pedestrian area");
       else
-        ret.type = _("pedestrian way");
+        descr = trstring("pedestrian way");
     }
 
-    else if(!strcmp(rawValue, "construction")) {
-      const char *cstr = tags.get_value("construction:highway");
-      if(cstr == nullptr)
-        cstr = tags.get_value("construction");
-      if(cstr == nullptr) {
-        ret.type = _("road under construction");
-      } else {
-        ret.type = trstring("%1 road under construction").arg(cstr);
-      }
+    else if (lcRet) {
+      ret.type = lcRet->pattern.arg(clean_underscores(rawValue));
+      return ret;
     }
-
-    else if (lcRet)
-      ret.type = lcRet->arg(_("road"));
 
     else
       ret.type.key = rawValue;
+
+    if (lcRet && !descr.isEmpty())
+      ret.type = lcRet->pattern.arg(descr);
+    else if (!descr.isEmpty())
+      ret.type = std::move(descr);
 
     return ret;
   }
