@@ -555,6 +555,28 @@ void test_lifecycle()
 
   tags.insert(osm_t::TagMap::value_type("construction", "light_rail"));
   helper_way(tags, "light rail under construction", 0);
+
+  // if some active element exists instead this should be used
+  tags.insert(osm_t::TagMap::value_type("highway", "cycleway"));
+  helper_way(tags, "cycleway", 0);
+
+  // the other way
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("highway", "abandoned"));
+  tags.insert(osm_t::TagMap::value_type("abandoned:highway", "path"));
+  helper_way(tags, trstring("abandoned %1").arg("path"), 0);
+
+  tags.insert(osm_t::TagMap::value_type("railway", "tram"));
+  helper_way(tags, "tram", 0);
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("building", "abandoned"));
+  tags.insert(osm_t::TagMap::value_type("abandoned:building", "residential"));
+  helper_way(tags, trstring("abandoned %1").arg(trstring("%1 building").arg("residential")), 0);
+
+  // the tagging doesn't make sense, but who cares ;)
+  tags.insert(osm_t::TagMap::value_type("emergency", "fire_hydrant"));
+  helper_way(tags, "fire hydrant", 0);
 }
 
 } // namespace

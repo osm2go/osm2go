@@ -181,7 +181,7 @@ std::optional<lifecycleResult> lifecycle(const tag_list_t &tags, const char *key
   return std::optional<lifecycleResult>();
 }
 
-nameParts describeBuilding(const osm_t &osm, const object_t &obj, const char *rawValue, const char *name)
+std::optional<nameParts> describeBuilding(const osm_t &osm, const object_t &obj, const char *rawValue, const char *name, const bool useLifecycle)
 {
   nameParts ret;
 
@@ -198,6 +198,8 @@ nameParts describeBuilding(const osm_t &osm, const object_t &obj, const char *ra
   } else if (rawValue != nullptr) {
     std::optional<lifecycleResult> lcRet = lifecycle(tags, "building", rawValue);
     if (lcRet) {
+      if (!useLifecycle)
+        return std::optional<nameParts>();
       lifecycleDescr = lcRet->pattern;
       rawValue = lcRet->value;
     }
@@ -235,11 +237,13 @@ nameParts describeBuilding(const osm_t &osm, const object_t &obj, const char *ra
   return ret;
 }
 
-nameParts describeHighway(const tag_list_t &tags, const object_t &obj, const char *rawValue)
+std::optional<nameParts> describeHighway(const tag_list_t &tags, const object_t &obj, const char *rawValue, const bool useLifecycle)
 {
   nameParts ret;
   std::optional<lifecycleResult> lcRet = lifecycle(tags, "highway", rawValue);
   if (lcRet) {
+    if (!useLifecycle)
+      return std::optional<nameParts>();
     // make sure there is no nullptr in rawValue below.
     // This happens if there is only highway=<lifecycle> without further details
     if (lcRet->value == nullptr) {
@@ -282,7 +286,7 @@ nameParts describeHighway(const tag_list_t &tags, const object_t &obj, const cha
   return ret;
 }
 
-nameParts nameElements(const osm_t &osm, const object_t &obj)
+nameParts nameElements(const osm_t &osm, const object_t &obj, const bool useLifecycle = false)
 {
   nameParts ret;
 
@@ -304,7 +308,9 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
       continue;
 
     std::optional<lifecycleResult> lcRet = lifecycle(tags, type_tags[i], rawValue);
-    if (lcRet && lcRet->value != nullptr)
+    if (lcRet && !useLifecycle)
+      continue;
+    else if (lcRet && lcRet->value != nullptr)
       ret.type = lcRet->pattern.arg(clean_underscores(lcRet->value));
     else if (lcRet)
       ret.type = lcRet->pattern.arg(type_tags[i]);
@@ -339,15 +345,19 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
   // ### BUILDINGS
   rawValue = tags.get_value("building");
   if (rawValue != nullptr && strcmp(rawValue, "no") != 0) {
-    return describeBuilding(osm, obj, rawValue, ret.name);
+    std::optional<nameParts> np = describeBuilding(osm, obj, rawValue, ret.name, useLifecycle);
+    if (np)
+      return *np;
   }
 
   // ### HIGHWAYS
   rawValue = tags.get_value("highway");
   if(rawValue != nullptr) {
-    nameParts hret = describeHighway(tags, obj, rawValue);
-    hret.name = ret.name;
-    return hret;
+    std::optional<nameParts> hret = describeHighway(tags, obj, rawValue, useLifecycle);
+    if (hret) {
+      ret.type = hret->type;
+      return ret;
+    }
   }
 
   // ### EMERGENCY
@@ -392,6 +402,8 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
 
   if(rawValue != nullptr && strcmp(rawValue, "yes") == 0) {
     ret.type = trstring("building part");
+  } else if (!useLifecycle) {
+    return nameElements(osm, obj, true);
   } else {
     // look if this has only one real tag and use that one
     const tag_t *stag = tags.singleTag();
