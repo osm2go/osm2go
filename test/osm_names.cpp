@@ -512,6 +512,51 @@ void test_simple()
   helper_node(tags, "fire hydrant: \"42\"");
 }
 
+// lifecycle replacements for things that are not handled specially like buildings and highways
+void test_lifecycle()
+{
+  osm_t::TagMap tags;
+
+  tags.insert(osm_t::TagMap::value_type("railway", "tram"));
+  helper_way(tags, "tram", 0);
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("railway", "abandoned"));
+  helper_way(tags, trstring("abandoned %1").arg("railway"), 0);
+
+  tags.insert(osm_t::TagMap::value_type("abandoned", "tram"));
+  helper_way(tags, trstring("abandoned %1").arg("tram"), 0);
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("highway", "construction"));
+  helper_way(tags, "road under construction", 0);
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("highway", "abandoned"));
+  helper_way(tags, "abandoned road", 0);
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("highway", "proposed"));
+  helper_way(tags, "proposed road", 0);
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("railway", "abandoned"));
+  helper_way(tags, "abandoned railway", 0);
+
+  tags.clear();
+  // there are several of these, all mapped to the same display value for simplicity
+  tags.insert(osm_t::TagMap::value_type("highway", "razed"));
+  helper_way(tags, "demolished road", 0);
+
+  // other things under construction
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("railway", "construction"));
+  helper_way(tags, "railway under construction", 0);
+
+  tags.insert(osm_t::TagMap::value_type("construction", "light_rail"));
+  helper_way(tags, "light rail under construction", 0);
+}
+
 } // namespace
 
 int main()
@@ -530,6 +575,7 @@ int main()
   test_relation_precedence();
   test_sport();
   test_simple();
+  test_lifecycle();
 
   xmlCleanupParser();
 

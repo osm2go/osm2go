@@ -181,6 +181,107 @@ std::optional<lifecycleResult> lifecycle(const tag_list_t &tags, const char *key
   return std::optional<lifecycleResult>();
 }
 
+nameParts describeBuilding(const osm_t &osm, const object_t &obj, const char *rawValue, const char *name)
+{
+  nameParts ret;
+
+  ret.name = name;
+
+  const tag_list_t &tags = static_cast<base_object_t *>(obj)->tags;
+  const char *street = tags.get_value("addr:street");
+  const char *hn = tags.get_value("addr:housenumber");
+  trstring lifecycleDescr = trstring("%1");
+
+  // simplify further checks
+  if (strcmp(rawValue, "yes") == 0) {
+    rawValue = nullptr;
+  } else if (rawValue != nullptr) {
+    std::optional<lifecycleResult> lcRet = lifecycle(tags, "building", rawValue);
+    if (lcRet) {
+      lifecycleDescr = lcRet->pattern;
+      rawValue = lcRet->value;
+    }
+  }
+
+  if(street == nullptr) {
+    // check if there is an "associatedStreet" relation where this is a "house" member
+    const relation_t *astreet = osm.find_relation(typed_relation_member_functor("associatedStreet", "house", obj));
+    if(astreet != nullptr)
+      street = astreet->tags.get_value("name");
+  }
+
+  if(hn != nullptr) {
+    trstring dsc = street != nullptr ?
+                      rawValue != nullptr ?
+                          trstring("%1 building %2 %3").arg(clean_underscores(rawValue)).arg(street) :
+                          trstring("building %1 %2").arg(street) :
+                      rawValue != nullptr ?
+                          trstring("%1 building housenumber %2").arg(clean_underscores(rawValue)) :
+                          trstring("building housenumber %1");
+    ret.type = lifecycleDescr.arg(dsc.arg(hn));
+  } else if (street != nullptr) {
+    ret.type = lifecycleDescr.arg(rawValue != nullptr ?
+                                  trstring("%1 building in %2").arg(clean_underscores(rawValue)).arg(street) :
+                                  trstring("building in %1").arg(street));
+  } else {
+    if (rawValue == nullptr)
+      ret.type = lifecycleDescr.arg(_("building"));
+    else
+      ret.type = lifecycleDescr.arg(trstring("%1 building").arg(clean_underscores(rawValue)));
+    if(ret.name == nullptr)
+      ret.name = tags.get_value("addr:housename");
+  }
+
+  return ret;
+}
+
+nameParts describeHighway(const tag_list_t &tags, const object_t &obj, const char *rawValue)
+{
+  nameParts ret;
+  std::optional<lifecycleResult> lcRet = lifecycle(tags, "highway", rawValue);
+  if (lcRet) {
+    // make sure there is no nullptr in rawValue below.
+    // This happens if there is only highway=<lifecycle> without further details
+    if (lcRet->value == nullptr) {
+      ret.type = lcRet->pattern.arg(_("road"));
+      return ret;
+    }
+    rawValue = lcRet->value;
+  }
+  trstring descr;
+
+  /* highways are a little bit difficult */
+  if(!strcmp(rawValue, "primary")     || !strcmp(rawValue, "secondary") ||
+      !strcmp(rawValue, "tertiary")    || !strcmp(rawValue, "unclassified") ||
+      !strcmp(rawValue, "residential") || !strcmp(rawValue, "service")) {
+    // no underscores replacement here because the whitelisted flags above don't have them
+    assert(strchr(rawValue, '_') == nullptr);
+    descr = trstring("%1 road").arg(rawValue);
+  }
+
+  else if(obj.type == object_t::WAY && strcmp(rawValue, "pedestrian") == 0) {
+    if(static_cast<way_t *>(obj)->is_area())
+      descr = trstring("pedestrian area");
+    else
+      descr = trstring("pedestrian way");
+  }
+
+  else if (lcRet) {
+    ret.type = lcRet->pattern.arg(clean_underscores(rawValue));
+    return ret;
+  }
+
+  else
+    ret.type.key = rawValue;
+
+  if (lcRet && !descr.isEmpty())
+    ret.type = lcRet->pattern.arg(descr);
+  else if (!descr.isEmpty())
+    ret.type = std::move(descr);
+
+  return ret;
+}
+
 nameParts nameElements(const osm_t &osm, const object_t &obj)
 {
   nameParts ret;
@@ -198,9 +299,19 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
                               "natural", "man_made" } };
 
   for(unsigned int i = 0; i < type_tags.size(); i++) {
-    ret.type.key = tags.get_value(type_tags[i]);
-    if (ret.type.key)
-      return ret;
+    const char *rawValue = tags.get_value(type_tags[i]);
+    if (rawValue == nullptr)
+      continue;
+
+    std::optional<lifecycleResult> lcRet = lifecycle(tags, type_tags[i], rawValue);
+    if (lcRet && lcRet->value != nullptr)
+      ret.type = lcRet->pattern.arg(clean_underscores(lcRet->value));
+    else if (lcRet)
+      ret.type = lcRet->pattern.arg(type_tags[i]);
+    else
+      ret.type.key = rawValue;
+
+    return ret;
   }
 
   // ### LEISURE
@@ -228,98 +339,15 @@ nameParts nameElements(const osm_t &osm, const object_t &obj)
   // ### BUILDINGS
   rawValue = tags.get_value("building");
   if (rawValue != nullptr && strcmp(rawValue, "no") != 0) {
-    const char *street = tags.get_value("addr:street");
-    const char *hn = tags.get_value("addr:housenumber");
-    trstring lifecycleDescr = trstring("%1");
-
-    // simplify further checks
-    if (strcmp(rawValue, "yes") == 0) {
-      rawValue = nullptr;
-    } else if (rawValue != nullptr) {
-      std::optional<lifecycleResult> lcRet = lifecycle(tags, "building", rawValue);
-      if (lcRet) {
-        lifecycleDescr = lcRet->pattern;
-        rawValue = lcRet->value;
-      }
-    }
-
-    if(street == nullptr) {
-      // check if there is an "associatedStreet" relation where this is a "house" member
-      const relation_t *astreet = osm.find_relation(typed_relation_member_functor("associatedStreet", "house", obj));
-      if(astreet != nullptr)
-        street = astreet->tags.get_value("name");
-    }
-
-    if(hn != nullptr) {
-      trstring dsc = street != nullptr ?
-                        rawValue != nullptr ?
-                            trstring("%1 building %2 %3").arg(clean_underscores(rawValue)).arg(street) :
-                            trstring("building %1 %2").arg(street) :
-                        rawValue != nullptr ?
-                            trstring("%1 building housenumber %2").arg(clean_underscores(rawValue)) :
-                            trstring("building housenumber %1");
-      ret.type = lifecycleDescr.arg(dsc.arg(hn));
-    } else if (street != nullptr) {
-      ret.type = lifecycleDescr.arg(rawValue != nullptr ?
-                                    trstring("%1 building in %2").arg(clean_underscores(rawValue)).arg(street) :
-                                    trstring("building in %1").arg(street));
-    } else {
-      if (rawValue == nullptr)
-        ret.type = lifecycleDescr.arg(_("building"));
-      else
-        ret.type = lifecycleDescr.arg(trstring("%1 building").arg(clean_underscores(rawValue)));
-      if(ret.name == nullptr)
-        ret.name = tags.get_value("addr:housename");
-    }
-
-    return ret;
+    return describeBuilding(osm, obj, rawValue, ret.name);
   }
 
   // ### HIGHWAYS
   rawValue = tags.get_value("highway");
   if(rawValue != nullptr) {
-    std::optional<lifecycleResult> lcRet = lifecycle(tags, "highway", rawValue);
-    if (lcRet) {
-      // make sure there is no nullptr in rawValue below.
-      // This happens if there is only highway=<lifecycle> without further details
-      if (lcRet->value == nullptr) {
-        ret.type = lcRet->pattern.arg(_("road"));
-        return ret;
-      }
-      rawValue = lcRet->value;
-    }
-    trstring descr;
-
-    /* highways are a little bit difficult */
-    if(!strcmp(rawValue, "primary")     || !strcmp(rawValue, "secondary") ||
-        !strcmp(rawValue, "tertiary")    || !strcmp(rawValue, "unclassified") ||
-        !strcmp(rawValue, "residential") || !strcmp(rawValue, "service")) {
-      // no underscores replacement here because the whitelisted flags above don't have them
-      assert(strchr(rawValue, '_') == nullptr);
-      descr = trstring("%1 road").arg(rawValue);
-    }
-
-    else if(obj.type == object_t::WAY && strcmp(rawValue, "pedestrian") == 0) {
-      if(static_cast<way_t *>(obj)->is_area())
-        descr = trstring("pedestrian area");
-      else
-        descr = trstring("pedestrian way");
-    }
-
-    else if (lcRet) {
-      ret.type = lcRet->pattern.arg(clean_underscores(rawValue));
-      return ret;
-    }
-
-    else
-      ret.type.key = rawValue;
-
-    if (lcRet && !descr.isEmpty())
-      ret.type = lcRet->pattern.arg(descr);
-    else if (!descr.isEmpty())
-      ret.type = std::move(descr);
-
-    return ret;
+    nameParts hret = describeHighway(tags, obj, rawValue);
+    hret.name = ret.name;
+    return hret;
   }
 
   // ### EMERGENCY
