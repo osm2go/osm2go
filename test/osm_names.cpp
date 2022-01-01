@@ -571,12 +571,41 @@ void test_lifecycle()
 
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("building", "abandoned"));
+  helper_way(tags, trstring("abandoned %1").arg(trstring("building")), 0);
+
   tags.insert(osm_t::TagMap::value_type("abandoned:building", "residential"));
   helper_way(tags, trstring("abandoned %1").arg(trstring("%1 building").arg("residential")), 0);
 
   // the tagging doesn't make sense, but who cares ;)
   tags.insert(osm_t::TagMap::value_type("emergency", "fire_hydrant"));
   helper_way(tags, "fire hydrant", 0);
+
+  // something that only exists in a prefixed namespace
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("demolished:railway", "rail"));
+  helper_way(tags, trstring("demolished %1").arg("rail"), 0);
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("demolished:railway", "yes"));
+  helper_way(tags, trstring("demolished %1").arg("railway"), 0);
+
+  // same for buildings
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("demolished:building", "yes"));
+  helper_way(tags, trstring("demolished %1").arg(trstring("building")), 0);
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("demolished:building", "commercial"));
+  helper_way(tags, trstring("demolished %1").arg(trstring("%1 building").arg("commercial")), 0);
+
+  // same for highways
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("demolished:highway", "yes"));
+  helper_way(tags, trstring("demolished %1").arg(trstring("road")), 0);
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("demolished:highway", "secondary"));
+  helper_way(tags, trstring("demolished %1").arg(trstring("%1 road").arg("secondary")), 0);
 }
 
 } // namespace

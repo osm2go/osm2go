@@ -146,37 +146,71 @@ struct lifecycleEntry {
 };
 
 struct lifecycleResult {
-  lifecycleResult() : value(nullptr) {}
+  lifecycleResult() : value(nullptr), prefix(nullptr) {}
   trstring pattern;
   const char *value;
+  const char *prefix; /* buildin constant, does not need to be freed */
 };
 
+const std::array<lifecycleEntry, 7> lifeCyclePrefixes = {{
+  lifecycleEntry("proposed", trstring("proposed %1")),
+  lifecycleEntry("construction", trstring("%1 under construction")),
+  lifecycleEntry("disused", trstring("disused %1")),
+  lifecycleEntry("abandoned", trstring("abandoned %1")),
+  lifecycleEntry("demolished", trstring("demolished %1")),
+  lifecycleEntry("removed", trstring("demolished %1")),
+  lifecycleEntry("razed", trstring("demolished %1")),
+}};
+
+/**
+ * @brief construct <prefix> + ":" + <key> and look up the value for that tag
+ */
+const char * __attribute__((nonnull(2, 3))) getLifecyclePrefixed(const tag_list_t &tags, const char *prefix, const char *key)
+{
+  std::string lc_key = prefix + std::string(1, ':') + key;
+
+  return tags.get_value(lc_key.c_str());
+}
+
+/**
+ * @brief check if rawValue is a lifecycle prefix, and look up if values exists inside that prefixed tags
+ */
 std::optional<lifecycleResult> lifecycle(const tag_list_t &tags, const char *key, const char *rawValue)
 {
-  static const std::array<lifecycleEntry, 7> entries = {{
-    lifecycleEntry("proposed", trstring("proposed %1")),
-    lifecycleEntry("construction", trstring("%1 under construction")),
-    lifecycleEntry("disused", trstring("disused %1")),
-    lifecycleEntry("abandoned", trstring("abandoned %1")),
-    lifecycleEntry("demolished", trstring("demolished %1")),
-    lifecycleEntry("removed", trstring("demolished %1")),
-    lifecycleEntry("razed", trstring("demolished %1")),
-  }};
-
   lifecycleResult res;
 
-  for (size_t i = 0; i < entries.size(); i++)
-    if (strcmp(rawValue, entries[i].tag) == 0) {
-      res.pattern = entries[i].translation;
+  for (size_t i = 0; i < lifeCyclePrefixes.size(); i++)
+    if (strcmp(rawValue, lifeCyclePrefixes[i].tag) == 0) {
+      res.pattern = lifeCyclePrefixes[i].translation;
+      res.prefix = lifeCyclePrefixes[i].tag;
 
-      std::string lc_key = rawValue + std::string(1, ':') + key;
-
-      res.value = tags.get_value(lc_key.c_str());
+      res.value = getLifecyclePrefixed(tags, lifeCyclePrefixes[i].tag, key);
       if (res.value == nullptr)
         res.value = tags.get_value(rawValue);
 
       return res;
     }
+
+  return std::optional<lifecycleResult>();
+}
+
+/**
+ * @brief check if the key exists completely inside a prefixed namespace
+ *
+ * This can be used to detect a <prefix>:<feature>=* when no <feature>=<prefix> exists.
+ */
+std::optional<lifecycleResult> lifecycleOnly(const tag_list_t &tags, const char *key)
+{
+  lifecycleResult res;
+
+  for (size_t i = 0; i < lifeCyclePrefixes.size(); i++) {
+    res.value = getLifecyclePrefixed(tags, lifeCyclePrefixes[i].tag, key);
+    if (res.value != nullptr) {
+      res.pattern = lifeCyclePrefixes[i].translation;
+      res.prefix = lifeCyclePrefixes[i].tag;
+      return res;
+    }
+  }
 
   return std::optional<lifecycleResult>();
 }
@@ -193,7 +227,7 @@ std::optional<nameParts> describeBuilding(const osm_t &osm, const object_t &obj,
   trstring lifecycleDescr = trstring("%1");
 
   // simplify further checks
-  if (strcmp(rawValue, "yes") == 0) {
+  if (rawValue != nullptr && strcmp(rawValue, "yes") == 0) {
     rawValue = nullptr;
   } else if (rawValue != nullptr) {
     std::optional<lifecycleResult> lcRet = lifecycle(tags, "building", rawValue);
@@ -201,7 +235,10 @@ std::optional<nameParts> describeBuilding(const osm_t &osm, const object_t &obj,
       if (!useLifecycle)
         return std::optional<nameParts>();
       lifecycleDescr = lcRet->pattern;
-      rawValue = lcRet->value;
+      if (lcRet->value == nullptr || strcmp(lcRet->value, "yes") == 0)
+        rawValue = nullptr;
+      else
+        rawValue = lcRet->value;
     }
   }
 
@@ -246,7 +283,7 @@ std::optional<nameParts> describeHighway(const tag_list_t &tags, const object_t 
       return std::optional<nameParts>();
     // make sure there is no nullptr in rawValue below.
     // This happens if there is only highway=<lifecycle> without further details
-    if (lcRet->value == nullptr) {
+    if (lcRet->value == nullptr || strcmp(lcRet->value, "yes") == 0) {
       ret.type = lcRet->pattern.arg(_("road"));
       return ret;
     }
@@ -308,6 +345,7 @@ nameParts nameElements(const osm_t &osm, const object_t &obj, const bool useLife
       continue;
 
     std::optional<lifecycleResult> lcRet = lifecycle(tags, type_tags[i], rawValue);
+    /* if this is key=<lifecycle> then ignore it on first pass */
     if (lcRet && !useLifecycle)
       continue;
     else if (lcRet && lcRet->value != nullptr)
@@ -318,6 +356,23 @@ nameParts nameElements(const osm_t &osm, const object_t &obj, const bool useLife
       ret.type.key = rawValue;
 
     return ret;
+  }
+
+  // it may happen that the "primary" feature only exists as <lifecycle>:<feature>
+  if (useLifecycle) {
+    for(unsigned int i = 0; i < type_tags.size(); i++) {
+      std::optional<lifecycleResult> lcRet = lifecycleOnly(tags, type_tags[i]);
+      if (!lcRet)
+        continue;
+      assert(lcRet->value != nullptr);
+
+      if (strcmp(lcRet->value, "yes") != 0)
+        ret.type = lcRet->pattern.arg(clean_underscores(lcRet->value));
+      else
+        ret.type = lcRet->pattern.arg(type_tags[i]);
+
+      return ret;
+    }
   }
 
   // ### LEISURE
@@ -349,6 +404,15 @@ nameParts nameElements(const osm_t &osm, const object_t &obj, const bool useLife
     if (np)
       return *np;
   }
+  if (useLifecycle && (rawValue == nullptr || strcmp(rawValue, "no") == 0)) {
+    std::optional<lifecycleResult> lcRet = lifecycleOnly(tags, "building");
+    if (lcRet) {
+      // there was no building=<lifecycle>, but work as if it was
+      std::optional<nameParts> np = describeBuilding(osm, obj, lcRet->prefix, ret.name, true);
+      if (np)
+        return *np;
+    }
+  }
 
   // ### HIGHWAYS
   rawValue = tags.get_value("highway");
@@ -357,6 +421,14 @@ nameParts nameElements(const osm_t &osm, const object_t &obj, const bool useLife
     if (hret) {
       ret.type = hret->type;
       return ret;
+    }
+  } else if (useLifecycle) {
+    std::optional<lifecycleResult> lcRet = lifecycleOnly(tags, "highway");
+    if (lcRet) {
+      // there was no highway=<lifecycle>, but work as if it was
+      std::optional<nameParts> np = describeHighway(tags, obj, lcRet->prefix, true);
+      if (np)
+        return *np;
     }
   }
 
