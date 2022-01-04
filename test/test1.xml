@@ -50,6 +50,15 @@
 		<scale_max>14000</scale_max>
 	</rule>
 	<rule>
+		<condition k="railway"/>
+		<condition k="railway" v="abandoned" invert="true"/>
+		<condition k="railway" v="razed" invert="true"/>
+		<condition k="railway" v="disused" invert="true"/>
+		<line width="7" width_bg="12" dashed="4" colour="#eeeeee" colour_bg="#999999"/>
+		<scale_min>1</scale_min>
+		<scale_max>150000</scale_max>
+	</rule>
+	<rule>
 		<condition k="highway" v="primary"/>
 		<line width="9" colour="#eb9898" width_bg="11" colour_bg="#c48080"/>
 		<scale_min>1</scale_min>

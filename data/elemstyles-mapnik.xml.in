@@ -42,14 +42,21 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
 
   <rule>
     <condition k="railway" v="abandoned"/>
-    <line width="4" width_bg="6" colour="__BG_COL__" colour_bg="#cccccc"/>
+    <line width="4" width_bg="6" colour="__BG_COL__" colour_bg="#cccccc" dashed="4" priority="-10"/>
     <scale_min>1</scale_min>
     <scale_max>14000</scale_max>
   </rule>
 
+	<rule>
+		<condition k="railway" v="razed"/>
+		<line width="4" width_bg="6" colour="__BG_COL__" colour_bg="#cccccc" dashed="4" priority="-10"/>
+		<scale_min>1</scale_min>
+		<scale_max>14000</scale_max>
+	</rule>
+
   <rule>
     <condition k="railway" v="disused"/>
-    <line width="4" width_bg="6" colour="__BG_COL__" colour_bg="#cccccc"/>
+    <line width="4" width_bg="6" colour="__BG_COL__" colour_bg="#cccccc" dashed="4" priority="-5"/>
     <scale_min>1</scale_min>
     <scale_max>14000</scale_max>
   </rule>
@@ -64,6 +71,9 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
 
   <rule>
     <condition k="railway"/><!-- catchall linear -->
+		<condition k="railway" v="abandoned" invert="true"/>
+		<condition k="railway" v="razed" invert="true"/>
+		<condition k="railway" v="disused" invert="true"/>
     <line width="4" width_bg="6" dashed="4" colour="#eeeeee" colour_bg="#999999"/>
     <scale_min>1</scale_min>
     <scale_max>150000</scale_max>

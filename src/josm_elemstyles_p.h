@@ -18,11 +18,20 @@
 class base_object_t;
 
 struct elemstyle_condition_t {
-    elemstyle_condition_t(const char *k, const char *v);
+    /**
+     * @constructor
+     * @param k the key to match
+     * @param v the value to match (may be nullptr)
+     * @param inv if a value match should be inverted
+     *
+     * If inv is true, both k and v need to be nonnull.
+     */
+    elemstyle_condition_t(const char *k, const char *v, bool inv = false);
     elemstyle_condition_t(const char *k, bool b);
 
     const char * const key;
     const std::variant<bool, const char *> value;
+    const bool invert;
 
 #if __cplusplus < 201103L
     elemstyle_condition_t &operator=(const elemstyle_condition_t &other)

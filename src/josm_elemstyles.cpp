@@ -40,15 +40,17 @@
 
 // make use of the value cache which is NOT cleared on project switch, so
 // the elements inserted here will not get lost
-elemstyle_condition_t::elemstyle_condition_t(const char *k, const char *v)
+elemstyle_condition_t::elemstyle_condition_t(const char *k, const char *v, bool inv)
   : key(tag_t::mapToCache(k))
   , value(tag_t::mapToCache(v))
+  , invert(inv)
 {
 }
 
 elemstyle_condition_t::elemstyle_condition_t(const char *k, bool b)
   : key(tag_t::mapToCache(k))
   , value(b)
+  , invert(false)
 {
 }
 
@@ -335,6 +337,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
   case TagCondition: {
     const char *k = nullptr, *v = nullptr;
     const char *b = nullptr;
+    bool invert = false;
 
     for(unsigned int i = 0; attrs[i] != nullptr; i += 2) {
       if(strcmp(attrs[i], "k") == 0)
@@ -343,9 +346,20 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
         v = attrs[i + 1];
       else if(strcmp(attrs[i], "b") == 0)
         b = attrs[i + 1];
+      else if(strcmp(attrs[i], "invert") == 0) {
+        invert = parse_boolean(attrs[i + 1], true_values);
+      }
     }
-    assert(k != nullptr);
-    elemstyle_condition_t cond = b == nullptr ? elemstyle_condition_t(k, v) :
+    if(unlikely(k == nullptr)) {
+      printf("WARNING: found condition without k(ey) attribute\n");
+      break;
+    }
+    if(unlikely(invert && v == nullptr)) {
+      printf("WARNING: found condition without v(alue) attribute, but with invert\n");
+      break;
+    }
+
+    elemstyle_condition_t cond = b == nullptr ? elemstyle_condition_t(k, v, invert) :
                                  elemstyle_condition_t(k, parse_boolean(b, true_values));
     styles.back()->conditions.push_back(cond);
     break;
@@ -524,8 +538,10 @@ bool elemstyle_condition_t::matches(const base_object_t &obj) const {
       // often enough. If it fails it's just a single compare of 2 values already in the
       // CPU registers, so it wont hurt much anyway.
       const char *val = std::get<const char *>(value);
-      if(val != nullptr && v != val && strcasecmp(v, val) != 0)
-        return false;
+      if(val != nullptr) {
+        if ((v != val && strcasecmp(v, val) != 0) != invert)
+          return false;
+      }
     }
   }
   return true;

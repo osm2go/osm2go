@@ -34,12 +34,12 @@ osm_test(diff_restore "${CMAKE_CURRENT_SOURCE_DIR}/" "diff_restore_data" "${CMAK
 osm_test(style_load "elemstyles.xml" 347 357 "standard")
 set_property(TEST style_load PROPERTY WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_test(NAME style_load_mapnik
-		COMMAND style_load "elemstyles-mapnik.xml" 136 139 "mapnik"
+		COMMAND style_load "elemstyles-mapnik.xml" 137 143 "mapnik"
 		WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 add_test(NAME style_load_potlatch
 		COMMAND style_load "${CMAKE_CURRENT_SOURCE_DIR}/../data/elemstyles-potlatch.xml" 27 27)
 add_test(NAME style_load_test1
-		COMMAND style_load "${CMAKE_CURRENT_SOURCE_DIR}/test1.xml" 9 10 "standard"
+		COMMAND style_load "${CMAKE_CURRENT_SOURCE_DIR}/test1.xml" 10 14 "standard"
 		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_executable(osm_load osm_load.cpp)
@@ -52,6 +52,10 @@ set_property(TEST osm_load PROPERTY PASS_REGULAR_EXPRESSION "Nodes: 10, 2 with 5
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test1.style.in" "${CMAKE_CURRENT_BINARY_DIR}/test1.style" @ONLY)
 osm_test(style_apply "${CMAKE_CURRENT_BINARY_DIR}/test1")
 set_property(TEST style_apply PROPERTY WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+osm_test(style_apply_mapnik)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../data/mapnik.style" "${CMAKE_CURRENT_BINARY_DIR}/../data/mapnik.style" COPYONLY)
+set_property(TEST style_apply_mapnik PROPERTY WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 find_program(DPKG_PARSECHANGELOG NAMES dpkg-parsechangelog)
 if (DPKG_PARSECHANGELOG)
