@@ -398,6 +398,8 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
             line->dash_length_off = 0;
           }
         }
+      } else if(strcmp(attrs[i], "priority") == 0) {
+        line->priority = parse_priority(attrs[i + 1]);
       }
     }
 
@@ -649,10 +651,11 @@ struct apply_condition {
   way_t * const way;
   /* during the elemstyle search a line_mod may be found. save it here */
   const elemstyle_line_mod_t **line_mod;
-  bool way_processed;
+  int priority;
   bool way_is_closed;
   apply_condition(const style_t *s, way_t *w, const elemstyle_line_mod_t **l)
-    : style(s), way(w), line_mod(l), way_processed(false)
+    : style(s), way(w), line_mod(l)
+    , priority(std::numeric_limits<typeof(priority)>::min())
     , way_is_closed(way->is_closed()) {}
   void operator()(const elemstyle_t *elemstyle);
 };
@@ -674,10 +677,11 @@ void apply_condition::operator()(const elemstyle_t* elemstyle)
     *line_mod = &elemstyle->line_mod;
   }
 
-  if(way_processed)
-    return;
-
   if(!way_is_closed && elemstyle->type & ES_TYPE_LINE) {
+    if(priority >= elemstyle->line->priority)
+      return;
+    priority = elemstyle->line->priority;
+
     way->draw.color = elemstyle->line->color;
     way->draw.width =  WIDTH_SCALE * elemstyle->line->width;
     if(elemstyle->line->bg.valid) {
@@ -692,8 +696,12 @@ void apply_condition::operator()(const elemstyle_t* elemstyle)
 
     way->draw.dash_length_on = elemstyle->line->dash_length_on;
     way->draw.dash_length_off = elemstyle->line->dash_length_off;
-    way_processed = true;
   } else if(way_is_closed && elemstyle->type & ES_TYPE_AREA) {
+    // something has already matched
+    if (priority > 0)
+      return;
+    priority = 1;
+
     way->draw.flags |= OSM_DRAW_FLAG_AREA;
     /* comment the following line for grey border around all areas */
     /* (potlatch style) */
@@ -710,8 +718,6 @@ void apply_condition::operator()(const elemstyle_t* elemstyle)
       way->zoom_max = elemstyle->zoom_max;
     else
       way->zoom_max = style->area.zoom_max;
-
-    way_processed = true;
   }
 }
 
@@ -734,7 +740,7 @@ void josm_elemstyle::colorize(way_t *w) const
   // If this is an area the previous run has done the area style. Run again
   // for the line style of the outer way.
   if(fc.way_is_closed) {
-    fc.way_processed = false;
+    fc.priority = std::numeric_limits<typeof(fc.priority)>::min();
     fc.way_is_closed = false;
     std::for_each(elemstyles.begin(), elemstyles.end(), fc);
   }

@@ -55,6 +55,7 @@ struct elemstyle_line_t {
   color_t color;
   unsigned short dash_length_on;
   unsigned short dash_length_off;
+  int priority;
 
   struct {
     bool valid : 8;

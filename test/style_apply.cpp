@@ -152,6 +152,7 @@ int main(int argc, char **argv)
 
   // 2 colliding linemods
   // only the last one should be used
+  tags.clear();
   tags.insert(osm_t::TagMap::value_type("bridge", "yes"));
   tags.insert(osm_t::TagMap::value_type("access", "no"));
   way->tags.replace(tags);
@@ -238,6 +239,29 @@ int main(int argc, char **argv)
   // test1.xml says color #bbb, test1.style says color 0x00000066
   assert_cmpnum(area->draw.area.color, 0xbbbbbb66);
   assert_cmpnum(area->draw.width, 2);
+
+  // test priority, first without collisions
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("railway", "abandoned"));
+  way->tags.replace(tags);
+  style->colorize(way);
+  assert_cmpnum(way->draw.color, 0xaabbccff);
+  assert_cmpnum(way->draw.width, 4);
+  assert_cmpnum(way->draw.dash_length_on, 4);
+  assert_cmpnum(way->draw.dash_length_off, 4);
+  assert_cmpnum(way->draw.bg.color, 0xccccccff);
+  assert_cmpnum(way->draw.bg.width, 6);
+
+  // this one should take priority
+  tags.insert(osm_t::TagMap::value_type("highway", "primary"));
+  way->tags.replace(tags);
+  style->colorize(way);
+  assert_cmpnum(way->draw.color, 0xeb9898ff);
+  assert_cmpnum(way->draw.width, 9);
+  assert_cmpnum(way->draw.dash_length_on, 0);
+  assert_cmpnum(way->draw.dash_length_off, 0);
+  assert_cmpnum(way->draw.bg.color, 0xc48080ff);
+  assert_cmpnum(way->draw.bg.width, 11);
 
   xmlCleanupParser();
 
