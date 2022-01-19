@@ -101,9 +101,7 @@ icon_t::load(const std::string &sname, int limit)
   icon_buffer::BufferMap &entries = static_cast<icon_buffer *>(this)->entries;
 
   /* check if icon list already contains an icon of that name */
-  const auto it = entries.find(sname);
-
-  if(it != entries.end()) {
+  if(const auto it = entries.find(sname); it != entries.end()) {
     it->second->use++;
     return it->second.get();
   }

@@ -48,7 +48,6 @@ canvas_t_create()
 void CanvasScene::keyPressEvent(QKeyEvent *keyEvent)
 {
   if (keyEvent->count() == 1) {
-    const int key = keyEvent->key();
     switch (keyEvent->key()) {
     case Qt::Key_Enter:
       if (keyEvent->modifiers() == Qt::KeypadModifier) {
@@ -60,7 +59,7 @@ void CanvasScene::keyPressEvent(QKeyEvent *keyEvent)
     case Qt::Key_Return:
       if (keyEvent->modifiers() == Qt::NoModifier) {
         keyEvent->accept();
-        emit keyPress(key);
+        emit keyPress(Qt::Key_Return);
         return;
       }
       break;

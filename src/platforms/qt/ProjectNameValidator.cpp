@@ -20,9 +20,9 @@ QValidator::State ProjectNameValidator::validate(QString &input, int &) const
     return QValidator::Invalid;
 
   const std::string sinput = v.toStdString();
-  for (auto &&p : m_projects)
-    if (p->name == sinput)
-      return QValidator::Intermediate;
+  if (m_projects.cend() != std::find_if(m_projects.cbegin(), m_projects.cend(),
+                                        [&sinput](auto &&p) { return p->name == sinput; }))
+    return QValidator::Intermediate;
 
   return QValidator::Acceptable;
 }
