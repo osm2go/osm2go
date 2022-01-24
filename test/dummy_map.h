@@ -99,17 +99,23 @@ public:
   enum Flags {
     MapDefaults = 0,
     InvalidStyle = 0x1,   ///< the style is empty and must not be used for colorization
-    EmptyStyle = 0x2      ///< the style is empty and will do nothing
+    EmptyStyle = 0x2,     ///< the style is empty and will do nothing
+    NodeStyle = 0x4       ///< the style will show nodes as 1x1 pixel dots
   };
 
   explicit test_map(appdata_t &a, canvas_t *cv = nullptr, unsigned int flags = MapDefaults)
     : map_t(a, cv)
   {
     assert((flags & (InvalidStyle | EmptyStyle)) != (InvalidStyle | EmptyStyle));
+    assert((flags & (InvalidStyle | NodeStyle)) != (InvalidStyle | NodeStyle));
     if (flags & InvalidStyle)
       style.reset(new invalid_style());
-    else if (flags & EmptyStyle)
+    else if (flags & (EmptyStyle | NodeStyle))
       style.reset(new josm_elemstyle());
+
+    if (flags & NodeStyle) {
+      style->node.radius = 1;
+    }
   }
 
   void set_autosave(bool) override { abort(); }
