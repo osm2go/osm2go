@@ -7,7 +7,7 @@ env:
     - VALGRIND_SUPP_DIR=/tmp/valgrind-suppressions
   matrix:
     - BUILD_NAME="default" CONF_OPTIONS="-DUSE_SVG_ICONS=On"
-    - BUILD_NAME="picker" CONF_OPTIONS="-DSERVER_EDITABLE=Off;-DPICKER_MENU=On;-DUSE_SVG_ICONS=Off" CURL_VERSION="7.76.0"
+    - BUILD_NAME="picker" CONF_OPTIONS="-DSERVER_EDITABLE=Off;-DPICKER_MENU=On;-DUSE_SVG_ICONS=Off" CURL_VERSION="7.81.0"
 cache:
   directories:
   - $VALGRIND_SUPP_DIR
