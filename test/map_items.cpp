@@ -576,6 +576,102 @@ void test_map_press_way_reuse_add_cancel(const std::string &tmpdir)
   assert_cmpnum(o->nodes.size(), 1);
 }
 
+// like test_map_press_way_add_cancel, but reuse an existing node
+// afterwards another node is added
+void test_map_press_way_intermediate_reuse_add_cancel(const std::string &tmpdir)
+{
+  appdata_t a;
+  a.project.reset(new project_t("foo", tmpdir));
+  canvas_holder canvas;
+  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas, test_map::NodeStyle));
+  a.project->osm.reset(new osm_t());
+  osm_t::ref o = a.project->osm;
+  set_bounds(o);
+  iconbar_t::create(a);
+
+  MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
+  expectMapItemDeselect(ui);
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, false));
+  ui->m_statusTexts.push_back(trstring("Place first node of new way"));
+
+  // where the click will be
+  osm2go_platform::screenpos clickpos(20, 20);
+  lpos_t pos = canvas->window2world(clickpos);
+  // a node to find later on
+  node_t *node = o->node_new(pos);
+  o->attach(node);
+
+  node_t *other = o->node_new(canvas->window2world(osm2go_platform::screenpos(240, 240)));
+  o->attach(other);
+
+  way_t *oldWay = new way_t();
+  oldWay->append_node(node);
+  oldWay->append_node(other);
+  o->attach(oldWay);
+
+  assert_null(m->action_way());
+  assert_null(m->action_way_extending());
+  assert_null(m->action_way_ends_on());
+  m->set_action(MAP_ACTION_WAY_ADD);
+  assert(a.iconbar->isCancelEnabled());
+  assert(!a.iconbar->isOkEnabled());
+  assert(!a.iconbar->isInfoEnabled());
+  assert(!a.iconbar->isTrashEnabled());
+  assert_cmpnum(ui->m_actions.size(), 0);
+  assert_cmpnum(ui->m_statusTexts.size(), 0);
+
+  assert(m->action_way() != nullptr);
+  assert_cmpnum(m->action_way()->node_chain.size(), 0);
+  assert_null(m->action_way_extending());
+  assert_null(m->action_way_ends_on());
+
+  // "click" at a good position to add a node
+  ui->m_statusTexts.push_back(trstring("Place next node of way"));
+
+  osm2go_platform::screenpos posFirst(1, 1);
+  m->button_press_public(posFirst);
+  m->button_release_public(posFirst);
+  assert_cmpnum(m->action_way()->node_chain.size(), 1);
+
+  assert(!m->touchnode);
+  m->button_press_public(clickpos);
+  assert(m->touchnode);
+  assert(m->touchnode_node == node);
+  m->button_release_public(clickpos);
+  assert_cmpnum(m->action_way()->node_chain.size(), 2);
+  assert(m->action_way()->node_chain.front() != node);
+  assert(m->action_way()->node_chain.back() == node);
+  assert(m->action_way_ends_on() == oldWay);
+
+  // now click another good position far enough away
+  osm2go_platform::screenpos posThird(42, 27);
+  m->button_press_public(posThird);
+  m->button_release_public(posThird);
+  assert_cmpnum(m->action_way()->node_chain.size(), 3);
+  assert(m->action_way()->node_chain.back() != node);
+  assert_null(m->action_way_ends_on());
+
+  // now accept everything
+  assert(a.iconbar->isCancelEnabled());
+  assert(a.iconbar->isOkEnabled());
+
+  ui->clearFlags.push_back(MainUi::ClearNormal);
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, true));
+
+  map_t::map_action_cancel(m.get());
+  assert(!a.iconbar->isCancelEnabled());
+  assert(!a.iconbar->isOkEnabled());
+  assert(!a.iconbar->isInfoEnabled());
+  assert(!a.iconbar->isTrashEnabled());
+  assert_null(m->action_way());
+  assert_null(m->action_way_extending());
+  assert_null(m->action_way_ends_on());
+
+  // the node must not have been removed
+  assert_cmpnum(o->nodes.size(), 2);
+  assert_cmpnum(o->ways.size(), 1);
+}
+
 void test_map_node_create_outside(const std::string &tmpdir)
 {
   appdata_t a;
@@ -741,6 +837,7 @@ int main(int argc, char **argv)
   test_map_drag_idle(osm_path);
   test_map_press_way_add_cancel(osm_path);
   test_map_press_way_reuse_add_cancel(osm_path);
+  test_map_press_way_intermediate_reuse_add_cancel(osm_path);
   test_map_node_create_outside(osm_path);
   test_map_reverse(osm_path);
 
