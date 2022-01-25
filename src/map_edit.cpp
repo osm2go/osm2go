@@ -196,6 +196,7 @@ void map_t::way_add_ok() {
 
   /* we might already be working on the "ends_on" way as we may */
   /* be extending it. Joining the same way doesn't make sense. */
+  bool showInfo = work->tags.empty();
   if(action.ends_on == work) {
     printf("  the new way ends on itself -> don't join itself\n");
     action.ends_on = nullptr;
@@ -210,6 +211,10 @@ void map_t::way_add_ok() {
     /* ways may be involved as the new way may be an extended existing */
     /* way being connected to another way. This happens if you connect */
     /* two existing ways using a new way between them */
+
+    // if both ways had distinct tags before then always show the info dialog
+    showInfo = !work->tags.empty() && !action.ends_on->tags.empty() &&
+               (work->tags != action.ends_on->tags);
 
     osm_t::mergeResult<way_t> mr = osm->mergeWays(work, action.ends_on, this);
     work = mr.obj;
@@ -226,7 +231,8 @@ void map_t::way_add_ok() {
   select_way(work);
 
   /* let the user specify some tags for the new way */
-  info_selected();
+  if (showInfo)
+    info_selected();
 }
 
 /* -------------------------- way_node_add ----------------------- */

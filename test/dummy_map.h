@@ -150,17 +150,17 @@ public:
     return action.type;
   }
 
-  const way_t * action_way() const
+  way_t *action_way() const
   {
     return action.way.get();
   }
 
-  const way_t * action_way_extending() const
+  const way_t *action_way_extending() const
   {
     return action.extending;
   }
 
-  const way_t * action_way_ends_on() const
+  const way_t *action_way_ends_on() const
   {
     return action.ends_on;
   }

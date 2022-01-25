@@ -578,7 +578,7 @@ void test_map_press_way_reuse_add_cancel(const std::string &tmpdir)
 
 // like test_map_press_way_add_cancel, but reuse an existing node
 // afterwards another node is added
-void test_map_press_way_intermediate_reuse_add_cancel(const std::string &tmpdir)
+void test_map_press_way_intermediate_reuse_add_ok(const std::string &tmpdir)
 {
   appdata_t a;
   a.project.reset(new project_t("foo", tmpdir));
@@ -658,18 +658,25 @@ void test_map_press_way_intermediate_reuse_add_cancel(const std::string &tmpdir)
   ui->clearFlags.push_back(MainUi::ClearNormal);
   ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_WMS_ADJUST, true));
 
-  map_t::map_action_cancel(m.get());
+  ui->m_statusTexts.push_back(trstring("unspecified way"));
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, true));
+
+  // add a tag here (which can't happen in reality when adding a way) to prevent showing the info dialog
+  std::vector<tag_t> ntags(1, tag_t("source", "testcase"));
+  m->action_way()->tags.replace(std::move(ntags));
+
+  map_t::map_action_ok(m.get());
   assert(!a.iconbar->isCancelEnabled());
   assert(!a.iconbar->isOkEnabled());
-  assert(!a.iconbar->isInfoEnabled());
-  assert(!a.iconbar->isTrashEnabled());
+  assert(a.iconbar->isInfoEnabled());
+  assert(a.iconbar->isTrashEnabled());
   assert_null(m->action_way());
   assert_null(m->action_way_extending());
   assert_null(m->action_way_ends_on());
 
   // the node must not have been removed
-  assert_cmpnum(o->nodes.size(), 2);
-  assert_cmpnum(o->ways.size(), 1);
+  assert_cmpnum(o->nodes.size(), 4);
+  assert_cmpnum(o->ways.size(), 2);
 }
 
 void test_map_node_create_outside(const std::string &tmpdir)
@@ -837,7 +844,7 @@ int main(int argc, char **argv)
   test_map_drag_idle(osm_path);
   test_map_press_way_add_cancel(osm_path);
   test_map_press_way_reuse_add_cancel(osm_path);
-  test_map_press_way_intermediate_reuse_add_cancel(osm_path);
+  test_map_press_way_intermediate_reuse_add_ok(osm_path);
   test_map_node_create_outside(osm_path);
   test_map_reverse(osm_path);
 
