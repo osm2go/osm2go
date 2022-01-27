@@ -60,16 +60,19 @@ int main(int argc, char **argv)
   assert(el_key != nullptr);
   assert_cmpstr(el_key->key, "OSM2go test");
   assert_cmpstr(el_key->value, "passed");
+  assert_cmpnum(el_key->rows(), 0);
 
   assert_cmpnum(item->widgets.at(1)->type, WIDGET_TYPE_LABEL);
   const presets_element_label *el_lb = dynamic_cast<const presets_element_label *>(item->widgets.at(1));
   assert(el_lb != nullptr);
   assert_cmpstr(el_lb->text, "xy label");
+  assert_cmpnum(el_lb->rows(), 1);
 
   assert_cmpnum(item->widgets.at(2)->type, WIDGET_TYPE_CHECK);
   const presets_element_checkbox *el_chk = dynamic_cast<const presets_element_checkbox *>(item->widgets.at(2));
   assert(el_chk != nullptr);
   assert_cmpstr(el_chk->text, "xy Chk");
+  assert_cmpnum(el_chk->rows(), 1);
 
   assert_cmpnum(item->widgets.at(3)->type, WIDGET_TYPE_MULTISELECT);
   const presets_element_multiselect *el_ms = dynamic_cast<const presets_element_multiselect *>(item->widgets.at(3));
@@ -79,6 +82,7 @@ int main(int argc, char **argv)
 #endif
   assert_cmpnum(el_ms->values.size(), 4);
   assert_cmpnum(el_ms->display_values.size(), 0);
+  assert_cmpnum_op(el_ms->rows(), >=, 1);
 
   assert_cmpnum(item->widgets.at(4)->type, WIDGET_TYPE_COMBO);
   const presets_element_combo *el_cmb = dynamic_cast<const presets_element_combo *>(item->widgets.at(4));
@@ -90,11 +94,13 @@ int main(int argc, char **argv)
   assert_cmpstr(el_cmb->values.back(), "cval2");
   assert_cmpstr(el_cmb->display_values.front(), "cval");
   assert_cmpstr(el_cmb->display_values.back(), "second cval");
+  assert_cmpnum(el_cmb->rows(), 1);
 
   assert_cmpnum(item->widgets.at(5)->type, WIDGET_TYPE_LINK);
   const presets_element_link *el_lnk = dynamic_cast<const presets_element_link *>(item->widgets.at(5));
   assert(el_lnk != nullptr);
   assert(el_lnk->item == gr->items.back());
+  assert_cmpnum(el_lnk->rows(), 1);
 
   p = gr->items.at(1);
   assert(!p->isItem());
