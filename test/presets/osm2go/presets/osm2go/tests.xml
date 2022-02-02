@@ -9,6 +9,13 @@
 		<role key="forward" text="forward segment" requisite="optional" type="way,closedway" />
 		<role key="backward" text="backward segment" requisite="optional" type="way,closedway" />
 	</chunk>
+	<chunk id="links">
+		<preset_link preset_name="second" />
+		<!-- reference the same thing again to have more than one child -->
+		<preset_link preset_name="second" />
+		<!-- reference to nonexisting item -->
+		<preset_link preset_name="third" />
+	</chunk>
 	<group name="OSM2go test" x.name="x" xy.name="OSM2go XY" xyz.name="xyz">
 		<item name="first" xy.name="erster" type="multipolygon">
 			<key key="OSM2go test" value="passed" />
@@ -18,8 +25,7 @@
 			<combo key="ckey" text="combo" xyz.name="bad combo"><!-- intentionally no match on language -->
 				<reference ref="cv" />
 			</combo>
-			<preset_link preset_name="second" />
-			<preset_link preset_name="third" />
+			<reference ref="links"/>
 			<reference ref="ro"/>
 		</item>
 		<separator/>
