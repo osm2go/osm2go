@@ -812,6 +812,89 @@ void test_map_reverse(const std::string &tmpdir)
   assert_cmpstr(r->members.front().role, "backward");
 }
 
+void test_select(const std::string &tmpdir)
+{
+  appdata_t a;
+  a.project.reset(new project_t("foo", tmpdir));
+  canvas_holder canvas;
+  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas, test_map::NodeStyle));
+  a.project->osm.reset(new osm_t());
+  osm_t::ref o = a.project->osm;
+  set_bounds(o);
+  iconbar_t::create(a);
+
+  MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
+  expectMapItemDeselect(ui);
+
+  way_t *w = new way_t();
+
+  // where the click will be
+  osm2go_platform::screenpos node1pos(100, 100);
+  osm2go_platform::screenpos node2pos(200, 200);
+
+  lpos_t pos = canvas->window2world(node1pos);
+  node_t *n = o->node_new(pos);
+  o->attach(n);
+  w->node_chain.push_back(n);
+
+  pos = canvas->window2world(node2pos);
+  n = o->node_new(pos);
+  o->attach(n);
+  w->node_chain.push_back(n);
+  o->attach(w);
+
+  osm2go_platform::screenpos node3pos(node2pos.x(), node1pos.y());
+  std::vector<tag_t> ntags(1, tag_t("emergency", "fire_hydrant"));
+
+  pos = canvas->window2world(node3pos);
+  n = o->node_new(pos);
+  n->tags.replace(std::move(ntags));
+  o->attach(n);
+
+  m->paint();
+
+  // FIXME: this should also work with the Gtk version, but it doesn't.
+  // I suspect it's a problem with the test (widget) setup where something is missing.
+#ifdef QT_VERSION
+  // select the way
+  osm2go_platform::screenpos clickpos((node1pos.x() + node2pos.x()) / 2, (node1pos.y() + node2pos.y()) / 2);
+
+  m->button_press_public(clickpos);
+  assert_cmpnum(m->highlight.items.size(), 0);
+
+  ui->m_statusTexts.push_back(trstring("unspecified way"));
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, true));
+  m->button_release_public(clickpos);
+
+  assert(m->selected.object == w);
+  // 1 for each node, 1 for the arrow, and 1 for the way itself
+  assert_cmpnum(m->highlight.items.size(), 4);
+#endif
+
+  // deselect
+  osm2go_platform::screenpos emptypos(node1pos.x(), node2pos.y());
+
+  m->button_press_public(emptypos);
+#ifdef QT_VERSION
+  expectMapItemDeselect(ui);
+#endif
+  m->button_release_public(emptypos);
+
+  assert_cmpnum(m->selected.object.type, object_t::ILLEGAL);
+  assert_cmpnum(m->highlight.items.size(), 0);
+
+  relation_t *r = new relation_t();
+  r->members.push_back(member_t(object_t(w), nullptr));
+  r->members.push_back(member_t(object_t(n), nullptr));
+  o->attach(r);
+
+  ui->m_statusTexts.push_back(trstring("unspecified relation"));
+  m->select_relation(r);
+  assert_cmpnum(m->highlight.items.size(), 2);
+
+  assert(m->selected.object == object_t(r));
+}
+
 } // namespace
 
 int main(int argc, char **argv)
@@ -847,6 +930,7 @@ int main(int argc, char **argv)
   test_map_press_way_intermediate_reuse_add_ok(osm_path);
   test_map_node_create_outside(osm_path);
   test_map_reverse(osm_path);
+  test_select(osm_path);
 
   assert_cmpnum(rmdir(tmpdir), 0);
 
