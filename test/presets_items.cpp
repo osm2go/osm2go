@@ -52,10 +52,10 @@ int main(int argc, char **argv)
   const presets_item *item = dynamic_cast<const presets_item *>(p);
   assert(item != nullptr);
   assert_cmpnum(item->roles.size(), 2);
-  assert_cmpnum(item->widgets.size(), 6);
+  assert_cmpnum(item->widgets.size(), 7);
   assert_cmpstr(item->link, std::string());
   assert(!item->addEditName);
-  assert_cmpnum(std::accumulate(item->widgets.begin(), item->widgets.end(), 0, widget_rows), 6);
+  assert_cmpnum(std::accumulate(item->widgets.begin(), item->widgets.end(), 0, widget_rows), 7);
 
   assert_cmpnum(item->widgets.front()->type, WIDGET_TYPE_KEY);
   const presets_element_key *el_key = dynamic_cast<const presets_element_key *>(item->widgets.front());
@@ -86,8 +86,14 @@ int main(int argc, char **argv)
   assert_cmpnum(el_ms->display_values.size(), 0);
   assert_cmpnum_op(el_ms->rows(), >=, 1);
 
-  assert_cmpnum(item->widgets.at(4)->type, WIDGET_TYPE_COMBO);
-  const presets_element_combo *el_cmb = dynamic_cast<const presets_element_combo *>(item->widgets.at(4));
+  assert_cmpnum(item->widgets.at(4)->type, WIDGET_TYPE_TEXT);
+  const presets_element_text *el_txt = dynamic_cast<const presets_element_text *>(item->widgets.at(4));
+  assert(el_txt != nullptr);
+  assert_cmpstr(el_txt->text, "text input");
+  assert_cmpnum(el_txt->rows(), 1);
+
+  assert_cmpnum(item->widgets.at(5)->type, WIDGET_TYPE_COMBO);
+  const presets_element_combo *el_cmb = dynamic_cast<const presets_element_combo *>(item->widgets.at(5));
   assert(el_cmb != nullptr);
   assert_cmpstr(el_cmb->text, "combo");
   assert_cmpnum(el_cmb->values.size(), 2);
@@ -98,8 +104,8 @@ int main(int argc, char **argv)
   assert_cmpstr(el_cmb->display_values.back(), "second cval");
   assert_cmpnum(el_cmb->rows(), 1);
 
-  assert_cmpnum(item->widgets.at(5)->type, WIDGET_TYPE_REFERENCE);
-  const presets_element_reference *el_ref = dynamic_cast<const presets_element_reference *>(item->widgets.at(5));
+  assert_cmpnum(item->widgets.at(6)->type, WIDGET_TYPE_REFERENCE);
+  const presets_element_reference *el_ref = dynamic_cast<const presets_element_reference *>(item->widgets.at(6));
   assert(el_ref != nullptr);
   assert_cmpnum(el_ref->rows(), 2);
   assert_cmpnum(el_ref->item->widgets.size(), 2);
