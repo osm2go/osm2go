@@ -90,7 +90,7 @@ iconbar_t::map_item_selected(const object_t &item)
   bool selected = item.type != object_t::ILLEGAL;
   iconbar_toggle_sel_widgets(static_cast<IconbarQt *>(this), selected);
 
-  bool way_en = selected && item.type == object_t::WAY;
+  bool way_en = item.type == object_t::WAY;
   iconbar_toggle_way_widgets(static_cast<IconbarQt *>(this), way_en, item);
 }
 
