@@ -2,8 +2,9 @@
 
 #include <array>
 
-static const std::array<const char *, 46 > discardable_tags = { {
+static const std::array<const char *, 47 > discardable_tags = { {
 	"created_by",
+	"converted_by",
 	"odbl",
 	"odbl:note",
 	"tiger:upload_uuid",
