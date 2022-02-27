@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="OpenStreetMap server" copyright="OpenStreetMap and contributors" attribution="http://www.openstreetmap.org/copyright" license="http://opendatacommons.org/licenses/odbl/1-0/">
+  <api>
+    <version minimum="0.8" maximum="42"/>
+    <area maximum="8.5"/>
+    <waynodes maximum="22222"/>
+    <relationmembers maximum="111"/>
+    <changesets maximum_elements="3"/>
+    <timeout seconds="86400"/>
+  </api>
+</osm>

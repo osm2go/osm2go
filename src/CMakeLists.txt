@@ -1,5 +1,7 @@
 add_library(osm2go_lib STATIC
 	appdata.h
+	api_limits.cpp
+	api_limits.h
 	area_edit.h
 	canvas.cpp
 	canvas.h
