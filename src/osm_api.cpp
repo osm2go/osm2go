@@ -7,6 +7,7 @@
 #include "osm_api.h"
 #include "osm_api_p.h"
 
+#include "api_limits.h"
 #include "appdata.h"
 #include "diff.h"
 #include "map.h"
@@ -62,8 +63,21 @@ bool osm_download(osm2go_platform::Widget *parent, project_t *project)
       project->rserver.clear();
   }
 
-  const std::string url = project->server(defaultServer) + "/map?bbox=" +
-                          project->bounds.print();
+  const std::string &server = project->server(defaultServer);
+  const size_t slsl = server.find("//"); // skip protocol
+  size_t sl;
+  if (slsl != std::string::npos) {
+    sl = server.find('/', slsl + 2);
+  } else {
+    sl = server.find('/');
+  }
+
+  const api_limits &limits = api_limits::instance(server.substr(0, sl));
+
+  if (limits.initialized() && limits.minApiVersion() != api_limits::ApiVersion_0_6)
+    return false;
+
+  const std::string url = server + "/map?bbox=" + project->bounds.print();
 
   /* Download the new file to a new name. If something goes wrong then the
    * old file will still be in place to be opened. */
