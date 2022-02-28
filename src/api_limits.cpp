@@ -13,6 +13,8 @@
 
 #include <cstring>
 #include <limits>
+#include <unordered_map>
+#include <utility>
 
 namespace {
 
@@ -40,34 +42,34 @@ api_limits::api_limits()
 {
 }
 
-api_limits &api_limits::raw_instance()
+const api_limits &api_limits::instance(const std::string &server)
 {
-  static api_limits limits;
+  static std::unordered_map<std::string, api_limits> instances;
+  std::unordered_map<std::string, api_limits>::iterator it = instances.find(server);
 
-  return limits;
-}
+  if (it != instances.end())
+    return it->second;
 
-const api_limits &api_limits::instance()
-{
-  api_limits &limits = raw_instance();
+  api_limits ret;
 
-  if (!limits.m_initialized)
-    queryXml("https://www.openstreetmap.org/api/capabilities");
+  std::string url = server + "/api/capabilities";
+  if (!ret.queryXml(url.c_str())) {
+    static const api_limits empty;
+    return empty;
+  }
 
-  return limits;
+  return instances.insert(std::make_pair(server, ret)).first->second;
 }
 
 bool api_limits::parseXml(const xmlDocGuard &xml)
 {
-  api_limits &limits = raw_instance();
-
   for (xmlNodePtr cur_node = xmlDocGetRootElement(xml.get()); cur_node != nullptr; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(likely(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "osm") == 0)) {
         for (xmlNode *sub_node = cur_node->children; sub_node != nullptr; sub_node = sub_node->next) {
           if (sub_node->type == XML_ELEMENT_NODE) {
             if(strcasecmp(reinterpret_cast<const char *>(sub_node->name), "api") == 0) {
-              limits.m_initialized = true;
+              m_initialized = true;
 
               for (xmlNode *policy_node = sub_node->children; policy_node != nullptr; policy_node = policy_node->next) {
                 if (policy_node->type == XML_ELEMENT_NODE) {
@@ -75,19 +77,19 @@ bool api_limits::parseXml(const xmlDocGuard &xml)
                     xmlString str(xmlGetProp(policy_node, BAD_CAST "minimum"));
 
                     if (!str.empty() && strcmp(static_cast<const char *>(str), "0.6") == 0)
-                      limits.m_minApiVersion = ApiVersion_0_6;
+                      m_minApiVersion = ApiVersion_0_6;
                     else
-                      limits.m_minApiVersion = ApiVersion_Unsupported;
+                      m_minApiVersion = ApiVersion_Unsupported;
                   } else if(strcasecmp(reinterpret_cast<const char *>(policy_node->name), "area") == 0) {
-                    limits.m_maxAreaSize = xml_get_prop_float(policy_node, "maximum");
+                    m_maxAreaSize = xml_get_prop_float(policy_node, "maximum");
                   } else if(strcasecmp(reinterpret_cast<const char *>(policy_node->name), "waynodes") == 0) {
-                    limits.m_nodesPerWay = xml_get_prop_uint(policy_node, "maximum");
+                    m_nodesPerWay = xml_get_prop_uint(policy_node, "maximum");
                   } else if(strcasecmp(reinterpret_cast<const char *>(policy_node->name), "relationmembers") == 0) {
-                    limits.m_membersPerRelation = xml_get_prop_uint(policy_node, "maximum");
+                    m_membersPerRelation = xml_get_prop_uint(policy_node, "maximum");
                   } else if(strcasecmp(reinterpret_cast<const char *>(policy_node->name), "changesets") == 0) {
-                    limits.m_elementsPerChangeset = xml_get_prop_uint(policy_node, "maximum_elements");
+                    m_elementsPerChangeset = xml_get_prop_uint(policy_node, "maximum_elements");
                   } else if(strcasecmp(reinterpret_cast<const char *>(policy_node->name), "timeout") == 0) {
-                    limits.m_apiTimeout = xml_get_prop_uint(policy_node, "seconds");
+                    m_apiTimeout = xml_get_prop_uint(policy_node, "seconds");
                   } else
                     printf("DEBUG: found unhandled osm/api/%s\n", policy_node->name);
                 }
@@ -101,7 +103,7 @@ bool api_limits::parseXml(const xmlDocGuard &xml)
     }
   }
 
-  return limits.m_initialized;
+  return m_initialized;
 }
 
 bool api_limits::queryXml(const char *url)

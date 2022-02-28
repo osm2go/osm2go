@@ -5,37 +5,39 @@
 #include <cstdio>
 #include <errno.h>
 #include <fcntl.h>
+#include <optional>
 
 #include <osm2go_test.h>
 
 namespace {
 
 class api_limits_test : public api_limits {
+  api_limits_test() : api_limits() {}
 public:
-  static bool parseExisting(const fdguard &basedir, const char *filename);
-  static bool queryDevXml()
-  {
-    return queryXml("https://master.apis.dev.openstreetmap.org/api/capabilities");
-  }
+  static api_limits parseExisting(const fdguard &basedir, const char *filename);
 };
 
-bool api_limits_test::parseExisting(const fdguard &basedir, const char *filename)
+api_limits api_limits_test::parseExisting(const fdguard &basedir, const char *filename)
 {
   fdguard difffd(basedir, filename, O_RDONLY);
 
   if (!difffd) {
     fprintf(stderr, "can not open %s\n", filename);
-    return false;
+    abort();
   }
+
+  api_limits_test ret;
 
   /* parse the file and get the DOM */
   xmlDocGuard doc(xmlReadFd(difffd, nullptr, nullptr, XML_PARSE_NONET));
   if(!doc) {
     fprintf(stderr, "can not parse XML of %s\n", filename);
-    return false;
+    abort();
   }
 
-  return api_limits::parseXml(doc);
+  ret.parseXml(doc);
+
+  return ret;
 }
 
 int verifyUInt(const char *descr, unsigned int value, unsigned int expected)
@@ -67,19 +69,21 @@ struct limits {
 
 int verifyExisting(const fdguard &basedir, const limits &limits)
 {
-  if (!api_limits_test::parseExisting(basedir, limits.filename))
+  const api_limits limit = api_limits_test::parseExisting(basedir, limits.filename);
+
+  if (!limit.initialized())
     return false;
 
   int ret = 0;
 
-  ret += verifyUInt("min API version", api_limits::minApiVersion(), limits.minApiVersion);
-  ret += verifyUInt("nodes per way", api_limits::nodesPerWay(), limits.nodesPerWay);
-  ret += verifyUInt("relation members", api_limits::membersPerRelation(), limits.membersPerRelation);
-  ret += verifyUInt("changeset elements", api_limits::elementsPerChangeset(), limits.elementsPerChangeset);
-  ret += verifyUInt("API timeout", api_limits::apiTimeout(), limits.apiTimeout);
+  ret += verifyUInt("min API version", limit.minApiVersion(), limits.minApiVersion);
+  ret += verifyUInt("nodes per way", limit.nodesPerWay(), limits.nodesPerWay);
+  ret += verifyUInt("relation members", limit.membersPerRelation(), limits.membersPerRelation);
+  ret += verifyUInt("changeset elements", limit.elementsPerChangeset(), limits.elementsPerChangeset);
+  ret += verifyUInt("API timeout", limit.apiTimeout(), limits.apiTimeout);
 
   float areaSize;
-  if ((areaSize = api_limits::maxAreaSize()) != limits.maxAreaSize) {
+  if ((areaSize = limit.maxAreaSize()) != limits.maxAreaSize) {
     fprintf(stderr, "expected value %f for area size, but got %f\n", limits.maxAreaSize, areaSize);
     ret = 1;
   }
@@ -89,10 +93,25 @@ int verifyExisting(const fdguard &basedir, const limits &limits)
 
 int verifyDevXml()
 {
-  if (!api_limits_test::queryDevXml())
+  const api_limits &limits = api_limits::instance("https://master.apis.dev.openstreetmap.org");
+
+  if (!limits.initialized())
     return 1;
 
-  if (api_limits::minApiVersion() != api_limits::ApiVersion_0_6)
+  if (limits.minApiVersion() != api_limits::ApiVersion_0_6)
+    return 1;
+
+  return 0;
+}
+
+int verifyInvalid()
+{
+  const api_limits &limits = api_limits::instance("http://invalid.invalid");
+
+  if (limits.initialized())
+    return 1;
+
+  if (limits.minApiVersion() != api_limits::ApiVersion_0_6)
     return 1;
 
   return 0;
@@ -131,8 +150,11 @@ int main(int argc, char **argv)
   limits limits_crazy("api_limits_crazy.xml", api_limits::ApiVersion_Unsupported, 8.5, 22222, 111, 3, 86400);
   result += verifyExisting(basedir, limits_crazy);
 
-  if (online)
+  if (online) {
     result += verifyDevXml();
+
+    result += verifyInvalid();
+  }
 
   xmlCleanupParser();
 

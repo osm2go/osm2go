@@ -8,6 +8,8 @@
 
 #include "misc.h"
 
+#include <osm2go_cpp.h>
+
 class api_limits {
 public:
   enum ApiVersions {
@@ -15,12 +17,10 @@ public:
     ApiVersion_Unsupported = 9999
   };
 
-private:
+protected:
   api_limits();
 
-  static api_limits &raw_instance();
-  static const api_limits &instance();
-
+private:
   ApiVersions m_minApiVersion;
   float m_maxAreaSize;
   unsigned int m_nodesPerWay;
@@ -28,44 +28,58 @@ private:
   unsigned int m_elementsPerChangeset;
   unsigned int m_apiTimeout;
   bool m_initialized;
+
 public:
+  /**
+   * @brief get the API limits of the given server
+   * @param server the base URL of the API server
+   *
+   * If the server can not be reached an instance with default
+   * values will be returned.
+   */
+  static const api_limits &instance(const std::string &server);
+
+  bool initialized() const
+  {
+    return m_initialized;
+  }
 
   /**
    * @brief return the minimum supported API version
    *
    * API 0.6 -> 6
    */
-  static ApiVersions minApiVersion()
+  ApiVersions minApiVersion() const
   {
-    return instance().m_minApiVersion;
+    return m_minApiVersion;
   }
 
   /**
    * @brief return the maximum downloadable area in square degrees
    */
-  static float maxAreaSize()
+  float maxAreaSize() const
   {
-    return instance().m_maxAreaSize;
+    return m_maxAreaSize;
   }
 
-  static unsigned int nodesPerWay()
+  unsigned int nodesPerWay() const
   {
-    return instance().m_nodesPerWay;
+    return m_nodesPerWay;
   }
 
-  static unsigned int membersPerRelation()
+  unsigned int membersPerRelation() const
   {
-    return instance().m_membersPerRelation;
+    return m_membersPerRelation;
   }
 
-  static unsigned int elementsPerChangeset()
+  unsigned int elementsPerChangeset() const
   {
-    return instance().m_elementsPerChangeset;
+    return m_elementsPerChangeset;
   }
 
-  static unsigned int apiTimeout()
+  unsigned int apiTimeout() const
   {
-    return instance().m_apiTimeout;
+    return m_apiTimeout;
   }
 
 protected:
@@ -74,7 +88,7 @@ protected:
    *
    * This is not private so the testcases can easily access it
    */
-  static bool parseXml(const xmlDocGuard &xml);
+  bool parseXml(const xmlDocGuard &xml);
 
-  static bool queryXml(const char *url);
+  bool queryXml(const char *url);
 };
