@@ -10,6 +10,7 @@
 #include "net_io.h"
 #include "notifications.h"
 #include "osm2go_annotations.h"
+#include "settings.h"
 
 #include <cstring>
 #include <limits>
@@ -59,6 +60,23 @@ const api_limits &api_limits::instance(const std::string &server)
   }
 
   return instances.insert(std::make_pair(server, ret)).first->second;
+}
+
+const api_limits &api_limits::offlineInstance(const std::string &server)
+{
+  static std::unordered_map<std::string, api_limits> instances;
+  std::unordered_map<std::string, api_limits>::iterator it;
+
+  if (server.empty())
+    it = instances.find(settings_t::instance()->server);
+  else
+    it = instances.find(server);
+
+  if (it != instances.end())
+    return it->second;
+
+  static const api_limits empty;
+  return empty;
 }
 
 bool api_limits::parseXml(const xmlDocGuard &xml)

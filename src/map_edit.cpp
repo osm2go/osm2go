@@ -24,6 +24,7 @@
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
 #include <osm2go_platform.h>
+#include "api_limits.h"
 
 /* -------------------------- way_add ----------------------- */
 
@@ -66,6 +67,11 @@ void map_t::way_add_segment(lpos_t pos) {
 #endif
       return;
     }
+  }
+
+  if (action.way->node_chain.size() >= api_limits::offlineInstance(appdata.project->rserver).nodesPerWay()) {
+    appdata.uicontrol->showNotification(_("Way too long"));
+    return;
   }
 
   /* use the existing node if one was touched */

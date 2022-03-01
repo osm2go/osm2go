@@ -39,6 +39,17 @@ public:
    */
   static const api_limits &instance(const std::string &server);
 
+  /**
+   * @brief get the API limits of the given server if already available
+   * @param server the base URL of the API server
+   *
+   * If the server has already been contacted return the instance with
+   * the real values, otherwise one with default values.
+   *
+   * In case server is empty the default server will be used.
+   */
+  static const api_limits &offlineInstance(const std::string &server);
+
   bool initialized() const
   {
     return m_initialized;

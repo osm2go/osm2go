@@ -33,6 +33,14 @@ struct project_t {
    */
   project_t(project_t &other);
 
+  /**
+   * @brief return the server URL
+   * @param def the default server
+   *
+   * The default server URL is shared accross all projects, so they only
+   * know that they use the default. In that case the default needs to
+   * be passed in.
+   */
   inline const std::string &server(const std::string &def) const noexcept
   { return rserver.empty() ? def : rserver; }
 

@@ -93,7 +93,19 @@ int verifyExisting(const fdguard &basedir, const limits &limits)
 
 int verifyDevXml()
 {
-  const api_limits &limits = api_limits::instance("https://master.apis.dev.openstreetmap.org");
+  const char *devServer = "https://master.apis.dev.openstreetmap.org";
+  const api_limits &deflimits = api_limits::offlineInstance(devServer);
+
+  if (deflimits.initialized())
+    return 1;
+
+  if (deflimits.minApiVersion() != api_limits::ApiVersion_0_6)
+    return 1;
+
+  if (deflimits.nodesPerWay() != static_cast<unsigned int>(-1))
+    return 1;
+
+  const api_limits &limits = api_limits::instance(devServer);
 
   if (!limits.initialized())
     return 1;
