@@ -43,9 +43,10 @@ api_limits::api_limits()
 {
 }
 
+static std::unordered_map<std::string, api_limits> instances;
+
 const api_limits &api_limits::instance(const std::string &server)
 {
-  static std::unordered_map<std::string, api_limits> instances;
   std::unordered_map<std::string, api_limits>::iterator it = instances.find(server);
 
   if (it != instances.end())
@@ -64,7 +65,6 @@ const api_limits &api_limits::instance(const std::string &server)
 
 const api_limits &api_limits::offlineInstance(const std::string &server)
 {
-  static std::unordered_map<std::string, api_limits> instances;
   std::unordered_map<std::string, api_limits>::iterator it;
 
   if (server.empty())

@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <optional>
 
+#include <osm2go_annotations.h>
 #include <osm2go_test.h>
 
 namespace {
@@ -112,6 +113,17 @@ int verifyDevXml()
 
   if (limits.minApiVersion() != api_limits::ApiVersion_0_6)
     return 1;
+
+  // test cache hit
+  const api_limits &limitsAgain = api_limits::offlineInstance(devServer);
+
+  assert(limits.initialized() == limitsAgain.initialized());
+  assert_cmpnum(limits.apiTimeout(), limitsAgain.apiTimeout());
+  assert_cmpnum(limits.elementsPerChangeset(), limitsAgain.elementsPerChangeset());
+  assert_cmpnum(limits.maxAreaSize(), limitsAgain.maxAreaSize());
+  assert_cmpnum(limits.membersPerRelation(), limitsAgain.membersPerRelation());
+  assert(limits.minApiVersion() == limitsAgain.minApiVersion());
+  assert_cmpnum(limits.nodesPerWay(), limitsAgain.nodesPerWay());
 
   return 0;
 }
