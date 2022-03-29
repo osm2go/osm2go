@@ -865,11 +865,15 @@ void test_select(const std::string &tmpdir)
   ui->m_statusTexts.push_back(trstring("unspecified way"));
   ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, true));
   m->button_release_public(clickpos);
+#else
+  ui->m_statusTexts.push_back(trstring("unspecified way"));
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, true));
+  m->select_way(w);
+#endif
 
-  assert(m->selected.object == w);
+  assert(m->selected.object == object_t(w));
   // 1 for each node, 1 for the arrow, and 1 for the way itself
   assert_cmpnum(m->highlight.items.size(), 4);
-#endif
 
   // deselect
   osm2go_platform::screenpos emptypos(node1pos.x(), node2pos.y());
