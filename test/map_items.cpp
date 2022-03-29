@@ -824,7 +824,6 @@ void test_select(const std::string &tmpdir)
   iconbar_t::create(a);
 
   MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
-  expectMapItemDeselect(ui);
 
   way_t *w = new way_t();
 
@@ -862,6 +861,7 @@ void test_select(const std::string &tmpdir)
   m->button_press_public(clickpos);
   assert_cmpnum(m->highlight.items.size(), 0);
 
+  expectMapItemDeselect(ui);
   ui->m_statusTexts.push_back(trstring("unspecified way"));
   ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, true));
   m->button_release_public(clickpos);
@@ -875,9 +875,7 @@ void test_select(const std::string &tmpdir)
   osm2go_platform::screenpos emptypos(node1pos.x(), node2pos.y());
 
   m->button_press_public(emptypos);
-#ifdef QT_VERSION
   expectMapItemDeselect(ui);
-#endif
   m->button_release_public(emptypos);
 
   assert_cmpnum(m->selected.object.type, object_t::ILLEGAL);
