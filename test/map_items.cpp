@@ -751,10 +751,10 @@ void test_map_reverse(const std::string &tmpdir)
   node_t *n = o->node_new(p);
   o->attach(n);
   p = lpos_t(20, 20);
-  w->node_chain.push_back(n);
+  w->append_node(n);
   n = o->node_new(p);
   o->attach(n);
-  w->node_chain.push_back(n);
+  w->append_node(n);
   o->attach(w);
 
   m->selected = object_t(w);
@@ -835,12 +835,12 @@ void test_select(const std::string &tmpdir)
   lpos_t pos = canvas->window2world(node1pos);
   node_t *n = o->node_new(pos);
   o->attach(n);
-  w->node_chain.push_back(n);
+  w->append_node(n);
 
   pos = canvas->window2world(node2pos);
   n = o->node_new(pos);
   o->attach(n);
-  w->node_chain.push_back(n);
+  w->append_node(n);
   o->attach(w);
 
   osm2go_platform::screenpos node3pos(node2pos.x(), node1pos.y());
