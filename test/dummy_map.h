@@ -9,6 +9,7 @@
 #include <uicontrol.h>
 
 #include <cstdlib>
+#include <cstdio>
 #include <map>
 
 #include <osm2go_annotations.h>
@@ -34,10 +35,14 @@ public:
   void setActionEnable(menu_items item, bool en) override
   {
     std::map<menu_items, bool>::iterator it = m_actions.find(item);
-    if (it != m_actions.end() && it->second == en)
-      m_actions.erase(it);
-    else
+    if (it == m_actions.end()) {
+      fprintf(stderr, "no action expected, but got action %i value %s\n", static_cast<int>(item), en ? "true" : "false");
       abort();
+    } else if (it->second != en) {
+      fprintf(stderr, "expected action %i received, but got value %s\n", static_cast<int>(item), en ? "true" : "false");
+      abort();
+    } else
+      m_actions.erase(it);
   }
   void showNotification(trstring::arg_type text, unsigned int) override
   {
