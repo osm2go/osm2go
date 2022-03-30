@@ -886,6 +886,7 @@ void test_select(const std::string &tmpdir)
   assert_cmpnum(m->highlight.items.size(), 0);
 
   relation_t *r = new relation_t();
+  object_t r_obj(r);
   r->members.push_back(member_t(object_t(w), nullptr));
   r->members.push_back(member_t(object_t(n), nullptr));
   o->attach(r);
@@ -894,7 +895,63 @@ void test_select(const std::string &tmpdir)
   m->select_relation(r);
   assert_cmpnum(m->highlight.items.size(), 2);
 
-  assert(m->selected.object == object_t(r));
+  assert(m->selected.object == r_obj);
+
+  expectMapItemDeselect(ui);
+  ui->m_statusTexts.push_back(trstring("unspecified relation"));
+  m->highlight_refresh();
+
+  assert(m->selected.object == r_obj);
+}
+
+// remove the middle node from a visible way, afterwards select it
+void test_redraw_way_on_node_delete(const std::string &tmpdir)
+{
+  appdata_t a;
+  a.project.reset(new project_t("foo", tmpdir));
+  canvas_holder canvas;
+  std::unique_ptr<test_map> m(std::make_unique<test_map>(a, *canvas, test_map::NodeStyle));
+  a.project->osm.reset(new osm_t());
+  osm_t::ref o = a.project->osm;
+  set_bounds(o);
+  iconbar_t::create(a);
+
+  MainUiDummy * const ui = static_cast<MainUiDummy *>(a.uicontrol.get());
+
+  way_t *w = new way_t();
+  node_t *n;
+
+  for (int i = 100; i <= 200; i += 50) {
+    lpos_t pos = canvas->window2world(osm2go_platform::screenpos(100, i));
+    n = o->node_new(pos);
+    o->attach(n);
+    w->append_node(n);
+  }
+  o->attach(w);
+
+  m->paint();
+
+  ui->m_statusTexts.push_back(trstring("unspecified way"));
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, true));
+  m->select_way(w);
+
+  assert(m->selected.object == object_t(w));
+  // way + 3 nodes + 2 arrows
+  assert_cmpnum(m->highlight.items.size(), 6);
+  // the way is not kept selected here because the map would delete the selected object,
+  // so this is not a path present anyway in the code as a node should be deleted
+  expectMapItemDeselect(ui);
+  m->item_deselect();
+
+  o->node_delete(w->node_chain.at(1), m.get());
+
+  ui->m_statusTexts.push_back(trstring("unspecified way"));
+  ui->m_actions.insert(std::make_pair(MainUi::MENU_ITEM_MAP_HIDE_SEL, true));
+  m->select_way(w);
+
+  assert(m->selected.object == object_t(w));
+  // way + 2 nodes + 1 arrow
+  assert_cmpnum(m->highlight.items.size(), 4);
 }
 
 } // namespace
@@ -933,6 +990,7 @@ int main(int argc, char **argv)
   test_map_node_create_outside(osm_path);
   test_map_reverse(osm_path);
   test_select(osm_path);
+  test_redraw_way_on_node_delete(osm_path);
 
   assert_cmpnum(rmdir(tmpdir), 0);
 
