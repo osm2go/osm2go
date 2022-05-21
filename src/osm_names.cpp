@@ -459,6 +459,33 @@ nameParts nameElements(const osm_t &osm, const object_t &obj, const bool useLife
     return ret;
   }
 
+  // ### POWER
+  rawValue = tags.get_value("power");
+  if (rawValue != nullptr) {
+    if (strcmp(rawValue, "generator") == 0) {
+      const char *dv = tags.get_value("generator:type");
+      if (dv != nullptr) {
+        ret.type.key = dv;
+        return ret;
+      }
+
+      dv = tags.get_value("generator:method");
+      if (dv == nullptr)
+        dv = tags.get_value("generator:source");
+
+      if (dv != nullptr) {
+        ret.type = trstring("%1 power generator").arg(clean_underscores(dv));
+        return ret;
+      }
+      ret.type = _("power generator");
+    } else {
+      ret.type.key = rawValue;
+    }
+
+
+    return ret;
+  }
+
   // ### BARRIER
   rawValue = tags.get_value("barrier");
   if(rawValue != nullptr) {

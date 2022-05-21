@@ -608,6 +608,32 @@ void test_lifecycle()
   helper_way(tags, trstring("demolished %1").arg(trstring("%1 road").arg("secondary")), 0);
 }
 
+void test_power_generator()
+{
+  osm_t::TagMap tags;
+
+  tags.insert(osm_t::TagMap::value_type("power", "generator"));
+  helper_node(tags, _("power generator"));
+
+  tags.insert(osm_t::TagMap::value_type("generator:source", "solar"));
+  helper_node(tags, trstring("%1 power generator").arg("solar"));
+
+  tags.insert(osm_t::TagMap::value_type("generator:method", "photovoltaic"));
+  helper_node(tags, trstring("%1 power generator").arg("photovoltaic"));
+
+  tags.insert(osm_t::TagMap::value_type("generator:type", "solar_photovoltaic_panel"));
+  helper_node(tags, "solar photovoltaic panel");
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("power", "generator"));
+  tags.insert(osm_t::TagMap::value_type("generator:source", "dark_matter"));
+  helper_node(tags, trstring("%1 power generator").arg("dark matter"));
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("power", "sink"));
+  helper_node(tags, "sink");
+}
+
 } // namespace
 
 int main()
@@ -627,6 +653,7 @@ int main()
   test_sport();
   test_simple();
   test_lifecycle();
+  test_power_generator();
 
   xmlCleanupParser();
 
