@@ -200,9 +200,9 @@ curl_custom_setup(const std::string &credentials)
   return curl;
 }
 
-bool
+std::optional<item_id_t>
 osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
-                            const char *url, item_id_t *id)
+                            const char *url, trstring::native_type_arg format)
 {
   char buffer[CURL_ERROR_SIZE];
 
@@ -264,21 +264,21 @@ osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
         context.append_str(write_data.c_str(), COLOR_ERR);
         context.append_str("\n");
       }
-    } else if(unlikely(!id)) {
-      context.append(_("ok\n"), COLOR_OK);
     } else {
       /* this will return the id on a successful create */
-      printf("request to parse successful reply '%s' as an id\n", write_data.c_str());
-      *id = strtoull(write_data.c_str(), nullptr, 10);
-      context.append(trstring("ok: #%1\n").arg(*id), COLOR_OK);
+      printf("request to parse successful reply '%s'\n", write_data.c_str());
+      item_id_t result = strtoull(write_data.c_str(), nullptr, 10);
+      context.append(trstring(format).arg(result), COLOR_OK);
+
+      return result;
     }
 
     /* don't retry unless we had an "internal server error" */
     if(response != 500)
-      return((res == 0)&&(response == 200));
+      return std::optional<item_id_t>();
   }
 
-  return false;
+  return std::optional<item_id_t>();
 }
 
 bool
@@ -369,10 +369,10 @@ upload_object(osm_upload_context_t &context, base_object_t *obj, bool is_new)
   if(likely(xml_str)) {
     printf("uploading %s " ITEM_ID_FORMAT " to %s\n", obj->apiString(), obj->id, url.c_str());
 
-    item_id_t tmp;
-    if(osm_update_item(context, xml_str.get(), url.c_str(), is_new ? &obj->id : &tmp)) {
+    std::optional<item_id_t> id = osm_update_item(context, xml_str.get(), url.c_str(), is_new ? _("ok: id #%1\n") : _("ok: version #%1\n"));
+    if(id) {
       if(!is_new)
-        obj->version = tmp;
+        obj->version = *id;
       context.project->data_dirty = true;
       return true;
     }
@@ -482,9 +482,9 @@ osm_create_changeset(osm_upload_context_t &context)
   if(xml_str) {
     printf("creating changeset %s from address %p\n", url.c_str(), xml_str.get());
 
-    item_id_t changeset;
-    if(osm_update_item(context, xml_str.get(), url.c_str(), &changeset)) {
-      context.changeset = std::to_string(changeset);
+    std::optional<item_id_t> changeset = osm_update_item(context, xml_str.get(), url.c_str(), _("ok: id #%1\n"));
+    if(changeset) {
+      context.changeset = std::to_string(*changeset);
       result = true;
     }
   }
@@ -504,7 +504,7 @@ osm_close_changeset(osm_upload_context_t &context)
                           "/close";
   context.append(_("Close changeset "));
 
-  return osm_update_item(context, nullptr, url.c_str(), nullptr);
+  return !!osm_update_item(context, nullptr, url.c_str(), _("ok\n"));
 }
 
 } // namespace
