@@ -26,7 +26,7 @@ namespace {
 
 void verify_diff(osm_t::ref osm)
 {
-  assert_cmpnum(12, osm->nodes.size());
+  assert_cmpnum(13, osm->nodes.size());
   assert_cmpnum(3, osm->ways.size());
   assert_cmpnum(5, osm->relations.size());
 
@@ -71,16 +71,11 @@ void verify_diff(osm_t::ref osm)
   assert(nn1->tags.empty());
   // added in diff, same position as existing node
   const node_t * const nn2 = osm->object_by_id<node_t>(-2);
-  assert(nn2 != nullptr);
-  assert_cmpnum(nn2->pos.lat, 52.269497);
-  assert_cmpnum(nn2->pos.lon, 9.5752223);
-  assert(nn2->tags.empty());
+  assert_null(nn2);
   // which is this one
   const node_t * const n27 = osm->object_by_id<node_t>(3577031227LL);
   assert(n27 != nullptr);
   assert_cmpnum(n27->flags, 0);
-  assert_cmpnum(nn2->pos.lat, n27->pos.lat);
-  assert_cmpnum(nn2->pos.lon, n27->pos.lon);
   // the node was part of the deleted way 351899455 and nothing else, the reference count must now be 0
   assert_cmpnum(n27->ways, 0);
   const node_t * const n29 = osm->object_by_id<node_t>(3577031229LL);
@@ -104,6 +99,7 @@ void verify_diff(osm_t::ref osm)
   assert_cmpnum(w452->tags.asMap().size(), 3);
   const way_t * const w453 = osm->object_by_id<way_t>(351899453);
   assert(w453 != nullptr);
+  // this references the "new" node -3577031229 in the diff, which has been replaced by 3577031229, which is then the same nodechain as upstream
   assert_cmpnum(w453->flags, 0);
   const relation_t * const r66316 = osm->object_by_id<relation_t>(66316);
   assert(r66316 != nullptr);
@@ -117,6 +113,20 @@ void verify_diff(osm_t::ref osm)
   assert_cmpnum(r255->flags, OSM_FLAG_DIRTY);
   assert_cmpnum(r255->members.size(), 164);
 
+  // added in diff, same position as existing node, and same tags
+  const node_t * const nn756 = osm->object_by_id<node_t>(-1566150756LL);
+  assert_null(nn756);
+  const node_t * const n756 = osm->object_by_id<node_t>(1566150756LL);
+  assert(n756 != nullptr);
+
+  const node_t * const nn228 = osm->object_by_id<node_t>(-3577031228LL);
+  assert(nn228 != nullptr);
+  assert_cmpstr(nn228->tags.get_value("note"), "foobar");
+  assert_cmpnum(nn228->tags.asMap().size(), 1);
+
+  const node_t * const nn229 = osm->object_by_id<node_t>(-3577031229LL);
+  assert_null(nn229);
+
   // diff is the same as original
   const relation_t * const r716 = osm->object_by_id<relation_t>(1939716);
   assert(r716 != nullptr);
@@ -127,6 +137,7 @@ void verify_diff(osm_t::ref osm)
   const relation_t * const or091 = osm->originalObject(r091);
   assert(or091 != nullptr);
   assert_cmpnum(r091->flags, OSM_FLAG_DIRTY);
+  // a node had been replaced by the "new" node -1566150756, which was changed back to 1566150756
   assert(r091->members == or091->members);
   assert_cmpstr(r091->tags.get_value("note"), "tags changed");
 
@@ -218,7 +229,7 @@ project_t *setup_for_restore(const char *argv2, const std::string &osm_path)
   assert(n29 != nullptr);
   assert_cmpnum(n29->ways, 1);
 
-  assert_cmpnum(10, osm->nodes.size());
+  assert_cmpnum(11, osm->nodes.size());
   assert_cmpnum(3, osm->ways.size());
   assert_cmpnum(5, osm->relations.size());
 

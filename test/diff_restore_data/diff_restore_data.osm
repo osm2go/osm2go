@@ -7,6 +7,11 @@
     <tag k='network' v='Großraum-Verkehr Hannover' />
     <tag k='ref' v='5791' />
   </node>
+  <node id='1566150756' timestamp='2015-06-06T13:58:56Z' uid='53064' user='Dakon' visible='true' version='5' changeset='31769882' lat='52.2695714' lon='9.5753517'>
+    <tag k='bus' v='yes' />
+    <tag k='name' v='Wennigsen/KGS' />
+    <tag k='public_transport' v='stop_position' />
+  </node>
   <node id='3398616417' timestamp='2015-03-14T19:30:39Z' uid='406374' user='lytron' version='1' changeset='29478939' lat='52.2694285' lon='9.5752791'>
     <tag k='amenity' v='waste_basket' />
   </node>

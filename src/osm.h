@@ -402,6 +402,15 @@ public:
   }
 
   /**
+   * @brief find a node matching the given predicate
+   */
+  template<typename _Predicate>
+  node_t *find_node(_Predicate pred) const
+  {
+    return find_object(nodes, pred);
+  }
+
+  /**
    * @brief find a way matching the given predicate, but only if no other one does
    */
   template<typename _Predicate>
@@ -459,15 +468,15 @@ public:
    */
   static void parse_tag(xmlNode* a_node, TagMap &tags);
 
-  void parse_relation_member(const xmlString &tp, const xmlString &refstr, const xmlString &role, std::vector<member_t> &members);
-  void parse_relation_member(xmlNode *a_node, std::vector<member_t> &members);
+  void parse_relation_member(const xmlString &tp, const xmlString &refstr, const xmlString &role, std::vector<member_t> &members, const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds = nullptr);
+  void parse_relation_member(xmlNode *a_node, std::vector<member_t> &members, const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds = nullptr);
 
   /**
    * @brief parse the reference of a way to a node from XML
    *
    * The reference count on the node will be incremented.
    */
-  node_t *parse_way_nd(xmlNode *a_node) const;
+  node_t *parse_way_nd(xmlNode *a_node, const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds) const;
 
   static osm_t *parse(const std::string &path, const std::string &filename);
 

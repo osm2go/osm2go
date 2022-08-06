@@ -332,8 +332,21 @@ T *restore_object(xmlNodePtr xml_node, osm_t::ref osm)
   }
 }
 
+struct existingNodeFinder {
+  existingNodeFinder(pos_t p, const osm_t::TagMap &t)
+    :pos(p), tags(t) {}
+
+  bool operator()(const std::pair<item_id_t, node_t *> &p) const {
+    const node_t *nd = p.second;
+    return !nd->isNew() && nd->pos == pos && nd->tags == tags;
+  }
+
+  const pos_t pos;
+  const osm_t::TagMap &tags;
+};
+
 void
-diff_restore_node(xmlNodePtr node_node, osm_t::ref osm)
+diff_restore_node(xmlNodePtr node_node, osm_t::ref osm, std::unordered_map<item_id_t, item_id_t> &replaced)
 {
   node_t *node = restore_object<node_t>(node_node, osm);
   if (node == nullptr)
@@ -353,16 +366,27 @@ diff_restore_node(xmlNodePtr node_node, osm_t::ref osm)
   osm_t::TagMap ntags = xml_scan_tags(node_node->children);
   /* check if the same changes have been done upstream */
   if(node->flags & OSM_FLAG_DIRTY && !pos_diff && node->tags == ntags) {
-    printf("node " ITEM_ID_FORMAT " has the same values and position as upstream, discarding diff\n", node->id);
+    printf("  node " ITEM_ID_FORMAT " has the same values and position as upstream, discarding diff\n", node->id);
     osm->unmark_dirty(node);
     return;
+  }
+
+  if (node->isNew()) {
+    // look if we find a node at the same position and with the same tags that is not new
+    node_t *oldNode = osm->find_node(existingNodeFinder(pos, ntags));
+    if (oldNode != nullptr) {
+      printf("  node " ITEM_ID_FORMAT " seems to already exist as node " ITEM_ID_FORMAT ", discarding it\n", node->id, oldNode->id);
+      replaced[node->id] = oldNode->id;
+      osm->node_delete(node);
+      return;
+    }
   }
 
   node->tags.replace(ntags);
 }
 
 void
-diff_restore_way(xmlNodePtr node_way, osm_t::ref osm)
+diff_restore_way(xmlNodePtr node_way, osm_t::ref osm, const std::unordered_map<item_id_t, item_id_t> *replaced)
 {
   way_t *way = restore_object<way_t>(node_way, osm);
   if (way == nullptr)
@@ -379,7 +403,7 @@ diff_restore_way(xmlNodePtr node_way, osm_t::ref osm)
     if(nd_node->type == XML_ELEMENT_NODE) {
       if(likely(strcmp(reinterpret_cast<const char *>(nd_node->name), "nd") == 0)) {
         /* attach node to node_chain */
-        node_t *tmp = osm->parse_way_nd(nd_node);
+        node_t *tmp = osm->parse_way_nd(nd_node, replaced);
         if(likely(tmp != nullptr))
           new_chain.push_back(tmp);
       }
@@ -415,7 +439,7 @@ diff_restore_way(xmlNodePtr node_way, osm_t::ref osm)
 }
 
 void
-diff_restore_relation(xmlNodePtr node_rel, osm_t::ref osm)
+diff_restore_relation(xmlNodePtr node_rel, osm_t::ref osm, const std::unordered_map<item_id_t, item_id_t> *replaced)
 {
   relation_t *relation = restore_object<relation_t>(node_rel, osm);
   if (relation == nullptr)
@@ -437,7 +461,7 @@ diff_restore_relation(xmlNodePtr node_rel, osm_t::ref osm)
     if(member_node->type == XML_ELEMENT_NODE) {
       if(likely(strcmp(reinterpret_cast<const char *>(member_node->name), "member") == 0)) {
 	/* attach member to member_chain */
-        osm->parse_relation_member(member_node, members);
+        osm->parse_relation_member(member_node, members, replaced);
       }
     }
   }
@@ -477,6 +501,7 @@ unsigned int project_t::diff_restore()
   printf("diff %s found, applying ...\n", diff_name.c_str());
 
   unsigned int res = DIFF_RESTORED;
+  std::unordered_map<item_id_t, item_id_t> replaced;
 
   for (xmlNode *cur_node = xmlDocGetRootElement(doc.get()); cur_node != nullptr;
        cur_node = cur_node->next) {
@@ -496,13 +521,13 @@ unsigned int project_t::diff_restore()
             node_node = node_node->next) {
           if(node_node->type == XML_ELEMENT_NODE) {
             if(strcmp(reinterpret_cast<const char *>(node_node->name), node_t::api_string()) == 0)
-              diff_restore_node(node_node, osm);
+              diff_restore_node(node_node, osm, replaced);
 
             else if(strcmp(reinterpret_cast<const char *>(node_node->name), way_t::api_string()) == 0)
-              diff_restore_way(node_node, osm);
+              diff_restore_way(node_node, osm, &replaced);
 
             else if(likely(strcmp(reinterpret_cast<const char *>(node_node->name), relation_t::api_string()) == 0))
-              diff_restore_relation(node_node, osm);
+              diff_restore_relation(node_node, osm, &replaced);
 
             else {
 	      printf("WARNING: item %s not restored\n", node_node->name);

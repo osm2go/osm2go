@@ -132,12 +132,28 @@ void osm_t::parse_tag(xmlNode *a_node, TagMap &tags)
 
 /* ------------------- way handling ------------------- */
 
-static node_t *parse_node_ref(const xmlString &prop, const osm_t *osm)
+namespace {
+
+item_id_t checkReplacedId(item_id_t id, const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds)
+{
+  if (replacedNodeIds != nullptr) {
+    const std::unordered_map<item_id_t, item_id_t>::const_iterator it = replacedNodeIds->find(id);
+    if (it != replacedNodeIds->end()) {
+      printf("Reference to node id " ITEM_ID_FORMAT " replaced with " ITEM_ID_FORMAT "\n", id, it->second);
+      id = it->second;
+    }
+  }
+
+  return id;
+}
+
+
+node_t *parse_node_ref(const xmlString &prop, const osm_t *osm, const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds = nullptr)
 {
   node_t *node = nullptr;
 
   if(likely(!prop.empty())) {
-    item_id_t id = strtoll(prop, nullptr, 10);
+    item_id_t id = checkReplacedId(strtoll(prop, nullptr, 10), replacedNodeIds);
 
     /* search matching node */
     node = osm->object_by_id<node_t>(id);
@@ -150,15 +166,18 @@ static node_t *parse_node_ref(const xmlString &prop, const osm_t *osm)
   return node;
 }
 
-node_t *osm_t::parse_way_nd(xmlNode *a_node) const {
+} // namespace
+
+node_t *osm_t::parse_way_nd(xmlNode *a_node, const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds) const
+{
   xmlString prop(xmlGetProp(a_node, BAD_CAST "ref"));
 
-  return parse_node_ref(prop, this);
+  return parse_node_ref(prop, this, replacedNodeIds);
 }
 
 /* ------------------- relation handling ------------------- */
 
-void osm_t::parse_relation_member(const xmlString &tp, const xmlString &refstr, const xmlString &role, std::vector<member_t> &members)
+void osm_t::parse_relation_member(const xmlString &tp, const xmlString &refstr, const xmlString &role, std::vector<member_t> &members, const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds)
 {
   if(unlikely(tp.empty())) {
     printf("missing type for relation member\n");
@@ -198,7 +217,7 @@ void osm_t::parse_relation_member(const xmlString &tp, const xmlString &refstr, 
 
   case object_t::NODE:
     /* search matching node */
-    obj = object_by_id<node_t>(id);
+    obj = object_by_id<node_t>(checkReplacedId(id, replacedNodeIds));
     break;
 
   case object_t::RELATION:
@@ -216,12 +235,13 @@ void osm_t::parse_relation_member(const xmlString &tp, const xmlString &refstr, 
   members.push_back(member_t(obj, rstr));
 }
 
-void osm_t::parse_relation_member(xmlNode *a_node, std::vector<member_t> &members) {
+void osm_t::parse_relation_member(xmlNode *a_node, std::vector<member_t> &members, const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds)
+{
   xmlString tp(xmlGetProp(a_node, BAD_CAST "type"));
   xmlString refstr(xmlGetProp(a_node, BAD_CAST "ref"));
   xmlString role(xmlGetProp(a_node, BAD_CAST "role"));
 
-  parse_relation_member(tp, refstr, role, members);
+  parse_relation_member(tp, refstr, role, members, replacedNodeIds);
 }
 
 /* -------------------------- stream parser ------------------- */
