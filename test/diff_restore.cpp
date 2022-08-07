@@ -24,11 +24,15 @@
 
 namespace {
 
+const unsigned int osm_nodes = 18; // nodes in the original OSM data
+const unsigned int osm_ways = 7; // ways in the original OSM data
+const unsigned int osm_relations = 9; // relations in the original OSM data
+
 void verify_diff(osm_t::ref osm)
 {
-  assert_cmpnum(13, osm->nodes.size());
-  assert_cmpnum(3, osm->ways.size());
-  assert_cmpnum(5, osm->relations.size());
+  assert_cmpnum(osm_nodes + 2, osm->nodes.size());
+  assert_cmpnum(osm_ways, osm->ways.size());
+  assert_cmpnum(osm_relations, osm->relations.size());
 
   // new tag added in diff
   const node_t * const n72 = osm->object_by_id<node_t>(638499572);
@@ -101,17 +105,22 @@ void verify_diff(osm_t::ref osm)
   assert(w453 != nullptr);
   // this references the "new" node -3577031229 in the diff, which has been replaced by 3577031229, which is then the same nodechain as upstream
   assert_cmpnum(w453->flags, 0);
-  const relation_t * const r66316 = osm->object_by_id<relation_t>(66316);
-  assert(r66316 != nullptr);
-  assert(r66316->isDeleted());
-  assert_cmpnum(r66316->flags, OSM_FLAG_DELETED);
-  assert(r66316->tags.empty());
-  assert(r66316->members.empty());
-  assert(osm->originalObject(r66316) != nullptr);
-  const relation_t * const r255 = osm->object_by_id<relation_t>(296255);
-  assert(r255 != nullptr);
-  assert_cmpnum(r255->flags, OSM_FLAG_DIRTY);
-  assert_cmpnum(r255->members.size(), 164);
+
+  // deleted by diff
+  const relation_t * const r_deleted = osm->object_by_id<relation_t>(1922655);
+  assert(r_deleted != nullptr);
+  assert(r_deleted->isDeleted());
+  assert_cmpnum(r_deleted->flags, OSM_FLAG_DELETED);
+  assert(r_deleted->tags.empty());
+  assert(r_deleted->members.empty());
+  assert(osm->originalObject(r_deleted) != nullptr);
+
+  const relation_t * const r_modified = osm->object_by_id<relation_t>(5827850);
+  assert(r_modified != nullptr);
+  assert_cmpnum(r_modified->flags, OSM_FLAG_DIRTY);
+  assert_cmpnum(r_modified->members.size(), 72);
+  // deleted by diff, and already deleted (i.e. not present) in OSM data
+  assert_null(osm->object_by_id<relation_t>(66316));
 
   // added in diff, same position as existing node, and same tags
   const node_t * const nn756 = osm->object_by_id<node_t>(-1566150756LL);
@@ -141,18 +150,19 @@ void verify_diff(osm_t::ref osm)
   assert(r091->members == or091->members);
   assert_cmpstr(r091->tags.get_value("note"), "tags changed");
 
-  const object_t r255m572(const_cast<node_t *>(n72));
-  std::vector<member_t>::const_iterator r255it = r255->find_member_object(r255m572);
-  r255it = r255->find_member_object(r255m572);
-  assert(r255it != r255->members.end());
-  assert(r255it->role != nullptr);
-  assert_cmpstr(r255it->role, "forward_stop");
-  assert_cmpnum(r255->tags.asMap().size(), 8);
+  const object_t r255m222(osm->object_by_id<node_t>(3577031222LL));
+  assert_cmpnum(r255m222.type, object_t::NODE);
+  std::vector<member_t>::const_iterator rmod_it = r_modified->find_member_object(r255m222);
+  rmod_it = r_modified->find_member_object(r255m222);
+  assert(rmod_it != r_modified->members.end());
+  assert(rmod_it->role != nullptr);
+  assert_cmpstr(rmod_it->role, "forward_stop");
+  assert_cmpnum(r_modified->tags.asMap().size(), 12);
 
-  const relation_t * const r853 = osm->object_by_id<relation_t>(5827853);
-  assert(r853 != nullptr);
-  assert_cmpnum(r853->flags, OSM_FLAG_DIRTY);
-  for(std::vector<member_t>::const_iterator it = r853->members.begin(); it != r853->members.end(); it++)
+  const relation_t * const route_master_521 = osm->object_by_id<relation_t>(1956804);
+  assert(route_master_521 != nullptr);
+  assert_cmpnum(route_master_521->flags, OSM_FLAG_DIRTY);
+  for(std::vector<member_t>::const_iterator it = route_master_521->members.begin(); it != route_master_521->members.end(); it++)
     assert_cmpnum(it->object.type, object_t::RELATION_ID);
 
   assert(!osm->is_clean(true));
@@ -197,22 +207,22 @@ project_t *setup_for_restore(const char *argv2, const std::string &osm_path)
   assert_cmpnum(osm->uploadPolicy, osm_t::Upload_Blocked);
   assert(osm->sanity_check().isEmpty());
 
-  const relation_t * const r255 = osm->object_by_id<relation_t>(296255);
+  const relation_t * const r255 = osm->object_by_id<relation_t>(5827850);
   assert(r255 != nullptr);
   assert_cmpnum(r255->flags, 0);
-  assert_cmpnum(r255->members.size(), 165);
-  assert_cmpnum(r255->tags.asMap().size(), 8);
-  const node_t * const n72 = osm->object_by_id<node_t>(638499572);
-  assert_cmpnum(n72->tags.asMap().size(), 4);
-  const object_t r255m572(const_cast<node_t *>(n72));
-  std::vector<member_t>::const_iterator r255it = r255->find_member_object(r255m572);
+  assert_cmpnum(r255->members.size(), 73);
+  assert_cmpnum(r255->tags.asMap().size(), 12);
+  const node_t * const n222 = osm->object_by_id<node_t>(3577031222LL);
+  assert_cmpnum(n222->tags.asMap().size(), 3);
+  const object_t r255m222(const_cast<node_t *>(n222));
+  std::vector<member_t>::const_iterator r255it = r255->find_member_object(r255m222);
   assert(r255it != r255->members.end());
   assert(r255it->role != nullptr);
   assert_cmpstr(r255it->role, "stop");
-  const relation_t * const r66316 = osm->object_by_id<relation_t>(66316);
+  const relation_t * const r66316 = osm->object_by_id<relation_t>(10792734);
   assert(r66316 != nullptr);
   assert(!r66316->tags.empty());
-  object_t rmember(object_t::RELATION_ID, 296255);
+  object_t rmember(object_t::RELATION_ID, 5827850);
   assert(!rmember.is_real());
   const std::vector<member_t>::const_iterator r66316it = r66316->find_member_object(rmember);
   assert(r66316it != r66316->members.end());
@@ -229,9 +239,9 @@ project_t *setup_for_restore(const char *argv2, const std::string &osm_path)
   assert(n29 != nullptr);
   assert_cmpnum(n29->ways, 1);
 
-  assert_cmpnum(11, osm->nodes.size());
-  assert_cmpnum(3, osm->ways.size());
-  assert_cmpnum(5, osm->relations.size());
+  assert_cmpnum(osm_nodes, osm->nodes.size());
+  assert_cmpnum(osm_ways, osm->ways.size());
+  assert_cmpnum(osm_relations, osm->relations.size());
 
   assert(osm->is_clean(true));
   verify_osm_db::run(osm);
@@ -283,12 +293,12 @@ int main(int argc, char **argv)
   verify_diff(osm);
   verify_osm_db::run(osm);
 
-  const relation_t * const r255 = osm->object_by_id<relation_t>(296255);
+  const relation_t * const r255 = osm->object_by_id<relation_t>(5827850);
   xmlString rel_str(r255->generate_xml("42"));
   printf("%s\n", rel_str.get());
   // make sure this test doesn't suddenly fail only because libxml2 decided to use the other type of quotes
-  assert((strstr(reinterpret_cast<const char *>(rel_str.get()), "<relation id=\"296255\" version=\"54\" changeset=\"42\">") != nullptr) !=
-         (strstr(reinterpret_cast<const char *>(rel_str.get()), "<relation id='296255' version='54' changeset='42'>") != nullptr));
+  assert((strstr(reinterpret_cast<const char *>(rel_str.get()), "<relation id=\"5827850\" version=\"8\" changeset=\"42\">") != nullptr) !=
+         (strstr(reinterpret_cast<const char *>(rel_str.get()), "<relation id='5827850' version='8' changeset='42'>") != nullptr));
 
   const way_t * const w55 = osm->object_by_id<way_t>(351899455);
   rel_str.reset(w55->generate_xml("47"));
@@ -299,8 +309,8 @@ int main(int argc, char **argv)
   const node_t * const n72 = osm->object_by_id<node_t>(638499572);
   rel_str.reset(n72->generate_xml("42"));
   printf("%s\n", rel_str.get());
-  assert((strstr(reinterpret_cast<const char *>(rel_str.get()), "<node id=\"638499572\" version=\"12\" changeset=\"42\" lat=\"52.26") != nullptr) !=
-         (strstr(reinterpret_cast<const char *>(rel_str.get()), "<node id='638499572' version='12' changeset='42' lat='52.26") != nullptr));
+  assert((strstr(reinterpret_cast<const char *>(rel_str.get()), "<node id=\"638499572\" version=\"13\" changeset=\"42\" lat=\"52.26") != nullptr) !=
+         (strstr(reinterpret_cast<const char *>(rel_str.get()), "<node id='638499572' version='13' changeset='42' lat='52.26") != nullptr));
 
   char tmpdir[] = "/tmp/osm2go-diff_restore-XXXXXX";
 

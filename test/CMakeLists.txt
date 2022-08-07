@@ -47,7 +47,7 @@ target_link_libraries(osm_load osm2go_lib)
 
 add_test(NAME osm_load
 		COMMAND osm_load ${CMAKE_CURRENT_SOURCE_DIR}/diff_restore_data/diff_restore_data.osm)
-set_property(TEST osm_load PROPERTY PASS_REGULAR_EXPRESSION "Nodes: 10, 2 with 5 tags\nWays: 3, 3 with 9 tags\nRelations: 5, 5 with 26 tags\n$")
+set_property(TEST osm_load PROPERTY PASS_REGULAR_EXPRESSION "Nodes: 18, 5 with 19 tags\nWays: 7, 7 with 24 tags\nRelations: 9, 9 with 85 tags\n$")
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test1.style.in" "${CMAKE_CURRENT_BINARY_DIR}/test1.style" @ONLY)
 osm_test(style_apply "${CMAKE_CURRENT_BINARY_DIR}/test1")
