@@ -134,12 +134,12 @@ void osm_t::parse_tag(xmlNode *a_node, TagMap &tags)
 
 namespace {
 
-item_id_t checkReplacedId(item_id_t id, const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds)
+item_id_t checkReplacedId(const char *type, item_id_t id, const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds)
 {
   if (replacedNodeIds != nullptr) {
     const std::unordered_map<item_id_t, item_id_t>::const_iterator it = replacedNodeIds->find(id);
     if (it != replacedNodeIds->end()) {
-      printf("Reference to node id " ITEM_ID_FORMAT " replaced with " ITEM_ID_FORMAT "\n", id, it->second);
+      printf("Reference to %s id " ITEM_ID_FORMAT " replaced with " ITEM_ID_FORMAT "\n", type, id, it->second);
       id = it->second;
     }
   }
@@ -147,13 +147,12 @@ item_id_t checkReplacedId(item_id_t id, const std::unordered_map<item_id_t, item
   return id;
 }
 
-
 node_t *parse_node_ref(const xmlString &prop, const osm_t *osm, const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds = nullptr)
 {
   node_t *node = nullptr;
 
   if(likely(!prop.empty())) {
-    item_id_t id = checkReplacedId(strtoll(prop, nullptr, 10), replacedNodeIds);
+    item_id_t id = checkReplacedId(node_t::api_string(), strtoll(prop, nullptr, 10), replacedNodeIds);
 
     /* search matching node */
     node = osm->object_by_id<node_t>(id);
@@ -177,7 +176,10 @@ node_t *osm_t::parse_way_nd(xmlNode *a_node, const std::unordered_map<item_id_t,
 
 /* ------------------- relation handling ------------------- */
 
-void osm_t::parse_relation_member(const xmlString &tp, const xmlString &refstr, const xmlString &role, std::vector<member_t> &members, const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds)
+void osm_t::parse_relation_member(const xmlString &tp, const xmlString &refstr,
+                                  const xmlString &role, std::vector<member_t> &members,
+                                  const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds,
+                                  const std::unordered_map<item_id_t, item_id_t> *replacedWayIds)
 {
   if(unlikely(tp.empty())) {
     printf("missing type for relation member\n");
@@ -212,12 +214,12 @@ void osm_t::parse_relation_member(const xmlString &tp, const xmlString &refstr, 
   switch(type) {
   case object_t::WAY:
     /* search matching way */
-    obj = object_by_id<way_t>(id);
+    obj = object_by_id<way_t>(checkReplacedId(way_t::api_string(), id, replacedWayIds));
     break;
 
   case object_t::NODE:
     /* search matching node */
-    obj = object_by_id<node_t>(checkReplacedId(id, replacedNodeIds));
+    obj = object_by_id<node_t>(checkReplacedId(node_t::api_string(), id, replacedNodeIds));
     break;
 
   case object_t::RELATION:
@@ -235,13 +237,15 @@ void osm_t::parse_relation_member(const xmlString &tp, const xmlString &refstr, 
   members.push_back(member_t(obj, rstr));
 }
 
-void osm_t::parse_relation_member(xmlNode *a_node, std::vector<member_t> &members, const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds)
+void osm_t::parse_relation_member(xmlNode *a_node, std::vector<member_t> &members,
+                                  const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds,
+                                  const std::unordered_map<item_id_t, item_id_t> *replacedWayIds)
 {
   xmlString tp(xmlGetProp(a_node, BAD_CAST "type"));
   xmlString refstr(xmlGetProp(a_node, BAD_CAST "ref"));
   xmlString role(xmlGetProp(a_node, BAD_CAST "role"));
 
-  parse_relation_member(tp, refstr, role, members, replacedNodeIds);
+  parse_relation_member(tp, refstr, role, members, replacedNodeIds, replacedWayIds);
 }
 
 /* -------------------------- stream parser ------------------- */

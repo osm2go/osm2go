@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <diff name="diff_restore_data">
   <node state="new" id="-1" lat="52.2693518" lon="9.5760140" time="1483221227"/>
-  <node state="new" id="-2" lat="52.269497" lon="9.5752223" time="1483221228"/> <!-- pretend this node was created even if the same is already on the server (without tags) -->
+  <node state="new" id="-3577031227" lat="52.269497" lon="9.5752223" time="1483221228"/> <!-- pretend this node was created even if the same is already on the server (without tags) -->
   <node state="new" id='-1566150756' lat='52.2695714' lon='9.5753517'> <!-- pretend this node was created even if the same is already on the server (with tags) -->
     <tag k='bus' v='yes' />
     <tag k='name' v='Wennigsen/KGS' />
     <tag k='public_transport' v='stop_position' />
   </node>
-  <node state="new" id='-3577031228' lat='52.2695229' lon='9.5752494'> <!-- pretend this node was created even if the same is already on the server, but tags have changed -->
+  <node state="new" id='-2' lat='52.2695229' lon='9.5752494'> <!-- pretend this node was created even if the same is already on the server as node 3577031228, but tags have changed -->
     <tag k='note' v='foobar' />
   </node>
   <node state="new" id='-3577031229' lat='52.2697044' lon='9.57518'> <!-- pretend this node was created even if the same is already on the server, irrelevant tags dropped -->
@@ -26,6 +26,14 @@
   <node id="3577031221" state='deleted' /> <!-- intentionally using mixed quoting style -->
   <node id="3577031223" lat="52.2694261" lon="9.5752398" time="1433599117"/>
   <node id="3577031226" state="deleted"/>
+  <way state="new" id='-30694811'> <!-- pretend this way was created even if the same is already on the server (with tags) -->
+    <nd ref='3577031231' />
+    <nd ref='1039434734' />
+    <nd ref='-1566150756' /> <!-- pseudo-new node -->
+    <tag k='highway' v='service' />
+    <tag k='psv' v='yes' />
+    <tag k='vehicle' v='no' />
+  </way>
   <way id='351899452' hidden='true'>
     <nd ref='3577031225' />
     <nd ref='3577031229' />
@@ -100,7 +108,7 @@
     <member type='way' ref='143108118' role='' />
     <member type='way' ref='27921018' role='' />
     <member type='way' ref='767372585' role='' />
-    <member type='way' ref='30694811' role='' />
+    <member type='way' ref='-30694811' role='' /> <!-- reference to pseudo-new way -->
     <member type='way' ref='416329311' role='' />
     <member type='way' ref='143108129' role='' />
     <member type='way' ref='314338919' role='' />
@@ -187,7 +195,7 @@
     <member type='way' ref='143108118' role='' />
     <member type='way' ref='27921018' role='' />
     <member type='way' ref='767372585' role='' />
-    <member type='way' ref='30694811' role='' />
+    <member type='way' ref='-30694811' role='' /> <!-- reference to pseudo-new way -->
     <member type='way' ref='416329311' role='' />
     <member type='way' ref='143108129' role='' />
     <member type='way' ref='314338919' role='' />

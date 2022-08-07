@@ -257,7 +257,7 @@ public:
    * @brief destroy the visible items
    * @param map the map pointer needed to release additional items
    *
-   * It is known that there are no additional items the map pointer
+   * If it is known that there are no additional items the map pointer
    * may be nullptr.
    */
   void item_chain_destroy(map_t *map);

@@ -27,12 +27,57 @@ namespace {
 const unsigned int osm_nodes = 18; // nodes in the original OSM data
 const unsigned int osm_ways = 7; // ways in the original OSM data
 const unsigned int osm_relations = 9; // relations in the original OSM data
+const item_id_t min_real_new_id = -2;
+
+bool fake_new_node_id(const std::pair<item_id_t, node_t *> &entry)
+{
+  assert_cmpnum_op(entry.first, >=, min_real_new_id);
+  return false;
+}
+
+bool fake_new_node(const node_t *node)
+{
+  assert_cmpnum_op(node->id, >=, min_real_new_id);
+  return false;
+}
+
+bool fake_new_way_id(const std::pair<item_id_t, way_t *> &entry)
+{
+  assert_cmpnum_op(entry.first, >=, min_real_new_id);
+
+  assert(std::find_if(entry.second->node_chain.begin(), entry.second->node_chain.end(),
+                 fake_new_node) == entry.second->node_chain.end());
+
+  return false;
+}
+
+bool fake_new_member(const member_t &member)
+{
+  assert_cmpnum_op(member.object.get_id(), >=, min_real_new_id);
+  return false;
+}
+
+bool fake_new_rel_id(const std::pair<item_id_t, relation_t *> &entry)
+{
+  assert_cmpnum_op(entry.first, >=, min_real_new_id);
+
+  assert(std::find_if(entry.second->members.begin(), entry.second->members.end(),
+                 fake_new_member) == entry.second->members.end());
+
+  return false;
+}
 
 void verify_diff(osm_t::ref osm)
 {
   assert_cmpnum(osm_nodes + 2, osm->nodes.size());
   assert_cmpnum(osm_ways, osm->ways.size());
   assert_cmpnum(osm_relations, osm->relations.size());
+
+  // no "new" object with an id less than min_real_new_id may exist or be referenced,
+  // they should have been mapped to their existing versions
+  assert_null(osm->find_node(fake_new_node_id));
+  assert_null(osm->find_way(fake_new_way_id));
+  assert_null(osm->find_relation(fake_new_rel_id));
 
   // new tag added in diff
   const node_t * const n72 = osm->object_by_id<node_t>(638499572);
@@ -74,7 +119,7 @@ void verify_diff(osm_t::ref osm)
   assert_cmpnum(nn1->pos.lon, 9.576014);
   assert(nn1->tags.empty());
   // added in diff, same position as existing node
-  const node_t * const nn2 = osm->object_by_id<node_t>(-2);
+  const node_t * const nn2 = osm->object_by_id<node_t>(-3577031227LL);
   assert_null(nn2);
   // which is this one
   const node_t * const n27 = osm->object_by_id<node_t>(3577031227LL);
@@ -128,7 +173,7 @@ void verify_diff(osm_t::ref osm)
   const node_t * const n756 = osm->object_by_id<node_t>(1566150756LL);
   assert(n756 != nullptr);
 
-  const node_t * const nn228 = osm->object_by_id<node_t>(-3577031228LL);
+  const node_t * const nn228 = osm->object_by_id<node_t>(-2);
   assert(nn228 != nullptr);
   assert_cmpstr(nn228->tags.get_value("note"), "foobar");
   assert_cmpnum(nn228->tags.asMap().size(), 1);

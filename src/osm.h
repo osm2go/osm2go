@@ -468,8 +468,12 @@ public:
    */
   static void parse_tag(xmlNode* a_node, TagMap &tags);
 
-  void parse_relation_member(const xmlString &tp, const xmlString &refstr, const xmlString &role, std::vector<member_t> &members, const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds = nullptr);
-  void parse_relation_member(xmlNode *a_node, std::vector<member_t> &members, const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds = nullptr);
+  void parse_relation_member(const xmlString &tp, const xmlString &refstr, const xmlString &role, std::vector<member_t> &members,
+                             const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds = nullptr,
+                             const std::unordered_map<item_id_t, item_id_t> *replacedWayIds = nullptr);
+  void parse_relation_member(xmlNode *a_node, std::vector<member_t> &members,
+                             const std::unordered_map<item_id_t, item_id_t> *replacedNodeIds = nullptr,
+                             const std::unordered_map<item_id_t, item_id_t> *replacedWayIds = nullptr);
 
   /**
    * @brief parse the reference of a way to a node from XML
