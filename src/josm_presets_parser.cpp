@@ -370,11 +370,16 @@ const std::vector<std::string> &userLangs()
       std::string lc = lcm;
       std::string::size_type d = lc.find('.');
       if(d != std::string::npos)
-        lc.erase(d);
-      lcodes.push_back(lc + '.');
+        lc.erase(d + 1);
+      else
+        lc += '.';
+      lcodes.push_back(lc);
       d = lc.find('_');
-      if(d != std::string::npos)
-        lcodes.push_back(lc.substr(0, d) + '.');
+      if(d != std::string::npos) {
+        lc.resize(d);
+        lc += '.';
+        lcodes.push_back(lc);
+      }
     }
   }
 
