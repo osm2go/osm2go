@@ -414,6 +414,28 @@ public:
 };
 
 void
+setFileDialogFromTrackPath(FileDialogGuard &dialog, settings_t::ref settings)
+{
+  if(settings->track_path.empty())
+    return;
+
+  if(g_file_test(settings->track_path.c_str(), G_FILE_TEST_EXISTS) != TRUE) {
+    std::string::size_type slashpos = settings->track_path.rfind('/');
+    if(slashpos != std::string::npos) {
+      settings->track_path[slashpos] = '\0';  // seperate path from file
+
+      /* the user just created a new document */
+      gtk_file_chooser_set_current_folder(dialog, settings->track_path.c_str());
+      gtk_file_chooser_set_current_name(dialog, settings->track_path.c_str() + slashpos + 1);
+
+      /* restore full filename */
+      settings->track_path[slashpos] = '/';
+    }
+  } else
+    gtk_file_chooser_set_filename(dialog, settings->track_path.c_str());
+}
+
+void
 cb_menu_track_import(appdata_t *appdata) {
   /* open a file selector */
   FileDialogGuard dialog(
@@ -431,22 +453,8 @@ cb_menu_track_import(appdata_t *appdata) {
            );
 
   settings_t::ref settings = settings_t::instance();
-  if(!settings->track_path.empty()) {
-    if(g_file_test(settings->track_path.c_str(), G_FILE_TEST_EXISTS) != TRUE) {
-      std::string::size_type slashpos = settings->track_path.rfind('/');
-      if(slashpos != std::string::npos) {
-        settings->track_path[slashpos] = '\0';  // seperate path from file
 
-        /* the user just created a new document */
-        gtk_file_chooser_set_current_folder(dialog, settings->track_path.c_str());
-        gtk_file_chooser_set_current_name(dialog, settings->track_path.c_str() + slashpos + 1);
-
-        /* restore full filename */
-        settings->track_path[slashpos] = '/';
-      }
-    } else
-      gtk_file_chooser_set_filename(dialog, settings->track_path.c_str());
-  }
+  setFileDialogFromTrackPath(dialog, settings);
 
   gtk_widget_show_all(dialog.get());
   if (gtk_dialog_run(dialog) == GTK_FM_OK) {
@@ -498,21 +506,7 @@ cb_menu_track_export(appdata_t *appdata) {
   settings_t::ref settings = settings_t::instance();
   g_debug("set filename <%s>", settings->track_path.c_str());
 
-  if(!settings->track_path.empty()) {
-    if(g_file_test(settings->track_path.c_str(), G_FILE_TEST_EXISTS) != TRUE) {
-      std::string::size_type slashpos = settings->track_path.rfind('/');
-      if(slashpos != std::string::npos) {
-        settings->track_path[slashpos] = '\0';  // seperate path from file
-
-        gtk_file_chooser_set_current_folder(dialog, settings->track_path.c_str());
-        gtk_file_chooser_set_current_name(dialog, settings->track_path.c_str() + slashpos + 1);
-
-        /* restore full filename */
-        settings->track_path[slashpos] = '/';
-      }
-    } else
-      gtk_file_chooser_set_filename(dialog, settings->track_path.c_str());
-  }
+  setFileDialogFromTrackPath(dialog, settings);
 
   if(gtk_dialog_run(dialog) == GTK_FM_OK) {
     g_string filename(gtk_file_chooser_get_filename(dialog));
