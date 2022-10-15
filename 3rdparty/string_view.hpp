@@ -191,7 +191,46 @@ constexpr std::wstring_view operator "" _sv( const wchar_t* str, size_t len ) no
 
 namespace nonstd {
 
+#ifdef __cpp_lib_starts_ends_with
 using std::string_view;
+#else
+
+class string_view : public std::string_view {
+public:
+    inline constexpr string_view() noexcept
+        : std::string_view() {}
+    inline constexpr string_view(const string_view& other ) noexcept = default;
+    inline constexpr string_view(const char *s, size_type count)
+        : std::string_view(s, count) {}
+    inline constexpr string_view(const char *s)
+        : std::string_view(s) {}
+    template< class It, class End >
+    constexpr string_view(It first, End last)
+        : std::string_view(first, last) {}
+    template< class R >
+    constexpr string_view(R&& r)
+        : std::string_view(r) {}
+    constexpr string_view(std::nullptr_t) = delete;
+
+    constexpr bool ends_with( string_view v ) const noexcept  // (1)
+    {
+        return size() >= v.size() && compare( size() - v.size(), npos, v ) == 0;
+    }
+
+    constexpr bool ends_with( char c ) const noexcept  // (2)
+    {
+        return ends_with( string_view( &c, 1 ) );
+    }
+
+    constexpr bool ends_with( char const * s ) const  // (3)
+    {
+        return ends_with( string_view( s ) );
+    }
+
+    bool ends_with(std::nullptr_t) const = delete;
+};
+#endif
+
 using std::wstring_view;
 using std::u16string_view;
 using std::u32string_view;
