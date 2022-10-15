@@ -71,5 +71,7 @@ private:
  * @brief adjust an API 0.5 url to 0.6 or http to https
  * @param rserver configured server URL
  * @returns if the server was changed
+ *
+ * If the server was adjusted the new string never ends with a '/'.
  */
 bool api_adjust(std::string &rserver);

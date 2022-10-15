@@ -51,12 +51,10 @@ bool osm_download(osm2go_platform::Widget *parent, project_t *project)
                   trstring("It seems your current project uses an outdated "
                            "server/protocol. It has thus been changed to:\n\n%1").arg(project->rserver),
                   parent);
-    }
-
-    /* server url should not end with a slash */
-    if(unlikely(ends_with(project->rserver, '/'))) {
+    } else if(unlikely(ends_with(project->rserver, '/'))) {
+      /* server url should not end with a slash */
       printf("removing trailing slash\n");
-      project->rserver.erase(project->rserver.size() - 1);
+      project->rserver.resize(project->rserver.size() - 1);
     }
 
     if(project->rserver == defaultServer)
