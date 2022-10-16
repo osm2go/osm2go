@@ -62,7 +62,7 @@ bool project_read(const std::string &project_file, project_t::ref project,
 
   /* parse the file and get the DOM */
   if(unlikely(!doc)) {
-    printf("error: could not parse file %s\n", project_file.c_str());
+    fprintf(stderr, "error: could not parse file %s\n", project_file.c_str());
     return false;
   }
 
@@ -145,8 +145,10 @@ bool project_read(const std::string &project_file, project_t::ref project,
     }
   }
 
-  if(!hasProj)
+  if(!hasProj) {
+    fprintf(stderr, "error: file %s does not contain <proj> element\n", project_file.c_str());
     return false;
+  }
 
   // no explicit filename was given, guess the default ones
   if(project->osmFile.empty()) {
@@ -466,11 +468,8 @@ static project_t *project_open(const std::string &name)
     project_file = project_filename(*project);
   }
 
-  printf("project file = %s\n", project_file.c_str());
-  if(unlikely(!project_read(project_file, project, settings->server, settings->base_path_fd))) {
-    printf("error reading project file\n");
+  if(unlikely(!project_read(project_file, project, settings->server, settings->base_path_fd)))
     return nullptr;
-  }
 
   return project.release();
 }
