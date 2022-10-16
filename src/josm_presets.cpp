@@ -201,7 +201,7 @@ bool presets_element_combo::matchValue(const std::string &val) const
   return std::find(values.begin(), values.end(), val) != values.end();
 }
 
-std::vector<unsigned int> presets_element_multiselect::matchedIndexes(const std::string &preset) const
+std::vector<unsigned int> presets_element_multiselect::matchedIndexes(nonstd::string_view preset) const
 {
   std::vector<unsigned int> indexes;
 

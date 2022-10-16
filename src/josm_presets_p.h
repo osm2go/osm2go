@@ -14,6 +14,8 @@
 #include <string>
 #include <vector>
 
+#include <string_view.hpp>
+
 #include <osm2go_cpp.h>
 
 enum presets_element_type_t {
@@ -198,7 +200,7 @@ protected:
   /**
    * @brief check which selection items are matched by preset
    */
-  std::vector<unsigned int> matchedIndexes(const std::string &preset) const;
+  std::vector<unsigned int> matchedIndexes(nonstd::string_view preset) const;
 
   bool matchValue(const std::string &val) const override;
 public:

@@ -12,6 +12,7 @@
 #include "osm2go_annotations.h"
 #include "settings.h"
 
+#include <algorithm>
 #include <cstring>
 #include <limits>
 #include <unordered_map>
@@ -30,6 +31,16 @@ xml_get_prop_uint(xmlNode *node, const char *prop)
     return std::numeric_limits<unsigned int>::max();
 }
 
+class match_sv {
+  nonstd::string_view sv;
+public:
+  inline match_sv(nonstd::string_view v) : sv(v) {}
+  bool operator()(const std::pair<std::string, api_limits> &other) const
+  {
+    return other.first == sv;
+  }
+};
+
 } // namespace
 
 api_limits::api_limits()
@@ -45,22 +56,29 @@ api_limits::api_limits()
 
 static std::unordered_map<std::string, api_limits> instances;
 
-const api_limits &api_limits::instance(const std::string &server)
+const api_limits &api_limits::instance(nonstd::string_view server)
 {
-  std::unordered_map<std::string, api_limits>::iterator it = instances.find(server);
+  const std::unordered_map<std::string, api_limits>::iterator itEnd = instances.end();
+  std::unordered_map<std::string, api_limits>::iterator it = std::find_if(instances.begin(), itEnd, match_sv(server));
 
-  if (it != instances.end())
+  if (it != itEnd)
     return it->second;
 
   api_limits ret;
 
-  std::string url = server + "/api/capabilities";
+  std::string url;
+  nonstd::string_view cap_url = "/api/capabilities";
+  url.resize(server.size() + cap_url.size());
+  // no assignment operator if string_view is no native type, and data() returns non-const in new C++ versions anyway
+  server.copy(const_cast<char *>(url.data()), server.size());
+  cap_url.copy(const_cast<char *>(url.data()) + server.size(), cap_url.size());
+
   if (!ret.queryXml(url.c_str())) {
     static const api_limits empty;
     return empty;
   }
 
-  return instances.insert(std::make_pair(server, ret)).first->second;
+  return instances.insert(std::make_pair(nonstd::to_string(server), ret)).first->second;
 }
 
 const api_limits &api_limits::offlineInstance(const std::string &server)

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2017-2018 Rolf Eike Beer <eike@sf-mail.de>
+ * SPDX-FileCopyrightText: 2017-2020 Rolf Eike Beer <eike@sf-mail.de>
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */

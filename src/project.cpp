@@ -33,6 +33,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <string_view.hpp>
+
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
@@ -243,7 +245,9 @@ bool project_t::rename(const std::string &nname, project_t::ref global, osm2go_p
   const bool isGlobal = global && global->name == name;
   assert(global.get() != this);
 
-  std::unique_ptr<project_t> tmpproj(std::make_unique<project_t>(nname, path.substr(0, path.size() - 1 /* slash */ - name.size())));
+  nonstd::string_view pathv = path;
+
+  std::unique_ptr<project_t> tmpproj(std::make_unique<project_t>(nname, pathv.substr(0, pathv.size() - 1 /* slash */ - name.size())));
   tmpproj->map_state = map_state;
   const bool oldOsmExists = osm_file_exists();
 
@@ -441,13 +445,21 @@ static project_t *project_open(const std::string &name)
   if(unlikely(sl != std::string::npos)) {
     // load with absolute or relative path, usually only done for demo
     project_file = name;
-    std::string pname = name.substr(sl + 1);
-    if(likely(ends_with(pname, ".proj")))
-      pname.erase(pname.size() - 5);
+    nonstd::string_view pname = name;
+
+    pname = pname.substr(sl + 1);
+    if(likely(pname.ends_with(".proj")))
+      pname.remove_suffix(5); // strlen(".proj")
+
     // usually that ends in /foo/foo.proj
-    if(name.compare(sl - pname.size() - 1, pname.size() + 1, '/' + pname) == 0)
-      sl -= pname.size();
-    project.reset(new project_t(pname, name.substr(0, sl)));
+    if (sl > pname.size() + 1 && name[sl - pname.size() - 1] == '/') {
+      // must be an extra view as old C++ versions can't compare std::string to a string_view
+      nonstd::string_view namev = name;
+
+      if(namev.compare(sl - pname.size(), pname.size(), pname) == 0)
+        sl -= pname.size();
+    }
+    project.reset(new project_t(nonstd::to_string(pname), nonstd::to_string_view(name).substr(0, sl)));
   } else {
     project.reset(new project_t(name, settings->base_path));
 
@@ -583,10 +595,26 @@ bool project_t::parse_osm() {
   return static_cast<bool>(osm);
 }
 
-project_t::project_t(const std::string &n, const std::string &base_path)
+namespace {
+
+std::string constructPath(nonstd::string_view base_path, const std::string &name)
+{
+  std::string path(base_path.size() + name.size() + 1 /* '/' + '\0' */, '/');
+
+  /* in never versions of C++ data() returns non-const anyway */
+  base_path.copy(const_cast<char *>(&path[0]), base_path.size());
+  path.replace(base_path.size(), base_path.size() + name.size(), name);
+  path += '/';
+
+  return path;
+}
+
+} // namespace
+
+project_t::project_t(const std::string &n, nonstd::string_view base_path)
   : bounds(pos_t(0, 0), pos_t(0, 0))
   , name(n)
-  , path(base_path +  name + '/')
+  , path(constructPath(base_path, name))
   , data_dirty(false)
   , isDemo(false)
   , dirfd(path.c_str())

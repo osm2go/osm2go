@@ -14,6 +14,8 @@
 #include <memory>
 #include <string>
 
+#include <string_view.hpp>
+
 #include <osm2go_platform.h>
 #include <osm2go_stl.h>
 
@@ -26,7 +28,7 @@ struct project_t {
   /**
    * @constructor
    */
-  project_t(const std::string &n, const std::string &base_path);
+  project_t(const std::string &n, nonstd::string_view base_path);
 
   /**
    * @brief sort-of move constructor

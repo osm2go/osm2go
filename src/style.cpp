@@ -233,7 +233,8 @@ style_t *style_t::load(const std::string &name)
   return style_load_fname(fullname);
 }
 
-std::string style_basename(const std::string &name) {
+nonstd::string_view style_basename(nonstd::string_view name)
+{
   std::string::size_type pos = name.rfind('/');
 
   /* and cut off extension */
@@ -318,7 +319,7 @@ style_t::~style_t()
 
 void style_change(appdata_t &appdata, const std::string &style_path)
 {
-  const std::string &new_style = style_basename(style_path);
+  nonstd::string_view new_style = style_basename(style_path);
   /* check if style has really been changed */
   if(settings_t::instance()->style == new_style)
     return;
@@ -329,7 +330,7 @@ void style_change(appdata_t &appdata, const std::string &style_path)
     return;
   }
 
-  settings_t::instance()->style = new_style;
+  settings_t::instance()->style = nonstd::to_string(new_style);
 
   appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
   osm2go_platform::process_events();

@@ -12,7 +12,9 @@ class style_t;
 #include <map>
 #include <string>
 
+#include <string_view.hpp>
+
 style_t *style_load_fname(const std::string &filename);
 std::map<std::string, std::string> style_scan();
-std::string style_basename(const std::string &name);
+nonstd::string_view style_basename(nonstd::string_view name);
 void style_change(appdata_t &appdata, const std::string &style_path);

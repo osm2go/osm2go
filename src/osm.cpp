@@ -118,10 +118,12 @@ item_id_t object_t::get_id() const noexcept {
 
 /* -------------------- tag handling ----------------------- */
 
+#include <string_view.hpp>
+
 class map_value_match_functor {
-  const std::string &value;
+  nonstd::string_view value;
 public:
-  explicit inline map_value_match_functor(const std::string &v) : value(v) {}
+  explicit inline map_value_match_functor(nonstd::string_view v) : value(v) {}
   inline bool operator()(const osm_t::TagMap::value_type &pair) const {
     return pair.second == value;
   }

@@ -70,7 +70,7 @@ bool osm_download(osm2go_platform::Widget *parent, project_t *project)
     sl = server.find('/');
   }
 
-  const api_limits &limits = api_limits::instance(server.substr(0, sl));
+  const api_limits &limits = api_limits::instance(nonstd::string_view(server).substr(0, sl));
 
   if (limits.initialized() && limits.minApiVersion() != api_limits::ApiVersion_0_6)
     return false;

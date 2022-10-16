@@ -8,6 +8,8 @@
 
 #include "misc.h"
 
+#include <string_view.hpp>
+
 #include <osm2go_cpp.h>
 
 class api_limits {
@@ -37,7 +39,7 @@ public:
    * If the server can not be reached an instance with default
    * values will be returned.
    */
-  static const api_limits &instance(const std::string &server);
+  static const api_limits &instance(nonstd::string_view server);
 
   /**
    * @brief get the API limits of the given server if already available
