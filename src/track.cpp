@@ -183,22 +183,22 @@ void track_save_segs::save_point::operator()(const track_point_t &point) const
  * @brief write the track information to a GPX file
  * @param name the filename to write to
  * @param track the track data to write
- * @param doc previous xml
+ * @param xdoc previous xml
  *
- * If doc is given, the last track in doc is updated and all remaining ones
- * are appended. If doc is nullptr all tracks are saved.
+ * If xdoc is given, the last track in xdoc is updated and all remaining ones
+ * are appended. If xdoc is nullptr all tracks are saved.
  *
- * doc is freed.
+ * xdoc is freed.
  */
 void
-track_write(const char *name, const track_t *track, xmlDoc *d)
+track_write(const char *name, const track_t *track, xmlDoc *xdoc)
 {
   printf("writing track to %s\n", name);
 
   xmlNodePtr trk_node;
   std::vector<track_seg_t>::const_iterator it = track->segments.begin();
   std::vector<track_seg_t>::const_iterator itEnd = track->segments.end();
-  xmlDocGuard doc(d);
+  xmlDocGuard doc(xdoc);
   if(doc) {
     xmlNodePtr cur_node;
     xmlNodePtr root_node = xmlDocGetRootElement(doc.get());
