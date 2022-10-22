@@ -274,10 +274,11 @@ void track_save(project_t::ref project, const track_t *track)
     return;
   }
 
-  const std::string trkfname = project->name + ".trk";
+  const std::string trk_name = project->path + project->name + ".trk";
+  const char *trkfname = trk_name.c_str() + project->path.size();
 
   if(track == nullptr) {
-    unlinkat(project->dirfd, trkfname.c_str(), 0);
+    unlinkat(project->dirfd, trkfname, 0);
     return;
   }
 
@@ -287,9 +288,9 @@ void track_save(project_t::ref project, const track_t *track)
   xmlDocPtr doc = nullptr;
 
   struct stat st;
-  if(fstatat(project->dirfd, trkfname.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode)) {
-    printf("backing up existing file '%s' to '%s'\n", trkfname.c_str(), backupfn);
-    if(renameat(project->dirfd, trkfname.c_str(), project->dirfd, backupfn) == 0) {
+  if(fstatat(project->dirfd, trkfname, &st, 0) == 0 && S_ISREG(st.st_mode)) {
+    printf("backing up existing file '%s' to '%s'\n", trkfname, backupfn);
+    if(renameat(project->dirfd, trkfname, project->dirfd, backupfn) == 0) {
       /* parse the old file and get the DOM */
       fdguard bupfd(project->dirfd, backupfn, O_RDONLY);
       if(likely(bupfd.valid()))
@@ -297,7 +298,6 @@ void track_save(project_t::ref project, const track_t *track)
     }
   }
 
-  const std::string trk_name = project->path + trkfname;
   track_write(trk_name.c_str(), track, doc);
   track->dirty = false;
 
