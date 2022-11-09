@@ -395,14 +395,14 @@ menu_create(appdata_internal &appdata, QMenuBar *menu)
   submenu->addSeparator();
 
   item = menu_append_new_item(submenu, trstring("More details"),
-                              nullptr, QKeySequence(Qt::ALT + Qt::Key_Period));
+                              nullptr, QKeySequence(Qt::ALT | Qt::Key_Period));
   QObject::connect(item, &QAction::triggered, appdata.window, [map]() { map->detail_increase(); });
 
   item = menu_append_new_item(submenu, trstring("Normal details"));
   QObject::connect(item, &QAction::triggered, appdata.window, [map]() { map->detail_normal(); });
 
   item = menu_append_new_item(submenu, trstring("Less details"),
-                              nullptr, QKeySequence(Qt::ALT + Qt::Key_Comma));
+                              nullptr, QKeySequence(Qt::ALT | Qt::Key_Comma));
   QObject::connect(item, &QAction::triggered, appdata.window, [map]() { map->detail_decrease(); });
 
   submenu->addSeparator();
@@ -428,7 +428,7 @@ menu_create(appdata_internal &appdata, QMenuBar *menu)
   QObject::connect(item, &QAction::triggered, [&appdata]() { cb_menu_upload(&appdata); });
 
   item = menu_append_new_item(submenu, trstring("&Download"),
-                              "download.16", QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_D));
+                              "download.16", QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_D));
   QObject::connect(item, &QAction::triggered, [&appdata]() { cb_menu_download(&appdata); });
 
   submenu->addSeparator();
@@ -493,7 +493,7 @@ menu_create(appdata_internal &appdata, QMenuBar *menu)
   QObject::connect(item, &QAction::toggled, [](bool en) { settings_t::instance()->follow_gps = en; });
 
   item = menu_append_new_item(submenu, trstring("Track &visibility"), nullptr,
-                              QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_V));
+                              QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_V));
   QObject::connect(item, &QAction::triggered, [&appdata]() {
     if(track_visibility_select() && appdata.track.track)
       appdata.map->track_draw(settings_t::instance()->trackVisibility, *appdata.track.track);

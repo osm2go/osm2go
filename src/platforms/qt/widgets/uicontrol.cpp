@@ -62,8 +62,8 @@ MainUiQt::MainUiQt()
 
   auto *mapMenu = new QMenu(QObject::tr("&Map"), appdata_t::window);
   menuitems[SUBMENU_MAP] = mapMenu;
-  menuitems[MENU_ITEM_MAP_RELATIONS] = menu_entry(mapMenu, QObject::tr("&Relations"), nullptr, QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_R));
-  menuitems[MENU_ITEM_MAP_UPLOAD] = menu_entry(mapMenu, QObject::tr("&Upload"), "upload.16", QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_U));
+  menuitems[MENU_ITEM_MAP_RELATIONS] = menu_entry(mapMenu, QObject::tr("&Relations"), nullptr, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_R));
+  menuitems[MENU_ITEM_MAP_UPLOAD] = menu_entry(mapMenu, QObject::tr("&Upload"), "upload.16", QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_U));
   menuitems[MENU_ITEM_MAP_UNDO_CHANGES] = menu_action(mapMenu, QObject::tr("Undo &all"), "edit-delete");
   menuitems[MENU_ITEM_MAP_SAVE_CHANGES] = menu_entry(mapMenu, QObject::tr("&Save local changes"), "document-save", QKeySequence::Save);
   menuitems[MENU_ITEM_MAP_HIDE_SEL] = menu_action(mapMenu, QObject::tr("&Hide selected"), "list-remove");
@@ -81,7 +81,7 @@ MainUiQt::MainUiQt()
   menuitems[MENU_ITEM_TRACK_CLEAR] = menu_action(trackMenu, QObject::tr("&Clear"), "edit-clear");
   menuitems[MENU_ITEM_TRACK_CLEAR_CURRENT] = menu_action(trackMenu, QObject::tr("Clear c&urrent segment"), "edit-clear");
   auto *mi = create_checkbox_item(trackMenu, QObject::tr("&GPS enable"));
-  mi->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_G));
+  mi->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_G));
   menuitems[MENU_ITEM_TRACK_ENABLE_GPS] = mi;
 
   menuitems[MENU_ITEM_TRACK_FOLLOW_GPS] = create_checkbox_item(trackMenu, QObject::tr("GPS follow"));
