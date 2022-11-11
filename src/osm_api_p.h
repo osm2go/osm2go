@@ -35,9 +35,8 @@ public:
   ~osm_upload_context_t() = default;
 
   void append_str(trstring::arg_type, const char * = nullptr) = delete;
-#ifndef TRSTRING_NATIVE_TYPE_IS_TRSTRING
+  template<typename = std::enable_if<!std::is_same<trstring::arg_type, trstring::native_type>::value>>
   void append_str(trstring::native_type, const char * = nullptr) = delete;
-#endif
 #endif
 
   appdata_t &appdata;
