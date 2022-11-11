@@ -32,11 +32,27 @@ assert_msg_fmt(const char *file, const int line, const char *func, const char *f
   abort();
 }
 
-static void
+namespace {
+
+void
 heremsg(const char *file, const int line, const char *func)
 {
   std::cerr << "code at: " << file << ":" << line << ": " << func << ": ";
 }
+
+void
+nummsg(const char *amsg, const char *opmsg, const char *bmsg)
+{
+  std::cerr << "Assertion " << amsg << " " << opmsg << " " << bmsg << " failed: " << amsg << ": ";
+}
+
+template<typename T>
+void hexmsg(T a)
+{
+  std::cerr << std::dec << a << " (0x" << std::hex << a << ")";
+}
+
+} // namespace
 
 void
 assert_msg_unreachable(const char *file, const int line, const char *func)
@@ -44,18 +60,6 @@ assert_msg_unreachable(const char *file, const int line, const char *func)
   heremsg(file, line, func);
   std::cerr << "should not be reachable" << std::endl;
   abort();
-}
-
-static void
-nummsg(const char *amsg, const char *opmsg, const char *bmsg)
-{
-  std::cerr << "Assertion " << amsg << " " << opmsg << " " << bmsg << " failed: " << amsg << ": ";
-}
-
-template<typename T>
-static void hexmsg(T a)
-{
-  std::cerr << std::dec << a << " (0x" << std::hex << a << ")";
 }
 
 template<typename T> assert_num_tpl<T>::assert_num_tpl(T a, const char *amsg, const char *opmsg,
