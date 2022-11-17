@@ -30,9 +30,9 @@ target_sources(osm2go_lib PRIVATE
 )
 
 target_include_directories(osm2go_lib
-		PRIVATE
-			${CMAKE_CURRENT_SOURCE_DIR}
-			${CMAKE_CURRENT_BINARY_DIR}
+	PRIVATE
+		${CMAKE_CURRENT_SOURCE_DIR}
+		${CMAKE_CURRENT_BINARY_DIR}
 )
 
 target_link_libraries(osm2go_platform_lib INTERFACE
