@@ -86,7 +86,7 @@ template<typename T> assert_num_tpl<T>::assert_num_tpl(T a, T b, const char *ams
   abort();
 }
 
-// the template as typeof(ca) intentionally so the type is always "const x" here,
+// the template has typeof(ca) intentionally so the type is always "const x" here,
 // otherwise the instances would have to be duplicated for "x" and "const x"
 
 template class assert_num_tpl<const unsigned long>;
