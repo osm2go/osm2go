@@ -14,14 +14,9 @@ target_include_directories(osm2go_lib
 			${CMAKE_CURRENT_SOURCE_DIR})
 
 target_sources(osm2go_lib PRIVATE
-	canvas_graphicsscene.cpp
-	canvas_graphicsscene.h
 	gps.cpp
 	gps_p.h
 	icon.cpp
-	iconbar.cpp
-	map_graphicsview.cpp
-	map_graphicsview.h
 	net_io.cpp
 	OldOrNotEmptyValidator.h
 	osm2go_i18n.h

@@ -2,9 +2,14 @@
 find_package(Qt5 ${Qt5_VERSION} COMPONENTS Widgets QuickWidgets REQUIRED)
 
 target_sources(osm2go_lib PRIVATE
+	canvas_graphicsscene.cpp
+	canvas_graphicsscene.h
+	iconbar_toolbar.cpp
 	info.cpp
 	info_p.h
 	josm_presets_button.cpp
+	map_graphicsview.cpp
+	map_graphicsview.h
 	ListEditDialog.cpp
 	ListEditDialog.h
 	MainUiQt.h
