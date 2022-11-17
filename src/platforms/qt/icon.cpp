@@ -12,7 +12,6 @@
 #include <filesystem>
 #include <memory>
 #include <QDebug>
-#include <QLabel>
 #include <QPainter>
 #include <QString>
 #include <QStringBuilder>
