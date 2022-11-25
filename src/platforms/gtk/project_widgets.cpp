@@ -231,7 +231,7 @@ callback_modified_name(GtkWidget *widget, name_callback_context_t *context)
   /* check if there's a name */
   if(name != nullptr && *name != '\0') {
     /* check if it consists of valid characters */
-    if(strpbrk(name, "\\*?()\n\t\r") == nullptr) {
+    if(strpbrk(name, "\\*?()\n\t\r:") == nullptr) {
       /* check if such a project already exists */
       if(project_exists(context->basefd, name).empty())
         ok = TRUE;

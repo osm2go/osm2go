@@ -23,10 +23,10 @@ public:
   explicit ProjectNameValidator(const std::vector<std::unique_ptr<project_t>> &projects, QObject *parent = nullptr)
     : QValidator(parent)
     , m_projects(projects)
-    // disallow '\\', '*', '?' because they cause trouble e.g. on FAT filesystems
+    // disallow ':', '\\', '*', '?' because they cause trouble e.g. on FAT filesystems
     // disallow '/' because it's a path separator everywhere
     // also disallow '(' and ')'
-    , m_badPattern("[\n\t\r" R"#(/\\\*?\(\)])#")
+    , m_badPattern("[\n\t\r:" R"#(/\\\*?\(\)])#")
   {
   }
   ~ProjectNameValidator() override = default;
