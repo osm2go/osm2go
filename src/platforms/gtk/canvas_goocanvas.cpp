@@ -214,8 +214,8 @@ static osm2go_platform::screenpos boundedScroll(canvas_goocanvas *gcanvas,
   gdouble max_sy_cu = 0.95 * (gcanvas->bounds.max.y + dim.height);
   gdouble max_sx_cu = 0.95 * (gcanvas->bounds.max.x + dim.width);
 
-  osm2go_platform::screenpos ret(std::min(std::max(d.x(), min_sx_cu), max_sx_cu),
-                                 std::min(std::max(d.y(), min_sy_cu), max_sy_cu));
+  osm2go_platform::screenpos ret(std::clamp(d.x(), min_sx_cu, max_sx_cu),
+                                 std::clamp(d.y(), min_sy_cu, max_sy_cu));
 
   /* adjust to screen center */
   GooCanvas *gc = GOO_CANVAS(gcanvas->widget);

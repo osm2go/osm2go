@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstring>
 #include <string>
 
@@ -367,4 +368,14 @@ namespace std {
 #define ENABLE_IF_CONVERTIBLE(T, B)
 #else
 #define ENABLE_IF_CONVERTIBLE(T, B) , typename std::enable_if<std::is_convertible<T, B>::value>::type* = nullptr
+#endif
+
+#ifndef __cpp_lib_clamp
+namespace std {
+  template<class T>
+  const T &clamp(const T &v, const T &lo, const T &hi)
+  {
+    return std::max<T>(std::min<T>(v, hi), lo);
+  }
+};
 #endif
