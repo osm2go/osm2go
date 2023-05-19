@@ -545,7 +545,7 @@ public:
 
   /**
    * @brief check if there are any modifications
-   * @param honor_hidden_flags if setting HIDDEN on ways should be considered a modifications
+   * @param honor_hidden_flags if setting HIDDEN on ways should be considered a modification
    */
   bool is_clean(bool honor_hidden_flags) const;
 
