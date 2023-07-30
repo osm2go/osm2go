@@ -212,6 +212,23 @@ public:
         : std::string_view(r) {}
     constexpr string_view(std::nullptr_t) = delete;
 
+    constexpr bool starts_with( string_view v ) const noexcept  // (1)
+    {
+        return size() >= v.size() && compare( 0, v.size(), v ) == 0;
+    }
+
+    constexpr bool starts_with( char c ) const noexcept  // (2)
+    {
+        return starts_with( string_view( &c, 1 ) );
+    }
+
+    constexpr bool starts_with( char const * s ) const  // (3)
+    {
+        return starts_with( string_view( s ) );
+    }
+
+    bool starts_with(std::nullptr_t) const = delete;
+
     constexpr bool ends_with( string_view v ) const noexcept  // (1)
     {
         return size() >= v.size() && compare( size() - v.size(), npos, v ) == 0;
