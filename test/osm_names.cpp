@@ -510,6 +510,10 @@ void test_simple()
   tags.insert(osm_t::TagMap::value_type("emergency", "fire_hydrant"));
   tags.insert(osm_t::TagMap::value_type("ref", "42"));
   helper_node(tags, "fire hydrant: \"42\"");
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("shop", "beauty"));
+  helper_node(tags, "beauty shop");
 }
 
 // lifecycle replacements for things that are not handled specially like buildings and highways
@@ -606,6 +610,10 @@ void test_lifecycle()
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("demolished:highway", "secondary"));
   helper_way(tags, trstring("demolished %1").arg(trstring("%1 road").arg("secondary")), 0);
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("disused:shop", "beauty"));
+  helper_node(tags, "disused beauty shop");
 }
 
 void test_power_generator()

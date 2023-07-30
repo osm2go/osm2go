@@ -414,6 +414,20 @@ nameParts nameElements(const osm_t &osm, const object_t &obj, const bool useLife
     }
   }
 
+  // ### SHOPS
+  rawValue = tags.get_value("shop");
+  if (rawValue != nullptr) {
+    ret.type = trstring("%1 shop").arg(clean_underscores(rawValue));
+  }
+  if (useLifecycle && (rawValue == nullptr)) {
+    std::optional<lifecycleResult> lcRet = lifecycleOnly(tags, "shop");
+    if (lcRet) {
+      // there was no shop=<lifecycle>, but work as if it was
+      ret.type = lcRet->pattern.arg(trstring("%1 shop").arg(clean_underscores(lcRet->value)));
+    }
+  }
+
+
   // ### HIGHWAYS
   rawValue = tags.get_value("highway");
   if(rawValue != nullptr) {
