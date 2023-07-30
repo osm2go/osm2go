@@ -16,6 +16,7 @@
 #include "josm_presets.h"
 #include "map.h"
 #include "misc.h"
+#include "SaxParser.h"
 #include "style.h"
 
 #include <algorithm>
@@ -71,9 +72,7 @@ namespace {
 
 typedef std::unordered_map<std::string, color_t> ColorMap;
 
-class StyleSax {
-  xmlSAXHandler handler;
-
+class StyleSax : public SaxParser {
   enum State {
     DocStart,
     TagRules,
@@ -102,7 +101,7 @@ class StyleSax {
   // custom find to avoid memory allocations for std::string
   struct tag_find {
     const char * const name;
-    explicit tag_find(const xmlChar *n) : name(reinterpret_cast<const char *>(n)) {}
+    explicit tag_find(const char *n) : name(n) {}
     inline bool operator()(const StateMap::value_type &p) const
     {
       return (strcmp(p.name, name) == 0);
@@ -119,18 +118,9 @@ public:
 private:
   ColorMap colors;
 
-  void characters(const char *ch, int len);
-  static void cb_characters(void *ts, const xmlChar *ch, int len) {
-    static_cast<StyleSax *>(ts)->characters(reinterpret_cast<const char *>(ch), len);
-  }
-  void startElement(const xmlChar *name, const char **attrs);
-  static void cb_startElement(void *ts, const xmlChar *name, const xmlChar **attrs) {
-    static_cast<StyleSax *>(ts)->startElement(name, reinterpret_cast<const char **>(attrs));
-  }
-  void endElement(const xmlChar *name);
-  static void cb_endElement(void *ts, const xmlChar *name) {
-    static_cast<StyleSax *>(ts)->endElement(name);
-  }
+  void characters(const char *ch, int len) override;
+  void startElement(const char *name, const char **attrs) override;
+  void endElement(const char *name) override;
 };
 
 /* --------------------- elemstyles.xml parsing ----------------------- */
@@ -233,13 +223,9 @@ parse_boolean(const char *bool_str, const std::array<const char *, 3> &value_str
 }
 
 StyleSax::StyleSax()
-  : state(DocStart)
+  : SaxParser()
+  , state(DocStart)
 {
-  memset(&handler, 0, sizeof(handler));
-  handler.characters = cb_characters;
-  handler.startElement = cb_startElement;
-  handler.endElement = cb_endElement;
-
   tags.push_back(StateMap::value_type("rules", DocStart, TagRules));
   tags.push_back(StateMap::value_type("rule", TagRules, TagRule));
   tags.push_back(StateMap::value_type("condition", TagRule, TagCondition));
@@ -253,7 +239,7 @@ StyleSax::StyleSax()
 
 bool StyleSax::parse(const std::string &filename)
 {
-  if (xmlSAXUserParseFile(&handler, this, filename.c_str()) != 0)
+  if (!parseFile(filename))
     return false;
 
   return !styles.empty();
@@ -309,7 +295,7 @@ parse_priority(const char *attr)
     return 0;
 }
 
-void StyleSax::startElement(const xmlChar *name, const char **attrs)
+void StyleSax::startElement(const char *name, const char **attrs)
 {
   StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(), tag_find(name));
 
@@ -472,7 +458,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
   }
 }
 
-void StyleSax::endElement(const xmlChar *name)
+void StyleSax::endElement(const char *name)
 {
   StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(), tag_find(name));
 

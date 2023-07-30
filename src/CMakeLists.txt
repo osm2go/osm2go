@@ -51,6 +51,7 @@ add_library(osm2go_lib STATIC
 	project.cpp
 	project.h
 	project_p.h
+	SaxParser.h
 	settings.h
 	style.cpp
 	style.h

@@ -6,6 +6,8 @@
 
 #include "josm_presets_p.h"
 
+#include "SaxParser.h"
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -136,7 +138,7 @@ struct str_map_find {
   }
 };
 
-class PresetSax {
+class PresetSax : public SaxParser {
 public:
   enum State {
     DocStart,
@@ -175,8 +177,6 @@ public:
   static const StateMap &preset_state_map();
 
 private:
-  xmlSAXHandler handler;
-
   // not a stack because that can't be iterated
   std::vector<State> state;
   std::stack<presets_item_t *> items; // the current item stack (i.e. menu layout)
@@ -217,19 +217,9 @@ private:
     void operator()(LLinks::value_type &l);
   };
 
-  void characters(const char *ch, int len);
-  static void cb_characters(void *ts, const xmlChar *ch, int len) {
-    static_cast<PresetSax *>(ts)->characters(reinterpret_cast<const char *>(ch), len);
-  }
-  void startElement(const char *name, const char **attrs);
-  static void cb_startElement(void *ts, const xmlChar *name, const xmlChar **attrs) {
-    static_cast<PresetSax *>(ts)->startElement(reinterpret_cast<const char *>(name),
-                                               reinterpret_cast<const char **>(attrs));
-  }
-  void endElement(const xmlChar *name);
-  static void cb_endElement(void *ts, const xmlChar *name) {
-    static_cast<PresetSax *>(ts)->endElement(name);
-  }
+  void characters(const char *ch, int len) override;
+  void startElement(const char *name, const char **attrs) override;
+  void endElement(const char *name) override;
 
   /**
    * @brief find attribute with the given name
@@ -387,16 +377,12 @@ const std::vector<std::string> &userLangs()
 }
 
 PresetSax::PresetSax(presets_items_internal &p, const std::string &b, int basefd)
-  : presets(p)
+  : SaxParser()
+  , presets(p)
   , basepath(b)
   , basedirfd(basefd)
   , langs(userLangs())
 {
-  memset(&handler, 0, sizeof(handler));
-  handler.characters = cb_characters;
-  handler.startElement = cb_startElement;
-  handler.endElement = cb_endElement;
-
   state.push_back(DocStart);
 }
 
@@ -448,7 +434,7 @@ void PresetSax::find_link_ref::operator()(PresetSax::LLinks::value_type &l)
 
 bool PresetSax::parse(const std::string &filename)
 {
-  if (xmlSAXUserParseFile(&handler, this, filename.c_str()) != 0)
+  if (!parseFile(filename))
     return false;
 
   std::for_each(laterLinks.begin(), laterLinks.end(), find_link_ref(*this));
@@ -970,7 +956,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
   }
 }
 
-void PresetSax::endElement(const xmlChar *name)
+void PresetSax::endElement(const char *name)
 {
   if(state.back() == UnknownTag) {
     state.pop_back();

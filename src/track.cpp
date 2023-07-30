@@ -17,6 +17,7 @@
 #include "map.h"
 #include "misc.h"
 #include "project.h"
+#include "SaxParser.h"
 #include "settings.h"
 #include "uicontrol.h"
 
@@ -48,8 +49,7 @@
 
 namespace {
 
-class TrackSax {
-  xmlSAXHandler handler;
+class TrackSax : public SaxParser {
   track_point_t *curPoint;
 
   enum State {
@@ -78,7 +78,7 @@ class TrackSax {
   // custom find to avoid memory allocations for std::string
   struct tag_find {
     const char * const name;
-    explicit tag_find(const xmlChar *n) : name(reinterpret_cast<const char *>(n)) {}
+    explicit tag_find(const char *n) : name(n) {}
     inline bool operator()(const StateMap::value_type &p) const {
       return (strcmp(p.name, name) == 0);
     }
@@ -93,18 +93,9 @@ public:
   std::vector<track_point_t>::size_type points;  ///< total points
 
 private:
-  void characters(const char *ch, int len);
-  static void cb_characters(void *ts, const xmlChar *ch, int len) {
-    static_cast<TrackSax *>(ts)->characters(reinterpret_cast<const char *>(ch), len);
-  }
-  void startElement(const xmlChar *name, const xmlChar **attrs);
-  static void cb_startElement(void *ts, const xmlChar *name, const xmlChar **attrs) {
-    static_cast<TrackSax *>(ts)->startElement(name, attrs);
-  }
-  void endElement(const xmlChar *name);
-  static void cb_endElement(void *ts, const xmlChar *name) {
-    static_cast<TrackSax *>(ts)->endElement(name);
-  }
+  void characters(const char *ch, int len) override;
+  void startElement(const char *name, const char **attrs) override;
+  void endElement(const char *name) override;
 };
 
 } // namespace
@@ -524,16 +515,12 @@ track_point_t::track_point_t(const pos_t &p, float alt, time_t t)
 }
 
 TrackSax::TrackSax()
-  : curPoint(nullptr)
+  : SaxParser()
+  , curPoint(nullptr)
   , state(DocStart)
   , track(nullptr)
   , points(0)
 {
-  memset(&handler, 0, sizeof(handler));
-  handler.characters = cb_characters;
-  handler.startElement = cb_startElement;
-  handler.endElement = cb_endElement;
-
   tags.push_back(StateMap::value_type("gpx", DocStart, TagGpx));
   tags.push_back(StateMap::value_type("trk", TagGpx, TagTrk));
   tags.push_back(StateMap::value_type("trkseg", TagTrk, TagTrkSeg));
@@ -544,7 +531,7 @@ TrackSax::TrackSax()
 
 bool TrackSax::parse(const char *filename)
 {
-  if(unlikely(xmlSAXUserParseFile(&handler, this, filename) != 0))
+  if(unlikely(!parseFile(filename)))
     return false;
 
   return track && !track->segments.empty();
@@ -577,7 +564,7 @@ void TrackSax::characters(const char *ch, int len)
   }
 }
 
-void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
+void TrackSax::startElement(const char *name, const char **attrs)
 {
   StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(), tag_find(name));
 
@@ -608,9 +595,9 @@ void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
     curPoint = &track->segments.back().track_points.back();
     for(unsigned int i = 0; attrs[i] != nullptr; i += 2) {
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "lat") == 0)
-        curPoint->pos.lat = xml_parse_float(attrs[i + 1]);
+        curPoint->pos.lat = osm2go_platform::string_to_double(attrs[i + 1]);
       else if(likely(strcmp(reinterpret_cast<const char *>(attrs[i]), "lon") == 0))
-        curPoint->pos.lon = xml_parse_float(attrs[i + 1]);
+        curPoint->pos.lon = osm2go_platform::string_to_double(attrs[i + 1]);
     }
     break;
   default:
@@ -618,7 +605,7 @@ void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
   }
 }
 
-void TrackSax::endElement(const xmlChar *name)
+void TrackSax::endElement(const char *name)
 {
   StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(), tag_find(name));
 
