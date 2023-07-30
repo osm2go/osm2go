@@ -241,12 +241,14 @@ test_roles(const presets_items *presets)
 
   // check that also non-interactive presets are considered
   tags.clear();
-  tags.insert(osm_t::TagMap::value_type("type", "building"));
+  tags.insert(osm_t::TagMap::value_type("type", "site"));
   r.tags.replace(tags);
 
   roles = presets->roles(&r, object_t(&n));
-  assert_cmpnum(roles.size(), 1);
+  assert_cmpnum(roles.size(), 3);
   assert(roles.find("entrance") != roles.end());
+  assert(roles.find("label") != roles.end());
+  assert(roles.find(std::string()) != roles.end());
 
   // check that regexp-roles are not shown
   relation_t r2;
