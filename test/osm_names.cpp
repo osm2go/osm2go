@@ -690,6 +690,30 @@ void test_railway_signals()
   helper_node(tags, _("signal"));
 }
 
+void test_railway_tracks()
+{
+  osm_t::TagMap tags;
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("railway", "rail"));
+  helper_way(tags, "rail", 2);
+
+  tags.insert(osm_t::TagMap::value_type("railway:track_ref", "12"));
+  helper_way(tags, trstring("railway track \"%1\"").arg("12"), 2);
+  // ways only
+  helper_node(tags, "rail");
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("railway", "rail"));
+  tags.insert(osm_t::TagMap::value_type("ref", "1761"));
+  helper_way(tags, trstring("rail: \"%1\"").arg("1761"), 2);
+
+  tags.insert(osm_t::TagMap::value_type("railway:track_ref", "12"));
+  helper_way(tags, trstring("railway track \"%1\" (\"%2\")").arg("12").arg("1761"), 2);
+  // ways only
+  helper_node(tags, trstring("rail: \"%1\"").arg("1761"));
+}
+
 } // namespace
 
 int main()
@@ -711,6 +735,7 @@ int main()
   test_lifecycle();
   test_power_generator();
   test_railway_signals();
+  test_railway_tracks();
 
   xmlCleanupParser();
 

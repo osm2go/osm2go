@@ -680,6 +680,19 @@ object_t::get_name(const osm_t &osm) const
   /* try to figure out _what_ this is */
   nameParts np = nameElements(osm, *this);
 
+  // Special case for railway tracks: they may have both "railway:track_ref" and "ref" at the
+  // same time inside e.g. a station. Prefer the track ref then.
+  if (np.name == nullptr && type == WAY && !np.type.isEmpty() && !np.type.isTranslated() && strcmp(np.type.key, "rail") == 0) {
+    const char *tref = obj->tags.get_value("railway:track_ref");
+    if (tref != nullptr) {
+      const char *ref = obj->tags.get_value("ref");
+      if (ref == nullptr)
+        return trstring("railway track \"%1\"").arg(tref);
+      else
+        return trstring("railway track \"%1\" (\"%2\")").arg(tref).arg(ref);
+    }
+  }
+
   // no good name was found so far, just look into some other tags to get a useful description
   const std::array<const char *, 3> name_tags = { { "ref", "note", "fix" "me" } };
   for(unsigned int i = 0; np.name == nullptr && i < name_tags.size(); i++)
