@@ -24,6 +24,8 @@
 #include <string>
 #include <utility>
 
+#include <string_view.hpp>
+
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
@@ -323,6 +325,39 @@ std::optional<nameParts> describeHighway(const tag_list_t &tags, const object_t 
   return ret;
 }
 
+class find_any_signal {
+  const tag_t **match;
+
+public:
+  find_any_signal(const tag_t *&m) : match(&m)
+  {
+    m = nullptr;
+  }
+
+  bool operator()(const tag_t &tag) const
+  {
+    const char *rsstart = "railway:signal:";
+
+    nonstd::string_view key(tag.key);
+
+    if (!key.starts_with(rsstart))
+      return false;
+
+    key.remove_prefix(strlen(rsstart));
+
+    // do not match "railway:signal:*:*" subtags
+    if (key.find(':') != nonstd::string_view::npos)
+      return false;
+
+    // "railway:signal:direction" and "railway:signal:position" are no signal types
+    if (key == "direction" || key == "position")
+      return false;
+
+    *match = &tag;
+    return true;
+  }
+};
+
 nameParts nameElements(const osm_t &osm, const object_t &obj, const bool useLifecycle = false)
 {
   nameParts ret;
@@ -334,9 +369,10 @@ nameParts nameElements(const osm_t &osm, const object_t &obj, const bool useLife
   ret.name = tags.get_value("name");
 
   /* search for some kind of "type" */
+  const char * const rw = "railway"; // so make compare on the pointer valid
   const std::array<const char *, 9> type_tags =
                           { { "amenity", "place", "historic",
-                              "tourism", "landuse", "waterway", "railway",
+                              "tourism", "landuse", "waterway", rw,
                               "natural", "man_made" } };
 
   for(unsigned int i = 0; i < type_tags.size(); i++) {
@@ -354,6 +390,37 @@ nameParts nameElements(const osm_t &osm, const object_t &obj, const bool useLife
       ret.type = lcRet->pattern.arg(type_tags[i]);
     else
       ret.type.key = rawValue;
+
+    // ### OpenRailwayMap special
+    if (type_tags[i] == rw && (strcmp(rawValue, "signal") == 0)) {
+      // these are the signal types that are to be found
+      const std::array<const char *, 6> signal_types =
+                            { { "combined", "main", "distant", "minor",
+                                "speed_limit", "speed_limit_distant" } };
+      const char *rsbase = "railway:signal:";
+      std::string signal_key;
+      signal_key.reserve(strlen(rsbase) + 20);
+      signal_key = rsbase;
+      for (unsigned int j = 0; j < signal_types.size(); j++) {
+        signal_key.resize(strlen(rsbase));
+        signal_key += signal_types[j];
+        rawValue = tags.get_value(signal_key.c_str());
+        if (rawValue != nullptr) {
+          ret.type.key = nullptr;
+          ret.type = trstring("%1 %2 signal").arg(rawValue).arg(clean_underscores(signal_types[j]));
+          return ret;
+        }
+      }
+
+      // find any other signal tag
+      const tag_t *sigmatch;
+      find_any_signal sigsearch(sigmatch);
+      if (tags.contains(sigsearch)) {
+          ret.type.key = nullptr;
+          ret.type = trstring("%1 %2 signal").arg(clean_underscores(sigmatch->value)).arg(sigmatch->key + strlen(rsbase));
+          return ret;
+      }
+    }
 
     return ret;
   }

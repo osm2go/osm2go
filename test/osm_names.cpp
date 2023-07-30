@@ -642,6 +642,54 @@ void test_power_generator()
   helper_node(tags, "sink");
 }
 
+void test_railway_signals()
+{
+  osm_t::TagMap tags;
+
+  tags.insert(osm_t::TagMap::value_type("railway", "signal"));
+  helper_node(tags, _("signal"));
+
+  tags.insert(osm_t::TagMap::value_type("ref", "U 13"));
+  helper_node(tags, trstring("%1: \"%2\"").arg("signal").arg(trstring("U 13")));
+
+  tags.insert(osm_t::TagMap::value_type("railway:signal:combined", "DE-ESO:ks"));
+  helper_node(tags, trstring("%1: \"%2\"").arg(trstring("%1 %2 signal").arg("DE-ESO:ks").arg("combined")).arg("U 13"));
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("railway", "signal"));
+  tags.insert(osm_t::TagMap::value_type("railway:signal:combined", "DE-ESO:ks"));
+  helper_node(tags, trstring("%1 %2 signal").arg("DE-ESO:ks").arg("combined"));
+
+  // additional signal types that should be ignored because combined is present
+  tags.insert(osm_t::TagMap::value_type("railway:signal:speed_limit", "DE-ESO:zs3"));
+  tags.insert(osm_t::TagMap::value_type("railway:signal:speed_limit_distant", "DE-ESO:zs3v"));
+  helper_node(tags, trstring("%1 %2 signal").arg("DE-ESO:ks").arg("combined"));
+
+  // now a different hierarchy
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("railway", "signal"));
+  tags.insert(osm_t::TagMap::value_type("railway:signal:speed_limit", "DE-ESO:zs3"));
+  tags.insert(osm_t::TagMap::value_type("railway:signal:speed_limit_distant", "DE-ESO:zs3v"));
+  helper_node(tags, trstring("%1 %2 signal").arg("DE-ESO:zs3").arg("speed limit"));
+
+  // also should work for something entirely different
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("railway", "signal"));
+  tags.insert(osm_t::TagMap::value_type("railway:signal:foo", "bar"));
+  helper_node(tags, trstring("%1 %2 signal").arg("bar").arg("foo"));
+
+  // special values that should not end up being used
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("railway", "signal"));
+  tags.insert(osm_t::TagMap::value_type("railway:signal:direction", "forward"));
+  tags.insert(osm_t::TagMap::value_type("railway:signal:position", "left"));
+  helper_node(tags, _("signal"));
+
+  // subtags must not be found either
+  tags.insert(osm_t::TagMap::value_type("railway:signal:foo:bar", "baz"));
+  helper_node(tags, _("signal"));
+}
+
 } // namespace
 
 int main()
@@ -662,6 +710,7 @@ int main()
   test_simple();
   test_lifecycle();
   test_power_generator();
+  test_railway_signals();
 
   xmlCleanupParser();
 
