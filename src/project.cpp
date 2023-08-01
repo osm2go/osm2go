@@ -240,6 +240,7 @@ static void swap_project(project_t *one, project_t *other)
   one->name.swap(other->name);
   one->osmFile.swap(other->osmFile);
   one->dirfd.swap(other->dirfd);
+  one->rserver.swap(other->rserver);
 }
 
 bool project_t::rename(const std::string &nname, project_t::ref global, osm2go_platform::Widget *parent)
