@@ -958,6 +958,10 @@ void map_t::button_release(const osm2go_platform::screenpos &p)
         osm2go_platform::screenpos d = pen_down.at - p;
         scroll_step(d);
       } else {
+        if (pen_down.on_item->object.type != object_t::NODE) {
+          printf("ignoring bogus release event on item of type %i\n", pen_down.on_item->object.type);
+          return;
+        }
         printf("released after dragging node\n");
         hl_cursor_clear();
 
