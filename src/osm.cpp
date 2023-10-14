@@ -85,7 +85,7 @@ static std::map<object_t::type_t, const char *> type_string_init()
 trstring::native_type
 object_t::type_string() const
 {
-  static std::map<type_t, const char *> types = type_string_init();
+  static const std::map<type_t, const char *> types = type_string_init();
 
   if(type == WAY) {
     if(!way->is_closed())
