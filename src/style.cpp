@@ -174,7 +174,7 @@ bool style_parse(const std::string &fullname, xmlString *fname, style_t &style)
 
   /* parse the file and get the DOM */
   if(unlikely(!doc)) {
-    xmlErrorPtr errP = xmlGetLastError();
+    const xmlError *errP = xmlGetLastError();
     printf("parsing %s failed: %s\n", fullname.c_str(), errP->message);
   } else {
     for(xmlNode *cur_node = xmlDocGetRootElement(doc.get()); cur_node != nullptr;

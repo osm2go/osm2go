@@ -156,7 +156,7 @@ bool api_limits::queryXml(const char *url)
 
   /* parse the file and get the DOM */
   if(unlikely(!doc)) {
-    xmlErrorPtr errP = xmlGetLastError();
+    const xmlError *errP = xmlGetLastError();
     error_dlg(trstring("API limits download failed:\n\n"
               "XML error while parsing limits:\n%1").arg(errP->message));
 

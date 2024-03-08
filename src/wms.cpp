@@ -450,7 +450,7 @@ wms_get_layers(osm2go_platform::Widget *parent, wms_t &wms)
   /* parse the file and get the DOM */
   bool parse_success = false;
   if(unlikely(!doc)) {
-    xmlErrorPtr errP = xmlGetLastError();
+    const xmlError *errP = xmlGetLastError();
     error_dlg(trstring("WMS download failed:\n\n"
               "XML error while parsing capabilities:\n%1").arg(errP->message));
   } else {
